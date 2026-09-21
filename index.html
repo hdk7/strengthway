@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("theme");
+          var theme =
+            saved === "light" || saved === "dark"
+              ? saved
+              : window.matchMedia("(prefers-color-scheme: light)").matches
+                ? "light"
+                : "dark";
+          document.documentElement.classList.remove("dark", "light");
+          document.documentElement.classList.add(theme);
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Strength Way — Premium Gym Management Platform</title>
+    <meta
+      name="description"
+      content="The Strength Way is a modern gym management platform for owners, trainers, and members. Memberships, scheduling, analytics, and progress tracking in one place."
+    />
+    <meta name="theme-color" content="#0d0d12" />
+    <link rel="icon" href="/logo.png" type="image/png" />
+  </head>
+  <body class="min-h-screen bg-background text-foreground antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
