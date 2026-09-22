@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { Counter } from "@/components/site/Counter";
+import { openMemberRegistrationModal } from "@/components/site/MemberRegistration";
 import heroImage from "@/assets/1mw.jpg";
 
 // Placeholder gym metrics — replace with real numbers before launch.
@@ -34,13 +35,14 @@ export function HeroSection() {
             trainers, and unlock analytics that turn effort into results.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a
-              href="#contact"
-              className="group inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-black shadow-lg transition-transform hover:scale-105"
+            <button
+              type="button"
+              onClick={openMemberRegistrationModal}
+              className="group inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 font-semibold text-black shadow-lg transition-transform hover:scale-105 cursor-pointer"
             >
               Start Training
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </a>
+            </button>
             <a
               href="#about"
               className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/20"

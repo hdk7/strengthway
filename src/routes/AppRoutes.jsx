@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import HomePage from "@/pages/site/HomePage";
 import PortfolioPage from "@/pages/site/PortfolioPage";
+import PublicTrainerProfilePage from "@/pages/site/PublicTrainerProfilePage";
 import NotFoundPage from "@/pages/site/NotFoundPage";
 
 import AdminLayout from "@/layout/AdminLayout";
@@ -14,8 +15,10 @@ import {
 } from "@/pages/ErrorPage";
 
 import DashboardHome from "@/pages/dashboard/DashboardHome";
-import TrainersPage from "@/pages/trainers-members/TrainersPage";
-import MembersPage from "@/pages/trainers-members/MembersPage";
+import TrainersPage from "@/pages/trainers-members/trainers/TrainersPage";
+import TrainerProfilePage from "@/pages/trainers-members/trainers/TrainerProfilePage";
+import MembersPage from "@/pages/trainers-members/members/MembersPage";
+import MemberProfilePage from "@/pages/trainers-members/members/MemberProfilePage";
 import BatchListPage from "@/pages/batches/BatchListPage";
 import MembersAttendancePage from "@/pages/attendance/MembersAttendancePage";
 import TrainersAttendancePage from "@/pages/attendance/TrainersAttendancePage";
@@ -38,6 +41,8 @@ export function AppRoutes() {
       {/* Marketing site */}
       <Route path="/" element={<HomePage />} />
       <Route path="/portfolio" element={<PortfolioPage />} />
+      <Route path="/trainers" element={<Navigate to="/#trainers" replace />} />
+      <Route path="/trainers/:id" element={<PublicTrainerProfilePage />} />
 
       {/* Admin auth */}
       <Route path="/admin/login" element={<LoginPage />} />
@@ -54,7 +59,9 @@ export function AppRoutes() {
         <Route path="dashboard" element={<DashboardHome />} />
 
         <Route path="trainers-members/trainers" element={<TrainersPage />} />
+        <Route path="trainers-members/trainers/:id" element={<TrainerProfilePage />} />
         <Route path="trainers-members/members" element={<MembersPage />} />
+        <Route path="trainers-members/members/:id" element={<MemberProfilePage />} />
 
         <Route path="batches/list" element={<BatchListPage />} />
 

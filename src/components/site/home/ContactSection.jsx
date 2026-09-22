@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { Reveal } from "@/components/site/Reveal";
+import { contactFormSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
+import { createInquiry } from "@/lib/inquiriesService";
 
 export function ContactSection() {
   return (
@@ -39,52 +41,136 @@ export function ContactSection() {
     </section>
   );
 }
-
 function ContactForm() {
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  function handleChange(e) {
+    const { name, value } = e.target;
+    const nextForm = { ...form, [name]: value };
+    setForm(nextForm);
+    const fieldError = validateFieldWithYup(contactFormSchema, name, nextForm);
+    setErrors((prev) => ({ ...prev, [name]: fieldError }));
+  }
+
+  function handleBlur(e) {
+    const { name, value } = e.target;
+    if (!name) return;
+    const currentForm = { ...form, [name]: value !== undefined ? value : form[name] };
+    const fieldError = validateFieldWithYup(contactFormSchema, name, currentForm);
+    setErrors((prev) => ({ ...prev, [name]: fieldError }));
+  }
+
+  function validate() {
+    const errs = validateWithYup(contactFormSchema, form);
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const name = data.get("name")?.toString().trim();
-    const email = data.get("email")?.toString().trim();
-    const message = data.get("message")?.toString().trim();
 
-    if (!name || !email || !message) {
-      toast.error("Please fill in your name, email, and message.");
+    if (!validate()) {
+      toast.error("Please correct the errors in the form.");
       return;
     }
 
     setSubmitting(true);
-    toast.success("Message sent — we'll get back to you shortly.");
-    setSubmitting(false);
-    form.reset();
+    try {
+      createInquiry({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        subject: form.subject.trim(),
+        message: form.message.trim(),
+      });
+      toast.success("Message sent — we'll get back to you shortly.");
+      setForm({ name: "", email: "", subject: "", message: "" });
+      setErrors({});
+    } catch {
+      toast.error("Failed to send inquiry. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <form className="rounded-3xl border border-border bg-background p-8" onSubmit={handleSubmit}>
+    <form
+      className="rounded-3xl border border-border bg-background p-8"
+      onSubmit={handleSubmit}
+      noValidate
+    >
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field name="name" label="Name" placeholder="UserName" required />
-        <Field name="email" label="Email" type="email" placeholder="username@gmail.com" required />
+        <Field
+          id="contact-name"
+          name="name"
+          label="Name"
+          placeholder="UserName"
+          required
+          value={form.name}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={errors.name}
+        />
+        <Field
+          id="contact-email"
+          name="email"
+          label="Email"
+          type="email"
+          placeholder="username@gmail.com"
+          required
+          value={form.email}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={errors.email}
+        />
       </div>
-      <Field name="subject" label="Subject" placeholder="I'd like a tour" className="mt-4" />
+      <Field
+        id="contact-subject"
+        name="subject"
+        label="Subject"
+        placeholder="I'd like a tour"
+        required
+        className="mt-4"
+        value={form.subject}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        error={errors.subject}
+      />
       <div className="mt-4">
-        <label className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Message
+        <label
+          htmlFor="contact-message"
+          className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground"
+        >
+          Message <span className="text-destructive">*</span>
         </label>
         <textarea
+          id="contact-message"
           name="message"
           rows={4}
           placeholder="Tell us how we can help…"
           required
-          className="w-full rounded-xl border border-border bg-input/40 p-3 text-sm outline-none transition-colors focus:border-primary"
+          value={form.message}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          aria-invalid={Boolean(errors.message)}
+          aria-describedby={errors.message ? "contact-message-error" : undefined}
+          className={`w-full rounded-xl border bg-input/40 p-3 text-sm text-foreground outline-none transition-all focus:ring-2 ${
+            errors.message
+              ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+              : "border-border focus:border-primary focus:ring-primary/20"
+          }`}
         />
+        {errors.message && (
+          <p id="contact-message-error" className="mt-1 text-xs text-destructive" role="alert">
+            {errors.message}
+          </p>
+        )}
       </div>
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
       >
         {submitting ? "Sending…" : "Send message"}
       </button>
@@ -92,16 +178,32 @@ function ContactForm() {
   );
 }
 
-function Field({ label, className = "", ...props }) {
+function Field({ id, label, error, className = "", required = false, ...props }) {
+  const errorId = id ? `${id}-error` : undefined;
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground">
-        {label}
+      <label
+        htmlFor={id}
+        className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground"
+      >
+        {label} {required && <span className="text-destructive">*</span>}
       </label>
       <input
+        id={id}
         {...props}
-        className="w-full rounded-xl border border-border bg-input/40 p-3 text-sm outline-none transition-colors focus:border-primary"
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        className={`w-full rounded-xl border bg-input/40 p-3 text-sm text-foreground outline-none transition-all focus:ring-2 ${
+          error
+            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
+            : "border-border focus:border-primary focus:ring-primary/20"
+        }`}
       />
+      {error && (
+        <p id={errorId} className="mt-1 text-xs text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

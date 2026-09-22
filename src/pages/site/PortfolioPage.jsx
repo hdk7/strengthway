@@ -9,7 +9,7 @@ import { VideosSection } from "@/components/site/portfolio/VideosSection";
 import { SessionsSection } from "@/components/site/portfolio/SessionsSection";
 import { FeedbackSection } from "@/components/site/portfolio/FeedbackSection";
 
-import { openMemberRegistrationModal } from "@/components/site/MemberRegistrationModal";
+import { openMemberRegistrationModal } from "@/components/site/MemberRegistration";
 
 export default function PortfolioPage() {
   useDocumentTitle("Portfolio — The Strength Way");

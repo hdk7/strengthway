@@ -15,7 +15,7 @@ const SESSION_CLIPS = [sessionVideo1, sessionVideo2, sessionVideo3];
 const SESSIONS = [
   {
     title: "Strength Training",
-    desc: "Progressive overload on barbell and rig work, coached rep by rep.",
+    desc: "Progressive overload on barbell and rig work, Trainered rep by rep.",
     duration: "50 min",
     level: "All levels",
     icon: Dumbbell,

@@ -80,7 +80,7 @@ export function ProgramsSection() {
             </h2>
           </div>
           <p className="max-w-md text-sm text-muted-foreground">
-            Every program is structured, coached, and tracked — no guesswork.
+            Every program is structured, ed, and tracked — no guesswork.
           </p>
         </Reveal>
 

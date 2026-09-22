@@ -131,7 +131,7 @@ body {
 
 /* Premium utilities (marketing site) */
 @utility text-gradient {
-  background: linear-gradient(135deg, oklch(0.55 0.01 260), oklch(0.85 0.008 260));
+  background: linear-gradient(135deg, #ffffff 0%, #d4d4d8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

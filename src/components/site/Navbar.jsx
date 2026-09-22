@@ -3,7 +3,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/site/Logo";
 import { ThemeToggle } from "@/hooks/theme";
-import { MemberRegistrationModal } from "@/components/site/MemberRegistrationModal";
+import { MemberRegistrationModal } from "@/components/site/MemberRegistration";
 
 // Past this many px of scroll, the header contracts into a floating pill.
 const SCROLL_THRESHOLD = 32;

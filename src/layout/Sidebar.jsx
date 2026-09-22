@@ -23,15 +23,15 @@ const navConfig = [
     label: "Trainers & Members",
     icon: Users,
     children: [
-      { id: "trainer-list", label: "Trainer", path: "/admin/trainers-members/trainers" },
-      { id: "member-list", label: "Member", path: "/admin/trainers-members/members" },
+      { id: "member-list", label: "Members", path: "/admin/trainers-members/members" },
+      { id: "trainer-list", label: "Trainers", path: "/admin/trainers-members/trainers" },
     ],
   },
   {
     id: "batches",
     label: "Batches",
     icon: Boxes,
-    children: [{ id: "list", label: "Batch List", path: "/admin/batches/list" }],
+    children: [{ id: "list", label: "Batch Lists/", path: "/admin/batches/list" }],
   },
   {
     id: "attendance",

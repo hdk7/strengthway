@@ -3,8 +3,7 @@ import { ArrowLeft, MailCheck } from "lucide-react";
 import TextField from "@/components/ui/TextField";
 import Button from "@/components/ui/button";
 import { forgotPassword, AuthError } from "./authService";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { forgotPasswordSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 
 export default function ForgotPasswordForm({ onBack }) {
   const [email, setEmail] = useState("");
@@ -14,20 +13,25 @@ export default function ForgotPasswordForm({ onBack }) {
   const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
-    setEmail(e.target.value);
-    setEmailError("");
+    const val = e.target.value;
+    setEmail(val);
+    const err = validateFieldWithYup(forgotPasswordSchema, "email", { email: val });
+    setEmailError(err);
     if (formError) setFormError("");
+  };
+
+  const handleBlur = (e) => {
+    const val = e?.target?.value !== undefined ? e.target.value : email;
+    const err = validateFieldWithYup(forgotPasswordSchema, "email", { email: val });
+    setEmailError(err);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email.trim()) {
-      setEmailError("Email is required");
-      return;
-    }
-    if (!EMAIL_PATTERN.test(email.trim())) {
-      setEmailError("Enter a valid email address");
+    const errs = validateWithYup(forgotPasswordSchema, { email });
+    if (errs.email) {
+      setEmailError(errs.email);
       return;
     }
 
@@ -110,6 +114,7 @@ export default function ForgotPasswordForm({ onBack }) {
         placeholder="user@thestrengthway.com"
         value={email}
         onChange={handleChange}
+        onBlur={handleBlur}
         error={emailError}
         disabled={submitting}
       />

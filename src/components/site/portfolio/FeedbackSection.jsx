@@ -27,7 +27,8 @@ const FEEDBACK = [
   {
     name: "Meera K.",
     role: "Quarterly Member",
-    quote: "The coaches actually watch your form. I've never felt this dialed-in during a session.",
+    quote:
+      "The Traineres actually watch your form. I've never felt this dialed-in during a session.",
     rating: 5,
   },
   {

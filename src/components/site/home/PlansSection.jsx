@@ -13,7 +13,7 @@ const PLANS = [
     features: [
       "Full access to every program — Strength, Calisthenics, Animal Flow, Mobility & more",
       "Unlimited group classes",
-      "Certified coach guidance every session",
+      "Certified Trainer guidance every session",
       "Progress tracking",
     ],
   },
@@ -27,44 +27,10 @@ const PLANS = [
     features: [
       "Full access to every program — Strength, Calisthenics, Animal Flow, Mobility & more",
       "Unlimited group classes",
-      "Certified coach guidance every session",
+      "Certified Trainer guidance every session",
       "Progress tracking",
       "1:1 quarterly fitness assessment",
       "Priority slot booking",
-    ],
-  },
-  {
-    name: "Half-Yearly",
-    price: "₹32,000",
-    period: "/6mo",
-    billing: "Billed ₹32,000 every 6 months",
-    popular: false,
-    badge: null,
-    features: [
-      "Full access to every program — Strength, Calisthenics, Animal Flow, Mobility & more",
-      "Unlimited group classes",
-      "Certified coach guidance every session",
-      "Progress tracking",
-      "Bi-monthly fitness & body composition check",
-      "Priority slot booking",
-      "Free guest passes (2/month)",
-    ],
-  },
-  {
-    name: "Annual",
-    price: "₹55,000",
-    period: "/yr",
-    billing: "Billed ₹55,000 annually",
-    popular: false,
-    badge: "BEST VALUE",
-    features: [
-      "Full access to every program — Strength, Calisthenics, Animal Flow, Mobility & more",
-      "Unlimited group classes",
-      "Certified coach guidance every session",
-      "Progress tracking",
-      "Full fitness & nutrition consultation",
-      "VIP priority booking & locker access",
-      "Free guest passes (4/month)",
     ],
   },
 ];
@@ -86,7 +52,7 @@ export function PlansSection() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2 lg:gap-8">
           {PLANS.map((plan, i) => (
             <Reveal key={plan.name} delay={i * 80}>
               <SpotlightCard
@@ -97,7 +63,7 @@ export function PlansSection() {
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 right-6 rounded-full border border-accent/40 bg-accent/20 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-accent backdrop-blur-md">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full border border-white/30 bg-white/15 px-3.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-md whitespace-nowrap shadow-sm">
                     {plan.badge}
                   </div>
                 )}
@@ -107,17 +73,14 @@ export function PlansSection() {
                     <span className="font-display text-4xl font-bold tracking-tight text-foreground">
                       {plan.price}
                     </span>
-                    <span className="text-sm font-medium text-muted-foreground">{plan.period}</span>
+                    <span className="text-sm font-medium text-white/70">{plan.period}</span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{plan.billing}</p>
+                  <p className="mt-1 text-xs text-white/70">{plan.billing}</p>
 
                   <ul className="mt-6 space-y-3">
                     {plan.features.map((feat) => (
-                      <li
-                        key={feat}
-                        className="flex items-start gap-2.5 text-xs text-muted-foreground"
-                      >
-                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" />
+                      <li key={feat} className="flex items-start gap-2.5 text-xs text-white">
+                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white" />
                         <span className="leading-relaxed">{feat}</span>
                       </li>
                     ))}
@@ -129,8 +92,8 @@ export function PlansSection() {
                     href="#contact"
                     className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition-all duration-200 ${
                       plan.popular
-                        ? "bg-accent text-accent-foreground shadow-md hover:opacity-90"
-                        : "border border-border bg-background text-foreground hover:bg-accent/10 hover:border-accent/40"
+                        ? "bg-white text-black font-semibold shadow-md hover:bg-white/90"
+                        : "border border-white/20 bg-background text-white hover:bg-white/10 hover:border-white/40"
                     }`}
                   >
                     Choose {plan.name}

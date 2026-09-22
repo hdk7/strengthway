@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import TextField from "@/components/ui/TextField";
 import Button from "@/components/ui/button";
-import { validateLogin } from "./validateLogin";
+import { loginSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS } from "./authService";
 import ForgotPasswordForm from "./ForgotPasswordForm";
 
@@ -15,9 +15,19 @@ export default function LoginForm({ onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }));
-    setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    const value = event.target.value;
+    const nextForm = { ...form, [field]: value };
+    setForm(nextForm);
+    const errorMsg = validateFieldWithYup(loginSchema, field, nextForm);
+    setFieldErrors((prev) => ({ ...prev, [field]: errorMsg || undefined }));
     if (formError) setFormError("");
+  };
+
+  const handleBlur = (field) => (event) => {
+    const value = event?.target?.value;
+    const currentForm = { ...form, [field]: value !== undefined ? value : form[field] };
+    const errorMsg = validateFieldWithYup(loginSchema, field, currentForm);
+    setFieldErrors((prev) => ({ ...prev, [field]: errorMsg || undefined }));
   };
 
   const handleFillDemo = () => {
@@ -28,7 +38,7 @@ export default function LoginForm({ onSuccess }) {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const errors = validateLogin(form);
+    const errors = validateWithYup(loginSchema, form);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
@@ -69,6 +79,7 @@ export default function LoginForm({ onSuccess }) {
         placeholder="you@thestrengthway.com"
         value={form.email}
         onChange={handleChange("email")}
+        onBlur={handleBlur("email")}
         error={fieldErrors.email}
         disabled={submitting}
       />
@@ -81,6 +92,7 @@ export default function LoginForm({ onSuccess }) {
         placeholder="Enter your password"
         value={form.password}
         onChange={handleChange("password")}
+        onBlur={handleBlur("password")}
         error={fieldErrors.password}
         disabled={submitting}
         endAdornment={

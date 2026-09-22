@@ -13,10 +13,9 @@ export default function TextField({ label, error, endAdornment, className = "", 
         className={[
           "flex items-center border rounded-lg bg-background",
           "transition-[border-color,box-shadow] duration-150 ease-[ease]",
-          "focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-accent)_10%,transparent)]",
           error
-            ? "border-destructive focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-destructive)_15%,transparent)]"
-            : "border-border",
+            ? "border-destructive focus-within:border-destructive focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-destructive)_15%,transparent)]"
+            : "border-border focus-within:border-accent focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-accent)_10%,transparent)]",
         ].join(" ")}
       >
         <input
