@@ -10,8 +10,8 @@ import {
   Waves,
   Wind,
 } from "lucide-react";
-import { Reveal } from "@/components/site/Reveal";
-import { SpotlightCard } from "@/components/site/SpotlightCard";
+import { Reveal } from "@/landingPage/Reveal";
+import { SpotlightCard } from "@/landingPage/SpotlightCard";
 
 const ITEMS = [
   {
@@ -68,14 +68,14 @@ const ITEMS = [
 
 export function ProgramsSection() {
   return (
-    <section id="programs" className="border-y border-border/60 bg-surface/30 py-24">
-      <div className="mx-auto max-w-[100rem] px-6">
+    <section id="programs" className="border-y border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+      <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
               Programs
             </div>
-            <h2 className="mt-4 font-display text-4xl font-bold sm:text-5xl">
+            <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
               Pick your <span className="text-gradient">discipline</span>.
             </h2>
           </div>
@@ -84,13 +84,15 @@ export function ProgramsSection() {
           </p>
         </Reveal>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-8 sm:mt-10 grid gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {ITEMS.map((it, i) => (
-            <Reveal key={it.title} delay={(i % 5) * 80}>
-              <SpotlightCard className="overflow-hidden rounded-2xl border border-black bg-black p-6 transition-all hover:border-white/40 hover:card-glow">
-                <it.icon className="h-8 w-8 text-white" />
-                <h3 className="mt-6 font-display text-2xl font-bold text-white">{it.title}</h3>
-                <p className="mt-2 text-sm text-white/60">{it.desc}</p>
+            <Reveal key={it.title} delay={(i % 5) * 80} className="min-w-0">
+              <SpotlightCard className="overflow-hidden rounded-2xl border border-black bg-black p-5 sm:p-6 transition-all hover:border-white/40 hover:card-glow min-w-0 h-full flex flex-col justify-between">
+                <div>
+                  <it.icon className="h-8 w-8 text-white shrink-0" />
+                  <h3 className="mt-6 font-display text-xl sm:text-2xl font-bold text-white break-words">{it.title}</h3>
+                  <p className="mt-2 text-sm text-white/60 leading-relaxed">{it.desc}</p>
+                </div>
               </SpotlightCard>
             </Reveal>
           ))}

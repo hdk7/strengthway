@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/Toast";
 import { ThemeProvider } from "@/hooks/theme";
-import ErrorBoundary from "@/components/site/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ui/NotFoundPage";
 import App from "./App";
 import "./index.css";
 

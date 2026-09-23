@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Dumbbell, Move, PawPrint, PersonStanding } from "lucide-react";
-import { Reveal } from "@/components/site/Reveal";
-import { SpotlightCard } from "@/components/site/SpotlightCard";
-import { CarouselDots } from "@/components/site/CarouselDots";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Reveal } from "@/landingPage/Reveal";
+import { SpotlightCard } from "@/landingPage/SpotlightCard";
+import { Carousel, CarouselContent, CarouselItem, CarouselDots } from "@/components/ui/carousel";
 import { SectionHeading } from "./SectionHeading";
 import { handleVideoPlay } from "./portfolioVideo";
 import sessionVideo1 from "@/assets/fewer-excuses-more-consistency.mp4";
@@ -43,12 +42,12 @@ const SESSIONS = [
   },
 ];
 
-export function SessionsSection({ onJoin }) {
+export function SessionsSection() {
   const [api, setApi] = useState();
   return (
-    <section id="sessions" className="border-y border-border/60 bg-surface/30 py-24">
-      <div className="mx-auto max-w-[100rem] px-6">
-        <Reveal>
+    <section id="sessions" className="border-y border-border/60 bg-surface/30 py-16 sm:py-24">
+      <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
+        <Reveal className="min-w-0">
           <SectionHeading
             eyebrow="Training sessions"
             title={
@@ -61,8 +60,8 @@ export function SessionsSection({ onJoin }) {
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {SESSIONS.map((s, i) => (
-            <Reveal key={s.title} delay={i * 80}>
-              <SpotlightCard className="rounded-2xl border border-border bg-background p-6">
+            <Reveal key={s.title} delay={i * 80} className="min-w-0">
+              <SpotlightCard className="rounded-2xl border border-border bg-background p-5 sm:p-6 min-w-0">
                 <s.icon className="h-8 w-8 text-primary" />
                 <h3 className="mt-4 font-display text-xl font-bold">{s.title}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{s.desc}</p>
@@ -96,16 +95,6 @@ export function SessionsSection({ onJoin }) {
             </CarouselContent>
           </Carousel>
           <CarouselDots api={api} count={SESSION_CLIPS.length} />
-        </Reveal>
-
-        <Reveal delay={200} className="mt-10 text-center">
-          <button
-            type="button"
-            onClick={onJoin}
-            className="rounded-xl bg-primary px-6 py-3 font-semibold text-primary-foreground transition-transform hover:scale-105"
-          >
-            Book a session
-          </button>
         </Reveal>
       </div>
     </section>

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import * as yup from "yup";
 
 export const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -272,17 +271,4 @@ export const trainerSchema = yup.object().shape({
   email: emailValidator(true),
   shift: selectValidator("Shift", true),
   bio: textValidator("Bio", 10, 500, true),
-});
-
-// 7. Manual Inquiry Schema (All fields required)
-export const inquirySchema = yup.object().shape({
-  name: nameValidator("Full name", true),
-  email: emailValidator(true),
-  subject: textValidator("Subject", 2, 150, true),
-  message: yup
-    .string()
-    .trim()
-    .required("Message is required.")
-    .min(10, "Message must be at least 10 characters.")
-    .max(1000, "Message cannot exceed 1000 characters."),
 });

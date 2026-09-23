@@ -1,12 +1,9 @@
-/* eslint-disable max-lines */
 import { useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   X,
   Phone,
   Mail,
-  Clock,
-  Award,
   Edit3,
   Trash2,
   Copy,
@@ -16,45 +13,13 @@ import {
   Quote,
   Calendar,
   UserCheck,
-  Sun,
-  Moon,
   Dumbbell,
   Flame,
   ArrowUpRight,
+  Award,
 } from "lucide-react";
 import { toast } from "sonner";
-
-function getShiftDetails(shiftString = "") {
-  const shiftLower = (shiftString || "").toLowerCase();
-  if (shiftLower.includes("morning")) {
-    return {
-      title: "Morning Shift",
-      hours: "06:00 AM – 02:00 PM",
-      icon: Sun,
-      color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
-      accentDot: "bg-amber-500",
-      badge: "Early Prime Time",
-    };
-  }
-  if (shiftLower.includes("evening")) {
-    return {
-      title: "Evening Shift",
-      hours: "02:00 PM – 10:00 PM",
-      icon: Moon,
-      color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-      accentDot: "bg-indigo-400",
-      badge: "Peak Gym Hours",
-    };
-  }
-  return {
-    title: "General Shift",
-    hours: "08:00 AM – 05:00 PM",
-    icon: Clock,
-    color: "text-accent bg-accent/10 border-accent/20",
-    accentDot: "bg-accent",
-    badge: "Full Day Access",
-  };
-}
+import { CertifiedAccreditations } from "@/components/trainers/CertifiedAccreditations";
 
 export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -69,8 +34,6 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
     .join("")
     .toUpperCase();
 
-  const shiftInfo = getShiftDetails(trainer.shift);
-  const ShiftIcon = shiftInfo.icon;
   const isInactive = trainer.status === "Inactive";
 
   const handleCopy = (text, fieldName, label) => {
@@ -82,7 +45,7 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
   };
 
   const tabs = [
-    { id: "overview", label: "Trainering & Shift", icon: Award },
+    { id: "overview", label: "Certified Accreditations", icon: Award },
     { id: "contact", label: "Direct Contact", icon: Phone },
     { id: "bio", label: "Philosophy & Bio", icon: Quote },
   ];
@@ -135,14 +98,6 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
                     >
                       {trainer.status || "Active"} Trainer
                     </span>
-
-                    {/* Shift Pill */}
-                    <span
-                      className={`hidden sm:inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${shiftInfo.color}`}
-                    >
-                      <ShiftIcon size={12} />
-                      <span>{shiftInfo.title}</span>
-                    </span>
                   </div>
 
                   <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground truncate font-display">
@@ -150,13 +105,7 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
                   </h2>
 
                   <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                    <span className="flex items-center gap-1 text-foreground font-semibold">
-                      <Award size={13} className="text-accent shrink-0" />
-                      <span>{trainer.specialization}</span>
-                    </span>
-
                     <span className="flex items-center gap-1 text-muted-foreground">
-                      <span>•</span>
                       <Sparkles size={13} className="text-accent shrink-0" />
                       <span>{trainer.experience} Experience</span>
                     </span>
@@ -243,83 +192,10 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
             id="trainer-details-desc"
             className="flex-1 overflow-y-auto p-6 sm:p-8 space-y-6 text-sm no-scrollbar"
           >
-            {/* TAB 1: TrainerING & SHIFT */}
+            {/* TAB 1: CERTIFIED ACCREDITATIONS */}
             {activeTab === "overview" && (
               <div className="space-y-6">
-                {/* Shift & Schedule Card */}
-                <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card to-background p-6 shadow-sm">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start gap-3.5">
-                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-accent/15 text-accent border border-accent/25">
-                        <ShiftIcon size={24} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-base font-bold text-foreground">{shiftInfo.title}</h4>
-                          <span
-                            className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${shiftInfo.color}`}
-                          >
-                            {shiftInfo.badge}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
-                          <Clock size={13} className="text-accent shrink-0" />
-                          <span className="font-mono font-medium text-foreground">
-                            {trainer.shift || shiftInfo.hours}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-left sm:text-right">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                        Floor Duty Role
-                      </span>
-                      <span className="text-xs font-bold text-emerald-500 flex items-center sm:justify-end mt-0.5">
-                        On-Site Supervising Trainer
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Trainering Competencies & Metrics Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Discipline / Specialization Card */}
-                  <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Primary Discipline
-                      </span>
-                      <div className="grid h-8 w-8 place-items-center rounded-xl bg-accent/10 text-accent">
-                        <Award size={16} />
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">{trainer.specialization}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Curriculum Lead & Form Auditor
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Experience Card */}
-                  <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Industry Experience
-                      </span>
-                      <div className="grid h-8 w-8 place-items-center rounded-xl bg-accent/10 text-accent">
-                        <Sparkles size={16} />
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-lg font-bold text-foreground">{trainer.experience}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        Proven Athlete Transformation Track Record
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <CertifiedAccreditations trainer={trainer} canUpload={false} />
 
                 {/* Training Focus & Methodologies */}
                 <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3">
@@ -478,26 +354,6 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
                     )}
                   </div>
                 </div>
-
-                {/* Department & Facility */}
-                <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
-                    Gym Facility & Department
-                  </span>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                    <div>
-                      <p className="font-bold text-foreground">
-                        The Strength Way — Floor & Conditioning Division
-                      </p>
-                      <p className="text-muted-foreground mt-0.5">
-                        Headquarters: Main Athletic Arena & Resistance Training Zone
-                      </p>
-                    </div>
-                    <span className="rounded-lg bg-muted/40 px-2.5 py-1 font-mono text-[11px] text-muted-foreground border border-border self-start sm:self-auto">
-                      Trainer Ref: {trainer.id}
-                    </span>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -528,7 +384,7 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
 
                     <div className="pt-2 flex items-center justify-between text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">
-                        — {trainer.name}, {trainer.specialization}
+                        — {trainer.name}
                       </span>
                       <span className="font-mono text-[11px]">TSW Trainering Faculty</span>
                     </div>

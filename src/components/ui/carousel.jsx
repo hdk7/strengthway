@@ -154,10 +154,10 @@ const CarouselPrevious = React.forwardRef(
         variant={variant}
         size={size}
         className={cn(
-          "absolute  h-8 w-8 rounded-full",
+          "absolute h-8 w-8 rounded-full hidden sm:inline-flex",
           orientation === "horizontal"
-            ? "-left-12 top-1/2 -translate-y-1/2"
-            : "-top-12 left-1/2 -translate-x-1/2 rotate-90",
+            ? "-left-4 sm:-left-12 top-1/2 -translate-y-1/2"
+            : "-top-4 sm:-top-12 left-1/2 -translate-x-1/2 rotate-90",
           className,
         )}
         disabled={!canScrollPrev}
@@ -182,10 +182,10 @@ const CarouselNext = React.forwardRef(
         variant={variant}
         size={size}
         className={cn(
-          "absolute h-8 w-8 rounded-full",
+          "absolute h-8 w-8 rounded-full hidden sm:inline-flex",
           orientation === "horizontal"
-            ? "-right-12 top-1/2 -translate-y-1/2"
-            : "-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
+            ? "-right-4 sm:-right-12 top-1/2 -translate-y-1/2"
+            : "-bottom-4 sm:-bottom-12 left-1/2 -translate-x-1/2 rotate-90",
           className,
         )}
         disabled={!canScrollNext}
@@ -201,3 +201,76 @@ const CarouselNext = React.forwardRef(
 CarouselNext.displayName = "CarouselNext";
 
 export { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext };
+
+// Keep in sync with the `[animation-duration:4000ms]` class below — it has to
+// be a static Tailwind class (not a style prop), so it can't read this value.
+const AUTOPLAY_MS = 4000;
+
+// Instagram-Stories-style progress dots: the active bar fills over the
+// autoplay interval, then advances to the next slide. Hovering or dragging
+// pauses the fill in place instead of resetting it.
+export function CarouselDots({ api: propApi, count, className }) {
+  const context = React.useContext(CarouselContext);
+  const api = propApi || context?.api;
+  const [selected, setSelected] = React.useState(0);
+  const [playing, setPlaying] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!api) return;
+    function onSelect() {
+      setSelected(api.selectedScrollSnap());
+    }
+    function pause() {
+      setPlaying(false);
+    }
+    function resume() {
+      setPlaying(true);
+    }
+    onSelect();
+    api.on("select", onSelect);
+    api.on("pointerDown", pause);
+    api.on("pointerUp", resume);
+    return () => {
+      api.off("select", onSelect);
+      api.off("pointerDown", pause);
+      api.off("pointerUp", resume);
+    };
+  }, [api]);
+
+  React.useEffect(() => {
+    if (!api || !playing) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => api.scrollNext(), AUTOPLAY_MS);
+    return () => clearInterval(id);
+  }, [api, playing]);
+
+  if (!api || count < 2) return null;
+
+  return (
+    <div
+      className={cn("mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-full px-2", className)}
+      onMouseEnter={() => setPlaying(false)}
+      onMouseLeave={() => setPlaying(true)}
+    >
+      {Array.from({ length: count }).map((_, i) => (
+        <button
+          key={i}
+          type="button"
+          aria-label={`Go to slide ${i + 1}`}
+          onClick={() => api.scrollTo(i)}
+          className="h-1 w-6 sm:w-10 shrink-0 overflow-hidden rounded-full bg-foreground/15 transition-all"
+        >
+          {i === selected && (
+            <span
+              key={selected}
+              className={cn(
+                "carousel-dot-fill [animation-duration:4000ms] block h-full w-full bg-foreground",
+                playing ? "" : "[animation-play-state:paused]",
+              )}
+            />
+          )}
+        </button>
+      ))}
+    </div>
+  );
+}

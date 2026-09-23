@@ -177,8 +177,17 @@ export function getTrainers() {
 }
 
 export function getTrainerById(id) {
+  if (!id) return null;
   const all = readStorage();
-  return all.find((t) => t.id === id) || null;
+  const cleanId = String(id).trim().toLowerCase();
+  return (
+    all.find(
+      (t) =>
+        t.id?.toLowerCase() === cleanId ||
+        t.name?.toLowerCase().replace(/\s+/g, "-") === cleanId ||
+        t.name?.toLowerCase() === cleanId,
+    ) || null
+  );
 }
 
 export function createTrainer(data) {

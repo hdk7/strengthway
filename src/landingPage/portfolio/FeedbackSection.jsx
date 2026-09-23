@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
-import { Reveal } from "@/components/site/Reveal";
-import { SpotlightCard } from "@/components/site/SpotlightCard";
-import { CarouselDots } from "@/components/site/CarouselDots";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Reveal } from "@/landingPage/Reveal";
+import { SpotlightCard } from "@/landingPage/SpotlightCard";
+import { Carousel, CarouselContent, CarouselItem, CarouselDots } from "@/components/ui/carousel";
 import { SectionHeading } from "./SectionHeading";
 import { handleVideoPlay } from "./portfolioVideo";
 import video7 from "@/assets/portfolio-video-7.mp4";
@@ -22,29 +21,26 @@ const FEEDBACK = [
     role: "Member since 2025",
     quote:
       "Six months of Animal Flow and calisthenics here changed how my body moves, not just how it looks.",
-    rating: 5,
   },
   {
     name: "Meera K.",
     role: "Quarterly Member",
     quote:
       "The Traineres actually watch your form. I've never felt this dialed-in during a session.",
-    rating: 5,
   },
   {
     name: "Devansh R.",
     role: "Quarterly Member",
     quote:
       "Booked a strength session on a whim and ended up rebuilding my whole routine around it.",
-    rating: 5,
   },
 ];
 
 export function FeedbackSection() {
   const [api, setApi] = useState();
   return (
-    <section className="mx-auto max-w-[100rem] px-6 py-24">
-      <Reveal>
+    <section className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <Reveal className="min-w-0">
         <SectionHeading
           eyebrow="Feedback"
           title={
@@ -54,10 +50,10 @@ export function FeedbackSection() {
           }
         />
       </Reveal>
-      <div className="mt-12 grid gap-6 md:grid-cols-3">
+      <div className="mt-12 grid gap-6 sm:grid-cols-2 md:grid-cols-3">
         {FEEDBACK.map((f, i) => (
-          <Reveal key={f.name} delay={i * 100}>
-            <SpotlightCard className="rounded-3xl border border-border bg-background p-8">
+          <Reveal key={f.name} delay={i * 100} className="min-w-0">
+            <SpotlightCard className="rounded-3xl border border-border bg-background p-6 sm:p-8 min-w-0">
               <div className="flex items-center gap-1 text-primary">
                 {Array.from({ length: f.rating }).map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-primary" />

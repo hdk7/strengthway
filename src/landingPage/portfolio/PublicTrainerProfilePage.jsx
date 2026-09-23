@@ -12,44 +12,30 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
-  Sparkles,
   User,
   ArrowRight,
   ChevronRight,
 } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/theme";
-import { Navbar } from "@/components/site/Navbar";
-import { Footer } from "@/components/site/Footer";
-import { BackToTop } from "@/components/site/BackToTop";
-import { CustomCursor } from "@/components/site/CustomCursor";
-import { Reveal } from "@/components/site/Reveal";
-import { getTrainerById, getTrainers, getTrainerPhoto } from "@/lib/trainersService";
+import { Navbar } from "@/landingPage/Navbar";
+import { Footer } from "@/landingPage/Footer";
+import { BackToTop } from "@/landingPage/BackToTop";
+import { CustomCursor } from "@/landingPage/CustomCursor";
+import { getTrainerById, getTrainers, getTrainerPhoto, updateTrainer } from "@/lib/trainersService";
+import { CertifiedAccreditations } from "@/components/trainers/CertifiedAccreditations";
 
 export default function PublicTrainerProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [trainer, setTrainer] = useState(null);
-  const [allTrainers, setAllTrainers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [allTrainers, setAllTrainers] = useState(() => getTrainers());
+  const [trainer, setTrainer] = useState(() => getTrainerById(id));
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setIsLoading(true);
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     const trainersList = getTrainers();
     setAllTrainers(trainersList);
-
-    // Support both ID matching ("TRN-101") and slug/name matching
-    const found =
-      getTrainerById(id) ||
-      trainersList.find(
-        (t) =>
-          t.id.toLowerCase() === (id || "").toLowerCase() ||
-          t.name.toLowerCase().replace(/\s+/g, "-") === (id || "").toLowerCase(),
-      );
-
-    setTrainer(found || null);
-    setIsLoading(false);
+    setTrainer(getTrainerById(id));
   }, [id]);
 
   const pageTitle = trainer
@@ -77,16 +63,6 @@ export default function PublicTrainerProfilePage() {
     }, 120);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading trainer profile…</p>
-        </div>
-      </div>
-    );
-  }
 
   if (!trainer) {
     return (
@@ -116,10 +92,10 @@ export default function PublicTrainerProfilePage() {
   }
 
   return (
-    <div className="custom-cursor-scope min-h-screen bg-background text-foreground">
+    <div className="custom-cursor-scope min-h-screen min-h-[100dvh] flex flex-col bg-background text-foreground">
       <Navbar />
 
-      <main className="pt-24 pb-20">
+      <main className="pt-24 pb-20 flex-1">
         <div className="mx-auto max-w-[100rem] px-6 lg:px-12 space-y-10">
           {/* Top Breadcrumb & Back Navigation */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
@@ -150,8 +126,7 @@ export default function PublicTrainerProfilePage() {
           </div>
 
           {/* Hero Trainer Profile Card */}
-          <Reveal>
-            <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-surface/80 via-surface/40 to-background p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-surface/80 via-surface/40 to-background p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl">
               {/* Glowing Background Orbs */}
               <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
               <div className="pointer-events-none absolute left-1/3 -bottom-20 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
@@ -173,23 +148,9 @@ export default function PublicTrainerProfilePage() {
 
                 {/* Trainer Information */}
                 <div className="lg:col-span-8 space-y-6">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
-                        <Clock size={13} />
-                        <span>{trainer.shift || "Morning Shift"}</span>
-                      </span>
-
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-medium text-white/80">
-                        <Sparkles size={13} />
-                        <span>{trainer.experience} Experience</span>
-                      </span>
-                    </div>
-
-                    <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight">
-                      {trainer.name}
-                    </h1>
-                  </div>
+                  <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight">
+                    {trainer.name}
+                  </h1>
 
                   {/* Bio / Quote */}
                   <blockquote className="rounded-2xl border-l-4 border-white/80 bg-white/5 p-4 sm:p-5 text-sm sm:text-base italic text-white/90">
@@ -198,7 +159,6 @@ export default function PublicTrainerProfilePage() {
                 </div>
               </div>
             </div>
-          </Reveal>
 
           {/* Trainer Official Profile & Form Details Grid */}
           <div className="space-y-6">
@@ -207,120 +167,66 @@ export default function PublicTrainerProfilePage() {
                 Official Roster Specifications
               </div>
               <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
-                Trainer Profile & Form Details
+                Trainer Profile
               </h2>
               <p className="text-sm text-muted-foreground">
-                Verified identification, shift scheduling, and coaching credentials registered in
+                Verified identification, athletic background, and certified coaching credentials registered in
                 The Strength Way directory.
               </p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-12">
               {/* Form Details Dossier Table */}
-              <div className="lg:col-span-7 rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/10 pb-4">
-                  <ShieldCheck size={18} className="text-emerald-400" />
-                  <span>Personal & Coaching Specifications</span>
-                </h3>
-
-                <dl className="mt-6 divide-y divide-white/10 text-sm">
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Full Name</dt>
-                    <dd className="mt-1 font-semibold text-white sm:col-span-2 sm:mt-0">
-                      {trainer.name}
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Trainer ID</dt>
-                    <dd className="mt-1 font-mono font-semibold text-emerald-400 sm:col-span-2 sm:mt-0">
-                      {trainer.id}
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Specialization</dt>
-                    <dd className="mt-1 font-semibold text-white sm:col-span-2 sm:mt-0">
-                      {trainer.specialization}
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Experience</dt>
-                    <dd className="mt-1 text-white sm:col-span-2 sm:mt-0">
-                      {trainer.experience} Professional Coaching
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Coaching Shift</dt>
-                    <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                      <Clock size={14} className="text-white/60" />
-                      <span>{trainer.shift || "Morning (06:00 - 14:00)"}</span>
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Floor Location</dt>
-                    <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                      <MapPin size={14} className="text-white/60" />
-                      <span>{trainer.floorZone || "Main Strength Floor & Functional Turf"}</span>
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Official Email</dt>
-                    <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                      <Mail size={14} className="text-white/60" />
-                      <a
-                        href={`mailto:${trainer.email}`}
-                        className="hover:text-white hover:underline"
-                      >
-                        {trainer.email}
-                      </a>
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Desk Phone</dt>
-                    <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                      <Phone size={14} className="text-white/60" />
-                      <span>{trainer.phone}</span>
-                    </dd>
-                  </div>
-
-                  <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt className="font-medium text-white/60">Languages</dt>
-                    <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                      <Globe size={14} className="text-white/60" />
-                      <span>{(trainer.languages || ["English", "Hindi"]).join(", ")}</span>
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-
-              {/* Verified Accreditations & Programs Handled */}
               <div className="lg:col-span-5 space-y-6">
                 <div className="rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
                   <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/10 pb-4">
-                    <Award size={18} className="text-white" />
-                    <span>Certified Accreditations</span>
+                    <ShieldCheck size={18} className="text-emerald-400" />
+                    <span>Personal Details & Identification</span>
                   </h3>
-                  <ul className="mt-5 space-y-3">
-                    {(
-                      trainer.certifications || [
-                        "CrossFit Level 2 Coach",
-                        "CSCS Specialist",
-                        "ACE Certified Personal Trainer",
-                        "Functional Movement Screen (FMS)",
-                      ]
-                    ).map((cert) => (
-                      <li key={cert} className="flex items-start gap-2.5 text-xs text-white">
-                        <CheckCircle2 size={16} className="mt-0.5 text-emerald-400 shrink-0" />
-                        <span className="font-medium leading-relaxed">{cert}</span>
-                      </li>
-                    ))}
-                  </ul>
+
+                  <dl className="mt-6 divide-y divide-white/10 text-sm">
+                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+                      <dt className="font-medium text-white/60">Full Name</dt>
+                      <dd className="mt-1 font-semibold text-white sm:col-span-2 sm:mt-0">
+                        {trainer.name}
+                      </dd>
+                    </div>
+
+                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+                      <dt className="font-medium text-white/60">Trainer ID</dt>
+                      <dd className="mt-1 font-mono font-semibold text-emerald-400 sm:col-span-2 sm:mt-0">
+                        {trainer.id}
+                      </dd>
+                    </div>
+
+                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+                      <dt className="font-medium text-white/60">Experience</dt>
+                      <dd className="mt-1 text-white sm:col-span-2 sm:mt-0">
+                        {trainer.experience} Professional Coaching
+                      </dd>
+                    </div>
+
+                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+                      <dt className="font-medium text-white/60">Email</dt>
+                      <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
+                        <Mail size={14} className="text-white/60" />
+                        <a
+                          href={`mailto:${trainer.email}`}
+                          className="hover:text-white hover:underline truncate"
+                        >
+                          {trainer.email}
+                        </a>
+                      </dd>
+                    </div>
+
+                    <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+                      <dt className="font-medium text-white/60">Phone</dt>
+                      <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
+                        <Phone size={14} className="text-white/60" />
+                        <span>{trainer.phone}</span>
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
 
                 <div className="rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
@@ -345,6 +251,20 @@ export default function PublicTrainerProfilePage() {
                       </span>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Certified Accreditations Document Uploads */}
+              <div className="lg:col-span-7">
+                <div className="rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
+                  <CertifiedAccreditations
+                    trainer={trainer}
+                    onUpdateTrainer={(updated) => {
+                      updateTrainer(trainer.id, updated);
+                      setTrainer(updated);
+                    }}
+                    canUpload={true}
+                  />
                 </div>
               </div>
             </div>
@@ -391,9 +311,8 @@ export default function PublicTrainerProfilePage() {
                       <h4 className="font-display text-lg font-bold text-white group-hover:underline">
                         {other.name}
                       </h4>
-                      <p className="text-xs text-white/80 font-medium">{other.specialization}</p>
-                      <p className="text-xs text-white/50">
-                        {other.experience} • {other.shift}
+                      <p className="text-xs text-white/60">
+                        {other.experience} Professional Experience
                       </p>
                     </div>
                   </Link>

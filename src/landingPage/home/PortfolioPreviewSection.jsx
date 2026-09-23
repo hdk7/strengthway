@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { Reveal } from "@/components/site/Reveal";
-import { CarouselDots } from "@/components/site/CarouselDots";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Reveal } from "@/landingPage/Reveal";
+import { Carousel, CarouselContent, CarouselItem, CarouselDots } from "@/components/ui/carousel";
 import portfolioPhoto1 from "@/assets/portfolio-photo-1.jpg";
 import portfolioPhoto2 from "@/assets/portfolio-photo-2.jpg";
 import portfolioPhoto3 from "@/assets/portfolio-photo-3.jpg";
@@ -27,14 +26,14 @@ const PORTFOLIO_PREVIEW_PHOTOS = [
 export function PortfolioPreviewSection() {
   const [api, setApi] = useState();
   return (
-    <section id="portfolio" className="border-y border-border/60 bg-surface/30 py-24">
-      <div className="mx-auto max-w-[100rem] px-6">
+    <section id="portfolio" className="border-y border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+      <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
               Portfolio
             </div>
-            <h2 className="mt-4 font-display text-4xl font-bold sm:text-5xl">
+            <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
               Break Yourself & <span className="text-gradient">Recreate Yourself</span>.
             </h2>
           </div>
@@ -48,7 +47,7 @@ export function PortfolioPreviewSection() {
         </Reveal>
 
         <Reveal delay={100}>
-          <Carousel setApi={setApi} opts={{ align: "start", loop: true }} className="mt-12">
+          <Carousel setApi={setApi} opts={{ align: "start", loop: true }} className="mt-8 sm:mt-10">
             <CarouselContent>
               {PORTFOLIO_PREVIEW_PHOTOS.map((src, i) => (
                 <CarouselItem key={i} className="basis-1/2 sm:basis-1/3 lg:basis-1/4">

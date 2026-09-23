@@ -308,8 +308,8 @@ export default function MemberProfilePage() {
             <div>
               <h3 className="text-sm font-bold text-foreground">Prospective Lead Registration</h3>
               <p className="text-xs text-muted-foreground">
-                This athlete registered via the landing page &ldquo;Join Now&rdquo; form. Confirm
-                this lead to officially activate their gym membership.
+                This athlete is a registered lead. Confirm this lead to officially activate their
+                gym membership.
               </p>
             </div>
           </div>

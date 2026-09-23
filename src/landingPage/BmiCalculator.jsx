@@ -9,8 +9,8 @@ export function BmiCalculator() {
   const pct = Math.max(0, Math.min(100, ((bmi - 15) / (35 - 15)) * 100));
 
   return (
-    <div className="grid gap-8 rounded-3xl border border-border bg-black p-8 backdrop-blur-sm md:grid-cols-2 md:p-12">
-      <div>
+    <div className="grid gap-8 rounded-3xl border border-border bg-black p-5 sm:p-8 md:p-12 backdrop-blur-sm md:grid-cols-2 min-w-0">
+      <div className="min-w-0">
         <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-xs uppercase tracking-wider text-white/70">
           <Activity className="h-3.5 w-3.5 text-white" /> Health check
         </div>
@@ -31,8 +31,8 @@ export function BmiCalculator() {
         </div>
       </div>
 
-      <div className="grid place-items-center rounded-2xl border border-zinc-800 bg-zinc-900/90 p-8 shadow-2xl backdrop-blur-md">
-        <div className="relative grid h-56 w-56 place-items-center rounded-full border border-zinc-800/80 bg-zinc-950/40">
+      <div className="grid place-items-center rounded-2xl border border-zinc-800 bg-zinc-900/90 p-5 sm:p-8 shadow-2xl backdrop-blur-md min-w-0">
+        <div className="relative grid h-48 w-48 sm:h-56 sm:w-56 place-items-center rounded-full border border-zinc-800/80 bg-zinc-950/40">
           <div
             className="absolute inset-0 rounded-full"
             style={{

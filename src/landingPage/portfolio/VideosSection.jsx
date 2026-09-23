@@ -1,5 +1,5 @@
-import { Reveal } from "@/components/site/Reveal";
-import { SpotlightCard } from "@/components/site/SpotlightCard";
+import { Reveal } from "@/landingPage/Reveal";
+import { SpotlightCard } from "@/landingPage/SpotlightCard";
 import { SectionHeading } from "./SectionHeading";
 import { handleVideoPlay } from "./portfolioVideo";
 import video1 from "@/assets/portfolio-video-1.mp4";
@@ -20,8 +20,8 @@ const VIDEOS = [
 
 export function VideosSection() {
   return (
-    <section id="videos" className="mx-auto max-w-[100rem] px-6 py-24">
-      <Reveal>
+    <section id="videos" className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <Reveal className="min-w-0">
         <SectionHeading
           eyebrow="Videos"
           title={
@@ -33,7 +33,7 @@ export function VideosSection() {
       </Reveal>
       <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {VIDEOS.map((v, i) => (
-          <Reveal key={v.title} delay={(i % 3) * 80}>
+          <Reveal key={v.title} delay={(i % 3) * 80} className="min-w-0">
             <SpotlightCard className="overflow-hidden rounded-2xl border border-border bg-surface/50">
               <video
                 src={v.src}

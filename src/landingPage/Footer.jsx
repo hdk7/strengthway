@@ -1,10 +1,10 @@
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
-import { Logo } from "@/components/site/Logo";
+import { Logo } from "@/landingPage/Logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-black bg-black">
-      <div className="mx-auto grid max-w-[100rem] gap-10 px-6 py-16 md:grid-cols-4">
+    <footer className="w-full shrink-0 border-t border-black bg-black">
+      <div className="mx-auto grid max-w-[100rem] gap-8 lg:gap-10 px-4 sm:px-6 lg:px-8 py-10 sm:py-12 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
         <div>
           <div className="flex items-center gap-2">
             <Logo
@@ -38,7 +38,7 @@ export function Footer() {
         ))}
       </div>
       <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-[100rem] flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row">
+        <div className="mx-auto flex max-w-[100rem] flex-col items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 py-5 md:flex-row">
           <p className="text-xs text-white/60">
             © {new Date().getFullYear()} The Strength Way. All rights reserved.
           </p>

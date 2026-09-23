@@ -1,40 +1,39 @@
 import { useState } from "react";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
-import { Reveal } from "@/components/site/Reveal";
+import { Reveal } from "@/landingPage/Reveal";
 import { contactFormSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
-import { createInquiry } from "@/lib/inquiriesService";
 
 export function ContactSection() {
   return (
-    <section id="contact" className="border-t border-border/60 bg-surface/30 py-24">
-      <div className="mx-auto grid max-w-[100rem] gap-12 px-6 md:grid-cols-2">
-        <Reveal>
+    <section id="contact" className="border-t border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+      <div className="mx-auto grid max-w-[100rem] gap-8 lg:gap-12 px-4 sm:px-6 lg:px-8 md:grid-cols-2 items-start">
+        <Reveal className="min-w-0">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
             Contact
           </div>
-          <h2 className="mt-4 font-display text-4xl font-bold sm:text-5xl">
+          <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
             Come <span className="text-gradient">visit us</span>.
           </h2>
-          <p className="mt-4 max-w-md text-muted-foreground">
+          <p className="mt-3 sm:mt-4 max-w-md text-sm sm:text-base text-muted-foreground">
             Drop by for a tour or ask us anything — we're happy to help you find the right plan.
           </p>
-          <div className="mt-8 space-y-4">
+          <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
             {[
               { i: MapPin, t: "221 Iron Ave, Brooklyn NY" },
               { i: Phone, t: "+1 (555) 010-4423" },
               { i: Mail, t: "hello@strengthway.fit" },
             ].map((c) => (
               <div key={c.t} className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary shrink-0">
                   <c.i className="h-4 w-4" />
                 </span>
-                <span className="text-sm">{c.t}</span>
+                <span className="text-sm break-all sm:break-normal">{c.t}</span>
               </div>
             ))}
           </div>
         </Reveal>
-        <Reveal delay={100}>
+        <Reveal delay={100} className="min-w-0">
           <ContactForm />
         </Reveal>
       </div>
@@ -78,17 +77,11 @@ function ContactForm() {
 
     setSubmitting(true);
     try {
-      createInquiry({
-        name: form.name.trim(),
-        email: form.email.trim(),
-        subject: form.subject.trim(),
-        message: form.message.trim(),
-      });
       toast.success("Message sent — we'll get back to you shortly.");
       setForm({ name: "", email: "", subject: "", message: "" });
       setErrors({});
     } catch {
-      toast.error("Failed to send inquiry. Please try again.");
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -96,7 +89,7 @@ function ContactForm() {
 
   return (
     <form
-      className="rounded-3xl border border-border bg-background p-8"
+      className="rounded-3xl border border-border bg-background p-5 sm:p-6 md:p-8 min-w-0"
       onSubmit={handleSubmit}
       noValidate
     >
@@ -131,13 +124,13 @@ function ContactForm() {
         label="Subject"
         placeholder="I'd like a tour"
         required
-        className="mt-4"
+        className="mt-3 sm:mt-4"
         value={form.subject}
         onChange={handleChange}
         onBlur={handleBlur}
         error={errors.subject}
       />
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         <label
           htmlFor="contact-message"
           className="mb-1.5 block text-xs font-medium uppercase tracking-widest text-muted-foreground"
@@ -147,7 +140,7 @@ function ContactForm() {
         <textarea
           id="contact-message"
           name="message"
-          rows={4}
+          rows={3}
           placeholder="Tell us how we can help…"
           required
           value={form.message}
@@ -170,7 +163,7 @@ function ContactForm() {
       <button
         type="submit"
         disabled={submitting}
-        className="mt-6 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+        className="mt-5 w-full rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-transform hover:scale-[1.01] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
       >
         {submitting ? "Sending…" : "Send message"}
       </button>

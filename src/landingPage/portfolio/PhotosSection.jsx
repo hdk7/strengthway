@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Reveal } from "@/components/site/Reveal";
-import { SpotlightCard } from "@/components/site/SpotlightCard";
+import { Reveal } from "@/landingPage/Reveal";
+import { SpotlightCard } from "@/landingPage/SpotlightCard";
 import {
   Carousel,
   CarouselContent,
@@ -53,9 +53,9 @@ export function PhotosSection({ onSelectPhoto }) {
   }, [api, playing]);
 
   return (
-    <section id="photos" className="border-y border-border/60 bg-surface/30 py-24">
-      <div className="mx-auto max-w-[100rem] px-6">
-        <Reveal>
+    <section id="photos" className="border-y border-border/60 bg-surface/30 py-16 sm:py-24">
+      <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
+        <Reveal className="min-w-0">
           <SectionHeading
             eyebrow="Photos"
             title={
@@ -68,7 +68,7 @@ export function PhotosSection({ onSelectPhoto }) {
 
         <Reveal
           delay={100}
-          className="mt-12 px-2 sm:px-14"
+          className="mt-12 px-0 sm:px-14 min-w-0"
           onMouseEnter={() => setPlaying(false)}
           onMouseLeave={() => setPlaying(true)}
         >

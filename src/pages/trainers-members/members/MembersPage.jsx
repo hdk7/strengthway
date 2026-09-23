@@ -508,7 +508,7 @@ export default function MembersPage() {
                           : statusFilter === "Archived"
                             ? "There are no soft-deleted members in the archive."
                             : statusFilter === "Lead"
-                              ? "No pending leads found. Prospective athletes who register via the landing page 'Join Now' button will appear here for confirmation."
+                              ? "No pending leads found."
                               : "Get started by adding your first gym member."}
                       </p>
                       {!searchQuery && statusFilter !== "Archived" && statusFilter !== "Lead" && (

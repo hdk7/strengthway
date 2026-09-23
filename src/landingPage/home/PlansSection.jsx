@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
-import { Reveal } from "@/components/site/Reveal";
-import { SpotlightCard } from "@/components/site/SpotlightCard";
+import { Reveal } from "@/landingPage/Reveal";
+import { SpotlightCard } from "@/landingPage/SpotlightCard";
 
 const PLANS = [
   {
@@ -37,26 +37,26 @@ const PLANS = [
 
 export function PlansSection() {
   return (
-    <section id="plans" className="py-24">
-      <div className="mx-auto max-w-[100rem] px-6">
+    <section id="plans" className="pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+      <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
             Memberships
           </div>
-          <h2 className="mt-4 font-display text-4xl font-bold sm:text-5xl">
+          <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
             A plan for every <span className="text-gradient">athlete</span>.
           </h2>
-          <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground">
+          <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
             Transparent pricing with zero hidden fees. Choose the commitment that aligns with your
             goals.
           </p>
         </Reveal>
 
-        <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2 lg:gap-8">
+        <div className="mx-auto mt-8 sm:mt-10 grid max-w-4xl gap-5 sm:grid-cols-2 lg:gap-6">
           {PLANS.map((plan, i) => (
-            <Reveal key={plan.name} delay={i * 80}>
+            <Reveal key={plan.name} delay={i * 80} className="min-w-0">
               <SpotlightCard
-                className={`relative flex h-full flex-col justify-between rounded-3xl border p-6 sm:p-8 transition-all ${
+                className={`relative flex h-full flex-col justify-between rounded-3xl border p-5 sm:p-8 transition-all min-w-0 ${
                   plan.popular
                     ? "border-accent/60 bg-surface/90 ring-1 ring-accent/30 hover:border-accent"
                     : "border-border/60 bg-surface/40 hover:border-border"
@@ -85,19 +85,6 @@ export function PlansSection() {
                       </li>
                     ))}
                   </ul>
-                </div>
-
-                <div className="mt-8 pt-4">
-                  <a
-                    href="#contact"
-                    className={`block w-full rounded-full py-3 text-center text-sm font-semibold transition-all duration-200 ${
-                      plan.popular
-                        ? "bg-white text-black font-semibold shadow-md hover:bg-white/90"
-                        : "border border-white/20 bg-background text-white hover:bg-white/10 hover:border-white/40"
-                    }`}
-                  >
-                    Choose {plan.name}
-                  </a>
                 </div>
               </SpotlightCard>
             </Reveal>

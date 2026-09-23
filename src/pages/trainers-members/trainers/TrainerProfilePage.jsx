@@ -7,17 +7,10 @@ import {
   Trash2,
   Phone,
   Mail,
-  Award,
   Sparkles,
   ShieldCheck,
   Quote,
   Calendar,
-  UserCheck,
-  Sun,
-  Moon,
-  Clock,
-  Dumbbell,
-  Flame,
   ExternalLink,
   ChevronRight,
   Copy,
@@ -32,44 +25,7 @@ import {
   toggleTrainerStatus,
 } from "@/lib/trainersService";
 import { TrainerModal } from "./TrainerModal";
-
-function getShiftDetails(shiftString = "") {
-  const shiftLower = (shiftString || "").toLowerCase();
-  if (shiftLower.includes("morning")) {
-    return {
-      title: "Morning Shift",
-      hours: "06:00 AM – 02:00 PM",
-      icon: Sun,
-      color: "text-amber-500 bg-amber-500/10 border-amber-500/20",
-      accentDot: "bg-amber-500",
-      badge: "Early Prime Time",
-      description:
-        "Supervises early morning athletes, functional warmups, and peak breakfast training slots.",
-    };
-  }
-  if (shiftLower.includes("evening")) {
-    return {
-      title: "Evening Shift",
-      hours: "02:00 PM – 10:00 PM",
-      icon: Moon,
-      color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-      accentDot: "bg-indigo-400",
-      badge: "Peak Gym Hours",
-      description:
-        "Leads evening strength conditioning, barbell mechanics, and high-intensity power sessions.",
-    };
-  }
-  return {
-    title: "General Shift",
-    hours: "08:00 AM – 05:00 PM",
-    icon: Clock,
-    color: "text-accent bg-accent/10 border-accent/20",
-    accentDot: "bg-accent",
-    badge: "Full Day Access",
-    description:
-      "Oversees general floor training, member technique evaluations, and specialized workshops.",
-  };
-}
+import { CertifiedAccreditations } from "@/components/trainers/CertifiedAccreditations";
 
 export default function TrainerProfilePage() {
   const { id } = useParams();
@@ -96,8 +52,6 @@ export default function TrainerProfilePage() {
       .toUpperCase();
   }, [trainer?.name]);
 
-  const shiftInfo = useMemo(() => getShiftDetails(trainer?.shift), [trainer?.shift]);
-  const ShiftIcon = shiftInfo.icon;
   const isInactive = trainer?.status === "Inactive";
 
   const handleCopy = (text, fieldKey, label) => {
@@ -214,6 +168,16 @@ export default function TrainerProfilePage() {
             <span>Delete Trainer</span>
           </button>
 
+          <Link
+            to={`/trainers/${trainer.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 hover:border-accent/40 transition-all shadow-sm cursor-pointer"
+          >
+            <ExternalLink size={14} />
+            <span>View Public Profile</span>
+          </Link>
+
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
@@ -267,14 +231,6 @@ export default function TrainerProfilePage() {
                 >
                   {trainer.status || "Active"} Trainer
                 </button>
-
-                {/* Shift Badge */}
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${shiftInfo.color}`}
-                >
-                  <ShiftIcon size={12} />
-                  <span>{shiftInfo.title}</span>
-                </span>
               </div>
 
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground font-display">
@@ -283,13 +239,7 @@ export default function TrainerProfilePage() {
 
               {/* Subtitle Details */}
               <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap pt-0.5">
-                <span className="flex items-center gap-1 text-foreground font-semibold">
-                  <Award size={13} className="text-accent shrink-0" />
-                  <span>{trainer.specialization}</span>
-                </span>
-
                 <span className="flex items-center gap-1">
-                  <span>•</span>
                   <Sparkles size={13} className="text-accent shrink-0" />
                   <span>{trainer.experience} Professional Experience</span>
                 </span>
@@ -340,61 +290,8 @@ export default function TrainerProfilePage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Shift Schedule, Competencies, Methodologies, Bio (8 Cols) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Shift Schedule & Floor Duty Role Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card to-background p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-start gap-4">
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-accent/15 text-accent border border-accent/25">
-                  <ShiftIcon size={28} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-foreground">{shiftInfo.title}</h3>
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${shiftInfo.color}`}
-                    >
-                      {shiftInfo.badge}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-sm text-foreground flex items-center gap-2">
-                    <Clock size={15} className="text-accent shrink-0" />
-                    <span className="font-mono font-bold">{trainer.shift || shiftInfo.hours}</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1.5">{shiftInfo.description}</p>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-left sm:text-right shrink-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-                  Floor Duty Assignment
-                </span>
-                <span className="text-xs font-bold text-emerald-500 flex items-center sm:justify-end mt-1">
-                  On-Site Supervising Trainer
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Trainering Competencies & Metrics Grid */}
+          {/* Trainering Competencies & Experience Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Primary Discipline Card */}
-            <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Primary Specialization
-                </span>
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-accent/10 text-accent">
-                  <Award size={16} />
-                </div>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-foreground">{trainer.specialization}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Lead Trainer for Form Correction & Periodized Hypertrophy
-                </p>
-              </div>
-            </div>
-
             {/* Experience Card */}
             <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
@@ -412,67 +309,33 @@ export default function TrainerProfilePage() {
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Core Methodologies & Training Focus */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
-            <div className="flex items-center gap-2">
-              <Dumbbell size={18} className="text-accent" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                Core Methodologies & Training Focus
-              </h3>
-            </div>
-            <div className="flex flex-wrap gap-2.5 pt-1">
-              {[
-                "Progressive Overload",
-                "Barbell Biomechanics",
-                "Functional Mobility & Warmup",
-                "Hypertrophy Periodization",
-                "Aerobic & Anaerobic Conditioning",
-                "Injury Rehabilitation & Form",
-              ].map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground/90"
-                >
-                  <Flame size={12} className="text-accent" />
-                  <span>{tag}</span>
+            {/* Faculty Standing Card */}
+            <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Faculty Accreditation
                 </span>
-              ))}
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <ShieldCheck size={16} />
+                </div>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">Verified Faculty Coach</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Official Registry & Verified Credentials
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Verified Staff Qualifications & Accreditations */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
-            <div className="flex items-center gap-2">
-              <ShieldCheck size={18} className="text-emerald-500" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                Verified Faculty Credentials & Certifications
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-              <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4">
-                <UserCheck size={22} className="text-accent shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-foreground">Certified Trainer</p>
-                  <p className="text-[11px] text-muted-foreground">Level 2+ Accredited</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4">
-                <ShieldCheck size={22} className="text-emerald-500 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-foreground">CPR / AED Certified</p>
-                  <p className="text-[11px] text-muted-foreground">First Aid Qualified</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4">
-                <Award size={22} className="text-accent shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-foreground">Floor Supervisor</p>
-                  <p className="text-[11px] text-muted-foreground">Safety Auditor</p>
-                </div>
-              </div>
-            </div>
+          {/* Certified Accreditations Document Uploads */}
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm">
+            <CertifiedAccreditations
+              trainer={trainer}
+              onUpdateTrainer={handleSaveEdit}
+              canUpload={true}
+            />
           </div>
 
           {/* Biography & Philosophy Quote Box */}
@@ -500,7 +363,7 @@ export default function TrainerProfilePage() {
 
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-muted-foreground">
                 <span className="font-semibold text-foreground">
-                  — {trainer.name}, {trainer.specialization}
+                  — {trainer.name}
                 </span>
                 <span className="font-mono text-[11px] text-accent">
                   The Strength Way Trainering Faculty
@@ -510,7 +373,7 @@ export default function TrainerProfilePage() {
           </div>
         </div>
 
-        {/* Right Column: Contact, Shift Department, Administrative Dossier (4 Cols) */}
+        {/* Right Column: Contact & Administrative Dossier (4 Cols) */}
         <div className="lg:col-span-4 space-y-6">
           {/* Direct Contact Channels */}
           <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
@@ -591,24 +454,6 @@ export default function TrainerProfilePage() {
             </div>
           </div>
 
-          {/* Department & Facility Assignment */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-accent">
-              Facility & Floor Assignment
-            </h3>
-
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 text-xs space-y-2 text-foreground">
-              <p className="font-bold text-sm">The Strength Way — Floor & Conditioning Division</p>
-              <p className="text-muted-foreground">
-                Main Athletic Arena, Resistance Periodization Zone, and Functional Mobility Floor.
-              </p>
-              <div className="pt-2 flex items-center justify-between border-t border-border/40 text-[11px] text-muted-foreground">
-                <span>Roster Classification:</span>
-                <span className="font-semibold text-foreground">Active Staff Trainer</span>
-              </div>
-            </div>
-          </div>
-
           {/* Trainer Administrative Dossier */}
           <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3 text-xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-accent">
@@ -619,10 +464,6 @@ export default function TrainerProfilePage() {
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-muted-foreground">System Trainer ID</span>
                 <span className="font-mono font-bold text-foreground">{trainer.id}</span>
-              </div>
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-muted-foreground">Shift Schedule</span>
-                <span className="font-medium text-foreground">{trainer.shift || "Morning"}</span>
               </div>
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-muted-foreground">Faculty Status</span>

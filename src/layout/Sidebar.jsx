@@ -10,7 +10,6 @@ import {
   Boxes,
   ClipboardCheck,
   Wallet,
-  Inbox,
   BarChart3,
   Database,
   Settings,
@@ -31,7 +30,7 @@ const navConfig = [
     id: "batches",
     label: "Batches",
     icon: Boxes,
-    children: [{ id: "list", label: "Batch Lists/", path: "/admin/batches/list" }],
+    children: [{ id: "list", label: "Batch List", path: "/admin/batches/list" }],
   },
   {
     id: "attendance",
@@ -55,7 +54,6 @@ const navConfig = [
       { id: "trainers", label: "Trainers Payments", path: "/admin/payments/trainers" },
     ],
   },
-  { id: "inquiries", label: "Inquiries", icon: Inbox, path: "/admin/inquiries" },
   { id: "reports", label: "Reports & Analytics", icon: BarChart3, path: "/admin/reports" },
   {
     id: "masters",
