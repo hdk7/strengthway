@@ -10,27 +10,18 @@ const TRAINERS = [
   {
     id: "TRN-101",
     name: "Dolliee Ellens",
-    spec: "Functional Fitness & Mobility",
-    experience: "5+ Years",
-    shift: "Morning Shift",
     img: trainer3,
     imgPosition: "object-top",
   },
   {
     id: "TRN-102",
     name: "Ashwin Kumar",
-    spec: "Strength & Conditioning",
-    experience: "7+ Years",
-    shift: "Evening Shift",
     img: portfolioPhoto3,
     imgPosition: "object-top",
   },
   {
     id: "TRN-103",
     name: "Robert Creflo",
-    spec: "Hypertrophy & Rehabilitation",
-    experience: "6+ Years",
-    shift: "General Shift",
     img: trainer2,
     imgPosition: "object-top",
   },
@@ -38,11 +29,14 @@ const TRAINERS = [
 
 export function TrainersSection() {
   return (
-    <section id="trainers" className="border-y border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+    <section
+      id="trainers"
+      className="border-y border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14"
+    >
       <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
-            Trainer
+            Trainers
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
             Train with the <span className="text-gradient">best</span>.
@@ -57,10 +51,10 @@ export function TrainersSection() {
             <Reveal key={t.id} delay={i * 100} className="min-w-0">
               <Link
                 to={`/trainers/${t.id}`}
-                className="group block cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white rounded-3xl min-w-0"
+                className="group block cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl min-w-0"
                 aria-label={`View profile and form details for ${t.name}`}
               >
-                <SpotlightCard className="relative overflow-hidden rounded-3xl border border-border/70 bg-background transition-all duration-300 group-hover:border-white/40 group-hover:shadow-2xl min-w-0">
+                <SpotlightCard className="relative overflow-hidden rounded-3xl border border-border/70 bg-card transition-all duration-300 group-hover:border-foreground/40 group-hover:shadow-2xl min-w-0">
                   {/* Floating Action Badge on Hover */}
                   <div className="pointer-events-none absolute top-4 right-4 z-20 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/60 px-3 py-1 text-xs font-semibold text-white opacity-0 backdrop-blur-md transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 translate-y-1">
                     <span>View Profile</span>
@@ -86,11 +80,8 @@ export function TrainersSection() {
                       <h3 className="font-display text-2xl font-bold text-white transition-colors duration-200 group-hover:text-white">
                         {t.name}
                       </h3>
-                      <p className="mt-0.5 text-sm text-white/80 font-medium">{t.spec}</p>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-white/60">
-                        <span>{t.shift}</span>
-                        <span>•</span>
-                        <span className="text-white/90 underline-offset-4 group-hover:underline">
+                      <div className="mt-2 flex items-center gap-2 text-xs text-white/90">
+                        <span className="underline-offset-4 group-hover:underline">
                           View details & form →
                         </span>
                       </div>

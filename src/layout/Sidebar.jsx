@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ChevronRight,
   LayoutDashboard,
+  Inbox,
   Users,
   Boxes,
   ClipboardCheck,
@@ -17,6 +18,7 @@ import {
 
 const navConfig = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+  { id: "inquiries", label: "Inquiries", icon: Inbox, path: "/admin/inquiries" },
   {
     id: "trainers-members",
     label: "Trainers & Members",
@@ -26,12 +28,7 @@ const navConfig = [
       { id: "trainer-list", label: "Trainers", path: "/admin/trainers-members/trainers" },
     ],
   },
-  {
-    id: "batches",
-    label: "Batches",
-    icon: Boxes,
-    children: [{ id: "list", label: "Batch List", path: "/admin/batches/list" }],
-  },
+  { id: "batches", label: "Batches", icon: Boxes, path: "/admin/batches" },
   {
     id: "attendance",
     label: "Attendance",
@@ -61,10 +58,9 @@ const navConfig = [
     icon: Database,
     children: [
       { id: "shift", label: "Shift Master", path: "/admin/masters/shift" },
-      { id: "batch", label: "Batch Master", path: "/admin/masters/batch" },
       {
         id: "membership-plan",
-        label: "Membership Plan Master",
+        label: "Membership Plan",
         path: "/admin/masters/membership-plan",
       },
       { id: "schedule", label: "Schedule Master", path: "/admin/masters/schedule" },
@@ -82,16 +78,20 @@ const navConfig = [
 
 function findNavItemByPath(pathname) {
   for (const top of navConfig) {
-    if (top.path === pathname) return { top, child: undefined };
-    const child = top.children?.find((c) => c.path === pathname);
+    if (top.path === pathname || (top.path && pathname.startsWith(`${top.path}/`))) {
+      return { top, child: undefined };
+    }
+    const child = top.children?.find(
+      (c) => c.path === pathname || pathname.startsWith(`${c.path}/`),
+    );
     if (child) return { top, child };
   }
   return undefined;
 }
 
 const itemBase =
-  "flex items-center gap-3 w-full py-2.5 px-3 border-none bg-transparent rounded-xl text-muted-foreground text-sm no-underline cursor-pointer text-left hover:bg-accent/10 hover:text-foreground transition-colors";
-const itemActive = "bg-accent/15 text-foreground font-semibold";
+  "group relative flex items-center gap-3 w-full py-2.5 px-3 border border-transparent rounded-xl text-muted-foreground text-sm no-underline cursor-pointer text-left hover:bg-accent/20 hover:text-foreground transition-all duration-150";
+const itemActive = "bg-primary/10 border-primary/25 text-foreground font-bold shadow-xs";
 
 function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggleGroup }) {
   const Icon = item.icon;
@@ -106,13 +106,24 @@ function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggl
         }
         title={isCollapsed ? item.label : undefined}
       >
-        <span className="shrink-0">
-          <Icon size={18} />
-        </span>
-        {!isCollapsed && (
-          <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-            {item.label}
-          </span>
+        {({ isActive }) => (
+          <>
+            <span
+              className={`shrink-0 transition-colors ${
+                isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+              }`}
+            >
+              <Icon size={18} />
+            </span>
+            {!isCollapsed && (
+              <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                {item.label}
+              </span>
+            )}
+            {isActive && !isCollapsed && (
+              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+            )}
+          </>
         )}
       </NavLink>
     );
@@ -122,11 +133,19 @@ function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggl
     <div>
       <button
         type="button"
-        className={`${itemBase} ${paddingClass}${isGroupActive ? ` ${itemActive}` : ""}`}
-        onClick={() => onToggleGroup(item.id)}
+        className={`${itemBase} ${paddingClass}${
+          isGroupActive
+            ? " bg-primary/10 border-primary/20 text-foreground font-bold shadow-xs"
+            : ""
+        }`}
+        onClick={() => onToggleGroup(item)}
         title={isCollapsed ? item.label : undefined}
       >
-        <span className="shrink-0">
+        <span
+          className={`shrink-0 transition-colors ${
+            isGroupActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+          }`}
+        >
           <Icon size={18} />
         </span>
         {!isCollapsed && (
@@ -135,7 +154,9 @@ function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggl
               {item.label}
             </span>
             <ChevronRight
-              className={`shrink-0 transition-transform duration-150 ${isGroupOpen ? "rotate-90" : ""}`}
+              className={`shrink-0 transition-transform duration-150 ${
+                isGroupOpen ? "rotate-90" : ""
+              } ${isGroupActive ? "text-primary" : "text-muted-foreground"}`}
               size={16}
             />
           </>
@@ -148,14 +169,21 @@ function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggl
               <NavLink
                 to={child.path}
                 className={({ isActive }) =>
-                  `block px-3 py-2 pl-10.5 ml-2 border-l-2 text-[13.5px] no-underline rounded-r-xl transition-colors ${
+                  `flex items-center justify-between px-3 py-2 pl-9 ml-2.5 border-l-2 text-[13px] no-underline rounded-r-xl transition-all duration-150 ${
                     isActive
-                      ? "border-primary bg-accent/15 text-foreground font-semibold"
-                      : "border-border text-muted-foreground hover:bg-accent/10 hover:text-foreground"
+                      ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs"
+                      : "border-border/60 text-muted-foreground hover:border-border hover:bg-accent/15 hover:text-foreground"
                   }`
                 }
               >
-                {child.label}
+                {({ isActive }) => (
+                  <>
+                    <span className="truncate">{child.label}</span>
+                    {isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mr-1" />
+                    )}
+                  </>
+                )}
               </NavLink>
             </li>
           ))}
@@ -240,8 +268,19 @@ export default function Sidebar({
     }
   }, [location.pathname]);
 
-  const toggleGroup = (id) => setOpenGroupId((cur) => (cur === id ? null : id));
   const activeMatch = findNavItemByPath(location.pathname);
+
+  const toggleGroup = (item) => {
+    const isAlreadyOpen = openGroupId === item.id;
+    if (isAlreadyOpen) {
+      setOpenGroupId(null);
+    } else {
+      setOpenGroupId(item.id);
+      if (item.children?.[0]?.path && activeMatch?.top.id !== item.id) {
+        navigate(item.children[0].path);
+      }
+    }
+  };
 
   const confirmLogout = () => {
     setShowLogoutConfirm(false);

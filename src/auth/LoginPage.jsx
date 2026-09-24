@@ -1,10 +1,10 @@
 /* eslint-disable max-lines */
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Shield, Sparkles, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Shield, Sparkles } from "lucide-react";
 import gymLogo from "@/assets/gym_logo.png";
 import loginHero from "@/assets/login-admin.jpg";
-import TextField from "@/components/ui/TextField";
+import { InputField, PasswordField, CheckboxField } from "@/components/form";
 import Button from "@/components/ui/button";
 import { loginSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS } from "@/auth/authService";
@@ -16,7 +16,6 @@ export function LoginForm({ onSuccess }) {
   const [form, setForm] = useState({ email: "", password: "" });
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (field) => (event) => {
@@ -76,7 +75,7 @@ export function LoginForm({ onSuccess }) {
         </div>
       )}
 
-      <TextField
+      <InputField
         label="Email address"
         type="email"
         name="email"
@@ -89,9 +88,8 @@ export function LoginForm({ onSuccess }) {
         disabled={submitting}
       />
 
-      <TextField
+      <PasswordField
         label="Password"
-        type={showPassword ? "text" : "password"}
         name="password"
         autoComplete="new-password"
         placeholder="Enter your password"
@@ -100,24 +98,10 @@ export function LoginForm({ onSuccess }) {
         onBlur={handleBlur("password")}
         error={fieldErrors.password}
         disabled={submitting}
-        endAdornment={
-          <button
-            type="button"
-            className="inline-flex items-center justify-center px-3 h-full bg-transparent border-none text-muted-foreground cursor-pointer hover:text-foreground"
-            onClick={() => setShowPassword((v) => !v)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            tabIndex={-1}
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        }
       />
 
       <div className="flex items-center justify-between text-[13.5px]">
-        <label className="flex items-center gap-1.5 text-muted-foreground cursor-pointer">
-          <input type="checkbox" name="remember" disabled={submitting} />
-          Remember me
-        </label>
+        <CheckboxField label="Remember me" name="remember" disabled={submitting} />
         <button
           type="button"
           className="text-accent bg-transparent border-none cursor-pointer p-0 text-[13.5px] hover:underline"
@@ -221,8 +205,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Middle Headline & Tagline */}
-          <div className="my-auto py-4 lg:py-6">
+          {/* Bottom Headline, Tagline & Metrics */}
+          <div className="mt-auto pt-6 pb-1 sm:pb-2">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 py-1 text-xs font-semibold text-white/90 backdrop-blur-md mb-3 sm:mb-4 shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
               <span>Elite Strength Training Suite</span>
@@ -283,10 +267,6 @@ export default function LoginPage() {
         {/* Center Card */}
         <div className="w-full max-w-md mx-auto my-auto py-2 sm:py-4">
           <div className="text-left mb-4 sm:mb-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-surface text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Secure Portal
-            </div>
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight">
               Admin sign in
             </h2>

@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
+import { InputField } from "@/components/form";
 
 // Pre-seeded rich accreditation documents based on trainer certification names
 const PRESET_ACCREDITATION_METADATA = {
@@ -117,7 +118,7 @@ const PRESET_ACCREDITATION_METADATA = {
   },
 };
 
-export function normalizeAccreditations(trainer) {
+function normalizeAccreditations(trainer) {
   const certs = trainer?.certifications || [
     "CrossFit Level 2 Coach",
     "CSCS Specialist",
@@ -253,11 +254,8 @@ export function CertifiedAccreditations({
             <Award size={20} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <span>Certified Accreditations & Documents</span>
-              <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-500 uppercase tracking-wider">
-                Audited & Verified
-              </span>
+            <h3 className="text-lg font-bold text-foreground">
+              Certified Accreditations & Documents
             </h3>
             <p className="text-xs text-muted-foreground">
               Official faculty certifications, board accreditations, and verified athletic credentials.
@@ -469,27 +467,19 @@ export function CertifiedAccreditations({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground block">Accreditation / Certificate Name</label>
-                <input
-                  type="text"
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  placeholder="e.g. CSCS Strength Specialist"
-                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              </div>
+              <InputField
+                label="Accreditation / Certificate Name"
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="e.g. CSCS Strength Specialist"
+              />
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground block">Issuing Authority / Academy</label>
-                <input
-                  type="text"
-                  value={customIssuer}
-                  onChange={(e) => setCustomIssuer(e.target.value)}
-                  placeholder="e.g. NSCA, CrossFit LLC, ACE"
-                  className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              </div>
+              <InputField
+                label="Issuing Authority / Academy"
+                value={customIssuer}
+                onChange={(e) => setCustomIssuer(e.target.value)}
+                placeholder="e.g. NSCA, CrossFit LLC, ACE"
+              />
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-2">

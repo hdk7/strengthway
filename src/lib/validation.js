@@ -225,6 +225,9 @@ export const adminMemberRegistrationSchema = yup.object().shape({
 export const contactFormSchema = yup.object().shape({
   name: nameValidator("Name", true),
   email: emailValidator(true),
+  mobile: phoneValidator("Mobile number", true, 10),
+  gender: selectValidator("Gender", true),
+  address: textValidator("Address", 5, 300, true),
   subject: textValidator("Subject", 2, 150, true),
   message: yup
     .string()
@@ -240,10 +243,7 @@ export const loginSchema = yup.object().shape({
     .string()
     .trim()
     .required("Email is required")
-    .test("valid-email", "Enter a valid email address", (val) => {
-      if (!val) return false;
-      return EMAIL_PATTERN.test(val);
-    }),
+    .test("valid-email", "Enter a valid email address", (val) => !val || EMAIL_PATTERN.test(val)),
   password: yup
     .string()
     .required("Password is required")
@@ -256,19 +256,23 @@ export const forgotPasswordSchema = yup.object().shape({
     .string()
     .trim()
     .required("Email is required")
-    .test("valid-email", "Enter a valid email address", (val) => {
-      if (!val) return false;
-      return EMAIL_PATTERN.test(val);
-    }),
+    .test("valid-email", "Enter a valid email address", (val) => !val || EMAIL_PATTERN.test(val)),
 });
 
-// 6. Trainer Management Schema (All fields required)
+// 6. Trainer Management Schema
 export const trainerSchema = yup.object().shape({
   name: nameValidator("Trainer name", true),
-  specialization: textValidator("Specialization", 2, 100, true),
+  gender: yup.string().trim().nullable(),
   experience: textValidator("Experience", 1, 50, true),
   phone: phoneValidator("Phone number", true, 10),
   email: emailValidator(true),
-  shift: selectValidator("Shift", true),
-  bio: textValidator("Bio", 10, 500, true),
+  status: yup.string().trim().nullable(),
+  quote: yup.string().trim().max(300, "Quote cannot exceed 300 characters.").nullable(),
+  programs: yup.mixed().nullable(),
+  photo: yup.string().trim().nullable(),
+  bio: textValidator("Bio", 10, 1000, true),
+  specialization: yup.string().trim().nullable(),
+  shift: yup.string().trim().nullable(),
+  floorZone: yup.string().trim().nullable(),
+  languages: yup.mixed().nullable(),
 });

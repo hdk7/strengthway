@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { useState, useEffect, useMemo } from "react";
 import {
   CalendarDays,
@@ -11,11 +10,7 @@ import {
   Info,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getCoachShiftMatrix,
-  toggleCoachSlot,
-  SHIFT_SLOTS,
-} from "@/lib/batchesService";
+import { getCoachShiftMatrix, toggleCoachSlot, SHIFT_SLOTS } from "@/lib/batchesService";
 
 export default function ShiftMasterPage() {
   const [matrix, setMatrix] = useState([]);
@@ -36,7 +31,7 @@ export default function ShiftMasterPage() {
         toast.success(
           isAssigned
             ? `${coachName} assigned to ${slotLabel}`
-            : `${coachName} removed from ${slotLabel}`
+            : `${coachName} removed from ${slotLabel}`,
         );
         loadMatrix();
       }
@@ -99,10 +94,14 @@ export default function ShiftMasterPage() {
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium uppercase tracking-wider">Total Shifts Scheduled</span>
+            <span className="text-xs font-medium uppercase tracking-wider">
+              Total Shifts Scheduled
+            </span>
             <Clock size={18} />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-emerald-400">{stats.totalAssignments}</div>
+          <div className="mt-2 text-3xl font-extrabold text-emerald-400">
+            {stats.totalAssignments}
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">Shift slots per week</p>
         </div>
 
@@ -161,10 +160,7 @@ export default function ShiftMasterPage() {
                   {SHIFT_SLOTS.map((slot) => {
                     const isYes = !!row.shifts[slot.key];
                     return (
-                      <td
-                        key={slot.key}
-                        className="px-3 py-4 text-center border-r border-border"
-                      >
+                      <td key={slot.key} className="px-3 py-4 text-center border-r border-border">
                         <button
                           onClick={() =>
                             handleToggle(row.coachId, slot.key, row.coachName, slot.label)
@@ -209,17 +205,14 @@ export default function ShiftMasterPage() {
               {SHIFT_SLOTS.map((slot) => {
                 const count = slotCoverage[slot.key] || 0;
                 return (
-                  <td
-                    key={slot.key}
-                    className="px-3 py-3.5 text-center border-r border-border"
-                  >
+                  <td key={slot.key} className="px-3 py-3.5 text-center border-r border-border">
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
                         count >= 2
                           ? "text-emerald-400"
                           : count === 1
-                          ? "text-amber-400"
-                          : "text-red-400"
+                            ? "text-amber-400"
+                            : "text-red-400"
                       }`}
                     >
                       {count} {count === 1 ? "Coach" : "Coaches"}

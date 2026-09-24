@@ -14,7 +14,7 @@ const links = [
   { href: "#trainers", label: "Trainers" },
   { href: "#portfolio", label: "Portfolio" },
   { href: "#bmi", label: "BMI" },
-  { href: "#contact", label: "Contact" },
+  { href: "#inquiries", label: "Inquiries" },
 ];
 
 export function Navbar() {
@@ -41,7 +41,7 @@ export function Navbar() {
       setScrolled(scrollY > SCROLL_THRESHOLD);
 
       if (isHome) {
-        const sections = ["about", "programs", "plans", "trainers", "portfolio", "bmi", "contact"];
+        const sections = ["about", "programs", "plans", "trainers", "portfolio", "bmi", "inquiries", "contact"];
         const scrollPosition = scrollY + 200;
 
         for (const sectionId of sections) {
@@ -107,7 +107,18 @@ export function Navbar() {
             scrolled ? "h-14 px-5 sm:px-6" : "h-16 px-4 sm:px-6"
           }`}
         >
-          <Link to="/" onClick={() => setOpen(false)} className="flex shrink-0 items-center gap-2">
+          <Link
+            to="/"
+            onClick={(e) => {
+              setOpen(false);
+              if (isHome) {
+                e.preventDefault();
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                setActiveSection("");
+              }
+            }}
+            className="flex shrink-0 items-center gap-2 cursor-pointer"
+          >
             <Logo textClassName="font-display text-lg font-bold tracking-tight" />
           </Link>
           <nav

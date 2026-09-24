@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import trainer3 from "@/assets/trainer-3.webp";
 import portfolioPhoto3 from "@/assets/portfolio-photo-3.jpg";
 import trainer2 from "@/assets/trainer-2.jpg";
@@ -14,6 +15,7 @@ export const SEED_TRAINERS = [
   {
     id: "TRN-101",
     name: "Dolliee Ellens",
+    gender: "Female",
     specialization: "Functional Fitness",
     experience: "5 Years",
     phone: "+91 98200 11223",
@@ -51,6 +53,7 @@ export const SEED_TRAINERS = [
   {
     id: "TRN-102",
     name: "Ashwin Kumar",
+    gender: "Male",
     specialization: "Strength & Conditioning",
     experience: "7 Years",
     phone: "+91 98450 33445",
@@ -88,6 +91,7 @@ export const SEED_TRAINERS = [
   {
     id: "TRN-103",
     name: "Robert Creflo",
+    gender: "Male",
     specialization: "Hypertrophy & Rehabilitation",
     experience: "6 Years",
     phone: "+91 97110 55667",
@@ -130,6 +134,8 @@ export function getTrainerPhoto(trainer) {
   return TRAINER_PHOTOS[trainer.id] || null;
 }
 
+const LEGACY_MOCK_TRAINER_IDS = ["TRN-104", "TRN-105", "TRN-106"];
+
 function readStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -139,7 +145,8 @@ function readStorage() {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      const merged = parsed.map((trainer) => {
+      const sanitized = parsed.filter((t) => !LEGACY_MOCK_TRAINER_IDS.includes(t.id));
+      const merged = sanitized.map((trainer) => {
         const seed = SEED_TRAINERS.find((s) => s.id === trainer.id);
         if (seed) {
           return {
@@ -151,10 +158,14 @@ function readStorage() {
             programs: trainer.programs || seed.programs,
             quote: trainer.quote || seed.quote,
             floorZone: trainer.floorZone || seed.floorZone,
+            gender: trainer.gender || seed.gender,
           };
         }
         return trainer;
       });
+      if (merged.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      }
       return merged;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_TRAINERS));
@@ -195,12 +206,31 @@ export function createTrainer(data) {
   const newTrainer = {
     id: data.id || `TRN-${Date.now().toString().slice(-3)}`,
     name: data.name || "",
+    gender: data.gender || "Male",
     specialization: data.specialization || "General Fitness",
     experience: data.experience || "1 Year",
     phone: data.phone || "",
     email: data.email || "",
-    shift: data.shift || "Morning",
+    shift: data.shift || "Morning (06:00 - 14:00)",
     status: data.status || "Active",
+    quote: data.quote || "",
+    floorZone: data.floorZone || "",
+    programs: Array.isArray(data.programs)
+      ? data.programs
+      : data.programs
+        ? data.programs
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : ["Functional Strength", "Athletic Conditioning"],
+    languages: Array.isArray(data.languages)
+      ? data.languages
+      : data.languages
+        ? data.languages
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : ["English"],
     bio: data.bio || "",
     photo: data.photo || null,
     joinedAt: new Date().toISOString(),
@@ -216,9 +246,22 @@ export function updateTrainer(id, updates) {
   let updatedTrainer = null;
   const updated = all.map((t) => {
     if (t.id === id) {
+      const formattedUpdates = { ...updates };
+      if (typeof formattedUpdates.programs === "string") {
+        formattedUpdates.programs = formattedUpdates.programs
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      if (typeof formattedUpdates.languages === "string") {
+        formattedUpdates.languages = formattedUpdates.languages
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
       updatedTrainer = {
         ...t,
-        ...updates,
+        ...formattedUpdates,
         updatedAt: new Date().toISOString(),
       };
       return updatedTrainer;

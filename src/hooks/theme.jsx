@@ -20,7 +20,13 @@ export function ThemeProvider({ children }) {
   useEffect(() => {
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(theme);
+    document.documentElement.style.colorScheme = theme;
     localStorage.setItem(STORAGE_KEY, theme);
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute("content", theme === "light" ? "#f4f4f5" : "#09090b");
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));

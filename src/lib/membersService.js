@@ -1,129 +1,28 @@
 export const STORAGE_KEY = "tsw-registered-members";
 
-export const SEED_MEMBERS = [
-  {
-    id: "MEM-1001",
-    firstName: "Vikram",
-    lastName: "Sharma",
-    dob: "1994-06-15",
-    gender: "Male",
-    mobile: "+91 98201 43210",
-    email: "vikram.sharma@example.com",
-    photo: null,
-    address: "B-402, Lotus Heights, Andheri West",
-    city: "Mumbai",
-    state: "Maharashtra",
-    country: "India",
-    pincode: "400053",
-    emergencyName: "Sunita Sharma",
-    emergencyRelationship: "Spouse",
-    emergencyNumber: "+91 98201 43299",
-    height: "178",
-    weight: "76",
-    medicalDoc: "fitness_cert_vikram.pdf",
-    medicalDocName: "fitness_cert_vikram.pdf",
-    medicalDocSize: "1.2 MB",
-    status: "Active",
-    isDeleted: false,
-    deletedAt: null,
-    registeredAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "MEM-1002",
-    firstName: "Ananya",
-    lastName: "Patel",
-    dob: "1998-03-22",
-    gender: "Female",
-    mobile: "+91 98450 12890",
-    email: "ananya.patel@example.com",
-    photo: null,
-    address: "703, Cyber View Apts, HSR Layout",
-    city: "Bengaluru",
-    state: "Karnataka",
-    country: "India",
-    pincode: "560102",
-    emergencyName: "Rajesh Patel",
-    emergencyRelationship: "Parent",
-    emergencyNumber: "+91 98450 12800",
-    height: "164",
-    weight: "58",
-    medicalDoc: "medical_report.pdf",
-    medicalDocName: "medical_report.pdf",
-    medicalDocSize: "840 KB",
-    status: "Active",
-    isDeleted: false,
-    deletedAt: null,
-    registeredAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "MEM-1003",
-    firstName: "Rohan",
-    lastName: "Verma",
-    dob: "1992-11-08",
-    gender: "Male",
-    mobile: "+91 97110 56432",
-    email: "rohan.verma@example.com",
-    photo: null,
-    address: "Flat 12, Gulmohar Enclave",
-    city: "New Delhi",
-    state: "Delhi",
-    country: "India",
-    pincode: "110016",
-    emergencyName: "Kavita Verma",
-    emergencyRelationship: "Sibling",
-    emergencyNumber: "+91 97110 56400",
-    height: "182",
-    weight: "84",
-    medicalDoc: null,
-    status: "Active",
-    isDeleted: false,
-    deletedAt: null,
-    registeredAt: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "MEM-1004",
-    firstName: "Priya",
-    lastName: "Nair",
-    dob: "1996-09-30",
-    gender: "Female",
-    mobile: "+91 98950 78123",
-    email: "priya.nair@example.com",
-    photo: null,
-    address: "Villa 8, Palm Meadows",
-    city: "Kochi",
-    state: "Kerala",
-    country: "India",
-    pincode: "682024",
-    emergencyName: "Deepak Nair",
-    emergencyRelationship: "Parent",
-    emergencyNumber: "+91 98950 78100",
-    height: "168",
-    weight: "62",
-    medicalDoc: "health_clearance.pdf",
-    medicalDocName: "health_clearance.pdf",
-    medicalDocSize: "2.1 MB",
-    status: "Active",
-    isDeleted: false,
-    deletedAt: null,
-    registeredAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
+export const SEED_MEMBERS = [];
+
+const LEGACY_MOCK_IDS = ["MEM-1001", "MEM-1002", "MEM-1003", "MEM-1004"];
 
 function readStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MEMBERS));
-      return [...SEED_MEMBERS];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+    if (Array.isArray(parsed)) {
+      const sanitized = parsed.filter((m) => !LEGACY_MOCK_IDS.includes(m.id));
+      if (sanitized.length !== parsed.length) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+      }
+      return sanitized;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MEMBERS));
-    return [...SEED_MEMBERS];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    return [];
   } catch {
-    return [...SEED_MEMBERS];
+    return [];
   }
 }
 
@@ -269,6 +168,21 @@ export function convertLeadToMember(id, additionalDetails = {}) {
     }
     return m;
   });
-  writeStorage(updated);
-  return converted;
+  if (converted) {
+    writeStorage(updated);
+    return converted;
+  }
+
+  // If not found in members storage (e.g. from Inquiry), create directly as an active member:
+  const newMember = {
+    id: id?.startsWith("MEM-") ? id : `MEM-${Date.now().toString().slice(-4)}`,
+    ...additionalDetails,
+    status: "Active",
+    isDeleted: false,
+    convertedAt: new Date().toISOString(),
+    registeredAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  writeStorage([newMember, ...all]);
+  return newMember;
 }

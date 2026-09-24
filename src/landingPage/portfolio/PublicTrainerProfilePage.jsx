@@ -6,7 +6,6 @@ import {
   Award,
   CheckCircle2,
   Clock,
-  Flame,
   Globe,
   Mail,
   MapPin,
@@ -22,7 +21,7 @@ import { Footer } from "@/landingPage/Footer";
 import { BackToTop } from "@/landingPage/BackToTop";
 import { CustomCursor } from "@/landingPage/CustomCursor";
 import { getTrainerById, getTrainers, getTrainerPhoto, updateTrainer } from "@/lib/trainersService";
-import { CertifiedAccreditations } from "@/components/trainers/CertifiedAccreditations";
+import { CertifiedAccreditations } from "@/pages/trainers-members/trainers/CertifiedAccreditations";
 
 export default function PublicTrainerProfilePage() {
   const { id } = useParams();
@@ -63,7 +62,6 @@ export default function PublicTrainerProfilePage() {
     }, 120);
   };
 
-
   if (!trainer) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
@@ -100,25 +98,25 @@ export default function PublicTrainerProfilePage() {
           {/* Top Breadcrumb & Back Navigation */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
             <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-              <Link to="/" className="hover:text-white transition-colors">
+              <Link to="/" className="hover:text-foreground transition-colors">
                 Home
               </Link>
               <ChevronRight size={13} />
               <button
                 type="button"
                 onClick={handleRedirectToTrainers}
-                className="hover:text-white transition-colors cursor-pointer"
+                className="hover:text-foreground transition-colors cursor-pointer"
               >
                 Trainers
               </button>
               <ChevronRight size={13} />
-              <span className="text-white font-medium">{trainer.name}</span>
+              <span className="text-foreground font-medium">{trainer.name}</span>
             </div>
 
             <button
               type="button"
               onClick={handleRedirectToTrainers}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-white/90 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-full px-4 py-2 transition-all cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-foreground hover:text-foreground bg-muted/60 hover:bg-accent/20 border border-border rounded-full px-4 py-2 transition-all cursor-pointer self-start sm:self-auto"
             >
               <ArrowLeft size={14} />
               <span>Back to All Trainers</span>
@@ -126,93 +124,93 @@ export default function PublicTrainerProfilePage() {
           </div>
 
           {/* Hero Trainer Profile Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-surface/80 via-surface/40 to-background p-6 sm:p-10 lg:p-12 shadow-2xl backdrop-blur-xl">
-              {/* Glowing Background Orbs */}
-              <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
-              <div className="pointer-events-none absolute left-1/3 -bottom-20 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card via-card/90 to-background p-6 sm:p-10 lg:p-12 shadow-sm backdrop-blur-xl">
+            {/* Glowing Background Orbs */}
+            <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+            <div className="pointer-events-none absolute left-1/3 -bottom-20 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
 
-              <div className="relative grid gap-8 lg:grid-cols-12 lg:items-center">
-                {/* Trainer Portrait with Clean Image (No badges / No ID overlay) */}
-                <div className="lg:col-span-4 flex justify-center lg:justify-start">
-                  <div className="relative group w-full max-w-sm rounded-3xl overflow-hidden border-2 border-white/20 bg-black/60 shadow-2xl">
-                    <img
-                      src={trainerPhoto}
-                      alt={trainer.name}
-                      width={800}
-                      height={1000}
-                      className="h-[420px] w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Trainer Information */}
-                <div className="lg:col-span-8 space-y-6">
-                  <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight">
-                    {trainer.name}
-                  </h1>
-
-                  {/* Bio / Quote */}
-                  <blockquote className="rounded-2xl border-l-4 border-white/80 bg-white/5 p-4 sm:p-5 text-sm sm:text-base italic text-white/90">
-                    "{trainer.quote || trainer.bio}"
-                  </blockquote>
+            <div className="relative grid gap-8 lg:grid-cols-12 lg:items-center">
+              {/* Trainer Portrait with Clean Image (No badges / No ID overlay) */}
+              <div className="lg:col-span-4 flex justify-center lg:justify-start">
+                <div className="relative group w-full max-w-sm rounded-3xl overflow-hidden border-2 border-border/80 bg-card shadow-lg">
+                  <img
+                    src={trainerPhoto}
+                    alt={trainer.name}
+                    width={800}
+                    height={1000}
+                    className="h-[420px] w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                 </div>
               </div>
+
+              {/* Trainer Information */}
+              <div className="lg:col-span-8 space-y-6">
+                <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-foreground tracking-tight">
+                  {trainer.name}
+                </h1>
+
+                {/* Bio / Quote */}
+                <blockquote className="rounded-2xl border-l-4 border-primary bg-muted/30 p-4 sm:p-5 text-sm sm:text-base italic text-foreground">
+                  "{trainer.quote || trainer.bio}"
+                </blockquote>
+              </div>
             </div>
+          </div>
 
           {/* Trainer Official Profile & Form Details Grid */}
           <div className="space-y-6">
             <div className="flex flex-col gap-1">
-              <div className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-white/60 font-mono">
+              <div className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground font-mono">
                 Official Roster Specifications
               </div>
-              <h2 className="font-display text-3xl font-bold text-white sm:text-4xl">
+              <h2 className="font-display text-3xl font-bold text-foreground sm:text-4xl">
                 Trainer Profile
               </h2>
               <p className="text-sm text-muted-foreground">
-                Verified identification, athletic background, and certified coaching credentials registered in
-                The Strength Way directory.
+                Verified identification, athletic background, and certified coaching credentials
+                registered in The Strength Way directory.
               </p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-12">
               {/* Form Details Dossier Table */}
               <div className="lg:col-span-5 space-y-6">
-                <div className="rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/10 pb-4">
-                    <ShieldCheck size={18} className="text-emerald-400" />
+                <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs">
+                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2 border-b border-border pb-4">
+                    <ShieldCheck size={18} className="text-emerald-500" />
                     <span>Personal Details & Identification</span>
                   </h3>
 
-                  <dl className="mt-6 divide-y divide-white/10 text-sm">
+                  <dl className="mt-6 divide-y divide-border text-sm">
                     <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="font-medium text-white/60">Full Name</dt>
-                      <dd className="mt-1 font-semibold text-white sm:col-span-2 sm:mt-0">
+                      <dt className="font-medium text-muted-foreground">Full Name</dt>
+                      <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
                         {trainer.name}
                       </dd>
                     </div>
 
                     <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="font-medium text-white/60">Trainer ID</dt>
-                      <dd className="mt-1 font-mono font-semibold text-emerald-400 sm:col-span-2 sm:mt-0">
+                      <dt className="font-medium text-muted-foreground">Trainer ID</dt>
+                      <dd className="mt-1 font-mono font-semibold text-emerald-500 sm:col-span-2 sm:mt-0">
                         {trainer.id}
                       </dd>
                     </div>
 
                     <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="font-medium text-white/60">Experience</dt>
-                      <dd className="mt-1 text-white sm:col-span-2 sm:mt-0">
+                      <dt className="font-medium text-muted-foreground">Experience</dt>
+                      <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0">
                         {trainer.experience} Professional Coaching
                       </dd>
                     </div>
 
                     <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="font-medium text-white/60">Email</dt>
-                      <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                        <Mail size={14} className="text-white/60" />
+                      <dt className="font-medium text-muted-foreground">Email</dt>
+                      <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0 flex items-center gap-2">
+                        <Mail size={14} className="text-muted-foreground" />
                         <a
                           href={`mailto:${trainer.email}`}
-                          className="hover:text-white hover:underline truncate"
+                          className="hover:text-primary hover:underline truncate"
                         >
                           {trainer.email}
                         </a>
@@ -220,43 +218,19 @@ export default function PublicTrainerProfilePage() {
                     </div>
 
                     <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="font-medium text-white/60">Phone</dt>
-                      <dd className="mt-1 text-white sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                        <Phone size={14} className="text-white/60" />
+                      <dt className="font-medium text-muted-foreground">Phone</dt>
+                      <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0 flex items-center gap-2">
+                        <Phone size={14} className="text-muted-foreground" />
                         <span>{trainer.phone}</span>
                       </dd>
                     </div>
                   </dl>
                 </div>
-
-                <div className="rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/10 pb-4">
-                    <Flame size={18} className="text-white" />
-                    <span>Programs & Classes Led</span>
-                  </h3>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {(
-                      trainer.programs || [
-                        "Functional Strength",
-                        "Animal Flow & Mobility",
-                        "Athletic Conditioning",
-                        "Kettlebell Mastery",
-                      ]
-                    ).map((prog) => (
-                      <span
-                        key={prog}
-                        className="rounded-full border border-white/15 bg-white/5 px-3.5 py-1 text-xs font-semibold text-white"
-                      >
-                        {prog}
-                      </span>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               {/* Certified Accreditations Document Uploads */}
               <div className="lg:col-span-7">
-                <div className="rounded-3xl border border-white/10 bg-surface/40 p-6 sm:p-8 backdrop-blur-md">
+                <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs">
                   <CertifiedAccreditations
                     trainer={trainer}
                     onUpdateTrainer={(updated) => {
@@ -270,13 +244,13 @@ export default function PublicTrainerProfilePage() {
             </div>
           </div>
 
-          {/* Explore Other Coaches Section */}
+          {/* Explore Other Trainers Section */}
           {otherTrainers.length > 0 && (
             <div className="space-y-6 pt-6 border-t border-border/60">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h3 className="font-display text-2xl font-bold text-white">
-                    Explore Other Coaches
+                  <h3 className="font-display text-2xl font-bold text-foreground">
+                    Explore Other Trainers
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     Discover our certified specialists across bodybuilding, calisthenics, and
@@ -286,7 +260,7 @@ export default function PublicTrainerProfilePage() {
                 <button
                   type="button"
                   onClick={handleRedirectToTrainers}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white self-start cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground self-start cursor-pointer transition-colors"
                 >
                   <span>View All Trainers</span>
                   <ArrowRight size={13} />
@@ -298,20 +272,20 @@ export default function PublicTrainerProfilePage() {
                   <Link
                     key={other.id}
                     to={`/trainers/${other.id}`}
-                    className="group flex items-center gap-4 rounded-3xl border border-white/10 bg-surface/40 p-4 transition-all hover:border-white/30 hover:bg-surface/70"
+                    className="group flex items-center gap-4 rounded-3xl border border-border bg-card p-4 transition-all hover:border-foreground/30 hover:bg-card/90 shadow-xs"
                   >
                     <img
                       src={getTrainerPhoto(other)}
                       alt={other.name}
                       width={160}
                       height={160}
-                      className="h-20 w-20 rounded-2xl object-cover object-top border border-white/15"
+                      className="h-20 w-20 rounded-2xl object-cover object-top border border-border"
                     />
                     <div className="space-y-1">
-                      <h4 className="font-display text-lg font-bold text-white group-hover:underline">
+                      <h4 className="font-display text-lg font-bold text-foreground group-hover:underline">
                         {other.name}
                       </h4>
-                      <p className="text-xs text-white/60">
+                      <p className="text-xs text-muted-foreground">
                         {other.experience} Professional Experience
                       </p>
                     </div>

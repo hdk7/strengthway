@@ -25,6 +25,7 @@ import {
   Shield,
   Sparkles,
   ArrowUpRight,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -219,6 +220,19 @@ export function MemberDetailsModal({ isOpen, onClose, member, onEdit, onSoftDele
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <span>•</span>
                         <span>{member.gender}</span>
+                      </span>
+                    )}
+
+                    {(member.batchTiming || member.schedule?.batchTiming || member.batchName) && (
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1 text-accent font-semibold">
+                          <Clock size={12} className="shrink-0" />
+                          <span>
+                            {member.batchName || "Batch"} (
+                            {member.batchTiming || member.schedule?.batchTiming})
+                          </span>
+                        </span>
                       </span>
                     )}
                   </div>

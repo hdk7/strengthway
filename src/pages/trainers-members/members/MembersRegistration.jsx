@@ -15,9 +15,11 @@ import {
   CheckCircle2,
   FileText,
   CreditCard,
+  Clock,
   ArrowRight,
   ArrowLeft,
   Sparkles,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,8 +27,11 @@ import {
   validateWithYup,
   validateFieldWithYup,
 } from "@/lib/validation";
+import { InputField, SelectField, TextareaField } from "@/components/form";
 import { createMember, updateMember, convertLeadToMember } from "@/lib/membersService";
+import { getBatches, enrollMemberInBatch } from "@/lib/batchesService";
 import {
+  getMembershipPlans,
   MEMBERSHIP_PLANS,
   PAYMENT_METHODS,
   calculateMembershipDates,
@@ -57,6 +62,7 @@ const INITIAL_FORM = {
   medicalDocName: "",
   medicalDocSize: "",
   bio: "",
+  batchId: "",
 };
 
 export function AdminMemberRegistrationModal({
@@ -66,10 +72,20 @@ export function AdminMemberRegistrationModal({
   memberToEdit = null,
   leadToConfirm = null,
 }) {
-  const activeLead = leadToConfirm || (memberToEdit?.status === "Lead" ? memberToEdit : null);
+  const activeLead =
+    leadToConfirm ||
+    (memberToEdit?.status === "Lead" || memberToEdit?.status === "Inquiry"
+      ? memberToEdit
+      : null);
   const isConfirmingLead = Boolean(activeLead);
-  const isEditingActiveMember = Boolean(memberToEdit && memberToEdit.status !== "Lead");
+  const isEditingActiveMember = Boolean(
+    memberToEdit &&
+      memberToEdit.status !== "Lead" &&
+      memberToEdit.status !== "Inquiry",
+  );
 
+  const [availablePlans, setAvailablePlans] = useState([]);
+  const [batches, setBatches] = useState([]);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
   const [paymentForm, setPaymentForm] = useState({
@@ -89,24 +105,35 @@ export function AdminMemberRegistrationModal({
   useEffect(() => {
     if (isOpen) {
       setStep(1);
-      const defaultPlan =
-        MEMBERSHIP_PLANS.find((p) => p.id === "plan-quarterly") || MEMBERSHIP_PLANS[0];
+      const activeBatches = getBatches();
+      setBatches(activeBatches);
+      const activePlans = getMembershipPlans(false);
+      const plansList = activePlans.length > 0 ? activePlans : getMembershipPlans(true);
+      setAvailablePlans(plansList);
+
+      const defaultPlan = plansList.find((p) => p.popular) || plansList[0];
       setPaymentForm({
-        selectedPlanId: defaultPlan.id,
+        selectedPlanId: defaultPlan?.id || "",
         paymentMethod: "UPI",
         transactionId: generateTransactionId("UPI"),
-        amountPaid: defaultPlan.price,
+        amountPaid: defaultPlan?.price || 0,
         paymentDate: new Date().toISOString().split("T")[0],
         paymentNotes: isConfirmingLead
-          ? `Enrollment payment for lead ${activeLead.firstName || "Athlete"}`
+          ? `Enrollment payment for inquiry ${activeLead.firstName || "Athlete"}`
           : "",
       });
 
       const sourceData = activeLead || memberToEdit;
       if (sourceData) {
+        const rawName = (sourceData.name || sourceData.fullName || "").trim();
+        const nameParts = rawName ? rawName.split(/\s+/) : [];
+        const derivedFirst = sourceData.firstName || nameParts[0] || "";
+        const derivedLast =
+          sourceData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
+
         setForm({
-          firstName: sourceData.firstName || "",
-          lastName: sourceData.lastName || "",
+          firstName: derivedFirst,
+          lastName: derivedLast,
           dob: sourceData.dob || "",
           gender: sourceData.gender || "",
           mobile: sourceData.mobile || "",
@@ -131,13 +158,21 @@ export function AdminMemberRegistrationModal({
             (isConfirmingLead
               ? "Active club member pursuing functional training and athletic progression."
               : ""),
+          batchId: sourceData.batchId || activeBatches[0]?.id || "",
         });
       } else {
-        setForm(INITIAL_FORM);
+        setForm({
+          ...INITIAL_FORM,
+          batchId: activeBatches[0]?.id || "",
+        });
       }
       setErrors({});
     }
   }, [isOpen, memberToEdit, leadToConfirm, activeLead, isConfirmingLead]);
+
+  const selectedBatch = batches.find((b) => b.id === form.batchId);
+  const chosenPlan =
+    availablePlans.find((p) => p.id === paymentForm.selectedPlanId) || availablePlans[0];
 
   const handleClose = (e) => {
     if (e && typeof e.preventDefault === "function") {
@@ -245,47 +280,85 @@ export function AdminMemberRegistrationModal({
     }
   };
 
-  const validate = () => {
-    const errs = validateWithYup(adminMemberRegistrationSchema, form);
+  const validateStep1 = () => {
+    const step1Keys = ["firstName", "lastName", "dob", "gender", "mobile", "email"];
+    const errs = {};
+    step1Keys.forEach((key) => {
+      const msg = validateFieldWithYup(adminMemberRegistrationSchema, key, form);
+      if (msg) errs[key] = msg;
+    });
+
+    if (!paymentForm.selectedPlanId) {
+      errs.selectedPlanId = "Please select a membership plan.";
+    }
+    if (!paymentForm.amountPaid || Number(paymentForm.amountPaid) <= 0) {
+      errs.amountPaid = "Please specify a valid payment amount.";
+    }
+
+    setErrors((prev) => ({ ...prev, ...errs }));
+    return Object.keys(errs).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const step2Keys = [
+      "address",
+      "city",
+      "state",
+      "country",
+      "pincode",
+      "emergencyName",
+      "emergencyRelationship",
+      "emergencyNumber",
+      "height",
+      "weight",
+      "bio",
+    ];
+    const errs = {};
+    step2Keys.forEach((key) => {
+      const msg = validateFieldWithYup(adminMemberRegistrationSchema, key, form);
+      if (msg) errs[key] = msg;
+    });
+
     if (isConfirmingLead && !form.medicalDoc && !form.medicalDocName) {
       errs.medicalDoc =
         "Medical fitness document is required before confirming member registration.";
     }
-    setErrors(errs);
+
+    setErrors((prev) => ({ ...prev, ...errs }));
     return Object.keys(errs).length === 0;
   };
 
-  const handleProceedToPayment = (e) => {
+  const handleProceedToBalanceDetails = (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
-    if (!validate()) {
-      toast.error("Please complete all required fields correctly before proceeding.");
+    if (!validateStep1()) {
+      toast.error(
+        "Please fill all required personal, plan, and payment details before proceeding.",
+      );
       return;
     }
-    const defaultPlan =
-      MEMBERSHIP_PLANS.find((p) => p.id === paymentForm.selectedPlanId) || MEMBERSHIP_PLANS[0];
-    setPaymentForm((prev) => ({
-      ...prev,
-      amountPaid: prev.amountPaid || defaultPlan.price,
-      transactionId: prev.transactionId || generateTransactionId(prev.paymentMethod),
-    }));
     setStep(2);
   };
 
-  const handleCompletePaymentAndRegister = (e) => {
+  const handleCompleteRegistration = (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
 
-    if (!paymentForm.selectedPlanId) {
-      toast.error("Please select a membership plan.");
-      return;
-    }
-    if (!paymentForm.transactionId || paymentForm.transactionId.trim().length < 4) {
-      toast.error("Please provide a valid transaction reference.");
+    const isStep1Valid = validateStep1();
+    const isStep2Valid = validateStep2();
+
+    if (!isStep1Valid || !isStep2Valid) {
+      if (!isStep1Valid) {
+        setStep(1);
+        toast.error("Please complete all personal and payment fields in Step 1.");
+      } else {
+        toast.error("Please complete all balance registration fields.");
+      }
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const plan = MEMBERSHIP_PLANS.find((p) => p.id === paymentForm.selectedPlanId);
+      const plan =
+        availablePlans.find((p) => p.id === paymentForm.selectedPlanId) || availablePlans[0];
       const dates = calculateMembershipDates(
         plan.durationMonths,
         new Date(paymentForm.paymentDate),
@@ -307,23 +380,43 @@ export function AdminMemberRegistrationModal({
         method: paymentForm.paymentMethod,
         amount: Number(paymentForm.amountPaid),
         formattedAmount: `₹${Number(paymentForm.amountPaid).toLocaleString("en-IN")}`,
-        transactionId: paymentForm.transactionId.trim(),
+        transactionId:
+          paymentForm.transactionId?.trim() ||
+          generateTransactionId(paymentForm.paymentMethod) ||
+          `TXN-${Date.now().toString().slice(-8)}`,
         receiptNo: generateReceiptNumber(),
         status: "Completed",
         paidAt: new Date(paymentForm.paymentDate).toISOString(),
         notes: paymentForm.paymentNotes,
       };
 
+      const selectedBatchInfo = batches.find((b) => b.id === form.batchId);
+      const scheduleDetails = selectedBatchInfo
+        ? {
+            batchId: selectedBatchInfo.id,
+            batchName: selectedBatchInfo.name,
+            batchTiming: selectedBatchInfo.timingLabel || selectedBatchInfo.startTime,
+            daysLabel: selectedBatchInfo.daysLabel || selectedBatchInfo.daysPattern,
+            daysPattern: selectedBatchInfo.daysPattern,
+          }
+        : null;
+
       let resultMember;
       if (isConfirmingLead) {
         resultMember = convertLeadToMember(activeLead.id, {
           ...form,
+          batchId: form.batchId || selectedBatchInfo?.id || "",
+          batchName: scheduleDetails?.batchName || "General Access",
+          batchTiming: scheduleDetails?.batchTiming || "",
+          shift: scheduleDetails?.batchTiming || "",
+          assignedBatch: scheduleDetails?.batchName || "General Access",
+          schedule: scheduleDetails,
           membershipPlan,
           paymentDetails,
         });
 
         toast.success(
-          `Lead ${form.firstName} ${form.lastName}`.trim() +
+          `Inquiry ${form.firstName} ${form.lastName}`.trim() +
             ` confirmed as an active Member with ${plan.name} Plan!`,
           {
             icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
@@ -332,6 +425,12 @@ export function AdminMemberRegistrationModal({
       } else {
         resultMember = createMember({
           ...form,
+          batchId: form.batchId || selectedBatchInfo?.id || "",
+          batchName: scheduleDetails?.batchName || "General Access",
+          batchTiming: scheduleDetails?.batchTiming || "",
+          shift: scheduleDetails?.batchTiming || "",
+          assignedBatch: scheduleDetails?.batchName || "General Access",
+          schedule: scheduleDetails,
           status: "Active",
           membershipPlan,
           paymentDetails,
@@ -344,6 +443,11 @@ export function AdminMemberRegistrationModal({
             icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
           },
         );
+      }
+
+      // Automatically assign member to the corresponding chosen batch timing
+      if (form.batchId && resultMember?.id) {
+        enrollMemberInBatch(form.batchId, resultMember.id);
       }
 
       setForm(INITIAL_FORM);
@@ -364,7 +468,9 @@ export function AdminMemberRegistrationModal({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEditingActiveMember) {
-      if (!validate()) {
+      const isStep1Valid = validateStep1();
+      const isStep2Valid = validateStep2();
+      if (!isStep1Valid || !isStep2Valid) {
         toast.error("Please fill in all required fields correctly.");
         return;
       }
@@ -387,7 +493,11 @@ export function AdminMemberRegistrationModal({
         setIsSubmitting(false);
       }
     } else {
-      handleProceedToPayment(e);
+      if (step === 1) {
+        handleProceedToBalanceDetails(e);
+      } else {
+        handleCompleteRegistration(e);
+      }
     }
   };
 
@@ -420,7 +530,7 @@ export function AdminMemberRegistrationModal({
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  1. Member Profile
+                  1. Registration & Payment
                 </span>
                 <span className="text-muted-foreground">•</span>
                 <span
@@ -430,19 +540,19 @@ export function AdminMemberRegistrationModal({
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  2. Plan & Payment
+                  2. Member Details
                 </span>
               </div>
             )}
 
             <DialogPrimitive.Title className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {isConfirmingLead
-                ? `Confirm Member: ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
+                ? `Member Registration ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
                 : isEditingActiveMember
                   ? "Edit Member Profile"
                   : step === 1
-                    ? "Member Registration"
-                    : "Membership Plan & Payment"}
+                    ? "Member Registration & Plan Payment"
+                    : "Member Details"}
             </DialogPrimitive.Title>
             <DialogPrimitive.Description
               id="admin-member-registration-desc"
@@ -450,13 +560,13 @@ export function AdminMemberRegistrationModal({
             >
               {isConfirmingLead
                 ? step === 1
-                  ? "Review pre-populated lead details, then complete emergency contact, fitness details & medical document."
-                  : "Step 2: Select membership plan and record payment to complete member confirmation."
+                  ? "Step 1 of 2: Review personal details, select training schedule, choose plan & record payment."
+                  : "Step 2 of 2: Complete residence address, emergency contact, physical fitness details & medical document."
                 : isEditingActiveMember
                   ? "Update gym member profile details, physical stats, and contact info"
                   : step === 1
-                    ? "Step 1 of 2: Enter personal, emergency contact, and physical fitness details."
-                    : "Step 2 of 2: Select a membership commitment tier and complete payment."}
+                    ? "Step 1 of 2: Enter personal details, select training batch, choose plan & record payment."
+                    : "Step 2 of 2: Complete residence address, emergency contact, physical vitals & medical document."}
             </DialogPrimitive.Description>
 
             <DialogPrimitive.Close
@@ -476,7 +586,7 @@ export function AdminMemberRegistrationModal({
               noValidate
               className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-8"
             >
-              {/* Pre-populated Lead Banner */}
+              {/* Pre-populated Inquiry Banner */}
               {isConfirmingLead && (
                 <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-500 font-bold">
@@ -484,11 +594,11 @@ export function AdminMemberRegistrationModal({
                   </div>
                   <div className="text-xs">
                     <p className="font-bold text-foreground text-sm">
-                      Lead Information Pre-Populated
+                      Inquiry Information Pre-Populated
                     </p>
                     <p className="text-muted-foreground mt-0.5 leading-relaxed">
                       Personal and Contact Information have been automatically loaded from this
-                      athlete&apos;s prospective lead submission. Please complete the remaining
+                      athlete&apos;s prospective inquiry submission. Please complete the remaining
                       required sections: <strong>Emergency Contact</strong>,{" "}
                       <strong>Fitness Information</strong>, and{" "}
                       <strong>Medical Fitness Document</strong> below before proceeding to plan
@@ -508,183 +618,92 @@ export function AdminMemberRegistrationModal({
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* First Name */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-first-name"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      First Name <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-first-name"
-                      name="firstName"
-                      type="text"
-                      required
-                      placeholder="Enter first name"
-                      value={form.firstName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.firstName
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.firstName && (
-                      <p className="mt-1 text-xs text-destructive">{errors.firstName}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-first-name"
+                    name="firstName"
+                    label="First Name"
+                    required
+                    placeholder="Enter first name"
+                    value={form.firstName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.firstName}
+                  />
 
-                  {/* Last Name */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-last-name"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Last Name <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-last-name"
-                      name="lastName"
-                      type="text"
-                      required
-                      placeholder="Enter last name"
-                      value={form.lastName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.lastName
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.lastName && (
-                      <p className="mt-1 text-xs text-destructive">{errors.lastName}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-last-name"
+                    name="lastName"
+                    label="Last Name"
+                    required
+                    placeholder="Enter last name"
+                    value={form.lastName}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.lastName}
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Date of Birth */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-dob"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Date of Birth <span className="text-destructive">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="admin-member-dob"
-                        name="dob"
-                        type="date"
-                        required
-                        max={new Date().toISOString().split("T")[0]}
-                        value={form.dob}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        onClick={(e) => e.target.showPicker?.()}
-                        className={`w-full rounded-xl border bg-background pl-10 pr-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 cursor-pointer [color-scheme:light] dark:[color-scheme:dark] ${
-                          errors.dob
-                            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                            : "border-border focus:border-accent focus:ring-accent/20"
-                        }`}
-                      />
-                      <Calendar className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </div>
-                    {errors.dob && <p className="mt-1 text-xs text-destructive">{errors.dob}</p>}
-                  </div>
+                  <InputField
+                    id="admin-member-dob"
+                    name="dob"
+                    type="date"
+                    label="Date of Birth"
+                    required
+                    max={new Date().toISOString().split("T")[0]}
+                    value={form.dob}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.dob}
+                    startIcon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+                    inputClassName="[color-scheme:light] dark:[color-scheme:dark] cursor-pointer"
+                  />
 
-                  {/* Gender */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-gender"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Gender <span className="text-destructive">*</span>
-                    </label>
-                    <select
-                      id="admin-member-gender"
-                      name="gender"
-                      required
-                      value={form.gender}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 cursor-pointer ${
-                        errors.gender
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    >
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
-                    </select>
-                    {errors.gender && (
-                      <p className="mt-1 text-xs text-destructive">{errors.gender}</p>
-                    )}
-                  </div>
+                  <SelectField
+                    id="admin-member-gender"
+                    name="gender"
+                    label="Gender"
+                    required
+                    value={form.gender}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.gender}
+                    placeholder="Select Gender"
+                    options={[
+                      { value: "Male", label: "Male" },
+                      { value: "Female", label: "Female" },
+                      { value: "Other", label: "Other" },
+                      { value: "Prefer not to say", label: "Prefer not to say" },
+                    ]}
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Mobile Number */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-mobile"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Mobile Number <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-mobile"
-                      name="mobile"
-                      type="tel"
-                      required
-                      placeholder="e.g. +91 98765 43210"
-                      value={form.mobile}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.mobile
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.mobile && (
-                      <p className="mt-1 text-xs text-destructive">{errors.mobile}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-mobile"
+                    name="mobile"
+                    type="tel"
+                    label="Mobile Number"
+                    required
+                    placeholder="e.g. +91 98765 43210"
+                    value={form.mobile}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.mobile}
+                  />
 
-                  {/* Email */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-email"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Email <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-email"
-                      name="email"
-                      type="email"
-                      required
-                      placeholder="e.g. alex@example.com"
-                      value={form.email}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.email
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.email && (
-                      <p className="mt-1 text-xs text-destructive">{errors.email}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-email"
+                    name="email"
+                    type="email"
+                    label="Email"
+                    required
+                    placeholder="e.g. alex@example.com"
+                    value={form.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.email}
+                  />
                 </div>
 
                 {/* Profile Photo */}
@@ -750,159 +769,262 @@ export function AdminMemberRegistrationModal({
                 </div>
               </section>
 
-              {/* 2. CONTACT INFORMATION */}
+              {/* 2. TRAINING SCHEDULE & BATCH SLOT */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
+                  <Calendar className="h-4 w-4 text-accent" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Training Schedule &amp; Batch Slot
+                  </h3>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-accent" />
+                      <span>Batch &amp; Timing</span>
+                    </label>
+                    {selectedBatch && (
+                      <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent">
+                        {selectedBatch.daysPattern || "MWF"}
+                      </span>
+                    )}
+                  </div>
+
+                  <SelectField
+                    id="admin-member-batch"
+                    name="batchId"
+                    value={form.batchId}
+                    onChange={(e) => setForm({ ...form, batchId: e.target.value })}
+                    placeholder="Select Training Batch Slot"
+                    options={batches.map((b) => ({
+                      value: b.id,
+                      label: `${b.name} • ${b.timingLabel || b.startTime} (${b.currentPax || 0}/${b.maxPax || 28} Pax)`,
+                    }))}
+                  />
+                </div>
+              </section>
+
+              {/* 3. MEMBERSHIP PLAN SELECTION */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                      Membership Plan
+                    </h3>
+                  </div>
+                  <span className="text-xs font-medium text-accent">Select commitment tier</span>
+                </div>
+
+                <div className="space-y-3">
+                  <SelectField
+                    id="admin-member-plan"
+                    name="selectedPlanId"
+                    label="Choose Membership Plan Tier"
+                    required
+                    value={paymentForm.selectedPlanId}
+                    onChange={(e) => {
+                      const planId = e.target.value;
+                      const found = availablePlans.find((p) => p.id === planId);
+                      setPaymentForm((prev) => ({
+                        ...prev,
+                        selectedPlanId: planId,
+                        amountPaid: found ? found.price : prev.amountPaid,
+                      }));
+                    }}
+                    error={errors.selectedPlanId}
+                    placeholder="Select Membership Plan Tier"
+                    options={availablePlans.map((plan) => ({
+                      value: plan.id,
+                      label: `${plan.name} — ${plan.formattedPrice} ${plan.period} (${plan.durationMonths} Month${plan.durationMonths > 1 ? "s" : ""}) ${plan.badge ? `• [${plan.badge}]` : ""}`,
+                    }))}
+                  />
+                </div>
+              </section>
+
+              {/* 4. PAYMENT FORM DETAILS */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
+                  <CreditCard className="h-4 w-4 text-accent" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Payment Form Details
+                  </h3>
+                </div>
+
+                {/* Choose Payment Method Dropdown */}
+                <SelectField
+                  id="admin-member-payment-method"
+                  name="paymentMethod"
+                  label="Payment Option / Method"
+                  required
+                  value={paymentForm.paymentMethod}
+                  onChange={(e) => {
+                    const methodId = e.target.value;
+                    setPaymentForm((prev) => ({
+                      ...prev,
+                      paymentMethod: methodId,
+                      transactionId: generateTransactionId(methodId),
+                    }));
+                  }}
+                  placeholder="Select Payment Option / Method"
+                  options={PAYMENT_METHODS.map((method) => ({
+                    value: method.id,
+                    label: `${method.name} — ${method.id === "Cash" ? "Gym Reception" : "Digital Transaction"}`,
+                  }))}
+                />
+
+                {/* Payment Details Inputs without Transaction ID field */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-1">
+                  <InputField
+                    label="Amount Received (₹)"
+                    required
+                    type="number"
+                    value={paymentForm.amountPaid}
+                    onChange={(e) =>
+                      setPaymentForm((prev) => ({ ...prev, amountPaid: e.target.value }))
+                    }
+                    inputClassName="font-semibold"
+                    error={errors.amountPaid}
+                  />
+
+                  <InputField
+                    label="Payment Date"
+                    type="date"
+                    value={paymentForm.paymentDate}
+                    onChange={(e) =>
+                      setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))
+                    }
+                  />
+                </div>
+
+                <InputField
+                  label="Billing Notes / Reference (Optional)"
+                  type="text"
+                  value={paymentForm.paymentNotes}
+                  onChange={(e) =>
+                    setPaymentForm((prev) => ({ ...prev, paymentNotes: e.target.value }))
+                  }
+                  placeholder="e.g. Paid at reception counter / GPay reference"
+                />
+              </section>
+            </form>
+          ) : (
+            <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
+              {/* Member & Plan Summary Header */}
+              <div className="rounded-2xl border border-border bg-surface/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm uppercase border border-border shrink-0">
+                    {form.firstName?.[0]}
+                    {form.lastName?.[0]}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground font-display">
+                      {form.firstName} {form.lastName}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {form.email} • {form.mobile}
+                    </p>
+                    {selectedBatch && (
+                      <p className="text-[11px] text-accent mt-0.5">
+                        Batch: {selectedBatch.name} (
+                        {selectedBatch.timingLabel || selectedBatch.startTime})
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="sm:text-right">
+                  <span className="text-xs font-semibold text-muted-foreground block">
+                    Plan &amp; Paid
+                  </span>
+                  <div className="flex items-center sm:justify-end gap-2 mt-0.5">
+                    <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-xs font-bold text-accent">
+                      {chosenPlan?.name || "Quarterly Pro"}
+                    </span>
+                    <span className="text-lg font-black text-emerald-400 font-display">
+                      ₹{Number(paymentForm.amountPaid).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 1. CONTACT & RESIDENCE INFORMATION */}
               <section className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <MapPin className="h-4 w-4 text-accent" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Contact Information
+                    Contact &amp; Residence Information
                   </h3>
                 </div>
 
-                {/* Address */}
-                <div>
-                  <label
-                    htmlFor="admin-member-address"
-                    className="mb-1.5 block text-xs font-medium text-foreground"
-                  >
-                    Address <span className="text-destructive">*</span>
-                  </label>
-                  <textarea
-                    id="admin-member-address"
-                    name="address"
-                    rows={2}
+                <TextareaField
+                  id="admin-member-address"
+                  name="address"
+                  rows={2}
+                  label="Address"
+                  required
+                  placeholder="Street address, building, apartment, or flat number"
+                  value={form.address}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={errors.address}
+                  textareaClassName="no-scrollbar resize-none"
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <InputField
+                    id="admin-member-city"
+                    name="city"
+                    label="City"
                     required
-                    placeholder="Street address, building, apartment, or flat number"
-                    value={form.address}
+                    placeholder="Enter city"
+                    value={form.city}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`no-scrollbar w-full rounded-xl border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 resize-none ${
-                      errors.address
-                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-accent focus:ring-accent/20"
-                    }`}
+                    error={errors.city}
                   />
-                  {errors.address && (
-                    <p className="mt-1 text-xs text-destructive">{errors.address}</p>
-                  )}
+
+                  <InputField
+                    id="admin-member-state"
+                    name="state"
+                    label="State"
+                    required
+                    placeholder="Enter state"
+                    value={form.state}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.state}
+                  />
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* City */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-city"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      City <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-city"
-                      name="city"
-                      type="text"
-                      required
-                      placeholder="Enter city"
-                      value={form.city}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.city
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.city && <p className="mt-1 text-xs text-destructive">{errors.city}</p>}
-                  </div>
+                  <InputField
+                    id="admin-member-country"
+                    name="country"
+                    label="Country"
+                    required
+                    placeholder="Enter country"
+                    value={form.country}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.country}
+                  />
 
-                  {/* State */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-state"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      State <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-state"
-                      name="state"
-                      type="text"
-                      required
-                      placeholder="Enter state"
-                      value={form.state}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.state
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.state && (
-                      <p className="mt-1 text-xs text-destructive">{errors.state}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Country */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-country"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Country <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-country"
-                      name="country"
-                      type="text"
-                      required
-                      placeholder="Enter country"
-                      value={form.country}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.country
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.country && (
-                      <p className="mt-1 text-xs text-destructive">{errors.country}</p>
-                    )}
-                  </div>
-
-                  {/* Pincode */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-pincode"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Pincode <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-pincode"
-                      name="pincode"
-                      type="text"
-                      required
-                      placeholder="e.g. 400001"
-                      value={form.pincode}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.pincode
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.pincode && (
-                      <p className="mt-1 text-xs text-destructive">{errors.pincode}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-pincode"
+                    name="pincode"
+                    label="Pincode"
+                    required
+                    placeholder="e.g. 400001"
+                    value={form.pincode}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.pincode}
+                  />
                 </div>
               </section>
 
-              {/* 3. EMERGENCY CONTACT */}
+              {/* 2. EMERGENCY CONTACT */}
               <section className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <PhoneCall className="h-4 w-4 text-accent" />
@@ -912,102 +1034,55 @@ export function AdminMemberRegistrationModal({
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Contact Name */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-emergency-name"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Contact Name <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      id="admin-member-emergency-name"
-                      name="emergencyName"
-                      type="text"
-                      required
-                      placeholder="Emergency contact person"
-                      value={form.emergencyName}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                        errors.emergencyName
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    />
-                    {errors.emergencyName && (
-                      <p className="mt-1 text-xs text-destructive">{errors.emergencyName}</p>
-                    )}
-                  </div>
-
-                  {/* Relationship */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-emergency-relationship"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Relationship <span className="text-destructive">*</span>
-                    </label>
-                    <select
-                      id="admin-member-emergency-relationship"
-                      name="emergencyRelationship"
-                      required
-                      value={form.emergencyRelationship}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition-all focus:ring-2 cursor-pointer ${
-                        errors.emergencyRelationship
-                          ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                          : "border-border focus:border-accent focus:ring-accent/20"
-                      }`}
-                    >
-                      <option value="">Select Relationship</option>
-                      <option value="Parent">Parent</option>
-                      <option value="Spouse">Spouse</option>
-                      <option value="Sibling">Sibling</option>
-                      <option value="Relative">Relative</option>
-                      <option value="Friend">Friend</option>
-                      <option value="Guardian">Guardian</option>
-                      <option value="Other">Other</option>
-                    </select>
-                    {errors.emergencyRelationship && (
-                      <p className="mt-1 text-xs text-destructive">
-                        {errors.emergencyRelationship}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Contact Number */}
-                <div>
-                  <label
-                    htmlFor="admin-member-emergency-number"
-                    className="mb-1.5 block text-xs font-medium text-foreground"
-                  >
-                    Contact Number <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    id="admin-member-emergency-number"
-                    name="emergencyNumber"
-                    type="tel"
+                  <InputField
+                    id="admin-member-emergency-name"
+                    name="emergencyName"
+                    label="Contact Name"
                     required
-                    placeholder="Emergency contact mobile number"
-                    value={form.emergencyNumber}
+                    placeholder="Emergency contact person"
+                    value={form.emergencyName}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full rounded-xl border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                      errors.emergencyNumber
-                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-accent focus:ring-accent/20"
-                    }`}
+                    error={errors.emergencyName}
                   />
-                  {errors.emergencyNumber && (
-                    <p className="mt-1 text-xs text-destructive">{errors.emergencyNumber}</p>
-                  )}
+
+                  <SelectField
+                    id="admin-member-emergency-relationship"
+                    name="emergencyRelationship"
+                    label="Relationship"
+                    required
+                    value={form.emergencyRelationship}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.emergencyRelationship}
+                    placeholder="Select Relationship"
+                    options={[
+                      { value: "Parent", label: "Parent" },
+                      { value: "Spouse", label: "Spouse" },
+                      { value: "Sibling", label: "Sibling" },
+                      { value: "Relative", label: "Relative" },
+                      { value: "Friend", label: "Friend" },
+                      { value: "Guardian", label: "Guardian" },
+                      { value: "Other", label: "Other" },
+                    ]}
+                  />
                 </div>
+
+                <InputField
+                  id="admin-member-emergency-number"
+                  name="emergencyNumber"
+                  type="tel"
+                  label="Contact Number"
+                  required
+                  placeholder="Emergency contact mobile number"
+                  value={form.emergencyNumber}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={errors.emergencyNumber}
+                />
               </section>
 
-              {/* 4. FITNESS INFORMATION */}
+              {/* 3. FITNESS INFORMATION */}
               <section className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <Activity className="h-4 w-4 text-accent" />
@@ -1017,82 +1092,48 @@ export function AdminMemberRegistrationModal({
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {/* Height */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-height"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Height <span className="text-destructive">*</span>
-                    </label>
-                    <div className="relative flex items-center">
-                      <input
-                        id="admin-member-height"
-                        name="height"
-                        type="number"
-                        step="0.1"
-                        required
-                        placeholder="e.g. 175"
-                        value={form.height}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`w-full rounded-xl border bg-background pl-3.5 pr-12 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                          errors.height
-                            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                            : "border-border focus:border-accent focus:ring-accent/20"
-                        }`}
-                      />
-                      <span className="pointer-events-none absolute right-3.5 text-xs font-semibold text-muted-foreground">
-                        cm
-                      </span>
-                    </div>
-                    {errors.height && (
-                      <p className="mt-1 text-xs text-destructive">{errors.height}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-height"
+                    name="height"
+                    type="number"
+                    step="0.1"
+                    label="Height"
+                    required
+                    placeholder="e.g. 175"
+                    value={form.height}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.height}
+                    endAdornment={
+                      <span className="text-xs font-semibold text-muted-foreground pr-3.5">cm</span>
+                    }
+                  />
 
-                  {/* Weight */}
-                  <div>
-                    <label
-                      htmlFor="admin-member-weight"
-                      className="mb-1.5 block text-xs font-medium text-foreground"
-                    >
-                      Weight <span className="text-destructive">*</span>
-                    </label>
-                    <div className="relative flex items-center">
-                      <input
-                        id="admin-member-weight"
-                        name="weight"
-                        type="number"
-                        step="0.1"
-                        required
-                        placeholder="e.g. 72"
-                        value={form.weight}
-                        onChange={handleChange}
-                        onBlur={handleBlur}
-                        className={`w-full rounded-xl border bg-background pl-3.5 pr-12 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 ${
-                          errors.weight
-                            ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                            : "border-border focus:border-accent focus:ring-accent/20"
-                        }`}
-                      />
-                      <span className="pointer-events-none absolute right-3.5 text-xs font-semibold text-muted-foreground">
-                        kg
-                      </span>
-                    </div>
-                    {errors.weight && (
-                      <p className="mt-1 text-xs text-destructive">{errors.weight}</p>
-                    )}
-                  </div>
+                  <InputField
+                    id="admin-member-weight"
+                    name="weight"
+                    type="number"
+                    step="0.1"
+                    label="Weight"
+                    required
+                    placeholder="e.g. 72"
+                    value={form.weight}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={errors.weight}
+                    endAdornment={
+                      <span className="text-xs font-semibold text-muted-foreground pr-3.5">kg</span>
+                    }
+                  />
                 </div>
               </section>
 
-              {/* 5. MEDICAL FITNESS DOCUMENT */}
+              {/* 4. MEDICAL FITNESS DOCUMENT & BIO */}
               <section className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <FileCheck className="h-4 w-4 text-accent" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Medical Fitness Document
+                    Medical Fitness Document &amp; Bio
                   </h3>
                 </div>
 
@@ -1168,192 +1209,20 @@ export function AdminMemberRegistrationModal({
                 </div>
 
                 {/* Bio */}
-                <div>
-                  <label
-                    htmlFor="admin-member-bio"
-                    className="mb-1.5 block text-xs font-medium text-foreground"
-                  >
-                    Bio <span className="text-destructive">*</span>
-                  </label>
-                  <textarea
-                    id="admin-member-bio"
-                    name="bio"
-                    rows={3}
-                    required
-                    placeholder="Tell us about yourself..."
-                    value={form.bio}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    className={`no-scrollbar w-full rounded-xl border bg-background p-3 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:ring-2 resize-none ${
-                      errors.bio
-                        ? "border-destructive focus:border-destructive focus:ring-destructive/20"
-                        : "border-border focus:border-accent focus:ring-accent/20"
-                    }`}
-                  />
-                  {errors.bio && <p className="mt-1 text-xs text-destructive">{errors.bio}</p>}
-                </div>
+                <TextareaField
+                  id="admin-member-bio"
+                  name="bio"
+                  rows={3}
+                  label="Athlete Bio &amp; Coaching Notes"
+                  required
+                  placeholder="Tell us about the athlete's background, training history or fitness goals..."
+                  value={form.bio}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={errors.bio}
+                  textareaClassName="no-scrollbar resize-none"
+                />
               </section>
-            </form>
-          ) : (
-            <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
-              {/* Member Summary Header */}
-              <div className="rounded-2xl border border-border bg-surface/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm uppercase border border-border shrink-0">
-                    {form.firstName?.[0]}
-                    {form.lastName?.[0]}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground font-display">
-                      {form.firstName} {form.lastName}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {form.email} • {form.mobile}
-                    </p>
-                  </div>
-                </div>
-                <div className="sm:text-right">
-                  <span className="text-xs font-semibold text-muted-foreground block">
-                    Payable Amount
-                  </span>
-                  <p className="text-xl font-black text-accent font-display">
-                    ₹{Number(paymentForm.amountPaid).toLocaleString("en-IN")}
-                  </p>
-                </div>
-              </div>
-
-              {/* Membership Plan Selection */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                  <div className="flex items-center gap-2 text-foreground font-semibold text-xs uppercase tracking-wider">
-                    <Sparkles size={14} className="text-accent" />
-                    <span>Select Membership Plan</span>
-                  </div>
-                  <span className="text-xs font-medium text-accent">Choose commitment tier</span>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {MEMBERSHIP_PLANS.map((plan) => {
-                    const isSelected = paymentForm.selectedPlanId === plan.id;
-                    return (
-                      <div
-                        key={plan.id}
-                        onClick={() =>
-                          setPaymentForm((prev) => ({
-                            ...prev,
-                            selectedPlanId: plan.id,
-                            amountPaid: plan.price,
-                          }))
-                        }
-                        className={`relative rounded-2xl border p-4 cursor-pointer transition-all duration-150 ${
-                          isSelected
-                            ? "border-accent bg-accent/10 ring-2 ring-accent shadow-sm"
-                            : "border-border bg-card hover:border-accent/50"
-                        }`}
-                      >
-                        {plan.badge && (
-                          <span className="absolute -top-2.5 right-3 rounded-full bg-accent px-2 py-0.2 text-[9px] font-bold text-accent-foreground uppercase tracking-wider">
-                            {plan.badge}
-                          </span>
-                        )}
-                        <h4 className="text-sm font-bold text-foreground font-display">
-                          {plan.name}
-                        </h4>
-                        <div className="mt-1 flex items-baseline gap-1">
-                          <span className="text-lg font-black text-foreground font-display">
-                            {plan.formattedPrice}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">{plan.period}</span>
-                        </div>
-                        <p className="mt-1.5 text-[10px] text-muted-foreground line-clamp-2">
-                          {plan.description}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Payment Method Selector */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-foreground font-semibold text-xs uppercase tracking-wider border-b border-border/60 pb-2">
-                  <CreditCard size={14} className="text-accent" />
-                  <span>Choose Payment Method</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {PAYMENT_METHODS.map((method) => {
-                    const isSelected = paymentForm.paymentMethod === method.id;
-                    return (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() =>
-                          setPaymentForm((prev) => ({
-                            ...prev,
-                            paymentMethod: method.id,
-                            transactionId: generateTransactionId(method.id),
-                          }))
-                        }
-                        className={`flex flex-col items-center justify-center rounded-xl border p-3 text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-500 ring-1 ring-emerald-500"
-                            : "border-border bg-card text-muted-foreground hover:text-foreground hover:border-accent/40"
-                        }`}
-                      >
-                        <span className="text-xs font-bold">{method.name}</span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">
-                          {method.id === "Cash" ? "Gym Reception" : "Digital Transaction"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Payment Reference & Details */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 pt-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Transaction / Receipt ID <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={paymentForm.transactionId}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({ ...prev, transactionId: e.target.value }))
-                    }
-                    placeholder="e.g. TXN-UPI-984123"
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-accent"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
-                    Amount Received (₹) <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={paymentForm.amountPaid}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({ ...prev, amountPaid: e.target.value }))
-                    }
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs font-semibold text-foreground outline-none transition-all focus:border-accent"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">Payment Date</label>
-                  <input
-                    type="date"
-                    value={paymentForm.paymentDate}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))
-                    }
-                    className="w-full rounded-xl border border-border bg-background px-3.5 py-2 text-xs text-foreground outline-none transition-all focus:border-accent"
-                  />
-                </div>
-              </div>
             </div>
           )}
 
@@ -1366,7 +1235,7 @@ export function AdminMemberRegistrationModal({
                 className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
               >
                 <ArrowLeft size={14} />
-                <span>Back to Member Details</span>
+                <span>Back to Registration &amp; Payment</span>
               </button>
             ) : (
               <div />
@@ -1395,16 +1264,16 @@ export function AdminMemberRegistrationModal({
               ) : step === 1 ? (
                 <button
                   type="button"
-                  onClick={handleProceedToPayment}
+                  onClick={handleProceedToBalanceDetails}
                   className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
                 >
-                  <span>Proceed to Plan & Payment</span>
+                  <span>Next: Member Details</span>
                   <ArrowRight size={14} />
                 </button>
               ) : (
                 <button
                   type="button"
-                  onClick={handleCompletePaymentAndRegister}
+                  onClick={handleCompleteRegistration}
                   disabled={isSubmitting}
                   className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-6 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                 >
@@ -1418,8 +1287,8 @@ export function AdminMemberRegistrationModal({
                       <CheckCircle2 size={14} />
                       <span>
                         {isConfirmingLead
-                          ? "Complete Payment & Confirm Member"
-                          : "Complete Payment & Activate Member"}
+                          ? "Complete Registration & Confirm Member"
+                          : "Complete Registration & Activate Member"}
                       </span>
                     </>
                   )}

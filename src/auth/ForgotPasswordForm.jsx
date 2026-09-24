@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, MailCheck } from "lucide-react";
-import TextField from "@/components/ui/TextField";
+import { InputField } from "@/components/form";
 import Button from "@/components/ui/button";
 import { forgotPassword, AuthError } from "./authService";
 import { forgotPasswordSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
@@ -91,7 +91,7 @@ export default function ForgotPasswordForm({ onBack }) {
   return (
     <form className="flex flex-col gap-4.5 text-left" onSubmit={handleSubmit} noValidate>
       <div className="mb-1">
-        <h2 className="text-[20px] font-semibold text-card mb-1">Forgot your password?</h2>
+        <h2 className="text-[20px] font-semibold text-foreground mb-1">Forgot your password?</h2>
         <p className="text-[13.5px] text-muted-foreground leading-relaxed">
           Enter your admin email and we will send you a link to reset your password.
         </p>
@@ -106,7 +106,7 @@ export default function ForgotPasswordForm({ onBack }) {
         </div>
       )}
 
-      <TextField
+      <InputField
         label="Email address"
         type="email"
         name="email"

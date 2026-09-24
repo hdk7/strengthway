@@ -256,7 +256,7 @@ export default function MemberProfilePage() {
             <span>Back to Members List</span>
           </button>
 
-          {!isDeleted && member.status === "Lead" && (
+          {!isDeleted && (member.status === "Lead" || member.status === "Inquiry") && (
             <button
               type="button"
               onClick={handleConvertLead}
@@ -298,17 +298,17 @@ export default function MemberProfilePage() {
         </div>
       </div>
 
-      {/* Lead Notice Banner if applicable */}
-      {!isDeleted && member.status === "Lead" && (
+      {/* Inquiry Notice Banner if applicable */}
+      {!isDeleted && (member.status === "Lead" || member.status === "Inquiry") && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
           <div className="flex items-center gap-3">
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-500">
               <UserCheck size={20} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-foreground">Prospective Lead Registration</h3>
+              <h3 className="text-sm font-bold text-foreground">Prospective Inquiry Registration</h3>
               <p className="text-xs text-muted-foreground">
-                This athlete is a registered lead. Confirm this lead to officially activate their
+                This athlete is a registered inquiry. Confirm this inquiry to officially activate their
                 gym membership.
               </p>
             </div>
@@ -358,9 +358,9 @@ export default function MemberProfilePage() {
                   <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-destructive">
                     Archived / Soft-Deleted
                   </span>
-                ) : member.status === "Lead" ? (
+                ) : member.status === "Lead" || member.status === "Inquiry" ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">
-                    Prospective Lead
+                    Prospective Inquiry
                   </span>
                 ) : (
                   <span

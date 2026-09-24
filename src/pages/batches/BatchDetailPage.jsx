@@ -31,6 +31,7 @@ import {
   updateDayClass,
 } from "@/lib/batchesService";
 import { getTrainerPhoto } from "@/lib/trainersService";
+import { InputField, SelectField, TextareaField, TimePickerField } from "@/components/form";
 
 export default function BatchDetailPage() {
   const { id } = useParams();
@@ -65,6 +66,8 @@ export default function BatchDetailPage() {
         startTime: found.startTime,
         endTime: found.endTime,
         daysPattern: found.daysPattern,
+        daysLabel: found.daysLabel,
+        daysList: found.daysList,
         maxPax: found.maxPax,
         status: found.status,
       });
@@ -83,7 +86,7 @@ export default function BatchDetailPage() {
         <h2 className="text-xl font-bold text-foreground">Batch Not Found</h2>
         <p className="mt-2 text-sm text-muted-foreground">The requested batch does not exist or has been removed.</p>
         <button
-          onClick={() => navigate("/admin/batches/list")}
+          onClick={() => navigate("/admin/batches")}
           className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/80"
         >
           <ArrowLeft size={16} /> Back to Batches
@@ -152,7 +155,7 @@ export default function BatchDetailPage() {
       {/* 1. Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link
-          to="/admin/batches/list"
+          to="/admin/batches"
           className="hover:text-foreground transition-colors"
         >
           Batches
@@ -575,103 +578,93 @@ export default function BatchDetailPage() {
             </div>
 
             <form onSubmit={handleSaveBatch} className="space-y-4 text-sm">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Batch Name
-                </label>
-                <input
-                  type="text"
-                  value={editBatchForm.name}
+              <InputField
+                label="Batch Name"
+                value={editBatchForm.name}
+                onChange={(e) =>
+                  setEditBatchForm({ ...editBatchForm, name: e.target.value })
+                }
+                size="sm"
+                labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                required
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <TimePickerField
+                  label="Start Time"
+                  value={editBatchForm.startTime}
                   onChange={(e) =>
-                    setEditBatchForm({ ...editBatchForm, name: e.target.value })
+                    setEditBatchForm({ ...editBatchForm, startTime: e.target.value })
                   }
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                  required
+                />
+                <TimePickerField
+                  label="End Time"
+                  value={editBatchForm.endTime}
+                  onChange={(e) =>
+                    setEditBatchForm({ ...editBatchForm, endTime: e.target.value })
+                  }
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Start Time
-                  </label>
-                  <input
-                    type="text"
-                    value={editBatchForm.startTime}
-                    onChange={(e) =>
-                      setEditBatchForm({ ...editBatchForm, startTime: e.target.value })
-                    }
-                    placeholder="06:00 AM"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    End Time
-                  </label>
-                  <input
-                    type="text"
-                    value={editBatchForm.endTime}
-                    onChange={(e) =>
-                      setEditBatchForm({ ...editBatchForm, endTime: e.target.value })
-                    }
-                    placeholder="07:00 AM"
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
+                <SelectField
+                  label="Days Pattern"
+                  value={editBatchForm.daysPattern}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditBatchForm({
+                      ...editBatchForm,
+                      daysPattern: val,
+                      daysLabel:
+                        val === "TTS"
+                          ? "Tuesday • Thursday • Saturday"
+                          : "Monday • Wednesday • Friday",
+                      daysList:
+                        val === "TTS"
+                          ? ["Tuesday", "Thursday", "Saturday"]
+                          : ["Monday", "Wednesday", "Friday"],
+                    });
+                  }}
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                  options={[
+                    { value: "MWF", label: "MWF (Mon • Wed • Fri)" },
+                    { value: "TTS", label: "TTS (Tue • Thu • Sat)" },
+                  ]}
+                />
+                <InputField
+                  type="number"
+                  min="1"
+                  max="100"
+                  label="Max Pax (Capacity)"
+                  value={editBatchForm.maxPax}
+                  onChange={(e) =>
+                    setEditBatchForm({ ...editBatchForm, maxPax: e.target.value })
+                  }
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                  required
+                />
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Days Pattern
-                  </label>
-                  <select
-                    value={editBatchForm.daysPattern}
-                    onChange={(e) =>
-                      setEditBatchForm({ ...editBatchForm, daysPattern: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                  >
-                    <option value="MWF">MWF (Mon • Wed • Fri)</option>
-                    <option value="TTS">TTS (Tue • Thu • Sat)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Max Pax (Capacity)
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={editBatchForm.maxPax}
-                    onChange={(e) =>
-                      setEditBatchForm({ ...editBatchForm, maxPax: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Status
-                </label>
-                <select
+                <SelectField
+                  label="Status"
                   value={editBatchForm.status}
                   onChange={(e) =>
                     setEditBatchForm({ ...editBatchForm, status: e.target.value })
                   }
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                  options={[
+                    { value: "Active", label: "Active" },
+                    { value: "Inactive", label: "Inactive" },
+                  ]}
+                />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
@@ -714,84 +707,67 @@ export default function BatchDetailPage() {
             </div>
 
             <form onSubmit={handleSaveScheduledClass} className="space-y-4 text-sm">
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Class Title
-                </label>
-                <input
-                  type="text"
-                  value={editingClass.title}
-                  onChange={(e) =>
-                    setEditingClass({ ...editingClass, title: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                  required
-                />
-              </div>
+              <InputField
+                label="Class Title"
+                value={editingClass.title}
+                onChange={(e) =>
+                  setEditingClass({ ...editingClass, title: e.target.value })
+                }
+                size="sm"
+                labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                required
+              />
 
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Workout Focus & Description
-                </label>
-                <textarea
-                  rows={2}
-                  value={editingClass.focus}
-                  onChange={(e) =>
-                    setEditingClass({ ...editingClass, focus: e.target.value })
-                  }
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                  required
-                />
-              </div>
+              <TextareaField
+                rows={2}
+                label="Workout Focus & Description"
+                value={editingClass.focus}
+                onChange={(e) =>
+                  setEditingClass({ ...editingClass, focus: e.target.value })
+                }
+                size="sm"
+                labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                required
+              />
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Intensity
-                  </label>
-                  <select
-                    value={editingClass.intensity}
-                    onChange={(e) =>
-                      setEditingClass({ ...editingClass, intensity: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                  >
-                    <option value="Medium">Medium</option>
-                    <option value="High">High</option>
-                    <option value="Peak">Peak</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Room / Floor Zone
-                  </label>
-                  <input
-                    type="text"
-                    value={editingClass.room || "Main Floor"}
-                    onChange={(e) =>
-                      setEditingClass({ ...editingClass, room: e.target.value })
-                    }
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Assigned Coach
-                </label>
-                <input
-                  type="text"
-                  value={editingClass.coachName}
+                <SelectField
+                  label="Intensity"
+                  value={editingClass.intensity}
                   onChange={(e) =>
-                    setEditingClass({ ...editingClass, coachName: e.target.value })
+                    setEditingClass({ ...editingClass, intensity: e.target.value })
                   }
-                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:border-foreground focus:outline-none"
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                  options={[
+                    { value: "Medium", label: "Medium" },
+                    { value: "High", label: "High" },
+                    { value: "Peak", label: "Peak" },
+                  ]}
+                />
+
+                <InputField
+                  label="Room / Floor Zone"
+                  value={editingClass.room || "Main Floor"}
+                  onChange={(e) =>
+                    setEditingClass({ ...editingClass, room: e.target.value })
+                  }
+                  size="sm"
+                  labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
                   required
                 />
               </div>
+
+              <InputField
+                label="Assigned Coach"
+                value={editingClass.coachName}
+                onChange={(e) =>
+                  setEditingClass({ ...editingClass, coachName: e.target.value })
+                }
+                size="sm"
+                labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+                required
+              />
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
                 <button

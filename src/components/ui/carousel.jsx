@@ -248,7 +248,10 @@ export function CarouselDots({ api: propApi, count, className }) {
 
   return (
     <div
-      className={cn("mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-full px-2", className)}
+      className={cn(
+        "mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 max-w-full px-2",
+        className,
+      )}
       onMouseEnter={() => setPlaying(false)}
       onMouseLeave={() => setPlaying(true)}
     >

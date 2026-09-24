@@ -4,7 +4,7 @@ import { Sun, Moon, PanelLeftClose, PanelLeftOpen, Search, Bell, Globe } from "l
 import Avatar from "@/components/ui/avatar";
 import { getCurrentUser } from "@/auth/currentUser";
 import { useTheme } from "@/hooks/theme";
-import logo from "@/assets/admin/logo.png";
+import logo from "@/assets/gym_logo.png";
 
 const iconBtnClass =
   "inline-flex items-center justify-center w-[34px] h-[34px] rounded-full border border-border bg-transparent text-muted-foreground cursor-pointer hover:bg-accent/10 hover:text-accent transition-colors";

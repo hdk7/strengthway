@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import { useDocumentTitle } from "@/hooks/theme";
 
 function getScreenTier() {
   if (typeof window === "undefined") return "large";
@@ -12,6 +13,7 @@ function getScreenTier() {
 }
 
 export default function AdminLayout() {
+  useDocumentTitle("The Strength Way — Admin");
   const [tier, setTier] = useState(getScreenTier);
   const [collapsed, setCollapsed] = useState(() => getScreenTier() === "medium");
   const [mobileOpen, setMobileOpen] = useState(false);

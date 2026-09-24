@@ -11,7 +11,10 @@ const HERO_STATS = [
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex flex-col justify-center overflow-hidden">
+    <section
+      id="hero"
+      className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex flex-col justify-center overflow-hidden"
+    >
       <img
         src={heroImage}
         alt="The Strength Way"

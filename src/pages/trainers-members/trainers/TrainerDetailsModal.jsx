@@ -19,7 +19,7 @@ import {
   Award,
 } from "lucide-react";
 import { toast } from "sonner";
-import { CertifiedAccreditations } from "@/components/trainers/CertifiedAccreditations";
+import { CertifiedAccreditations } from "@/pages/trainers-members/trainers/CertifiedAccreditations";
 
 export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -383,9 +383,7 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
                     </div>
 
                     <div className="pt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="font-medium text-foreground">
-                        — {trainer.name}
-                      </span>
+                      <span className="font-medium text-foreground">— {trainer.name}</span>
                       <span className="font-mono text-[11px]">TSW Trainering Faculty</span>
                     </div>
                   </div>

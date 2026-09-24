@@ -11,6 +11,7 @@ import {
   FileCheck,
   Filter,
   Archive,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminMemberRegistrationModal } from "./MembersRegistration";
@@ -22,7 +23,7 @@ export default function MembersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedLeadForConfirm, setSelectedLeadForConfirm] = useState(null);
+  const [selectedInquiryForConfirm, setSelectedInquiryForConfirm] = useState(null);
 
   // Load all members including soft-deleted ones from membersService
   useEffect(() => {
@@ -54,13 +55,13 @@ export default function MembersPage() {
     }
   };
 
-  const handleOpenConfirmModal = (leadMember) => {
-    setSelectedLeadForConfirm(leadMember);
+  const handleOpenConfirmModal = (inquiryMember) => {
+    setSelectedInquiryForConfirm(inquiryMember);
   };
 
-  const handleLeadConfirmed = (updatedMember) => {
+  const handleInquiryConfirmed = (updatedMember) => {
     setMembers((prev) => prev.map((m) => (m.id === updatedMember.id ? updatedMember : m)));
-    setSelectedLeadForConfirm(null);
+    setSelectedInquiryForConfirm(null);
   };
 
   const filteredMembers = useMemo(() => {
@@ -91,16 +92,18 @@ export default function MembersPage() {
   const stats = useMemo(() => {
     const activeList = members.filter((m) => !m.isDeleted);
     const total = activeList.length;
-    const leads = activeList.filter((m) => m.status === "Lead").length;
+    const inquiries = activeList.filter((m) => m.status === "Lead" || m.status === "Inquiry").length;
     const active = activeList.filter(
-      (m) => m.status === "Active" || (!m.status && m.status !== "Lead"),
+      (m) =>
+        m.status === "Active" ||
+        (!m.status && m.status !== "Lead" && m.status !== "Inquiry"),
     ).length;
     const withMedical = activeList.filter((m) => m.medicalDoc || m.medicalDocName).length;
     const archived = members.filter((m) => m.isDeleted).length;
     return {
       total,
       active,
-      leads,
+      inquiries,
       withMedical,
       archived,
     };
@@ -131,7 +134,7 @@ export default function MembersPage() {
       </div>
 
       {/* Metrics Summary Row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {/* Total Members */}
         <div
           onClick={() => setStatusFilter("All")}
@@ -148,60 +151,6 @@ export default function MembersPage() {
           <div className="mt-3">
             <span className="text-2xl font-bold text-foreground">{stats.total}</span>
             <p className="mt-0.5 text-[11px] text-muted-foreground">Registered in gym</p>
-          </div>
-        </div>
-
-        {/* Pending Leads */}
-        <div
-          onClick={() => setStatusFilter("Lead")}
-          className={`rounded-2xl border bg-card p-4 shadow-sm cursor-pointer transition-all hover:border-amber-500/50 ${
-            statusFilter === "Lead" ? "border-amber-500 ring-1 ring-amber-500/30" : "border-border"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Prospective Leads</span>
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-amber-500/10 text-amber-500">
-              <UserPlus size={16} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-bold text-amber-500">{stats.leads}</span>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Awaiting confirmation</p>
-          </div>
-        </div>
-
-        {/* Active Members */}
-        <div
-          onClick={() => setStatusFilter("Active")}
-          className={`rounded-2xl border bg-card p-4 shadow-sm cursor-pointer transition-all hover:border-emerald-500/50 ${
-            statusFilter === "Active"
-              ? "border-emerald-500 ring-1 ring-emerald-500/30"
-              : "border-border"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Active Status</span>
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-500/10 text-emerald-500">
-              <UserCheck size={16} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-bold text-emerald-500">{stats.active}</span>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Currently attending</p>
-          </div>
-        </div>
-
-        {/* Medical Clearance */}
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Medical Clearance</span>
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-accent/10 text-accent">
-              <FileCheck size={16} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <span className="text-2xl font-bold text-foreground">{stats.withMedical}</span>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Documents on record</p>
           </div>
         </div>
 
@@ -240,7 +189,7 @@ export default function MembersPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, mobile, email, or ID…"
-            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2 text-xs text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-accent focus:ring-1 focus:ring-accent"
+            className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-accent focus:ring-1 focus:ring-accent"
           />
         </div>
 
@@ -259,28 +208,6 @@ export default function MembersPage() {
               }`}
             >
               All
-            </button>
-            <button
-              type="button"
-              onClick={() => setStatusFilter("Lead")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
-                statusFilter === "Lead"
-                  ? "bg-amber-500 text-black font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <span>Leads</span>
-              {stats.leads > 0 && (
-                <span
-                  className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                    statusFilter === "Lead"
-                      ? "bg-black/20 text-black"
-                      : "bg-amber-500/15 text-amber-500"
-                  }`}
-                >
-                  {stats.leads}
-                </span>
-              )}
             </button>
             <button
               type="button"
@@ -391,6 +318,17 @@ export default function MembersPage() {
                             <p className="text-[11px] text-muted-foreground font-mono">
                               {member.id}
                             </p>
+                            {(member.batchTiming ||
+                              member.schedule?.batchTiming ||
+                              member.batchName) && (
+                              <span className="inline-flex items-center gap-1 mt-1 rounded-md bg-accent/10 px-1.5 py-0.5 text-[10px] font-semibold text-accent">
+                                <Clock size={10} className="shrink-0" />
+                                <span>
+                                  {member.batchTiming || member.schedule?.batchTiming}
+                                  {member.batchName ? ` • ${member.batchName}` : ""}
+                                </span>
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -463,15 +401,15 @@ export default function MembersPage() {
                           <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 px-2.5 py-1 text-xs font-semibold text-destructive">
                             Archived
                           </span>
-                        ) : member.status === "Lead" ? (
+                        ) : member.status === "Lead" || member.status === "Inquiry" ? (
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="inline-flex items-center rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-bold text-amber-500">
-                              Lead
+                              Inquiry
                             </span>
                             <button
                               type="button"
                               onClick={() => handleOpenConfirmModal(member)}
-                              title="Confirm lead, complete mandatory details & payment to convert to active gym member"
+                              title="Confirm inquiry, complete mandatory details & payment to convert to active gym member"
                               className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
                             >
                               <UserCheck size={13} />
@@ -507,20 +445,23 @@ export default function MembersPage() {
                           ? "Try adjusting your search query or filters."
                           : statusFilter === "Archived"
                             ? "There are no soft-deleted members in the archive."
-                            : statusFilter === "Lead"
-                              ? "No pending leads found."
+                            : statusFilter === "Lead" || statusFilter === "Inquiry"
+                              ? "No pending inquiries found."
                               : "Get started by adding your first gym member."}
                       </p>
-                      {!searchQuery && statusFilter !== "Archived" && statusFilter !== "Lead" && (
-                        <button
-                          type="button"
-                          onClick={handleOpenAddModal}
-                          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer"
-                        >
-                          <UserPlus size={15} />
-                          <span>Add Member</span>
-                        </button>
-                      )}
+                      {!searchQuery &&
+                        statusFilter !== "Archived" &&
+                        statusFilter !== "Lead" &&
+                        statusFilter !== "Inquiry" && (
+                          <button
+                            type="button"
+                            onClick={handleOpenAddModal}
+                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer"
+                          >
+                            <UserPlus size={15} />
+                            <span>Add Member</span>
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>
@@ -532,19 +473,19 @@ export default function MembersPage() {
 
       {/* Member Add / Confirm Registration Modal */}
       <AdminMemberRegistrationModal
-        isOpen={isAddModalOpen || Boolean(selectedLeadForConfirm)}
+        isOpen={isAddModalOpen || Boolean(selectedInquiryForConfirm)}
         onClose={() => {
           setIsAddModalOpen(false);
-          setSelectedLeadForConfirm(null);
+          setSelectedInquiryForConfirm(null);
         }}
-        leadToConfirm={selectedLeadForConfirm}
+        leadToConfirm={selectedInquiryForConfirm}
         onSuccess={(savedMember, isConfirm) => {
-          if (isConfirm || selectedLeadForConfirm) {
+          if (isConfirm || selectedInquiryForConfirm) {
             setMembers((prev) => prev.map((m) => (m.id === savedMember.id ? savedMember : m)));
           } else {
             setMembers((prev) => [savedMember, ...prev]);
           }
-          setSelectedLeadForConfirm(null);
+          setSelectedInquiryForConfirm(null);
           setIsAddModalOpen(false);
         }}
       />

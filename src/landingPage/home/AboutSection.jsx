@@ -11,7 +11,10 @@ const ABOUT_STATS = [
 
 export function AboutSection() {
   return (
-    <section id="about" className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+    <section
+      id="about"
+      className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14"
+    >
       <div className="grid gap-8 md:gap-10 lg:gap-14 md:grid-cols-2 items-center">
         <Reveal className="min-w-0">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
@@ -43,10 +46,14 @@ export function AboutSection() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 min-w-0">
           {ABOUT_STATS.map((s, i) => (
             <Reveal key={s.l} delay={i * 80} className="min-w-0">
-              <SpotlightCard className="rounded-2xl border border-black bg-black p-4 sm:p-6 transition-transform hover:-translate-y-1 min-w-0">
-                <s.i className="h-6 w-6 text-white" />
-                <div className="mt-4 sm:mt-6 font-display text-2xl sm:text-3xl font-bold text-white">{s.k}</div>
-                <div className="mt-1 text-[11px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-white/60 truncate">{s.l}</div>
+              <SpotlightCard className="rounded-2xl border border-border/80 bg-card p-4 sm:p-6 transition-transform hover:-translate-y-1 min-w-0 shadow-xs">
+                <s.i className="h-6 w-6 text-foreground" />
+                <div className="mt-4 sm:mt-6 font-display text-2xl sm:text-3xl font-bold text-foreground">
+                  {s.k}
+                </div>
+                <div className="mt-1 text-[11px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-muted-foreground truncate">
+                  {s.l}
+                </div>
               </SpotlightCard>
             </Reveal>
           ))}
