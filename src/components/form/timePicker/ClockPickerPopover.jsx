@@ -29,7 +29,7 @@ export default function ClockPickerPopover({
             onClick={() => onStepChange("hour")}
             className={`px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
               clockStep === "hour"
-                ? "bg-accent text-accent-foreground"
+                ? "bg-accent text-background"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -41,7 +41,7 @@ export default function ClockPickerPopover({
             onClick={() => onStepChange("minute")}
             className={`px-2 py-0.5 rounded-md transition-colors cursor-pointer ${
               clockStep === "minute"
-                ? "bg-accent text-accent-foreground"
+                ? "bg-accent text-background"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -91,7 +91,7 @@ export default function ClockPickerPopover({
         <button
           type="button"
           onClick={onConfirm}
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground py-2 text-xs font-bold hover:bg-accent/90 transition-colors cursor-pointer shadow-sm"
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent text-background py-2 text-xs font-bold hover:bg-accent/90 transition-colors cursor-pointer shadow-sm"
         >
           <Check size={13} />
           Set {displayTime}

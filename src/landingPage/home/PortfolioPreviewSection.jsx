@@ -26,7 +26,7 @@ const PORTFOLIO_PREVIEW_PHOTOS = [
 export function PortfolioPreviewSection() {
   const [api, setApi] = useState();
   return (
-    <section id="portfolio" className="border-y border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
+    <section id="portfolio" className="border-y border-border/60 bg-card/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14">
       <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -39,7 +39,7 @@ export function PortfolioPreviewSection() {
           </div>
           <Link
             to="/portfolio"
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-3 font-semibold transition-colors hover:bg-surface"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-5 py-3 font-semibold transition-colors hover:bg-card"
           >
             See full portfolio
             <ArrowRight className="h-4 w-4" />

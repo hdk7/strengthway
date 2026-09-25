@@ -84,7 +84,7 @@ function BmiCalculator() {
   return (
     <div className="grid gap-8 rounded-3xl border border-border bg-card p-5 sm:p-8 md:p-12 shadow-sm md:grid-cols-2 min-w-0">
       <div className="min-w-0">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs uppercase tracking-wider text-muted-foreground">
+        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-wider text-muted-foreground">
           <Activity className="h-3.5 w-3.5 text-foreground" /> Health check
         </div>
         <h3 className="mt-4 font-display text-3xl font-bold text-foreground sm:text-4xl">

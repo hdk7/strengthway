@@ -160,7 +160,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
 
         <DialogPrimitive.Content
           aria-describedby="trainer-modal-desc"
-          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-2xl max-h-[90vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card text-card-foreground shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none overflow-hidden"
+          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-2xl max-h-[90vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none overflow-hidden"
         >
           {/* Header */}
           <div className="relative border-b border-border/60 px-6 py-5 sm:px-8 text-center shrink-0">
@@ -235,7 +235,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                     <button
                       type="button"
                       onClick={() => photoInputRef.current?.click()}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                     >
                       <Upload size={14} />
                       <span>{form.photo ? "Change Photo" : "Upload Photo"}</span>
@@ -420,7 +420,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
               type="submit"
               form="trainer-form"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-60"
             >
               <CheckCircle2 size={14} />
               <span>

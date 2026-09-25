@@ -98,7 +98,7 @@ export function Navbar() {
       <header
         className={`w-full pointer-events-auto transition-all duration-300 ease-out ${
           scrolled
-            ? "mt-3 mx-3 sm:mx-6 max-w-[calc(100vw-1.5rem)] sm:max-w-5xl rounded-full border border-border/70 bg-surface/90 card-glow backdrop-blur-xl shadow-2xl"
+            ? "mt-3 mx-3 sm:mx-6 max-w-[calc(100vw-1.5rem)] sm:max-w-5xl rounded-full border border-border/70 bg-card/90 card-glow backdrop-blur-xl shadow-2xl"
             : "mt-0 max-w-full rounded-none border-b border-border/50 bg-background/95 backdrop-blur-md"
         }`}
       >

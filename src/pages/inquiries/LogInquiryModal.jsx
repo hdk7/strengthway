@@ -123,7 +123,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md animate-in fade-in duration-200" />
         <DialogPrimitive.Content
           aria-describedby="inquiry-form-desc"
-          className="no-scrollbar fixed left-1/2 top-1/2 z-50 w-full max-w-4xl max-h-[92vh] -translate-x-1/2 -translate-y-1/2 flex flex-col rounded-3xl border border-border/80 bg-card text-card-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 focus:outline-none"
+          className="no-scrollbar fixed left-1/2 top-1/2 z-50 w-full max-w-4xl max-h-[92vh] -translate-x-1/2 -translate-y-1/2 flex flex-col rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 focus:outline-none"
         >
           {/* Header Bar */}
           <div className="flex items-center justify-between border-b border-border/70 bg-card px-6 py-4 sm:px-8 shrink-0">
@@ -250,7 +250,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
                             onClick={() => handleGenderSelect(g)}
                             className={`rounded-xl border py-2 text-xs font-semibold transition-all cursor-pointer ${
                               form.gender === g
-                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                ? "bg-primary text-background border-primary shadow-sm"
                                 : "border-border bg-background hover:bg-accent/10 text-muted-foreground hover:text-foreground"
                             }`}
                           >
@@ -383,7 +383,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
               type="submit"
               form="inquiry-profile-form"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-60 hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-60 hover:scale-[1.02] active:scale-[0.98]"
             >
               <CheckCircle2 size={14} />
               <span>{isSubmitting ? "Saving…" : "Save Inquiry"}</span>

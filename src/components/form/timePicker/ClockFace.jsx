@@ -40,7 +40,7 @@ export default function ClockFace({
     dial: "#27272a", // surface-2 — inner circle
     hand: "var(--color-primary)",
     active: "var(--color-primary)",
-    activeFg: "var(--color-primary-foreground)",
+    activeFg: "var(--color-background)",
     text: "var(--color-foreground)",
     mutedText: "var(--color-muted-foreground)",
   };
@@ -70,8 +70,7 @@ export default function ClockFace({
         width={SIZE}
         height={SIZE}
         viewBox={`0 0 ${SIZE} ${SIZE}`}
-        style={{ display: "block" }}
-        className="select-none"
+        className="block select-none"
       >
         {/* Outer ring */}
         <circle cx={CX} cy={CY} r={CX - 4} fill={C.ring} stroke={C.ringStroke} strokeWidth="1" />
@@ -100,7 +99,7 @@ export default function ClockFace({
             const { x, y } = polarToXY(angle, HOUR_R);
             const isActive = h === clockHour;
             return (
-              <g key={h} onClick={() => onHourClick(h)} style={{ cursor: "pointer" }}>
+              <g key={h} onClick={() => onHourClick(h)} className="cursor-pointer">
                 <circle cx={x} cy={y} r="17" fill={isActive ? C.active : "transparent"} />
                 <text
                   x={x}
@@ -124,7 +123,7 @@ export default function ClockFace({
             const { x, y } = polarToXY(angle, MIN_R);
             const isActive = m === clockMinute;
             return (
-              <g key={m} onClick={() => onMinuteClick(m)} style={{ cursor: "pointer" }}>
+              <g key={m} onClick={() => onMinuteClick(m)} className="cursor-pointer">
                 <circle cx={x} cy={y} r="17" fill={isActive ? C.active : "transparent"} />
                 <text
                   x={x}

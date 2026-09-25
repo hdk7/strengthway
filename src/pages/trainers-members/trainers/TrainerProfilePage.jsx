@@ -110,7 +110,7 @@ export default function TrainerProfilePage() {
         <button
           type="button"
           onClick={() => navigate("/admin/trainers-members/trainers")}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
           <span>Back to Trainers Directory</span>
@@ -171,7 +171,7 @@ export default function TrainerProfilePage() {
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
           >
             <Edit3 size={14} />
             <span>Edit Profile</span>
@@ -220,13 +220,13 @@ export default function TrainerProfilePage() {
             </h1>
 
             {/* Bio / Quote */}
-            <blockquote className="rounded-2xl border-l-4 border-primary bg-muted/30 p-4 sm:p-5 text-sm sm:text-base italic text-foreground">
+            <div className="rounded-2xl border border-border bg-muted/30 p-4 sm:p-5 text-sm sm:text-base italic text-foreground">
               "
               {trainer.quote ||
                 trainer.bio ||
                 "Dedicated to building relentless strength and sustainable athletic performance."}
               "
-            </blockquote>
+            </div>
           </div>
         </div>
       </div>

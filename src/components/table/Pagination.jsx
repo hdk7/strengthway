@@ -135,7 +135,7 @@ const Pagination = ({
                 aria-current={isActive ? "page" : undefined}
                 className={`${btnSize} rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center ${
                   isActive
-                    ? "bg-primary text-primary-foreground font-bold shadow-xs"
+                    ? "bg-primary text-background font-bold shadow-xs"
                     : "border border-border hover:border-foreground/40 bg-card text-foreground hover:bg-muted font-normal"
                 }`}
               >

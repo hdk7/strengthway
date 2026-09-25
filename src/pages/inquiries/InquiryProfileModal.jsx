@@ -31,19 +31,6 @@ export function InquiryProfileModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  const initials = useMemo(() => {
-    const raw = String(inquiry?.name || "").trim();
-    if (!raw) return "U";
-    const parts = raw.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "U";
-    return (
-      parts
-        .slice(0, 2)
-        .map((p) => p[0] || "")
-        .join("")
-        .toUpperCase() || "U"
-    );
-  }, [inquiry?.name]);
 
   const formattedDateTime = useMemo(() => {
     if (!inquiry?.createdAt) return "—";
@@ -78,7 +65,7 @@ export function InquiryProfileModal({
       onClick={onClose}
     >
       <div
-        className="no-scrollbar relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-card text-card-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="no-scrollbar relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Bar with Close Button */}
@@ -111,49 +98,30 @@ export function InquiryProfileModal({
             <div className="pointer-events-none absolute left-1/3 -bottom-10 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
             <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-              <div className="flex items-center gap-5 min-w-0">
-                {/* Monogram Avatar with Live Ring */}
-                <div className="relative shrink-0">
-                  <div className="h-20 w-20 sm:h-22 sm:w-22 rounded-2xl border-2 border-border/80 bg-gradient-to-br from-card to-background p-1 shadow-xl">
-                    <div className="grid h-full w-full place-items-center rounded-xl bg-accent/15 text-accent font-display text-2xl sm:text-3xl font-black tracking-wider uppercase">
-                      {initials}
-                    </div>
-                  </div>
-                  <span className="absolute -bottom-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-background border border-border">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="space-y-2 min-w-0">
+                <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-foreground truncate">
+                  {inquiry.name || "Anonymous Prospect"}
+                </h2>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Inquiry ID */}
+                  <span className="font-mono text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                    {inquiry.id}
                   </span>
-                </div>
 
-                {/* Name, Badges & Subject Preview */}
-                <div className="space-y-1.5 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Inquiry ID */}
-                    <span className="font-mono text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
-                      {inquiry.id}
-                    </span>
-
-                    {/* Gender */}
-                    {inquiry.gender && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                        <User size={12} className="text-muted-foreground" />
-                        <span>{inquiry.gender}</span>
-                      </span>
-                    )}
-
-                    {/* Date and Time */}
+                  {/* Gender */}
+                  {inquiry.gender && (
                     <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                      <Clock size={12} className="text-primary" />
-                      <span>{formattedDateTime}</span>
+                      <User size={12} className="text-muted-foreground" />
+                      <span>{inquiry.gender}</span>
                     </span>
-                  </div>
+                  )}
 
-                  <h2 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight text-foreground truncate">
-                    {inquiry.name || "Anonymous Prospect"}
-                  </h2>
-
-                  <p className="text-xs sm:text-sm text-muted-foreground italic truncate">
-                    &ldquo;{inquiry.subject || "General Inquiry"}&rdquo;
-                  </p>
+                  {/* Date and Time */}
+                  <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card/80 px-2.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                    <Clock size={12} className="text-primary" />
+                    <span>{formattedDateTime}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -312,9 +280,9 @@ export function InquiryProfileModal({
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
                     Message
                   </span>
-                  <blockquote className="rounded-2xl border-l-4 border-primary bg-muted/20 p-5 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans">
+                  <div className="rounded-2xl border border-border bg-muted/20 p-5 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans">
                     {inquiry.message || "No message provided."}
-                  </blockquote>
+                  </div>
                 </div>
               </div>
             </div>

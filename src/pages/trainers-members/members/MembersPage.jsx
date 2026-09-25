@@ -125,7 +125,7 @@ export default function MembersPage() {
           <button
             type="button"
             onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-background shadow-sm transition-all hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <UserPlus size={18} />
             <span>Add Member</span>
@@ -203,7 +203,7 @@ export default function MembersPage() {
               onClick={() => setStatusFilter("All")}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                 statusFilter === "All"
-                  ? "bg-accent text-accent-foreground font-semibold"
+                  ? "bg-accent text-background font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -214,7 +214,7 @@ export default function MembersPage() {
               onClick={() => setStatusFilter("Active")}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                 statusFilter === "Active"
-                  ? "bg-accent text-accent-foreground font-semibold"
+                  ? "bg-accent text-background font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -225,7 +225,7 @@ export default function MembersPage() {
               onClick={() => setStatusFilter("Inactive")}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                 statusFilter === "Inactive"
-                  ? "bg-accent text-accent-foreground font-semibold"
+                  ? "bg-accent text-background font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -236,7 +236,7 @@ export default function MembersPage() {
               onClick={() => setStatusFilter("Archived")}
               className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
                 statusFilter === "Archived"
-                  ? "bg-destructive text-destructive-foreground font-semibold"
+                  ? "bg-destructive text-white font-semibold"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -456,7 +456,7 @@ export default function MembersPage() {
                           <button
                             type="button"
                             onClick={handleOpenAddModal}
-                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer"
+                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer"
                           >
                             <UserPlus size={15} />
                             <span>Add Member</span>

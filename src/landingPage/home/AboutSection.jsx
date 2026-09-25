@@ -17,7 +17,7 @@ export function AboutSection() {
     >
       <div className="grid gap-8 md:gap-10 lg:gap-14 md:grid-cols-2 items-center">
         <Reveal className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
             About The Strength Way
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">

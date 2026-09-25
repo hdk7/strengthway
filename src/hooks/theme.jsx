@@ -53,7 +53,7 @@ export function ThemeToggle({ className = "" }) {
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={toggleTheme}
-      className={`relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface/50 transition-all duration-300 hover:bg-surface hover:border-primary/50 hover:scale-105 active:scale-95 ${className}`}
+      className={`relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-card/50 transition-all duration-300 hover:bg-card hover:border-primary/50 hover:scale-105 active:scale-95 ${className}`}
     >
       <Sun
         className={`absolute h-4 w-4 text-amber-400 transition-all duration-300 ${
@@ -71,7 +71,7 @@ export function ThemeToggle({ className = "" }) {
 
 export function useDocumentTitle(title = STATIC_TITLE) {
   useEffect(() => {
-    document.title = title || STATIC_TITLE;
+    document.title = STATIC_TITLE;
   }, [title]);
 }
 

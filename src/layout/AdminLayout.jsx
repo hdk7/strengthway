@@ -13,7 +13,7 @@ function getScreenTier() {
 }
 
 export default function AdminLayout() {
-  useDocumentTitle("The Strength Way — Admin");
+  useDocumentTitle("The Strength Way");
   const [tier, setTier] = useState(getScreenTier);
   const [collapsed, setCollapsed] = useState(() => getScreenTier() === "medium");
   const [mobileOpen, setMobileOpen] = useState(false);

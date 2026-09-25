@@ -11,7 +11,6 @@ import {
   FileCheck,
   Calendar,
   Trash2,
-  Image as ImageIcon,
   CheckCircle2,
   FileText,
   CreditCard,
@@ -98,7 +97,6 @@ export function AdminMemberRegistrationModal({
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const fileInputRef = useRef(null);
   const docInputRef = useRef(null);
 
   // Sync form with leadToConfirm / memberToEdit or reset on open
@@ -183,7 +181,6 @@ export function AdminMemberRegistrationModal({
     if (!memberToEdit && !leadToConfirm) {
       setForm(INITIAL_FORM);
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
     if (docInputRef.current) docInputRef.current.value = "";
     if (typeof onClose === "function") {
       onClose();
@@ -204,39 +201,6 @@ export function AdminMemberRegistrationModal({
     const currentForm = { ...form, [name]: value !== undefined ? value : form[name] };
     const fieldError = validateFieldWithYup(adminMemberRegistrationSchema, name, currentForm);
     setErrors((prev) => ({ ...prev, [name]: fieldError }));
-  };
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file (PNG, JPG, WEBP).");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image file size should not exceed 5MB.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm((prev) => ({
-        ...prev,
-        photo: reader.result,
-        photoName: file.name,
-      }));
-      toast.success("Profile photo uploaded!");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemovePhoto = () => {
-    setForm((prev) => ({ ...prev, photo: null, photoName: "" }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const handleDocUpload = (e) => {
@@ -452,7 +416,6 @@ export function AdminMemberRegistrationModal({
 
       setForm(INITIAL_FORM);
       setStep(1);
-      if (fileInputRef.current) fileInputRef.current.value = "";
       if (docInputRef.current) docInputRef.current.value = "";
       if (onSuccess) {
         onSuccess(resultMember, isConfirmingLead);
@@ -517,7 +480,7 @@ export function AdminMemberRegistrationModal({
         {/* Modal Window */}
         <DialogPrimitive.Content
           aria-describedby="admin-member-registration-desc"
-          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-3xl max-h-[92vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card text-card-foreground shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
+          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-3xl max-h-[92vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
         >
           {/* Header */}
           <div className="relative border-b border-border/60 px-6 py-5 sm:px-8 shrink-0 text-center">
@@ -526,7 +489,7 @@ export function AdminMemberRegistrationModal({
                 <span
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
                     step === 1
-                      ? "bg-accent text-accent-foreground shadow-sm"
+                      ? "bg-accent text-background shadow-sm"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -705,95 +668,23 @@ export function AdminMemberRegistrationModal({
                     error={errors.email}
                   />
                 </div>
-
-                {/* Profile Photo */}
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-foreground">
-                    Profile Photo
-                  </label>
-                  <div className="flex flex-wrap items-center gap-4 rounded-xl border border-dashed border-border p-3.5 bg-background/50">
-                    {form.photo ? (
-                      <div className="relative flex items-center gap-3">
-                        <img
-                          src={form.photo}
-                          alt="Profile preview"
-                          className="h-14 w-14 rounded-xl object-cover border border-border shadow-sm"
-                        />
-                        <div>
-                          <p className="text-xs font-medium text-foreground max-w-[200px] truncate">
-                            {form.photoName || "Uploaded photo"}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground">
-                            Ready for registration
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleRemovePhoto}
-                          className="ml-2 inline-flex items-center gap-1 rounded-lg border border-destructive/30 px-2.5 py-1 text-xs text-destructive hover:bg-destructive/10 transition-colors"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          <span>Remove</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3">
-                        <div className="grid h-12 w-12 place-items-center rounded-xl bg-accent/10 text-accent">
-                          <ImageIcon className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 hover:border-accent/40 transition-colors cursor-pointer"
-                          >
-                            <Upload className="h-3.5 w-3.5" />
-                            <span>Upload Photo</span>
-                          </button>
-                          <p className="mt-1 text-[11px] text-muted-foreground">
-                            JPG, PNG, or WEBP up to 5MB
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    <input
-                      ref={fileInputRef}
-                      id="admin-member-photo-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
               </section>
 
-              {/* 2. TRAINING SCHEDULE & BATCH SLOT */}
+              {/* 2. BATCH SLOT & MEMBERSHIP PLAN */}
               <section className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <Calendar className="h-4 w-4 text-accent" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Training Schedule &amp; Batch Slot
+                    Batch Slot &amp; Membership Plan
                   </h3>
                 </div>
 
-                <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-accent" />
-                      <span>Batch &amp; Timing</span>
-                    </label>
-                    {selectedBatch && (
-                      <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent">
-                        {selectedBatch.daysPattern || "MWF"}
-                      </span>
-                    )}
-                  </div>
-
+                <div className="grid gap-4 sm:grid-cols-2">
                   <SelectField
                     id="admin-member-batch"
                     name="batchId"
+                    label="Batch Slot"
+                    hint={selectedBatch?.daysPattern}
                     value={form.batchId}
                     onChange={(e) => setForm({ ...form, batchId: e.target.value })}
                     placeholder="Select Training Batch Slot"
@@ -802,27 +693,13 @@ export function AdminMemberRegistrationModal({
                       label: `${b.name} • ${b.timingLabel || b.startTime} (${b.currentPax || 0}/${b.maxPax || 28} Pax)`,
                     }))}
                   />
-                </div>
-              </section>
 
-              {/* 3. MEMBERSHIP PLAN SELECTION */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-accent" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                      Membership Plan
-                    </h3>
-                  </div>
-                  <span className="text-xs font-medium text-accent">Select commitment tier</span>
-                </div>
-
-                <div className="space-y-3">
                   <SelectField
                     id="admin-member-plan"
                     name="selectedPlanId"
-                    label="Choose Membership Plan Tier"
+                    label="Membership Plan"
                     required
+                    hint={chosenPlan ? `${chosenPlan.durationMonths} Mo` : undefined}
                     value={paymentForm.selectedPlanId}
                     onChange={(e) => {
                       const planId = e.target.value;
@@ -837,13 +714,13 @@ export function AdminMemberRegistrationModal({
                     placeholder="Select Membership Plan Tier"
                     options={availablePlans.map((plan) => ({
                       value: plan.id,
-                      label: `${plan.name} — ${plan.formattedPrice} ${plan.period} (${plan.durationMonths} Month${plan.durationMonths > 1 ? "s" : ""}) ${plan.badge ? `• [${plan.badge}]` : ""}`,
+                      label: `${plan.name} — ${plan.formattedPrice} (${plan.durationMonths} Mo)${plan.badge ? ` • [${plan.badge}]` : ""}`,
                     }))}
                   />
                 </div>
               </section>
 
-              {/* 4. PAYMENT FORM DETAILS */}
+              {/* 3. PAYMENT FORM DETAILS */}
               <section className="space-y-4">
                 <div className="flex items-center gap-2 border-b border-border/60 pb-2">
                   <CreditCard className="h-4 w-4 text-accent" />
@@ -852,30 +729,29 @@ export function AdminMemberRegistrationModal({
                   </h3>
                 </div>
 
-                {/* Choose Payment Method Dropdown */}
-                <SelectField
-                  id="admin-member-payment-method"
-                  name="paymentMethod"
-                  label="Payment Option / Method"
-                  required
-                  value={paymentForm.paymentMethod}
-                  onChange={(e) => {
-                    const methodId = e.target.value;
-                    setPaymentForm((prev) => ({
-                      ...prev,
-                      paymentMethod: methodId,
-                      transactionId: generateTransactionId(methodId),
-                    }));
-                  }}
-                  placeholder="Select Payment Option / Method"
-                  options={PAYMENT_METHODS.map((method) => ({
-                    value: method.id,
-                    label: `${method.name} — ${method.id === "Cash" ? "Gym Reception" : "Digital Transaction"}`,
-                  }))}
-                />
+                {/* Payment Option & Amount Received Side by Side */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <SelectField
+                    id="admin-member-payment-method"
+                    name="paymentMethod"
+                    label="Payment Option / Method"
+                    required
+                    value={paymentForm.paymentMethod}
+                    onChange={(e) => {
+                      const methodId = e.target.value;
+                      setPaymentForm((prev) => ({
+                        ...prev,
+                        paymentMethod: methodId,
+                        transactionId: generateTransactionId(methodId),
+                      }));
+                    }}
+                    placeholder="Select Payment Option / Method"
+                    options={PAYMENT_METHODS.map((method) => ({
+                      value: method.id,
+                      label: `${method.name} — ${method.id === "Cash" ? "Gym Reception" : "Digital Transaction"}`,
+                    }))}
+                  />
 
-                {/* Payment Details Inputs without Transaction ID field */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-1">
                   <InputField
                     label="Amount Received (₹)"
                     required
@@ -886,15 +762,6 @@ export function AdminMemberRegistrationModal({
                     }
                     inputClassName="font-semibold"
                     error={errors.amountPaid}
-                  />
-
-                  <InputField
-                    label="Payment Date"
-                    type="date"
-                    value={paymentForm.paymentDate}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({ ...prev, paymentDate: e.target.value }))
-                    }
                   />
                 </div>
 
@@ -912,7 +779,7 @@ export function AdminMemberRegistrationModal({
           ) : (
             <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
               {/* Member & Plan Summary Header */}
-              <div className="rounded-2xl border border-border bg-surface/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="rounded-2xl border border-border bg-card/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm uppercase border border-border shrink-0">
                     {form.firstName?.[0]}
@@ -1257,7 +1124,7 @@ export function AdminMemberRegistrationModal({
                   type="submit"
                   form="admin-member-registration-form"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                  className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-background shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 cursor-pointer"
                 >
                   {isSubmitting ? "Saving…" : "Save Changes"}
                 </button>
@@ -1265,7 +1132,7 @@ export function AdminMemberRegistrationModal({
                 <button
                   type="button"
                   onClick={handleProceedToBalanceDetails}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-background shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
                 >
                   <span>Next: Member Details</span>
                   <ArrowRight size={14} />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, MapPin, Phone, User, ShieldCheck, MessageSquare, ArrowRight } from "lucide-react";
+import { Mail, MapPin, Phone, User, MessageSquare, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Reveal } from "@/landingPage/Reveal";
 import { contactFormSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
@@ -10,7 +10,7 @@ export function ContactSection() {
   return (
     <section
       id="inquiries"
-      className="border-t border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14 relative"
+      className="border-t border-border/60 bg-card/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14 relative"
     >
       <span id="contact" className="sr-only" />
       <div className="mx-auto grid max-w-[100rem] gap-8 lg:gap-12 px-4 sm:px-6 lg:px-8 md:grid-cols-2 items-start">
@@ -127,36 +127,6 @@ function ContactForm() {
       <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute left-1/4 -bottom-20 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
 
-      {/* Profile Header Dossier Top */}
-      <div className="relative mb-6 sm:mb-8 pb-5 border-b border-border/80 flex items-center gap-4">
-        <div className="relative shrink-0">
-          <div className="h-16 w-16 sm:h-18 sm:w-18 rounded-2xl border-2 border-border/80 bg-gradient-to-br from-card via-background to-muted p-1 shadow-md">
-            <div className="grid h-full w-full place-items-center rounded-xl bg-primary/10 text-primary font-display text-2xl font-black uppercase">
-              {form.name && form.name.trim() ? (
-                form.name.trim().charAt(0).toUpperCase()
-              ) : (
-                <User size={26} className="text-primary/70" />
-              )}
-            </div>
-          </div>
-          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-background border border-border">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/40 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-            <ShieldCheck size={12} className="text-emerald-500" />
-            <span>Athlete Inquiry Dossier</span>
-          </div>
-          <h3 className="text-lg sm:text-xl font-bold font-display text-foreground truncate">
-            {form.name.trim() || "Prospective Athlete"}
-          </h3>
-          <p className="text-xs text-muted-foreground truncate">
-            {form.subject.trim() || "Register interest or request facility walkthrough"}
-          </p>
-        </div>
-      </div>
 
       <div className="relative space-y-6">
         {/* Section 1: Personal Details */}
@@ -284,9 +254,9 @@ function ContactForm() {
           <button
             type="submit"
             disabled={submitting}
-            className="group relative w-full overflow-hidden rounded-2xl bg-primary py-3.5 px-6 font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/95 hover:scale-[1.01] hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+            className="group relative w-full overflow-hidden rounded-2xl bg-primary py-3.5 px-6 font-semibold text-background shadow-lg shadow-primary/20 transition-all hover:bg-primary/95 hover:scale-[1.01] hover:shadow-xl hover:shadow-primary/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
           >
-            <span>{submitting ? "Submitting Inquiry…" : "Submit Official Inquiry"}</span>
+            <span>{submitting ? "Submitting Inquiry…" : "Submit Inquiry"}</span>
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
           </button>
         </div>

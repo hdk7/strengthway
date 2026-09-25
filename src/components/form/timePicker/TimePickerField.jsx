@@ -142,7 +142,7 @@ export default function TimePickerField({
             onClick={openClock}
             className={`rounded-lg p-1 transition-colors cursor-pointer ${
               isPickerOpen
-                ? "bg-accent text-accent-foreground"
+                ? "bg-accent text-background"
                 : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
             }`}
             title="Pick time on clock"

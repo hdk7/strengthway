@@ -126,7 +126,7 @@ export default function DateRangeCalendar({
               onClick={() => onDayClick(day.dateString, true)}
               className={`w-8 h-8 mx-auto rounded-full text-xs font-medium transition-all cursor-pointer flex items-center justify-center ${
                 isStart || isEnd
-                  ? "bg-primary text-primary-foreground font-bold shadow-sm"
+                  ? "bg-primary text-background font-bold shadow-sm"
                   : inRange
                   ? "bg-primary/15 text-primary font-semibold rounded-none first:rounded-l-full last:rounded-r-full"
                   : "text-foreground hover:bg-muted"

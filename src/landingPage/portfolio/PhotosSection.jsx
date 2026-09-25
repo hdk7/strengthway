@@ -53,7 +53,7 @@ export function PhotosSection({ onSelectPhoto }) {
   }, [api, playing]);
 
   return (
-    <section id="photos" className="border-y border-border/60 bg-surface/30 py-16 sm:py-24">
+    <section id="photos" className="border-y border-border/60 bg-card/30 py-16 sm:py-24">
       <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="min-w-0">
           <SectionHeading

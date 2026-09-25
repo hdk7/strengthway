@@ -96,7 +96,7 @@ export default function DashboardHome() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {stat.title}
                 </span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent transition-colors group-hover:bg-accent group-hover:text-background">
                   <Icon size={20} />
                 </div>
               </div>

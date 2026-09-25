@@ -57,7 +57,7 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
 
         <DialogPrimitive.Content
           aria-describedby="trainer-details-desc"
-          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-3xl max-h-[92vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-3xl border border-border/80 bg-card/95 text-card-foreground shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none overflow-hidden"
+          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-3xl max-h-[92vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-3xl border border-border/80 bg-card/95 text-foreground shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] backdrop-blur-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none overflow-hidden"
         >
           {/* Top Master Trainer Header */}
           <div className="relative border-b border-border/70 bg-gradient-to-r from-accent/20 via-background/80 to-accent/10 px-6 pt-7 pb-6 sm:px-8 shrink-0 overflow-hidden">
@@ -429,7 +429,7 @@ export function TrainerDetailsModal({ isOpen, onClose, trainer, onEdit, onDelete
                   onClose();
                   onEdit(trainer);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
               >
                 <Edit3 size={14} />
                 <span>Edit Profile</span>

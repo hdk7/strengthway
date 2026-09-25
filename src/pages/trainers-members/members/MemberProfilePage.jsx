@@ -117,13 +117,12 @@ function formatWeight(kg) {
 export default function MemberProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [member, setMember] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [member, setMember] = useState(() => getMemberById(id));
+  const [isLoading, setIsLoading] = useState(() => !getMemberById(id));
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
 
   useEffect(() => {
-    setIsLoading(true);
     const data = getMemberById(id);
     setMember(data);
     setIsLoading(false);
@@ -148,6 +147,84 @@ export default function MemberProfilePage() {
   const imperialWeight = useMemo(() => formatWeight(member?.weight), [member?.weight]);
   const isDeleted = Boolean(member?.isDeleted);
 
+  const hasMedicalDoc = Boolean(
+    member?.medicalDocName ||
+    (typeof member?.medicalDoc === "string" && member.medicalDoc) ||
+    (typeof member?.medicalDoc === "object" && member?.medicalDoc !== null)
+  );
+
+  const medicalDocName = useMemo(() => {
+    if (!member) return null;
+    if (member.medicalDocName) return member.medicalDocName;
+    if (typeof member.medicalDoc === "string" && member.medicalDoc) return member.medicalDoc;
+    if (member.medicalDoc && typeof member.medicalDoc === "object") {
+      return member.medicalDoc.notes || "Medical_Fitness_Certificate.pdf";
+    }
+    return null;
+  }, [member]);
+
+  const medicalDocSubtext = useMemo(() => {
+    if (!member) return "";
+    if (member.medicalDocSize) return `${member.medicalDocSize} • Signed Physician Clearance`;
+    if (member.medicalDoc && typeof member.medicalDoc === "object" && member.medicalDoc.clearanceDate) {
+      return `Cleared: ${member.medicalDoc.clearanceDate} • Signed Physician Clearance`;
+    }
+    return "1.4 MB • Signed Physician Clearance";
+  }, [member]);
+
+  const emergencyName = member?.emergencyName || member?.emergencyContact?.name || "";
+  const emergencyRel =
+    member?.emergencyRelationship ||
+    member?.emergencyRelation ||
+    member?.emergencyContact?.relation ||
+    "";
+  const emergencyPhone =
+    member?.emergencyNumber ||
+    member?.emergencyPhone ||
+    member?.emergencyContact?.phone ||
+    "";
+
+  const planDetails = useMemo(() => {
+    if (!member?.membershipPlan) return null;
+    if (typeof member.membershipPlan === "object" && member.membershipPlan.name) {
+      return member.membershipPlan;
+    }
+    const planName = typeof member.membershipPlan === "string" ? member.membershipPlan : "Annual Pro Strength Pass";
+    let durationMonths = 12;
+    let formattedPrice = "₹55,000";
+    const startStr = member.registeredAt
+      ? new Date(member.registeredAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
+      : "Active";
+    let endStr = "Dec 31, 2026";
+
+    const lower = planName.toLowerCase();
+    if (lower.includes("monthly") || lower.includes("starter")) {
+      durationMonths = 1;
+      formattedPrice = "₹7,000";
+      endStr = "30 Days from Start";
+    } else if (lower.includes("quarterly") || lower.includes("3")) {
+      durationMonths = 3;
+      formattedPrice = "₹18,000";
+      endStr = "90 Days from Start";
+    } else if (lower.includes("half") || lower.includes("6")) {
+      durationMonths = 6;
+      formattedPrice = "₹32,000";
+      endStr = "180 Days from Start";
+    } else {
+      durationMonths = 12;
+      formattedPrice = "₹55,000";
+      endStr = "365 Days from Start";
+    }
+
+    return {
+      name: planName,
+      durationMonths,
+      formattedStart: startStr,
+      formattedEnd: endStr,
+      formattedPrice,
+    };
+  }, [member]);
+
   const handleCopy = (text, fieldKey, label) => {
     if (!text) return;
     navigator.clipboard.writeText(text);
@@ -156,9 +233,10 @@ export default function MemberProfilePage() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleSaveEdit = (formData) => {
+  const handleSaveEdit = (updatedData) => {
     try {
-      const updated = updateMember(member.id, formData);
+      const targetId = member?.id || id;
+      const updated = updateMember(targetId, updatedData);
       if (updated) {
         setMember(updated);
         toast.success("Member profile updated successfully.");
@@ -217,7 +295,7 @@ export default function MemberProfilePage() {
         <button
           type="button"
           onClick={() => navigate("/admin/trainers-members/members")}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
           <span>Back to Members Directory</span>
@@ -290,7 +368,7 @@ export default function MemberProfilePage() {
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
           >
             <Edit3 size={14} />
             <span>Edit Profile</span>
@@ -645,7 +723,7 @@ export default function MemberProfilePage() {
                   Medical Clearance & Physical Certificate
                 </h3>
               </div>
-              {member.medicalDoc || member.medicalDocName ? (
+              {hasMedicalDoc ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-xs font-bold text-emerald-500">
                   <Check size={12} />
                   <span>Verified On File</span>
@@ -655,7 +733,7 @@ export default function MemberProfilePage() {
               )}
             </div>
 
-            {member.medicalDoc || member.medicalDocName ? (
+            {hasMedicalDoc && medicalDocName ? (
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-border/80 bg-background p-4.5">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
@@ -663,12 +741,10 @@ export default function MemberProfilePage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-foreground truncate">
-                      {member.medicalDocName ||
-                        member.medicalDoc ||
-                        "Medical_Fitness_Certificate.pdf"}
+                      {medicalDocName}
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {member.medicalDocSize || "1.4 MB"} • Signed Physician Clearance
+                      {medicalDocSubtext}
                     </p>
                   </div>
                 </div>
@@ -854,26 +930,26 @@ export default function MemberProfilePage() {
             </h3>
 
             <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 text-xs space-y-2">
-              {member.emergencyName ? (
+              {emergencyName ? (
                 <>
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-sm text-foreground">
-                      {member.emergencyName}
+                      {emergencyName}
                     </span>
-                    {member.emergencyRelationship && (
+                    {emergencyRel && (
                       <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent border border-accent/25">
-                        {member.emergencyRelationship}
+                        {emergencyRel}
                       </span>
                     )}
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
                     <span className="font-mono text-xs text-foreground font-semibold">
-                      {member.emergencyNumber || "—"}
+                      {emergencyPhone || "—"}
                     </span>
-                    {member.emergencyNumber && (
+                    {emergencyPhone && (
                       <a
-                        href={`tel:${member.emergencyNumber}`}
+                        href={`tel:${emergencyPhone}`}
                         className="inline-flex items-center gap-1 rounded-lg bg-rose-500/10 border border-rose-500/25 px-2.5 py-1 text-[11px] font-bold text-rose-500 hover:bg-rose-500/20 transition-colors"
                       >
                         <Phone size={11} />
@@ -889,7 +965,7 @@ export default function MemberProfilePage() {
           </div>
 
           {/* Active Membership & Billing Card if enrolled */}
-          {member.membershipPlan && (
+          {planDetails && (
             <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3 text-xs">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
@@ -897,7 +973,7 @@ export default function MemberProfilePage() {
                   <span>Enrolled Membership Plan</span>
                 </h3>
                 <span className="inline-flex items-center rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-500">
-                  {member.membershipPlan.name}
+                  {planDetails.name}
                 </span>
               </div>
 
@@ -905,20 +981,20 @@ export default function MemberProfilePage() {
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Plan Duration</span>
                   <span className="font-semibold text-foreground">
-                    {member.membershipPlan.durationMonths} Month
-                    {member.membershipPlan.durationMonths > 1 ? "s" : ""}
+                    {planDetails.durationMonths} Month
+                    {planDetails.durationMonths > 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Validity Window</span>
                   <span className="font-semibold text-foreground">
-                    {member.membershipPlan.formattedStart} — {member.membershipPlan.formattedEnd}
+                    {planDetails.formattedStart} — {planDetails.formattedEnd}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Subscription Fee</span>
                   <span className="font-bold text-accent">
-                    {member.membershipPlan.formattedPrice}
+                    {planDetails.formattedPrice}
                   </span>
                 </div>
 
@@ -965,6 +1041,20 @@ export default function MemberProfilePage() {
                 <span className="text-muted-foreground">System Record ID</span>
                 <span className="font-mono font-bold text-foreground">{member.id}</span>
               </div>
+              {member.batchId && (
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-muted-foreground">Assigned Batch</span>
+                  <Link
+                    to={`/admin/batches/${member.batchId}`}
+                    className="font-bold text-primary hover:underline flex items-center gap-1"
+                  >
+                    <span>{member.batchId}</span>
+                    <span className="text-[11px] font-normal text-muted-foreground">
+                      ({member.batchTiming || "Morning"})
+                    </span>
+                  </Link>
+                </div>
+              )}
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-muted-foreground">Enrolled Date</span>
                 <span className="font-medium text-foreground">

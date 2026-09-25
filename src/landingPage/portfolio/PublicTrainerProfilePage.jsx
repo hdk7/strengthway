@@ -37,10 +37,7 @@ export default function PublicTrainerProfilePage() {
     setTrainer(getTrainerById(id));
   }, [id]);
 
-  const pageTitle = trainer
-    ? `${trainer.name} — Trainer Profile | The Strength Way`
-    : "Trainer Profile — The Strength Way";
-  useDocumentTitle(pageTitle);
+  useDocumentTitle("The Strength Way");
 
   const trainerPhoto = useMemo(() => {
     return getTrainerPhoto(trainer);
@@ -151,9 +148,9 @@ export default function PublicTrainerProfilePage() {
                 </h1>
 
                 {/* Bio / Quote */}
-                <blockquote className="rounded-2xl border-l-4 border-primary bg-muted/30 p-4 sm:p-5 text-sm sm:text-base italic text-foreground">
+                <div className="rounded-2xl border border-border bg-muted/30 p-4 sm:p-5 text-sm sm:text-base italic text-foreground">
                   "{trainer.quote || trainer.bio}"
-                </blockquote>
+                </div>
               </div>
             </div>
           </div>

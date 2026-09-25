@@ -54,7 +54,7 @@ const TableFilter = ({
               onClick={() => onChange && onChange(optVal)}
               className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
                 isSelected
-                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                  ? "bg-primary text-background shadow-xs font-bold"
                   : "bg-card text-muted-foreground hover:text-foreground border border-border hover:bg-muted"
               }`}
             >
@@ -63,7 +63,7 @@ const TableFilter = ({
                 <span
                   className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                     isSelected
-                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      ? "bg-background/20 text-background"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -131,7 +131,7 @@ const TableFilter = ({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
                   isSelected
-                    ? "bg-accent text-accent-foreground font-semibold"
+                    ? "bg-accent text-background font-semibold"
                     : "text-foreground hover:bg-muted"
                 }`}
               >

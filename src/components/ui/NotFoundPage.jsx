@@ -94,7 +94,7 @@ const ERROR_CONFIG = {
     code: "404",
     strokeClass: "[-webkit-text-stroke:1.5px_var(--color-accent)]",
     solidBg: "bg-accent hover:bg-accent/90",
-    solidFg: "text-accent-foreground",
+    solidFg: "text-background",
     blobBg: "bg-accent",
     badgeBg: "bg-accent/10",
     badgeBorder: "border-accent/30",
@@ -275,7 +275,7 @@ export const ServerErrorPage = (props) => <ErrorPage status={500} {...props} />;
    4. NotFoundPage Component (Public site 404)
 ───────────────────────────────────────────────────────────────── */
 export default function NotFoundPage() {
-  useDocumentTitle("Page not found — The Strength Way");
+  useDocumentTitle("The Strength Way");
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
       <div className="absolute inset-0 grid-bg opacity-30" />

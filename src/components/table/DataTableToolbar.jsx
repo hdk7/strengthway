@@ -41,7 +41,7 @@ export default function DataTableToolbar({
         <div className="shrink-0 flex items-center justify-between gap-3 bg-card border border-border px-4 py-3 rounded-2xl shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
             {HeaderIcon && (
-              <span className="p-1.5 rounded-xl bg-accent text-accent-foreground shrink-0">
+              <span className="p-1.5 rounded-xl bg-accent text-background shrink-0">
                 <HeaderIcon size={18} />
               </span>
             )}

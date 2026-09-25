@@ -5,15 +5,15 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        default: "bg-primary text-background shadow hover:bg-primary/90",
+        destructive: "bg-destructive text-white shadow-sm hover:bg-destructive/90",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "border border-border bg-background shadow-sm hover:bg-accent hover:text-background",
+        secondary: "bg-muted text-foreground shadow-sm hover:bg-muted/80",
+        ghost: "hover:bg-accent hover:text-background",
         link: "text-primary underline-offset-4 hover:underline",
         primary:
-          "w-full h-auto px-4 py-3 text-[15px] font-semibold rounded-lg border border-transparent bg-primary text-primary-foreground shadow-sm hover:opacity-90 active:scale-[0.99] transition-all focus-visible:outline-2 focus-visible:outline-primary",
+          "w-full h-auto px-4 py-3 text-[15px] font-semibold rounded-lg border border-transparent bg-primary text-background shadow-sm hover:opacity-90 active:scale-[0.99] transition-all focus-visible:outline-2 focus-visible:outline-primary",
       },
       size: {
         default: "h-9 px-4 py-2",

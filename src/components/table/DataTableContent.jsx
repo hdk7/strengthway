@@ -80,7 +80,7 @@ export default function DataTableContent({
             <button
               type="button"
               onClick={onResetFilters}
-              className="mt-4 px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/80 transition-colors cursor-pointer"
+              className="mt-4 px-4 py-2 rounded-xl bg-accent text-background text-xs font-semibold hover:bg-accent/80 transition-colors cursor-pointer"
             >
               Reset Filters
             </button>

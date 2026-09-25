@@ -29,11 +29,11 @@ import TrainersPaymentsPage from "@/pages/payments/TrainersPaymentsPage";
 import ReportsPage from "@/pages/reports/ReportsPage";
 import ShiftMasterPage from "@/pages/masters/ShiftMasterPage";
 import MembershipPlanMasterPage from "@/pages/masters/MembershipPlanMasterPage";
-import ScheduleMasterPage from "@/pages/masters/ScheduleMasterPage";
 import AttendancePolicyMasterPage from "@/pages/masters/AttendancePolicyMasterPage";
-import HolidayMasterPage from "@/pages/masters/HolidayMasterPage";
 import PaymentFeeMasterPage from "@/pages/masters/PaymentFeeMasterPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
+
+import MasterClassSchedulePage from "@/pages/schedule/MasterClassSchedulePage";
 
 export function AppRoutes() {
   return (
@@ -65,6 +65,15 @@ export function AppRoutes() {
         <Route path="trainers-members/members" element={<MembersPage />} />
         <Route path="trainers-members/members/:id" element={<MemberProfilePage />} />
 
+        {/* Schedule Menu Routes */}
+        <Route path="schedule" element={<Navigate to="/admin/schedule/batches" replace />} />
+        <Route path="schedule/calendar" element={<Navigate to="/admin/schedule/batches" replace />} />
+        <Route path="schedule/batches" element={<BatchListPage />} />
+        <Route path="schedule/master-class" element={<MasterClassSchedulePage />} />
+        <Route path="schedule/sessions" element={<Navigate to="/admin/schedule/master-class" replace />} />
+        <Route path="schedule/holidays" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
+
+        {/* Existing Batches Routes */}
         <Route path="batches" element={<BatchListPage />} />
         <Route path="batches/list" element={<Navigate to="/admin/batches" replace />} />
         <Route path="batches/:id" element={<BatchDetailPage />} />
@@ -80,9 +89,9 @@ export function AppRoutes() {
         <Route path="masters/shift" element={<ShiftMasterPage />} />
         <Route path="masters/batch" element={<Navigate to="/admin/batches" replace />} />
         <Route path="masters/membership-plan" element={<MembershipPlanMasterPage />} />
-        <Route path="masters/schedule" element={<ScheduleMasterPage />} />
+        <Route path="masters/schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
         <Route path="masters/attendance-policy" element={<AttendancePolicyMasterPage />} />
-        <Route path="masters/holiday" element={<HolidayMasterPage />} />
+        <Route path="masters/holiday" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
         <Route path="masters/payment-fee" element={<PaymentFeeMasterPage />} />
 
         <Route path="settings" element={<SettingsPage />} />

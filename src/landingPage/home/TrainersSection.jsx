@@ -31,7 +31,7 @@ export function TrainersSection() {
   return (
     <section
       id="trainers"
-      className="border-y border-border/60 bg-surface/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14"
+      className="border-y border-border/60 bg-card/30 pt-18 pb-10 sm:pt-20 sm:pb-12 md:pt-22 md:pb-14"
     >
       <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center">

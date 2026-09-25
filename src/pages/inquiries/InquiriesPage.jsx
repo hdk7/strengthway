@@ -139,7 +139,7 @@ export default function InquiriesPage() {
         <button
           type="button"
           onClick={() => setIsLogModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] self-start sm:self-auto"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] self-start sm:self-auto"
         >
           <Plus size={15} />
           <span>New Inquiry</span>

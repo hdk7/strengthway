@@ -34,7 +34,7 @@ export function VideosSection() {
       <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {VIDEOS.map((v, i) => (
           <Reveal key={v.title} delay={(i % 3) * 80} className="min-w-0">
-            <SpotlightCard className="overflow-hidden rounded-2xl border border-border bg-surface/50">
+            <SpotlightCard className="overflow-hidden rounded-2xl border border-border bg-card/50">
               <video
                 src={v.src}
                 controls

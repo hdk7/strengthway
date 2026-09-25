@@ -14,6 +14,7 @@ import {
   BarChart3,
   Database,
   Settings,
+  CalendarDays,
 } from "lucide-react";
 
 const navConfig = [
@@ -28,7 +29,19 @@ const navConfig = [
       { id: "trainer-list", label: "Trainers", path: "/admin/trainers-members/trainers" },
     ],
   },
-  { id: "batches", label: "Batches", icon: Boxes, path: "/admin/batches" },
+  {
+    id: "schedule",
+    label: "Schedule",
+    icon: CalendarDays,
+    children: [
+      { id: "batch-schedule", label: "Batch Schedule", path: "/admin/schedule/batches" },
+      {
+        id: "master-class-schedule",
+        label: "Master Class Schedule",
+        path: "/admin/schedule/master-class",
+      },
+    ],
+  },
   {
     id: "attendance",
     label: "Attendance",
@@ -63,13 +76,11 @@ const navConfig = [
         label: "Membership Plan",
         path: "/admin/masters/membership-plan",
       },
-      { id: "schedule", label: "Schedule Master", path: "/admin/masters/schedule" },
       {
         id: "attendance-policy",
-        label: "Attendance Policy Master",
+        label: "Attendance Policy",
         path: "/admin/masters/attendance-policy",
       },
-      { id: "holiday", label: "Holiday Master", path: "/admin/masters/holiday" },
       { id: "payment-fee", label: "Payment Fee Master", path: "/admin/masters/payment-fee" },
     ],
   },
@@ -82,7 +93,12 @@ function findNavItemByPath(pathname) {
       return { top, child: undefined };
     }
     const child = top.children?.find(
-      (c) => c.path === pathname || pathname.startsWith(`${c.path}/`),
+      (c) =>
+        c.path === pathname ||
+        pathname.startsWith(`${c.path}/`) ||
+        (c.id === "batch-schedule" && (pathname === "/admin/batches" || pathname.startsWith("/admin/batches/"))) ||
+        (c.id === "master-class-schedule" && pathname === "/admin/masters/schedule") ||
+        (c.id === "attendance-policy" && (pathname === "/admin/masters/holiday" || pathname === "/admin/schedule/holidays")),
     );
     if (child) return { top, child };
   }
@@ -168,22 +184,44 @@ function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggl
             <li key={child.id}>
               <NavLink
                 to={child.path}
-                className={({ isActive }) =>
-                  `flex items-center justify-between px-3 py-2 pl-9 ml-2.5 border-l-2 text-[13px] no-underline rounded-r-xl transition-all duration-150 ${
-                    isActive
+                className={({ isActive }) => {
+                  const isCurrentActive =
+                    isActive ||
+                    (child.id === "batch-schedule" &&
+                      (location.pathname === "/admin/batches" ||
+                        location.pathname.startsWith("/admin/batches/"))) ||
+                    (child.id === "master-class-schedule" &&
+                      location.pathname === "/admin/masters/schedule") ||
+                    (child.id === "attendance-policy" &&
+                      (location.pathname === "/admin/masters/holiday" ||
+                        location.pathname === "/admin/schedule/holidays"));
+                  return `flex items-center justify-between px-3 py-2 pl-9 ml-2.5 border-l-2 text-[13px] no-underline rounded-r-xl transition-all duration-150 ${
+                    isCurrentActive
                       ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs"
                       : "border-border/60 text-muted-foreground hover:border-border hover:bg-accent/15 hover:text-foreground"
-                  }`
-                }
+                  }`;
+                }}
               >
-                {({ isActive }) => (
-                  <>
-                    <span className="truncate">{child.label}</span>
-                    {isActive && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mr-1" />
-                    )}
-                  </>
-                )}
+                {({ isActive }) => {
+                  const isCurrentActive =
+                    isActive ||
+                    (child.id === "batch-schedule" &&
+                      (location.pathname === "/admin/batches" ||
+                        location.pathname.startsWith("/admin/batches/"))) ||
+                    (child.id === "master-class-schedule" &&
+                      location.pathname === "/admin/masters/schedule") ||
+                    (child.id === "attendance-policy" &&
+                      (location.pathname === "/admin/masters/holiday" ||
+                        location.pathname === "/admin/schedule/holidays"));
+                  return (
+                    <>
+                      <span className="truncate">{child.label}</span>
+                      {isCurrentActive && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0 mr-1" />
+                      )}
+                    </>
+                  );
+                }}
               </NavLink>
             </li>
           ))}
@@ -235,7 +273,7 @@ function SignOutModal({ open, onClose, onConfirm }) {
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground text-sm font-semibold transition-colors cursor-pointer shadow-md"
+            className="flex-1 px-4 py-2.5 rounded-xl bg-destructive hover:bg-destructive/90 text-white text-sm font-semibold transition-colors cursor-pointer shadow-md"
           >
             Sign out
           </button>
@@ -309,7 +347,7 @@ export default function Sidebar({
         ].join(" ")}
       >
         <nav
-          className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-0.5 scrollbar-thin [scrollbar-color:var(--color-border)_transparent]"
+          className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-0.5"
           onClick={(e) => {
             if (mobileOpen && e.target.closest("a")) onMobileClose?.();
           }}
@@ -344,7 +382,7 @@ export default function Sidebar({
               className="w-full flex items-center gap-3 p-2 px-2.5 rounded-lg text-muted-foreground hover:bg-destructive/10 transition-colors cursor-pointer group text-left border-none bg-transparent"
               aria-label="Sign out"
             >
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-destructive-foreground transition-colors shrink-0">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-destructive/10 text-destructive group-hover:bg-destructive group-hover:text-white transition-colors shrink-0">
                 <LogOut size={16} />
               </div>
               <div className="flex flex-col min-w-0 flex-1 leading-tight">

@@ -79,7 +79,7 @@ export default function ThemeSelect({
                 }}
                 className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer text-left ${
                   isSelected
-                    ? "bg-accent text-accent-foreground font-semibold"
+                    ? "bg-accent text-background font-semibold"
                     : "text-foreground hover:bg-muted"
                 }`}
               >

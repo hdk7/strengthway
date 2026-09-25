@@ -443,7 +443,7 @@ export default function MembershipPlanMasterPage() {
                   </span>
                 ) : (
                   plan.badge && (
-                    <span className="absolute -top-3 left-6 rounded-full bg-accent px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-sm">
+                    <span className="absolute -top-3 left-6 rounded-full bg-accent px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-background shadow-sm">
                       {plan.badge}
                     </span>
                   )
@@ -733,7 +733,7 @@ export default function MembershipPlanMasterPage() {
 
           <DialogPrimitive.Content
             aria-describedby="plan-modal-description"
-            className="fixed left-[50%] top-[50%] z-[100] w-[95vw] max-w-2xl max-h-[88vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-3xl border border-border/80 bg-card text-card-foreground shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-200"
+            className="fixed left-[50%] top-[50%] z-[100] w-[95vw] max-w-2xl max-h-[88vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-3xl border border-border/80 bg-card text-foreground shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 duration-200"
           >
             {/* Fixed Modal Header */}
             <div className="flex items-center justify-between border-b border-border/80 bg-muted/20 px-6 py-4 sm:px-7 shrink-0">
@@ -764,11 +764,11 @@ export default function MembershipPlanMasterPage() {
               </DialogPrimitive.Close>
             </div>
 
-            {/* Scrollable Form Body with custom-scrollbar */}
+            {/* Scrollable Form Body */}
             <form
               id="plan-form"
               onSubmit={handleSave}
-              className="flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-7 space-y-5 custom-scrollbar text-xs"
+              className="flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-7 space-y-5 text-xs"
             >
               {/* SECTION 1: Plan Identity & Status */}
               <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 sm:p-5 space-y-4">
@@ -988,7 +988,7 @@ export default function MembershipPlanMasterPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                     Configured Plan Features:
                   </span>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                     {form.features.map((feat, idx) => (
                       <div
                         key={idx}

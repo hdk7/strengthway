@@ -275,7 +275,7 @@ export function CertifiedAccreditations({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 text-xs font-bold shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-background px-4 py-2 text-xs font-bold shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer"
             >
               <Upload size={14} />
               <span>Upload Accreditation</span>
@@ -497,7 +497,7 @@ export function CertifiedAccreditations({
                 type="button"
                 onClick={handleConfirmUpload}
                 disabled={isUploading}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2 text-xs font-bold transition-all shadow-md cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-background px-5 py-2 text-xs font-bold transition-all shadow-md cursor-pointer"
               >
                 <ShieldCheck size={14} />
                 <span>{isUploading ? "Verifying..." : "Verify & Save Document"}</span>

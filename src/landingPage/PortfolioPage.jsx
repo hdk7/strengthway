@@ -13,7 +13,7 @@ import { SessionsSection } from "@/landingPage/portfolio/SessionsSection";
 import { FeedbackSection } from "@/landingPage/portfolio/FeedbackSection";
 
 export function PortfolioPage() {
-  useDocumentTitle("Portfolio — The Strength Way");
+  useDocumentTitle("The Strength Way");
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   return (

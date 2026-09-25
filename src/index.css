@@ -2,54 +2,19 @@
 @import "tw-animate-css";
 
 /* ─────────────────────────────────────────────────────────────────
-   This is the ONLY color file in the project. Every component reads
-   colors through the CSS variables + Tailwind utilities defined here
-   (bg-background, text-foreground, border-border, bg-accent, ...) —
-   never a hardcoded hex. Flipping <html> between "dark" and "light"
-   (see hooks/theme-context.jsx) re-points every variable at once.
+   The Strength Way — Master Design System & Theme Engine
+   Every component reads colors through CSS variables + Tailwind utilities
+   defined here (bg-background, text-foreground, border-border, bg-accent, etc.).
+   Toggling <html> between "dark" and "light" switches all tokens seamlessly.
+   Derived tokens reference base tokens to avoid duplicate hex definitions.
 ───────────────────────────────────────────────────────────────── */
-
-html {
-  height: 100%;
-  scroll-behavior: smooth;
-  overflow-x: clip;
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: auto;
-  background-color: var(--color-background);
-}
-
-body {
-  min-height: 100%;
-  min-height: 100dvh;
-  margin: 0;
-  padding: 0;
-  position: relative;
-  overflow-x: clip;
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: auto;
-  background-color: var(--color-background);
-}
-
-#root {
-  min-height: 100%;
-  min-height: 100dvh;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow-x: clip;
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: auto;
-}
 
 @custom-variant dark (&:is(.dark, .dark *));
 
-/* ── Dark theme (the default — index.html puts "dark" on <html>) ──
-   Pitch black base, grey accents, high contrast. Every color in the app
-   is one of these names: marketing pages, the Join flow and the admin
-   dashboard all read the exact same tokens. ────────────────────────── */
+/* ── Dark theme (Default — <html> has "dark") ─────────────────────── */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-display: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: var(--font-sans);
 
   --radius-sm: 0.625rem;
   --radius-md: 0.75rem;
@@ -58,38 +23,20 @@ body {
   --radius-2xl: 1.375rem;
   --radius-3xl: 1.625rem;
 
+  /* Reusable Base & Semantic Tokens */
   --color-background: #09090b;
   --color-foreground: #fafafa;
   --color-card: #18181b;
-  --color-card-foreground: #fafafa;
-  --color-popover: #18181b;
-  --color-popover-foreground: #fafafa;
-  --color-primary: #f4f4f5;
-  --color-primary-foreground: #09090b;
-  --color-secondary: #27272a;
-  --color-secondary-foreground: #fafafa;
   --color-muted: #27272a;
   --color-muted-foreground: #a1a1aa;
+  --color-primary: #f4f4f5;
   --color-accent: #e4e4e7;
-  --color-accent-foreground: #09090b;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #ffffff;
-  --color-border: #27272a;
-  --color-input: #18181b;
+  --color-border: var(--color-muted);
   --color-ring: #71717a;
-  --color-surface: #18181b;
-  --color-surface-2: #27272a;
-  --color-brand: #e4e4e7;
-  --color-brand-glow: #71717a;
-  --color-chart-1: #f4f4f5;
-  --color-chart-2: #a1a1aa;
-  --color-chart-3: #71717a;
-  --color-chart-4: #e4e4e7;
-  --color-chart-5: #52525b;
+  --color-destructive: #ef4444;
 }
 
-/* Non-color layout tokens (admin sidebar). Kept here too — one file, no
-   scattered magic numbers. */
+/* Layout Tokens */
 :root {
   --sidebar-width: 256px;
   --sidebar-width-collapsed: 72px;
@@ -99,86 +46,77 @@ html.dark {
   color-scheme: dark;
 }
 
-/* ── Light theme — same names, different values. Toggling the class on
-   <html> (see hooks/theme-context.jsx) re-themes the whole app. ────── */
+/* ── Light theme overrides ────────────────────────────────────────── */
 :root:is(.light),
 html.light {
   color-scheme: light;
+
+  /* Reusable Light Theme Tokens */
   --color-background: #f4f4f5;
   --color-foreground: #09090b;
   --color-card: #ffffff;
-  --color-card-foreground: #09090b;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #09090b;
-  --color-primary: #18181b;
-  --color-primary-foreground: #fafafa;
-  --color-secondary: #f4f4f5;
-  --color-secondary-foreground: #09090b;
-  --color-muted: #f4f4f5;
+  --color-muted: var(--color-background);
   --color-muted-foreground: #71717a;
+  --color-primary: #18181b;
   --color-accent: #27272a;
-  --color-accent-foreground: #fafafa;
-  --color-destructive: #dc2626;
-  --color-destructive-foreground: #ffffff;
   --color-border: #e4e4e7;
-  --color-input: #ffffff;
-  --color-ring: #18181b;
-  --color-surface: #ffffff;
-  --color-surface-2: #e4e4e7;
-  --color-brand: #18181b;
-  --color-brand-glow: #71717a;
-  --color-chart-1: #18181b;
-  --color-chart-2: #52525b;
-  --color-chart-3: #71717a;
-  --color-chart-4: #27272a;
-  --color-chart-5: #a1a1aa;
+  --color-ring: var(--color-primary);
+  --color-destructive: #dc2626;
 }
 
-html {
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
+/* ── Base Layer Consolidated Styles ──────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply border-border;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  html,
+  body,
+  #root {
+    overflow-x: clip;
+    overscroll-behavior-y: none;
+    overscroll-behavior-x: auto;
+  }
+
+  html {
+    @apply h-full scroll-smooth bg-background text-foreground font-sans transition-colors duration-300;
+  }
+
+  body {
+    @apply min-h-full m-0 p-0;
+    min-height: 100dvh;
+  }
+
+  #root {
+    @apply min-h-full relative flex flex-col;
+    min-height: 100dvh;
+  }
 }
 
-html,
-body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-sans);
-}
+/* ── Custom Utilities (Active Application Components) ─────────────── */
 
-* {
-  border-color: var(--color-border);
-}
-
-/* Premium utilities (marketing site) */
 @utility text-gradient {
-  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+  background: linear-gradient(135deg, var(--color-foreground) 0%, var(--color-muted-foreground) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-html.light .text-gradient,
-:root.light .text-gradient,
-.light .text-gradient,
-[data-theme="light"] .text-gradient {
-  background: linear-gradient(135deg, #09090b 0%, #52525b 100%) !important;
-  -webkit-background-clip: text !important;
-  background-clip: text !important;
-  color: transparent !important;
-}
-
-@utility glass {
-  background: color-mix(in oklab, var(--color-surface) 75%, transparent);
-  backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid var(--color-border);
-}
-
 @utility card-glow {
   box-shadow:
     0 1px 0 0 color-mix(in oklab, var(--color-foreground) 4%, transparent) inset,
-    0 20px 40px -20px color-mix(in oklab, var(--color-brand) 30%, transparent);
+    0 20px 40px -20px color-mix(in oklab, var(--color-accent) 30%, transparent);
 }
 
 @utility grid-bg {
@@ -199,7 +137,7 @@ html.light .text-gradient,
   background:
     radial-gradient(
       1000px 500px at 50% -10%,
-      color-mix(in oklab, var(--color-brand) 25%, transparent),
+      color-mix(in oklab, var(--color-accent) 25%, transparent),
       transparent 60%
     ),
     radial-gradient(
@@ -209,220 +147,14 @@ html.light .text-gradient,
     );
 }
 
-@keyframes float-slow {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-14px);
-  }
-}
-@keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-brand) 50%, transparent);
-  }
-  100% {
-    box-shadow: 0 0 0 24px color-mix(in oklab, --color-brand 0%, transparent);
-  }
-}
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-@keyframes kenburns {
-  0% {
-    transform: scale(1) translate3d(0, 0, 0);
-  }
-  100% {
-    transform: scale(1.14) translate3d(-1.5%, -1.5%, 0);
-  }
-}
-@keyframes heartbeat {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  15% {
-    transform: scale(1.12);
-  }
-  30% {
-    transform: scale(1);
-  }
-  45% {
-    transform: scale(1.08);
-  }
-  60% {
-    transform: scale(1);
-  }
-}
-@keyframes badge-in {
-  0% {
-    opacity: 0;
-    transform: translateY(14px) scale(0.94);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-@keyframes caret-blink {
-  0%,
-  70%,
-  100% {
-    opacity: 1;
-  }
-  20%,
-  50% {
-    opacity: 0;
-  }
-}
-@keyframes hero-expand {
-  0% {
-    opacity: 0;
-    transform: scale(0.82);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-@keyframes scan-line {
-  0% {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-}
-@keyframes glow-pulse {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@keyframes spin-slow {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes glitch {
-  0% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0, 0);
-    filter: hue-rotate(0deg);
-  }
-  10% {
-    clip-path: inset(10% 0 60% 0);
-    transform: translate(-4px, 2px);
-    filter: hue-rotate(-8deg);
-  }
-  20% {
-    clip-path: inset(60% 0 5% 0);
-    transform: translate(3px, -2px);
-    filter: hue-rotate(8deg);
-  }
-  30% {
-    clip-path: inset(20% 0 40% 0);
-    transform: translate(-2px, 1px);
-    filter: hue-rotate(-4deg);
-  }
-  40% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(4px, -1px);
-    filter: hue-rotate(4deg);
-  }
-  50% {
-    clip-path: inset(45% 0 20% 0);
-    transform: translate(-3px, 2px);
-    filter: hue-rotate(-6deg);
-  }
-  60% {
-    clip-path: inset(5% 0 70% 0);
-    transform: translate(2px, -3px);
-    filter: hue-rotate(6deg);
-  }
-  70% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(-1px, 1px);
-    filter: hue-rotate(0deg);
-  }
-  100% {
-    clip-path: inset(0 0 0 0);
-    transform: translate(0, 0);
-    filter: hue-rotate(0deg);
-  }
-}
-
-@utility animate-float {
-  animation: float-slow 6s ease-in-out infinite;
-}
-@utility animate-pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-@utility animate-kenburns {
-  animation: kenburns 16s ease-in-out infinite alternate;
-}
-@utility animate-heartbeat {
-  animation: heartbeat 2.4s ease-in-out infinite;
-}
-@utility animate-badge-in {
-  animation: badge-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@utility animate-caret-blink {
-  animation: caret-blink 1s ease-out infinite;
-}
-@utility animate-hero-expand {
-  animation: hero-expand 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@utility animate-scan-line {
-  animation: scan-line 3.5s ease-in-out infinite;
-}
-@utility animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-@utility animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
-}
-@utility animate-glitch {
-  animation: glitch 0.5s ease-in-out both;
-}
 @utility no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-html.no-scrollbar,
-html.no-scrollbar body,
-html.no-scrollbar #root {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
-}
-
-html.no-scrollbar::-webkit-scrollbar,
-html.no-scrollbar body::-webkit-scrollbar,
-html.no-scrollbar #root::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
 }
 
 @utility spotlight-card {
@@ -466,34 +198,19 @@ html.no-scrollbar #root::-webkit-scrollbar {
   }
 }
 
-/* Custom cursor replaces the native one — scoped to the landing page
-   (.custom-cursor-scope) only, and fine-pointer devices only, so touch/mobile
-   and every other page (dashboard, login, portfolio) keep their native cursor. */
+/* Custom cursor scoped to fine-pointer landing page */
 @media (hover: hover) and (pointer: fine) {
   .custom-cursor-scope,
   .custom-cursor-scope * {
-    cursor: none !important;
+    @apply cursor-none!;
   }
-}
-
-@utility shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in oklab, white 8%, transparent),
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: shimmer 2s linear infinite;
 }
 
 @media print {
   .no-print {
-    display: none !important;
+    @apply hidden!;
   }
   main {
-    padding: 0 !important;
-    height: auto !important;
-    overflow: visible !important;
+    @apply p-0! h-auto! overflow-visible!;
   }
 }

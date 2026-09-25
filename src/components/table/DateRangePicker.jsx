@@ -214,7 +214,7 @@ export default function DateRangePicker({
           <button
             type="button"
             onClick={handleApply}
-            className="w-full mt-4 py-2.5 rounded-2xl bg-primary text-primary-foreground font-bold text-xs tracking-wide shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
+            className="w-full mt-4 py-2.5 rounded-2xl bg-primary text-background font-bold text-xs tracking-wide shadow-xs hover:opacity-90 transition-opacity cursor-pointer"
           >
             Apply
           </button>

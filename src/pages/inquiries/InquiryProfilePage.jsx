@@ -34,19 +34,6 @@ export default function InquiryProfilePage() {
     setIsLoading(false);
   }, [id]);
 
-  const initials = useMemo(() => {
-    const raw = String(inquiry?.name || "").trim();
-    if (!raw) return "U";
-    const parts = raw.split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "U";
-    return (
-      parts
-        .slice(0, 2)
-        .map((p) => p[0] || "")
-        .join("")
-        .toUpperCase() || "U"
-    );
-  }, [inquiry?.name]);
 
   const formattedDateTime = useMemo(() => {
     if (!inquiry?.createdAt) return "—";
@@ -106,7 +93,7 @@ export default function InquiryProfilePage() {
         <button
           type="button"
           onClick={() => navigate("/admin/inquiries")}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-all cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
           <span>Back to Inquiries List</span>
@@ -160,49 +147,30 @@ export default function InquiryProfilePage() {
         <div className="pointer-events-none absolute left-1/3 -bottom-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
         <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-6 min-w-0">
-            {/* Monogram Avatar with Live Status Ring */}
-            <div className="relative shrink-0">
-              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-2 border-border/80 bg-gradient-to-br from-card to-background p-1 shadow-xl">
-                <div className="grid h-full w-full place-items-center rounded-xl bg-accent/15 text-accent font-display text-3xl sm:text-4xl font-black tracking-wider uppercase">
-                  {initials}
-                </div>
-              </div>
-              <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background border border-border">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          <div className="space-y-2.5 min-w-0">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground truncate">
+              {inquiry.name || "Anonymous Prospect"}
+            </h1>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Inquiry ID */}
+              <span className="font-mono text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full">
+                {inquiry.id}
               </span>
-            </div>
 
-            {/* Name, Badges & Subject Preview */}
-            <div className="space-y-2 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Inquiry ID */}
-                <span className="font-mono text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full">
-                  {inquiry.id}
-                </span>
-
-                {/* Gender */}
-                {inquiry.gender && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    <User size={13} className="text-muted-foreground" />
-                    <span>{inquiry.gender}</span>
-                  </span>
-                )}
-
-                {/* Date and Time */}
+              {/* Gender */}
+              {inquiry.gender && (
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
-                  <Clock size={13} className="text-primary" />
-                  <span>{formattedDateTime}</span>
+                  <User size={13} className="text-muted-foreground" />
+                  <span>{inquiry.gender}</span>
                 </span>
-              </div>
+              )}
 
-              <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground truncate">
-                {inquiry.name || "Anonymous Prospect"}
-              </h1>
-
-              <p className="text-sm text-muted-foreground italic truncate">
-                &ldquo;{inquiry.subject || "General Inquiry"}&rdquo;
-              </p>
+              {/* Date and Time */}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
+                <Clock size={13} className="text-primary" />
+                <span>{formattedDateTime}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -374,9 +342,9 @@ export default function InquiryProfilePage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
                   Message
                 </span>
-                <blockquote className="rounded-2xl border-l-4 border-primary bg-muted/20 p-5 sm:p-6 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans">
+                <div className="rounded-2xl border border-border bg-muted/20 p-5 sm:p-6 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans">
                   {inquiry.message || "No message provided."}
-                </blockquote>
+                </div>
               </div>
             </div>
           </div>
