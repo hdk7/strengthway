@@ -7,12 +7,48 @@ export const STORAGE_KEY_COACH_SHIFTS = "tsw-coach-shifts";
 export const STORAGE_KEY_SCHEDULED_CLASSES = "tsw-scheduled-classes";
 
 export const SHIFT_SLOTS = [
-  { key: "6_00_am_mwf", label: "6.00 am MWF", time: "06:00 AM - 07:00 AM", days: "MWF" },
-  { key: "8_00_am_mwf", label: "8.00am MWF", time: "08:00 AM - 09:00 AM", days: "MWF" },
-  { key: "6_00_am_tts", label: "6 am TTS", time: "06:00 AM - 07:00 AM", days: "TTS" },
-  { key: "8_00_am_tts", label: "8 AM TTS", time: "08:00 AM - 09:00 AM", days: "TTS" },
-  { key: "6_30_pm_mwf", label: "6.30 PM MWF", time: "06:30 PM - 07:30 PM", days: "MWF" },
-  { key: "8_00_pm_mwf", label: "8 00 PM MWF", time: "08:00 PM - 09:00 PM", days: "MWF" },
+  {
+    key: "6_00_am_mwf",
+    label: "6.00 am MWF",
+    time: "06:00 AM - 07:00 AM",
+    days: "MWF",
+    batchId: "BATCH-01",
+  },
+  {
+    key: "8_00_am_mwf",
+    label: "8.00am MWF",
+    time: "08:00 AM - 09:00 AM",
+    days: "MWF",
+    batchId: "BATCH-02",
+  },
+  {
+    key: "6_00_am_tts",
+    label: "6 am TTS",
+    time: "06:00 AM - 07:00 AM",
+    days: "TTS",
+    batchId: "BATCH-04",
+  },
+  {
+    key: "8_00_am_tts",
+    label: "8 AM TTS",
+    time: "08:00 AM - 09:00 AM",
+    days: "TTS",
+    batchId: "BATCH-05",
+  },
+  {
+    key: "6_30_pm_mwf",
+    label: "6.30 PM MWF",
+    time: "06:30 PM - 07:30 PM",
+    days: "MWF",
+    batchId: "BATCH-03",
+  },
+  {
+    key: "8_00_pm_mwf",
+    label: "8 00 PM MWF",
+    time: "08:00 PM - 09:00 PM",
+    days: "MWF",
+    batchId: "BATCH-06",
+  },
 ];
 
 export const SEED_BATCHES = [
@@ -27,9 +63,9 @@ export const SEED_BATCHES = [
     daysLabel: "Monday • Wednesday • Friday",
     daysList: ["Monday", "Wednesday", "Friday"],
     maxPax: 28,
-    currentPax: 18,
+    currentPax: 21,
     status: "Active",
-    trainerIds: ["TRN-101", "TRN-103"],
+    trainerIds: ["TRN-101", "TRN-103", "TRN-106"],
     description: "Morning functional strength and athletic conditioning batch.",
     memberIds: [
       "MEM-2001",
@@ -38,7 +74,21 @@ export const SEED_BATCHES = [
       "MEM-2004",
       "MEM-2005",
       "MEM-2006",
-      "MEM-2030",
+      "MEM-2007",
+      "MEM-2008",
+      "MEM-2009",
+      "MEM-2010",
+      "MEM-2011",
+      "MEM-2012",
+      "MEM-2013",
+      "MEM-2014",
+      "MEM-2015",
+      "MEM-2016",
+      "MEM-2017",
+      "MEM-2018",
+      "MEM-2019",
+      "MEM-2020",
+      "MEM-2122",
     ],
     createdAt: "2026-01-01T06:00:00.000Z",
   },
@@ -53,17 +103,34 @@ export const SEED_BATCHES = [
     daysLabel: "Monday • Wednesday • Friday",
     daysList: ["Monday", "Wednesday", "Friday"],
     maxPax: 28,
-    currentPax: 21,
+    currentPax: 23,
     status: "Active",
-    trainerIds: ["TRN-102", "TRN-101"],
+    trainerIds: ["TRN-101", "TRN-103", "TRN-106"],
     description: "Mid-morning hypertrophy and barbell foundation batch.",
     memberIds: [
-      "MEM-2007",
-      "MEM-2008",
-      "MEM-2009",
-      "MEM-2010",
-      "MEM-2011",
+      "MEM-2021",
+      "MEM-2022",
+      "MEM-2023",
+      "MEM-2024",
+      "MEM-2025",
+      "MEM-2026",
+      "MEM-2027",
+      "MEM-2028",
+      "MEM-2029",
+      "MEM-2030",
       "MEM-2031",
+      "MEM-2032",
+      "MEM-2033",
+      "MEM-2034",
+      "MEM-2035",
+      "MEM-2036",
+      "MEM-2037",
+      "MEM-2038",
+      "MEM-2039",
+      "MEM-2040",
+      "MEM-2041",
+      "MEM-2042",
+      "MEM-2123",
     ],
     createdAt: "2026-01-01T08:00:00.000Z",
   },
@@ -80,14 +147,34 @@ export const SEED_BATCHES = [
     maxPax: 28,
     currentPax: 25,
     status: "Active",
-    trainerIds: ["TRN-102", "TRN-103"],
-    description: "Evening prime strength and conditioning program.",
+    trainerIds: ["TRN-103", "TRN-104", "TRN-106"],
+    description: "Evening prime strength, Olympic lifting, and power conditioning program.",
     memberIds: [
-      "MEM-2012",
-      "MEM-2013",
-      "MEM-2014",
-      "MEM-2015",
-      "MEM-2016",
+      "MEM-2043",
+      "MEM-2044",
+      "MEM-2045",
+      "MEM-2046",
+      "MEM-2047",
+      "MEM-2048",
+      "MEM-2049",
+      "MEM-2050",
+      "MEM-2051",
+      "MEM-2052",
+      "MEM-2053",
+      "MEM-2054",
+      "MEM-2055",
+      "MEM-2056",
+      "MEM-2057",
+      "MEM-2058",
+      "MEM-2059",
+      "MEM-2060",
+      "MEM-2061",
+      "MEM-2062",
+      "MEM-2063",
+      "MEM-2064",
+      "MEM-2065",
+      "MEM-2066",
+      "MEM-2124",
     ],
     createdAt: "2026-01-01T18:30:00.000Z",
   },
@@ -102,16 +189,30 @@ export const SEED_BATCHES = [
     daysLabel: "Tuesday • Thursday • Saturday",
     daysList: ["Tuesday", "Thursday", "Saturday"],
     maxPax: 28,
-    currentPax: 15,
+    currentPax: 19,
     status: "Active",
-    trainerIds: ["TRN-103"],
-    description: "Tuesday-Thursday-Saturday morning athletic power track.",
+    trainerIds: ["TRN-101", "TRN-105"],
+    description: "Tuesday-Thursday-Saturday early athletic power and mobility track.",
     memberIds: [
-      "MEM-2017",
-      "MEM-2018",
-      "MEM-2019",
-      "MEM-2020",
-      "MEM-2021",
+      "MEM-2067",
+      "MEM-2068",
+      "MEM-2069",
+      "MEM-2070",
+      "MEM-2071",
+      "MEM-2072",
+      "MEM-2073",
+      "MEM-2074",
+      "MEM-2075",
+      "MEM-2076",
+      "MEM-2077",
+      "MEM-2078",
+      "MEM-2079",
+      "MEM-2080",
+      "MEM-2081",
+      "MEM-2082",
+      "MEM-2083",
+      "MEM-2084",
+      "MEM-2125",
     ],
     createdAt: "2026-01-01T06:00:00.000Z",
   },
@@ -126,15 +227,32 @@ export const SEED_BATCHES = [
     daysLabel: "Tuesday • Thursday • Saturday",
     daysList: ["Tuesday", "Thursday", "Saturday"],
     maxPax: 28,
-    currentPax: 23,
+    currentPax: 21,
     status: "Active",
-    trainerIds: ["TRN-102", "TRN-101"],
-    description: "TTS mid-morning progressive overload and conditioning.",
+    trainerIds: ["TRN-101", "TRN-105"],
+    description: "TTS mid-morning progressive overload, endurance, and conditioning.",
     memberIds: [
-      "MEM-2022",
-      "MEM-2023",
-      "MEM-2024",
-      "MEM-2025",
+      "MEM-2085",
+      "MEM-2086",
+      "MEM-2087",
+      "MEM-2088",
+      "MEM-2089",
+      "MEM-2090",
+      "MEM-2091",
+      "MEM-2092",
+      "MEM-2093",
+      "MEM-2094",
+      "MEM-2095",
+      "MEM-2096",
+      "MEM-2097",
+      "MEM-2098",
+      "MEM-2099",
+      "MEM-2100",
+      "MEM-2101",
+      "MEM-2102",
+      "MEM-2103",
+      "MEM-2104",
+      "MEM-2105",
     ],
     createdAt: "2026-01-01T08:00:00.000Z",
   },
@@ -149,15 +267,27 @@ export const SEED_BATCHES = [
     daysLabel: "Monday • Wednesday • Friday",
     daysList: ["Monday", "Wednesday", "Friday"],
     maxPax: 28,
-    currentPax: 17,
+    currentPax: 16,
     status: "Active",
-    trainerIds: ["TRN-102", "TRN-103"],
-    description: "Late evening athletic strength session.",
+    trainerIds: ["TRN-103", "TRN-104", "TRN-105", "TRN-106"],
+    description: "Night shift athletic power, metabolic conditioning, and recovery session.",
     memberIds: [
-      "MEM-2026",
-      "MEM-2027",
-      "MEM-2028",
-      "MEM-2029",
+      "MEM-2106",
+      "MEM-2107",
+      "MEM-2108",
+      "MEM-2109",
+      "MEM-2110",
+      "MEM-2111",
+      "MEM-2112",
+      "MEM-2113",
+      "MEM-2114",
+      "MEM-2115",
+      "MEM-2116",
+      "MEM-2117",
+      "MEM-2118",
+      "MEM-2119",
+      "MEM-2120",
+      "MEM-2121",
     ],
     createdAt: "2026-01-01T20:00:00.000Z",
   },
@@ -172,18 +302,10 @@ export const SEED_COACH_SHIFTS = [
     shifts: {
       "6_00_am_mwf": true,
       "8_00_am_mwf": true,
+      "6_00_am_tts": true,
       "8_00_am_tts": true,
-    },
-  },
-  {
-    coachId: "TRN-102",
-    coachName: "Ashwin",
-    fullName: "Ashwin Kumar",
-    role: "Strength and Conditioning Specialist",
-    shifts: {
-      "8_00_am_mwf": true,
-      "6_30_pm_mwf": true,
-      "8_00_pm_mwf": true,
+      "6_30_pm_mwf": false,
+      "8_00_pm_mwf": false,
     },
   },
   {
@@ -193,14 +315,59 @@ export const SEED_COACH_SHIFTS = [
     role: "Senior Strength and Rehab Specialist",
     shifts: {
       "6_00_am_mwf": true,
-      "6_00_am_tts": true,
+      "8_00_am_mwf": true,
+      "6_00_am_tts": false,
+      "8_00_am_tts": false,
       "6_30_pm_mwf": true,
+      "8_00_pm_mwf": true,
+    },
+  },
+  {
+    coachId: "TRN-104",
+    coachName: "Bharath",
+    fullName: "Bharath V",
+    role: "Barbell & Strength Coach",
+    shifts: {
+      "6_00_am_mwf": false,
+      "8_00_am_mwf": false,
+      "6_00_am_tts": false,
+      "8_00_am_tts": false,
+      "6_30_pm_mwf": true,
+      "8_00_pm_mwf": true,
+    },
+  },
+  {
+    coachId: "TRN-105",
+    coachName: "Rengaraj",
+    fullName: "Rengaraj M",
+    role: "High Performance Conditioning Coach",
+    shifts: {
+      "6_00_am_mwf": false,
+      "8_00_am_mwf": false,
+      "6_00_am_tts": true,
+      "8_00_am_tts": true,
+      "6_30_pm_mwf": false,
+      "8_00_pm_mwf": true,
+    },
+  },
+  {
+    coachId: "TRN-106",
+    coachName: "F Coach",
+    fullName: "F Coach",
+    role: "Functional Movements & Kettlebell Specialist",
+    shifts: {
+      "6_00_am_mwf": true,
+      "8_00_am_mwf": true,
+      "6_00_am_tts": false,
+      "8_00_am_tts": false,
+      "6_30_pm_mwf": true,
+      "8_00_pm_mwf": true,
     },
   },
 ];
 
 export const SEED_SCHEDULED_CLASSES = [
-  // BATCH 1 Classes
+  // BATCH 1 Classes (MWF 06:00 AM)
   {
     id: "CLS-101",
     batchId: "BATCH-01",
@@ -234,11 +401,11 @@ export const SEED_SCHEDULED_CLASSES = [
     focus: "Conventional deadlifts, Romanian deadlifts, and kettlebell swings",
     intensity: "High",
     room: "Deadlift Platforms",
-    coachName: "Dolliee Ellens",
+    coachName: "F Coach",
     time: "06:00 AM - 07:00 AM",
   },
 
-  // BATCH 2 Classes
+  // BATCH 2 Classes (MWF 08:00 AM)
   {
     id: "CLS-201",
     batchId: "BATCH-02",
@@ -248,7 +415,7 @@ export const SEED_SCHEDULED_CLASSES = [
     focus: "Power clean turnover, front rack positioning, and triple extension",
     intensity: "High",
     room: "Olympic Lifting Floor",
-    coachName: "Ashwin Kumar",
+    coachName: "F Coach",
     time: "08:00 AM - 09:00 AM",
   },
   {
@@ -272,11 +439,49 @@ export const SEED_SCHEDULED_CLASSES = [
     focus: "Turf sled pushes, battle ropes, and shuttle intervals",
     intensity: "High",
     room: "Turf & Sled Track",
-    coachName: "Ashwin Kumar",
+    coachName: "Robert Creflo",
     time: "08:00 AM - 09:00 AM",
   },
 
-  // BATCH 4 Classes (TTS)
+  // BATCH 3 Classes (MWF 06:30 PM)
+  {
+    id: "CLS-301",
+    batchId: "BATCH-03",
+    day: "Monday",
+    title: "Olympic Clean & Jerk Progression",
+    category: "Olympic Weightlifting",
+    focus: "Split jerk footwork, elbow drive, and bar speed",
+    intensity: "High",
+    room: "Olympic Lifting Floor",
+    coachName: "Bharath V",
+    time: "06:30 PM - 07:30 PM",
+  },
+  {
+    id: "CLS-302",
+    batchId: "BATCH-03",
+    day: "Wednesday",
+    title: "Heavy Barbell Bench Press & Lockout",
+    category: "Strength & Hypertrophy",
+    focus: "Powerlifting arch setup, triceps lockout, and pause reps",
+    intensity: "High",
+    room: "Olympic Bench Area",
+    coachName: "Robert Creflo",
+    time: "06:30 PM - 07:30 PM",
+  },
+  {
+    id: "CLS-303",
+    batchId: "BATCH-03",
+    day: "Friday",
+    title: "Metabolic Conditioning & Strongman Carries",
+    category: "Functional Fitness",
+    focus: "Farmer carries, trap bar deadlift intervals, and core bracing",
+    intensity: "High",
+    room: "Turf & Sled Track",
+    coachName: "F Coach",
+    time: "06:30 PM - 07:30 PM",
+  },
+
+  // BATCH 4 Classes (TTS 06:00 AM)
   {
     id: "CLS-401",
     batchId: "BATCH-04",
@@ -286,7 +491,7 @@ export const SEED_SCHEDULED_CLASSES = [
     focus: "Tempo squats, ankle mobility, and core stabilization",
     intensity: "High",
     room: "Main Rig & Platforms",
-    coachName: "Robert Creflo",
+    coachName: "Dolliee Ellens",
     time: "06:00 AM - 07:00 AM",
   },
   {
@@ -298,7 +503,7 @@ export const SEED_SCHEDULED_CLASSES = [
     focus: "Military barbell press, weighted pull-ups, and core bracing",
     intensity: "High",
     room: "Main Rig & Platforms",
-    coachName: "Robert Creflo",
+    coachName: "Rengaraj M",
     time: "06:00 AM - 07:00 AM",
   },
   {
@@ -310,8 +515,84 @@ export const SEED_SCHEDULED_CLASSES = [
     focus: "Continuous multi-exercise barbell complex without resting between movements",
     intensity: "High",
     room: "Main Rig & Platforms",
-    coachName: "Robert Creflo",
+    coachName: "Rengaraj M",
     time: "06:00 AM - 07:00 AM",
+  },
+
+  // BATCH 5 Classes (TTS 08:00 AM)
+  {
+    id: "CLS-501",
+    batchId: "BATCH-05",
+    day: "Tuesday",
+    title: "Front Squat Mechanics & Quad Drive",
+    category: "Strength & Hypertrophy",
+    focus: "Thoracic upright posture, front rack grip, and eccentric control",
+    intensity: "High",
+    room: "Main Rig & Platforms",
+    coachName: "Dolliee Ellens",
+    time: "08:00 AM - 09:00 AM",
+  },
+  {
+    id: "CLS-502",
+    batchId: "BATCH-05",
+    day: "Thursday",
+    title: "Snatch Technique & Overhead Squat Stability",
+    category: "Olympic Weightlifting",
+    focus: "Snatch balance, wide grip turnover, and shoulder girdle lock",
+    intensity: "High",
+    room: "Olympic Lifting Floor",
+    coachName: "Rengaraj M",
+    time: "08:00 AM - 09:00 AM",
+  },
+  {
+    id: "CLS-503",
+    batchId: "BATCH-05",
+    day: "Saturday",
+    title: "Team Conditioning & Turf Sled Gauntlet",
+    category: "Functional Fitness",
+    focus: "Partner sled pushes, assault bike sprints, and high-intensity interval ladders",
+    intensity: "High",
+    room: "Turf & Sled Track",
+    coachName: "Dolliee Ellens",
+    time: "08:00 AM - 09:00 AM",
+  },
+
+  // BATCH 6 Classes (MWF 08:00 PM)
+  {
+    id: "CLS-601",
+    batchId: "BATCH-06",
+    day: "Monday",
+    title: "Late-Night Heavy Squat Complex",
+    category: "Strength & Hypertrophy",
+    focus: "Safety squat bar, paused box squats, and glute-ham tie-in",
+    intensity: "High",
+    room: "Main Rig & Platforms",
+    coachName: "Robert Creflo",
+    time: "08:00 PM - 09:00 PM",
+  },
+  {
+    id: "CLS-602",
+    batchId: "BATCH-06",
+    day: "Wednesday",
+    title: "Deadlift Variations & Spinal Neutrality",
+    category: "Strength & Hypertrophy",
+    focus: "Deficit deadlifts, barbell rows, and lat engagement",
+    intensity: "High",
+    room: "Deadlift Platforms",
+    coachName: "Bharath V",
+    time: "08:00 PM - 09:00 PM",
+  },
+  {
+    id: "CLS-603",
+    batchId: "BATCH-06",
+    day: "Friday",
+    title: "Full Body Functional Capacity & Sled Finisher",
+    category: "Functional Fitness",
+    focus: "Kettlebell clean & press, sandbag carries, and metabolic flush",
+    intensity: "High",
+    room: "Turf & Sled Track",
+    coachName: "F Coach",
+    time: "08:00 PM - 09:00 PM",
   },
 ];
 
@@ -331,20 +612,34 @@ function readStorage(key, defaultData) {
           localStorage.setItem(key, JSON.stringify(defaultData));
           return [...defaultData];
         }
-        const needsMemberIds = parsed.some(
-          (b) => !Array.isArray(b.memberIds) || b.memberIds.length === 0,
+        const needsSync = parsed.some(
+          (b) =>
+            b.maxPax !== 28 ||
+            !Array.isArray(b.memberIds) ||
+            b.memberIds.length < 15 ||
+            !Array.isArray(b.trainerIds),
         );
-        if (needsMemberIds && defaultData && defaultData.length > 0) {
-          const merged = parsed.map((b) => {
-            const seed = defaultData.find((s) => s.id === b.id);
-            if (seed && seed.memberIds && (!b.memberIds || b.memberIds.length === 0)) {
-              return {
-                ...b,
-                memberIds: seed.memberIds,
-                currentPax: b.currentPax || seed.currentPax,
-              };
-            }
-            return b;
+        if (needsSync && defaultData && defaultData.length > 0) {
+          const merged = defaultData.map((seedBatch) => {
+            const existing = parsed.find((b) => b.id === seedBatch.id);
+            if (!existing) return seedBatch;
+            return {
+              ...existing,
+              name: seedBatch.name,
+              shortName: seedBatch.shortName,
+              startTime: seedBatch.startTime,
+              endTime: seedBatch.endTime,
+              timingLabel: seedBatch.timingLabel,
+              daysPattern: seedBatch.daysPattern,
+              daysLabel: seedBatch.daysLabel,
+              daysList: seedBatch.daysList,
+              maxPax: 28,
+              currentPax: seedBatch.memberIds?.length || existing.currentPax || 0,
+              trainerIds: Array.isArray(existing.trainerIds) && existing.trainerIds.length > 0
+                ? existing.trainerIds
+                : seedBatch.trainerIds,
+              memberIds: seedBatch.memberIds,
+            };
           });
           localStorage.setItem(key, JSON.stringify(merged));
           return merged;
@@ -352,23 +647,20 @@ function readStorage(key, defaultData) {
         return parsed;
       }
       if (key === STORAGE_KEY_SCHEDULED_CLASSES) {
-        if (parsed.length === 0) {
+        if (parsed.length === 0 || parsed.length < defaultData.length) {
           localStorage.setItem(key, JSON.stringify(defaultData));
           return [...defaultData];
         }
         return parsed;
       }
       if (key === STORAGE_KEY_COACH_SHIFTS) {
-        const validCoachIds = ["TRN-101", "TRN-102", "TRN-103"];
-        const sanitized = parsed.filter((c) => validCoachIds.includes(c.coachId));
-        if (sanitized.length === 0) {
+        const expectedCoachIds = ["TRN-101", "TRN-103", "TRN-104", "TRN-105", "TRN-106"];
+        const hasAllCoaches = expectedCoachIds.every((id) => parsed.some((c) => c.coachId === id));
+        if (!hasAllCoaches || parsed.length !== expectedCoachIds.length) {
           localStorage.setItem(key, JSON.stringify(defaultData));
           return [...defaultData];
         }
-        if (sanitized.length !== parsed.length) {
-          localStorage.setItem(key, JSON.stringify(sanitized));
-        }
-        return sanitized;
+        return parsed;
       }
       return parsed;
     }
@@ -661,3 +953,78 @@ export function enrollMemberInBatch(batchId, memberId) {
   writeStorage(STORAGE_KEY_BATCHES, batches);
   return updatedBatch;
 }
+
+/**
+ * Returns an array of batch IDs that the given trainer is currently assigned to.
+ */
+export function getTrainerBatchIds(trainerId) {
+  if (!trainerId) return [];
+  const batches = getBatches();
+  return batches
+    .filter((b) => Array.isArray(b.trainerIds) && b.trainerIds.includes(trainerId))
+    .map((b) => b.id);
+}
+
+/**
+ * Synchronizes batch assignments for a specific trainer across all batches and coach shifts.
+ * Any batch ID in selectedBatchIds will include trainerId; any batch ID not in selectedBatchIds will remove trainerId.
+ */
+export function syncTrainerBatches(trainerId, selectedBatchIds = []) {
+  if (!trainerId) return [];
+  const batches = getBatches();
+  const targetBatchIds = Array.isArray(selectedBatchIds) ? selectedBatchIds : [];
+  let batchesChanged = false;
+
+  const updatedBatches = batches.map((batch) => {
+    const isSelected = targetBatchIds.includes(batch.id);
+    const currentTrainers = Array.isArray(batch.trainerIds) ? [...batch.trainerIds] : [];
+    const hasTrainer = currentTrainers.includes(trainerId);
+
+    if (isSelected && !hasTrainer) {
+      batchesChanged = true;
+      return {
+        ...batch,
+        trainerIds: [...currentTrainers, trainerId],
+      };
+    } else if (!isSelected && hasTrainer) {
+      batchesChanged = true;
+      return {
+        ...batch,
+        trainerIds: currentTrainers.filter((id) => id !== trainerId),
+      };
+    }
+    return batch;
+  });
+
+  if (batchesChanged) {
+    writeStorage(STORAGE_KEY_BATCHES, updatedBatches);
+  }
+
+  // Also sync coach shift matrix if coach exists in shift matrix
+  try {
+    const matrix = getCoachShiftMatrix();
+    const coach = matrix.find(
+      (c) => c.coachId === trainerId || c.fullName?.toLowerCase() === trainerId?.toLowerCase(),
+    );
+    if (coach && coach.shifts) {
+      let shiftChanged = false;
+      SHIFT_SLOTS.forEach((slot) => {
+        if (slot.batchId) {
+          const shouldBeActive = targetBatchIds.includes(slot.batchId);
+          if (coach.shifts[slot.key] !== shouldBeActive) {
+            coach.shifts[slot.key] = shouldBeActive;
+            shiftChanged = true;
+          }
+        }
+      });
+      if (shiftChanged) {
+        writeStorage(STORAGE_KEY_COACH_SHIFTS, matrix);
+      }
+    }
+  } catch (err) {
+    console.error("Failed to sync coach shifts:", err);
+  }
+
+  return updatedBatches;
+}
+

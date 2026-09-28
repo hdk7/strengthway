@@ -27,7 +27,6 @@ import TrainersAttendancePage from "@/pages/attendance/TrainersAttendancePage";
 import MembersPaymentsPage from "@/pages/payments/MembersPaymentsPage";
 import TrainersPaymentsPage from "@/pages/payments/TrainersPaymentsPage";
 import ReportsPage from "@/pages/reports/ReportsPage";
-import ShiftMasterPage from "@/pages/masters/ShiftMasterPage";
 import MembershipPlanMasterPage from "@/pages/masters/MembershipPlanMasterPage";
 import AttendancePolicyMasterPage from "@/pages/masters/AttendancePolicyMasterPage";
 import PaymentFeeMasterPage from "@/pages/masters/PaymentFeeMasterPage";
@@ -86,7 +85,7 @@ export function AppRoutes() {
 
         <Route path="reports" element={<ReportsPage />} />
 
-        <Route path="masters/shift" element={<ShiftMasterPage />} />
+        <Route path="masters/shift" element={<Navigate to="/admin/masters/membership-plan" replace />} />
         <Route path="masters/batch" element={<Navigate to="/admin/batches" replace />} />
         <Route path="masters/membership-plan" element={<MembershipPlanMasterPage />} />
         <Route path="masters/schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />

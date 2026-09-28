@@ -2,6 +2,9 @@
 import trainer3 from "@/assets/trainer-3.webp";
 import portfolioPhoto3 from "@/assets/portfolio-photo-3.jpg";
 import trainer2 from "@/assets/trainer-2.jpg";
+import portfolioPhoto1 from "@/assets/portfolio-photo-1.jpg";
+import portfolioPhoto2 from "@/assets/portfolio-photo-2.jpg";
+import portfolioPhoto5 from "@/assets/portfolio-photo-5.jpg";
 
 export const STORAGE_KEY = "tsw-trainers";
 
@@ -9,6 +12,9 @@ export const TRAINER_PHOTOS = {
   "TRN-101": trainer3,
   "TRN-102": portfolioPhoto3,
   "TRN-103": trainer2,
+  "TRN-104": portfolioPhoto1,
+  "TRN-105": portfolioPhoto2,
+  "TRN-106": portfolioPhoto5,
 };
 
 export const SEED_TRAINERS = [
@@ -126,6 +132,107 @@ export const SEED_TRAINERS = [
     },
     joinedAt: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString(),
   },
+  {
+    id: "TRN-104",
+    name: "Bharath V",
+    gender: "Male",
+    specialization: "Olympic Weightlifting & Power",
+    experience: "8 Years",
+    phone: "+91 98860 77889",
+    email: "bharath.v@strengthway.com",
+    shift: "Evening (18:30 - 21:00)",
+    status: "Active",
+    bio: "National-level weightlifter and strength specialist. Focuses on explosive triple extension, barbell snatch and clean & jerk mechanics, and maximum athletic power output.",
+    photo: portfolioPhoto1,
+    floorZone: "Olympic Platforms & Heavy Rigs",
+    certifications: [
+      "USAW Level 2 Weightlifting Coach",
+      "CSCS Specialist",
+      "Kettlebell Athletics Specialist",
+    ],
+    languages: ["English", "Kannada", "Hindi"],
+    rating: 4.92,
+    reviewsCount: 68,
+    quote: "Precision under tension turns potential into pure explosive power.",
+    programs: [
+      "Olympic Snatch & Clean",
+      "Barbell Power Progression",
+      "Explosive Athlete Conditioning",
+    ],
+    stats: {
+      clients: "220+",
+      successRate: "98%",
+      hours: "1,600+",
+      rating: "4.9",
+    },
+    joinedAt: new Date(Date.now() - 240 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "TRN-105",
+    name: "Rengaraj M",
+    gender: "Male",
+    specialization: "Conditioning & Mobility",
+    experience: "6 Years",
+    phone: "+91 98451 88990",
+    email: "rengaraj.m@strengthway.com",
+    shift: "Morning & Night (06:00 - 09:00 & 20:00 - 21:00)",
+    status: "Active",
+    bio: "Specializes in multi-directional agility, metabolic conditioning, and joint fascial decompression. Champions fluid functional movement without compromising raw strength.",
+    photo: portfolioPhoto2,
+    floorZone: "Turf Track & Functional Rig",
+    certifications: [
+      "FMS (Functional Movement Screen)",
+      "ACE Certified Personal Trainer",
+      "Animal Flow Master Instructor",
+    ],
+    languages: ["English", "Tamil", "Hindi"],
+    rating: 4.89,
+    reviewsCount: 54,
+    quote: "Move well before you move fast; build resilient foundations that last.",
+    programs: [
+      "Metabolic Conditioning",
+      "Fascial Mobility & Movement",
+      "TTS Athletic Conditioning",
+    ],
+    stats: {
+      clients: "190+",
+      successRate: "96%",
+      hours: "1,250+",
+      rating: "4.9",
+    },
+    joinedAt: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: "TRN-106",
+    name: "F Coach",
+    gender: "Female",
+    specialization: "Floor Master & Functional Strength",
+    experience: "7 Years",
+    phone: "+91 98210 99001",
+    email: "fcoach@strengthway.com",
+    shift: "Dual Shift (06:00 - 09:00 & 18:30 - 21:00)",
+    status: "Active",
+    bio: "Floor Master Coach orchestrating high-intensity functional classes, barbell posture alignment, and tactical metabolic workouts across morning and evening shifts.",
+    photo: portfolioPhoto5,
+    floorZone: "Main Arena & Functional Floor",
+    certifications: ["CrossFit Level 2 Trainer", "ISSA Master Coach", "Precision Nutrition L2"],
+    languages: ["English", "Hindi"],
+    rating: 4.96,
+    reviewsCount: 92,
+    quote: "Discipline on the gym floor translates to unbreakable resilience in life.",
+    programs: [
+      "Master Class Floor Supervision",
+      "Functional Strength Foundations",
+      "Lactate Threshold Circuits",
+    ],
+    stats: {
+      clients: "310+",
+      successRate: "99%",
+      hours: "2,100+",
+      rating: "5.0",
+    },
+    joinedAt: new Date(Date.now() - 280 * 24 * 60 * 60 * 1000).toISOString(),
+  },
 ];
 
 export function getTrainerPhoto(trainer) {
@@ -133,8 +240,6 @@ export function getTrainerPhoto(trainer) {
   if (trainer.photo) return trainer.photo;
   return TRAINER_PHOTOS[trainer.id] || null;
 }
-
-const LEGACY_MOCK_TRAINER_IDS = ["TRN-104", "TRN-105", "TRN-106"];
 
 function readStorage() {
   try {
@@ -145,24 +250,28 @@ function readStorage() {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      const sanitized = parsed.filter((t) => !LEGACY_MOCK_TRAINER_IDS.includes(t.id));
-      const merged = sanitized.map((trainer) => {
-        const seed = SEED_TRAINERS.find((s) => s.id === trainer.id);
-        if (seed) {
-          return {
-            ...seed,
-            ...trainer,
-            photo: trainer.photo || seed.photo,
-            certifications: trainer.certifications || seed.certifications,
-            stats: trainer.stats || seed.stats,
-            programs: trainer.programs || seed.programs,
-            quote: trainer.quote || seed.quote,
-            floorZone: trainer.floorZone || seed.floorZone,
-            gender: trainer.gender || seed.gender,
-          };
-        }
-        return trainer;
-      });
+      const existingIds = new Set(parsed.map((t) => t.id));
+      const missingSeeds = SEED_TRAINERS.filter((s) => !existingIds.has(s.id));
+      const merged = [
+        ...parsed.map((trainer) => {
+          const seed = SEED_TRAINERS.find((s) => s.id === trainer.id);
+          if (seed) {
+            return {
+              ...seed,
+              ...trainer,
+              photo: trainer.photo || seed.photo,
+              certifications: trainer.certifications || seed.certifications,
+              stats: trainer.stats || seed.stats,
+              programs: trainer.programs || seed.programs,
+              quote: trainer.quote || seed.quote,
+              floorZone: trainer.floorZone || seed.floorZone,
+              gender: trainer.gender || seed.gender,
+            };
+          }
+          return trainer;
+        }),
+        ...missingSeeds,
+      ];
       if (merged.length !== parsed.length) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       }

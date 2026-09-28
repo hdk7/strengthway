@@ -189,32 +189,29 @@ export default function MemberProfilePage() {
     if (typeof member.membershipPlan === "object" && member.membershipPlan.name) {
       return member.membershipPlan;
     }
-    const planName = typeof member.membershipPlan === "string" ? member.membershipPlan : "Annual Pro Strength Pass";
-    let durationMonths = 12;
-    let formattedPrice = "₹55,000";
+    const planName = typeof member.membershipPlan === "string" ? member.membershipPlan : "Quarterly Pro";
+    let durationMonths = 3;
+    let formattedPrice = "₹18,000";
     const startStr = member.registeredAt
       ? new Date(member.registeredAt).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
       : "Active";
-    let endStr = "Dec 31, 2026";
-
     const lower = planName.toLowerCase();
-    if (lower.includes("monthly") || lower.includes("starter")) {
+    if (lower.includes("monthly") || lower.includes("starter") || lower.includes("1")) {
       durationMonths = 1;
       formattedPrice = "₹7,000";
-      endStr = "30 Days from Start";
-    } else if (lower.includes("quarterly") || lower.includes("3")) {
+    } else {
       durationMonths = 3;
       formattedPrice = "₹18,000";
-      endStr = "90 Days from Start";
-    } else if (lower.includes("half") || lower.includes("6")) {
-      durationMonths = 6;
-      formattedPrice = "₹32,000";
-      endStr = "180 Days from Start";
-    } else {
-      durationMonths = 12;
-      formattedPrice = "₹55,000";
-      endStr = "365 Days from Start";
     }
+
+    const startDate = member.registeredAt ? new Date(member.registeredAt) : new Date();
+    const endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + durationMonths);
+    const endStr = endDate.toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
 
     return {
       name: planName,
@@ -308,19 +305,39 @@ export default function MemberProfilePage() {
     <div className="space-y-6 pb-12">
       {/* Top Header & Breadcrumb Nav */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Link to="/admin/dashboard" className="hover:text-foreground transition-colors">
-            Dashboard
-          </Link>
-          <ChevronRight size={12} />
-          <Link
-            to="/admin/trainers-members/members"
-            className="hover:text-foreground transition-colors"
-          >
-            Members
-          </Link>
-          <ChevronRight size={12} />
-          <span className="text-foreground font-semibold">{fullName}</span>
+        <div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+            <Link to="/admin/dashboard" className="hover:text-foreground transition-colors">
+              Dashboard
+            </Link>
+            <ChevronRight size={12} />
+            <Link
+              to="/admin/trainers-members/members"
+              className="hover:text-foreground transition-colors"
+            >
+              Members
+            </Link>
+            <ChevronRight size={12} />
+            <span className="text-foreground font-semibold">{fullName}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground font-display">
+              {fullName}
+            </h1>
+            {isDeleted ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-destructive">
+                Archived
+              </span>
+            ) : member.status === "Lead" || member.status === "Inquiry" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-amber-500">
+                Inquiry
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
+                {member.status || "Active"} Member
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Back & Action Buttons */}
@@ -402,135 +419,10 @@ export default function MemberProfilePage() {
         </div>
       )}
 
-      {/* Hero Athletic Pass Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-accent/20 via-card to-background p-6 sm:p-8 shadow-sm">
-        {/* Ambient Glowing Orbs */}
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute left-1/3 -bottom-10 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl" />
-
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          {/* Identity Info */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            {/* Avatar with live status ring */}
-            <div className="relative shrink-0">
-              <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl border-2 border-border/80 bg-gradient-to-br from-card to-background p-1 shadow-xl">
-                {member.photo ? (
-                  <img
-                    src={member.photo}
-                    alt={fullName}
-                    className="h-full w-full rounded-xl object-cover"
-                  />
-                ) : (
-                  <div className="grid h-full w-full place-items-center rounded-xl bg-accent/15 text-accent font-display text-3xl font-black tracking-wider uppercase">
-                    {initials}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Name, ID, Badges */}
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                {/* Status Badge */}
-                {isDeleted ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-destructive">
-                    Archived / Soft-Deleted
-                  </span>
-                ) : member.status === "Lead" || member.status === "Inquiry" ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-amber-500">
-                    Prospective Inquiry
-                  </span>
-                ) : (
-                  <span
-                    className={`inline-flex items-center rounded-full px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider ${
-                      member.status === "Inactive"
-                        ? "bg-muted border border-border text-muted-foreground"
-                        : "bg-emerald-500/15 border border-emerald-500/30 text-emerald-500"
-                    }`}
-                  >
-                    {member.status || "Active"} Member
-                  </span>
-                )}
-              </div>
-
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground font-display">
-                {fullName}
-              </h1>
-
-              {/* Subtitle Details */}
-              <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap pt-0.5">
-                <span className="flex items-center gap-1">
-                  <Calendar size={13} className="text-accent shrink-0" />
-                  <span>
-                    Enrolled:{" "}
-                    <strong className="text-foreground font-medium">
-                      {member.registeredAt
-                        ? new Date(member.registeredAt).toLocaleDateString("en-IN", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })
-                        : "Recently"}
-                    </strong>
-                  </span>
-                </span>
-
-                {age !== null && (
-                  <span className="flex items-center gap-1">
-                    <span>•</span>
-                    <span>
-                      <strong className="text-foreground font-medium">{age}</strong> yrs old
-                    </span>
-                  </span>
-                )}
-
-                {member.gender && (
-                  <span className="flex items-center gap-1">
-                    <span>•</span>
-                    <span>{member.gender}</span>
-                  </span>
-                )}
-
-                {member.city && (
-                  <span className="hidden sm:flex items-center gap-1">
-                    <span>•</span>
-                    <MapPin size={12} className="text-accent" />
-                    <span>{member.city}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Direct Quick Action Contact Group */}
-          <div className="flex items-center gap-3 flex-wrap self-start md:self-center shrink-0">
-            {member.mobile && (
-              <a
-                href={`tel:${member.mobile}`}
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/80 px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-accent/10 hover:border-accent/40 hover:text-accent transition-all shadow-sm cursor-pointer"
-              >
-                <Phone size={14} className="text-accent" />
-                <span>Call {member.mobile}</span>
-              </a>
-            )}
-
-            {member.email && (
-              <a
-                href={`mailto:${member.email}`}
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/80 px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-accent/10 hover:border-accent/40 hover:text-accent transition-all shadow-sm cursor-pointer"
-              >
-                <Mail size={14} className="text-accent" />
-                <span>Send Email</span>
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Main 2-Column Responsive Dashboard Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Vitals, BMI Spectrum, Bio, Documents (8 Cols) */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* Left Column: Vitals, BMI Spectrum, Bio, Documents (7 Cols) */}
+        <div className="lg:col-span-7 space-y-6">
           {/* Physical Stats Metric Tiles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {/* Height Card */}
@@ -620,100 +512,6 @@ export default function MemberProfilePage() {
             </div>
           </div>
 
-          {/* Interactive BMI & Body Composition Spectrum Bar */}
-          {bmiInfo && (
-            <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                    <Activity size={16} className="text-accent" />
-                    <span>Body Composition Spectrum Analysis</span>
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Calculated using standard athletic body mass index ratio
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Evaluated Score:</span>
-                  <span className="text-sm font-black text-foreground">{bmiInfo.value}</span>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-bold border ${bmiInfo.color}`}
-                  >
-                    {bmiInfo.category}
-                  </span>
-                </div>
-              </div>
-
-              {/* Spectrum Gradient Track */}
-              <div className="space-y-2 pt-2">
-                <div className="relative h-3 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-emerald-500 via-50% to-rose-500 opacity-80" />
-                  <div
-                    className="absolute top-0 bottom-0 w-2.5 bg-white border-2 border-black rounded-full shadow-[0_0_8px_rgba(0,0,0,0.8)] -translate-x-1/2 transition-all duration-500"
-                    style={{ left: `${bmiInfo.barPercent}%` }}
-                    title={`BMI: ${bmiInfo.value} (${bmiInfo.category})`}
-                  />
-                </div>
-
-                {/* Range Labels */}
-                <div className="flex justify-between text-[10px] font-mono text-muted-foreground px-1">
-                  <span>Underweight (&lt;18.5)</span>
-                  <span className="text-emerald-500 font-semibold">Normal (18.5–24.9)</span>
-                  <span>Overweight (25–29.9)</span>
-                  <span>Obese (30+)</span>
-                </div>
-              </div>
-
-              {/* Athletic Guidance Box */}
-              <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4 text-xs text-foreground/90 flex items-start gap-3">
-                <Sparkles size={18} className="text-accent shrink-0 mt-0.5" />
-                <div>
-                  <strong className="font-semibold text-accent block mb-0.5">
-                    Athletic Training Directive:
-                  </strong>
-                  <span>{bmiInfo.advice}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Athlete Bio & Fitness Philosophy */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
-            <div className="flex items-center gap-2">
-              <Quote size={18} className="text-accent" />
-              <h3 className="text-sm font-bold uppercase tracking-wider text-foreground">
-                Athlete Fitness Profile & Background
-              </h3>
-            </div>
-
-            <div className="rounded-2xl border border-border/50 bg-background/50 p-5">
-              <p className="text-sm sm:text-base text-foreground/90 leading-relaxed font-serif italic">
-                &ldquo;Active club member pursuing functional strength progression, regular
-                endurance sessions, and overall athletic longevity with consistent gym
-                attendance.&rdquo;
-              </p>
-            </div>
-
-            {/* Core Training Focus Badges */}
-            <div className="flex flex-wrap gap-2 pt-1">
-              {[
-                "Progressive Resistance",
-                "Metabolic Conditioning",
-                "Mobility & Flexibility",
-                "Nutrition Discipline",
-                "Form Optimization",
-              ].map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-muted/30 px-3 py-1.5 text-xs font-medium text-foreground/90"
-                >
-                  <Flame size={12} className="text-accent" />
-                  <span>{tag}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-
           {/* Medical Fitness Clearance Document */}
           <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
             <div className="flex items-center justify-between">
@@ -787,291 +585,403 @@ export default function MemberProfilePage() {
           </div>
         </div>
 
-        {/* Right Column: Contact, Address, Emergency Contact, Account Dossier (4 Cols) */}
-        <div className="lg:col-span-4 space-y-6">
-          {/* Direct Contact Card */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-accent">
-              Contact Channels
-            </h3>
-
-            {/* Phone */}
-            <div className="group rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-1 transition-all hover:border-accent/40">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Phone size={13} className="text-accent" />
-                  <span>Mobile Phone</span>
-                </span>
-                {member.mobile && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(member.mobile, "mobile", "Mobile number")}
-                    className="rounded-lg p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    title="Copy phone"
-                  >
-                    {copiedField === "mobile" ? (
-                      <Check size={13} className="text-emerald-500" />
-                    ) : (
-                      <Copy size={13} />
-                    )}
-                  </button>
-                )}
-              </div>
-              <p className="text-sm font-bold text-foreground font-mono tracking-tight pt-1">
-                {member.mobile || "Not provided"}
-              </p>
-              {member.mobile && (
-                <a
-                  href={`tel:${member.mobile}`}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline pt-1"
-                >
-                  <span>Click to call</span>
-                  <ExternalLink size={10} />
-                </a>
-              )}
-            </div>
-
-            {/* Email */}
-            <div className="group rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-1 transition-all hover:border-accent/40">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <Mail size={13} className="text-accent" />
-                  <span>Email Address</span>
-                </span>
-                {member.email && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(member.email, "email", "Email address")}
-                    className="rounded-lg p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    title="Copy email"
-                  >
-                    {copiedField === "email" ? (
-                      <Check size={13} className="text-emerald-500" />
-                    ) : (
-                      <Copy size={13} />
-                    )}
-                  </button>
-                )}
-              </div>
-              <p className="text-sm font-bold text-foreground break-all pt-1">
-                {member.email || "Not provided"}
-              </p>
-              {member.email && (
-                <a
-                  href={`mailto:${member.email}`}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline pt-1"
-                >
-                  <span>Click to compose</span>
-                  <ExternalLink size={10} />
-                </a>
-              )}
-            </div>
-
-            {/* Date of Birth */}
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-1">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <Calendar size={13} className="text-accent" />
-                <span>Date of Birth</span>
-              </span>
-              <p className="text-sm font-bold text-foreground font-mono pt-1">
-                {member.dob || "—"}
-              </p>
-              {age !== null && (
-                <p className="text-[11px] text-muted-foreground">
-                  Verified Age: {age} Years (Eligible Adult Member)
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Residential Address Card */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-              <MapPin size={14} />
-              <span>Residential Address</span>
-            </h3>
-
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 text-xs space-y-2 text-foreground">
-              {member.address ? (
-                <>
-                  <p className="font-semibold text-sm leading-relaxed">{member.address}</p>
-                  <div className="flex flex-wrap gap-2 text-muted-foreground pt-1">
-                    {member.city && (
-                      <span className="rounded-md bg-card px-2 py-0.5 border border-border font-medium text-foreground">
-                        {member.city}
-                      </span>
-                    )}
-                    {member.state && (
-                      <span className="rounded-md bg-card px-2 py-0.5 border border-border font-medium text-foreground">
-                        {member.state}
-                      </span>
-                    )}
-                    {member.pincode && (
-                      <span className="rounded-md bg-accent/10 px-2 py-0.5 border border-accent/25 font-mono font-bold text-accent">
-                        PIN: {member.pincode}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground pt-1">
-                    Country: {member.country || "India"}
+        {/* Right Column: Contact Channels, Residential Address, Emergency Contact, Enrolled Membership Plan, Membership Account Dossier (5 Cols) */}
+        <div className="lg:col-span-5 space-y-6">
+          {/* CARD 1: Contact Channels, Residential Address & Emergency Contact */}
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <Phone size={15} />
+                </div>
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    Contact Channels & Residence
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Communication channels, home address, and emergency contact
                   </p>
-                </>
-              ) : (
-                <p className="text-muted-foreground">No address recorded.</p>
-              )}
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Emergency Contact Card */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-              <Shield size={14} />
-              <span>Emergency Contact</span>
-            </h3>
+            {/* 1. Contact Channels */}
+            <div className="space-y-2.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                Contact Channels
+              </span>
 
-            <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 text-xs space-y-2">
-              {emergencyName ? (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-sm text-foreground">
-                      {emergencyName}
-                    </span>
-                    {emergencyRel && (
-                      <span className="rounded-full bg-accent/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent border border-accent/25">
-                        {emergencyRel}
+              <div className="space-y-2">
+                {/* Mobile Phone */}
+                <div className="group rounded-2xl border border-border/60 bg-muted/20 p-3.5 transition-all hover:border-accent/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card border border-border text-accent">
+                      <Phone size={14} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                        Mobile Phone
                       </span>
-                    )}
+                      <span className="text-xs font-bold text-foreground font-mono truncate block">
+                        {member.mobile || "Not provided"}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="font-mono text-xs text-foreground font-semibold">
-                      {emergencyPhone || "—"}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {member.mobile && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(member.mobile, "mobile", "Mobile number")}
+                          className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
+                          title="Copy phone"
+                        >
+                          {copiedField === "mobile" ? (
+                            <Check size={13} className="text-emerald-500" />
+                          ) : (
+                            <Copy size={13} />
+                          )}
+                        </button>
+                        <a
+                          href={`tel:${member.mobile}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent/10 border border-accent/20 px-2.5 py-1 text-[11px] font-semibold text-accent hover:bg-accent/20 transition-colors"
+                        >
+                          <span>Call</span>
+                          <ExternalLink size={10} />
+                        </a>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email Address */}
+                <div className="group rounded-2xl border border-border/60 bg-muted/20 p-3.5 transition-all hover:border-accent/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card border border-border text-accent">
+                      <Mail size={14} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                        Email Address
+                      </span>
+                      <span className="text-xs font-bold text-foreground truncate block">
+                        {member.email || "Not provided"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {member.email && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(member.email, "email", "Email address")}
+                          className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
+                          title="Copy email"
+                        >
+                          {copiedField === "email" ? (
+                            <Check size={13} className="text-emerald-500" />
+                          ) : (
+                            <Copy size={13} />
+                          )}
+                        </button>
+                        <a
+                          href={`mailto:${member.email}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-accent/10 border border-accent/20 px-2.5 py-1 text-[11px] font-semibold text-accent hover:bg-accent/20 transition-colors"
+                        >
+                          <span>Mail</span>
+                          <ExternalLink size={10} />
+                        </a>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Date of Birth & Age */}
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card border border-border text-accent">
+                      <Calendar size={14} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                        Date of Birth
+                      </span>
+                      <span className="text-xs font-bold text-foreground font-mono block">
+                        {member.dob
+                          ? new Date(member.dob).toLocaleDateString("en-IN", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "—"}
+                      </span>
+                    </div>
+                  </div>
+                  {age !== null && (
+                    <span className="rounded-full bg-accent/10 border border-accent/25 px-2.5 py-0.5 text-[10px] font-bold text-accent">
+                      {age} Yrs old
                     </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Residential Address */}
+            <div className="space-y-2.5 pt-3.5 border-t border-border/60">
+              <div className="flex items-center gap-1.5">
+                <MapPin size={13} className="text-accent" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Residential Address
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-2">
+                {member.address ? (
+                  <>
+                    <p className="font-semibold text-xs leading-relaxed text-foreground">
+                      {member.address}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      {member.city && (
+                        <span className="rounded-md bg-card px-2 py-0.5 text-[11px] font-semibold border border-border text-foreground">
+                          {member.city}
+                        </span>
+                      )}
+                      {member.state && (
+                        <span className="rounded-md bg-card px-2 py-0.5 text-[11px] font-semibold border border-border text-foreground">
+                          {member.state}
+                        </span>
+                      )}
+                      {member.pincode && (
+                        <span className="rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-mono font-bold border border-accent/25 text-accent">
+                          PIN: {member.pincode}
+                        </span>
+                      )}
+                      <span className="text-[11px] text-muted-foreground ml-auto">
+                        {member.country || "India"}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No residential address recorded on file.</p>
+                )}
+              </div>
+            </div>
+
+            {/* 3. Emergency Contact */}
+            <div className="space-y-2.5 pt-3.5 border-t border-border/60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Shield size={13} className="text-rose-500" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Emergency Contact
+                  </span>
+                </div>
+                {emergencyRel && (
+                  <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-500 border border-rose-500/25">
+                    {emergencyRel}
+                  </span>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-3.5 space-y-2">
+                {emergencyName ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <p className="font-bold text-xs text-foreground">{emergencyName}</p>
+                      <p className="font-mono text-xs font-semibold text-muted-foreground mt-0.5">
+                        {emergencyPhone || "No phone listed"}
+                      </p>
+                    </div>
+
                     {emergencyPhone && (
                       <a
                         href={`tel:${emergencyPhone}`}
-                        className="inline-flex items-center gap-1 rounded-lg bg-rose-500/10 border border-rose-500/25 px-2.5 py-1 text-[11px] font-bold text-rose-500 hover:bg-rose-500/20 transition-colors"
+                        className="inline-flex items-center gap-1.5 self-start sm:self-center rounded-xl bg-rose-500 text-white px-3 py-1.5 text-xs font-bold shadow-sm hover:bg-rose-600 transition-colors"
                       >
-                        <Phone size={11} />
+                        <Phone size={12} />
                         <span>Emergency Call</span>
                       </a>
                     )}
                   </div>
-                </>
-              ) : (
-                <p className="text-muted-foreground">No emergency contact recorded.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Active Membership & Billing Card if enrolled */}
-          {planDetails && (
-            <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3 text-xs">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-                  <Award size={14} />
-                  <span>Enrolled Membership Plan</span>
-                </h3>
-                <span className="inline-flex items-center rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-500">
-                  {planDetails.name}
-                </span>
-              </div>
-
-              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Plan Duration</span>
-                  <span className="font-semibold text-foreground">
-                    {planDetails.durationMonths} Month
-                    {planDetails.durationMonths > 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Validity Window</span>
-                  <span className="font-semibold text-foreground">
-                    {planDetails.formattedStart} — {planDetails.formattedEnd}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Subscription Fee</span>
-                  <span className="font-bold text-accent">
-                    {planDetails.formattedPrice}
-                  </span>
-                </div>
-
-                {member.paymentDetails && (
-                  <>
-                    <div className="flex items-center justify-between pt-2 border-t border-border/40">
-                      <span className="text-muted-foreground">Payment Method</span>
-                      <span className="font-medium text-foreground">
-                        {member.paymentDetails.method}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Txn Reference</span>
-                      <span className="font-mono text-[11px] text-foreground">
-                        {member.paymentDetails.transactionId}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Receipt Number</span>
-                      <span className="font-mono text-[11px] text-emerald-500 font-bold">
-                        {member.paymentDetails.receiptNo}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Payment Status</span>
-                      <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
-                        {member.paymentDetails.status}
-                      </span>
-                    </div>
-                  </>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No emergency contact recorded on profile.</p>
                 )}
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Account & Facility Summary */}
-          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-3 text-xs">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-accent">
-              Membership Account Dossier
-            </h3>
-
-            <div className="space-y-2 divide-y divide-border/40">
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-muted-foreground">System Record ID</span>
-                <span className="font-mono font-bold text-foreground">{member.id}</span>
-              </div>
-              {member.batchId && (
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-muted-foreground">Assigned Batch</span>
-                  <Link
-                    to={`/admin/batches/${member.batchId}`}
-                    className="font-bold text-primary hover:underline flex items-center gap-1"
-                  >
-                    <span>{member.batchId}</span>
-                    <span className="text-[11px] font-normal text-muted-foreground">
-                      ({member.batchTiming || "Morning"})
-                    </span>
-                  </Link>
+          {/* CARD 2: Enrolled Membership Plan & Membership Account Dossier */}
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3.5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <Award size={15} />
                 </div>
-              )}
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-muted-foreground">Enrolled Date</span>
-                <span className="font-medium text-foreground">
-                  {member.registeredAt
-                    ? new Date(member.registeredAt).toLocaleDateString("en-IN")
-                    : "—"}
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                    Membership Plan & Dossier
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Subscription agreement, batch allocation, and facility access
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Enrolled Membership Plan */}
+            {planDetails && (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Enrolled Membership Plan
+                  </span>
+                  <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
+                    {planDetails.name}
+                  </span>
+                </div>
+
+                <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-3">
+                  <div className="grid grid-cols-3 gap-2 pb-2.5 border-b border-border/40 text-center">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+                        Duration
+                      </span>
+                      <span className="text-xs font-bold text-foreground">
+                        {planDetails.durationMonths} Month{planDetails.durationMonths > 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+                        Fee
+                      </span>
+                      <span className="text-xs font-bold text-accent font-mono">
+                        {planDetails.formattedPrice}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+                        Expires
+                      </span>
+                      <span className="text-xs font-bold text-emerald-400 truncate block">
+                        {planDetails.formattedEnd}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>Term Window:</span>
+                      <span className="font-medium text-foreground">
+                        {planDetails.formattedStart} — {planDetails.formattedEnd}
+                      </span>
+                    </div>
+
+                    {member.paymentDetails && (
+                      <>
+                        <div className="flex items-center justify-between text-muted-foreground pt-1.5 border-t border-border/40">
+                          <span>Payment Method:</span>
+                          <span className="font-semibold text-foreground">
+                            {member.paymentDetails.method}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>Txn Reference:</span>
+                          <span className="font-mono text-[11px] text-foreground font-semibold">
+                            {member.paymentDetails.transactionId}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>Receipt Number:</span>
+                          <span className="font-mono text-[11px] text-emerald-400 font-bold">
+                            {member.paymentDetails.receiptNo}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>Payment Status:</span>
+                          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                            {member.paymentDetails.status}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 5. Membership Account Dossier */}
+            <div className="space-y-2.5 pt-3.5 border-t border-border/60">
+              <div className="flex items-center gap-1.5">
+                <FileCheck size={13} className="text-accent" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Membership Account Dossier
                 </span>
               </div>
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-muted-foreground">Facility Access</span>
-                <span className="font-semibold text-emerald-500">Full Gym Floor & Equipment</span>
-              </div>
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-muted-foreground">Record Status</span>
-                <span className="font-bold text-foreground">
-                  {isDeleted ? "Archived" : member.status || "Active"}
-                </span>
+
+              <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-2 text-xs divide-y divide-border/40">
+                <div className="flex items-center justify-between pb-2">
+                  <span className="text-muted-foreground">System Record ID:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-foreground">{member.id}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(member.id, "memberId", "Member ID")}
+                      className="rounded p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                      title="Copy ID"
+                    >
+                      {copiedField === "memberId" ? (
+                        <Check size={11} className="text-emerald-500" />
+                      ) : (
+                        <Copy size={11} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {member.batchId && (
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-muted-foreground">Assigned Batch:</span>
+                    <Link
+                      to={`/admin/batches/${member.batchId}`}
+                      className="font-bold text-accent hover:underline flex items-center gap-1"
+                    >
+                      <span>{member.batchId}</span>
+                      <span className="text-[11px] font-normal text-muted-foreground">
+                        ({member.batchTiming || "Morning"})
+                      </span>
+                    </Link>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-muted-foreground">Enrolled Date:</span>
+                  <span className="font-medium text-foreground">
+                    {member.registeredAt
+                      ? new Date(member.registeredAt).toLocaleDateString("en-IN", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "—"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <span className="text-muted-foreground">Facility Access:</span>
+                  <span className="font-semibold text-emerald-400">
+                    Full Gym Floor & Equipment
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-muted-foreground">Record Status:</span>
+                  <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
+                    {isDeleted ? "Archived" : member.status || "Active"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

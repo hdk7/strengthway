@@ -275,4 +275,5 @@ export const trainerSchema = yup.object().shape({
   shift: yup.string().trim().nullable(),
   floorZone: yup.string().trim().nullable(),
   languages: yup.mixed().nullable(),
+  batchIds: yup.array().nullable(),
 });

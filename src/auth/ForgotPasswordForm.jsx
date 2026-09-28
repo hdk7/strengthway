@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowLeft, MailCheck } from "lucide-react";
 import { InputField } from "@/components/form";
-import Button from "@/components/ui/button";
+import Button from "@/components/ui/Button";
 import { forgotPassword, AuthError } from "./authService";
 import { forgotPasswordSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 

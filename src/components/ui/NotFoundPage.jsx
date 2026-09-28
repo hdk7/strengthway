@@ -12,7 +12,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import { Logo } from "@/landingPage/Logo";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { ThemeToggle, useDocumentTitle } from "@/hooks/theme";
 
 /* ─────────────────────────────────────────────────────────────────

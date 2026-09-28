@@ -47,7 +47,6 @@ const SHORT_DAYS_MAP = {
 export function BatchListPage() {
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
-  const [daysFilter, setDaysFilter] = useState("ALL"); // "ALL" | "MWF" | "TTS" | "CUSTOM"
   const [statusFilter, setStatusFilter] = useState("ALL"); // "ALL" | "Active" | "Inactive"
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
@@ -80,7 +79,6 @@ export function BatchListPage() {
 
   const filteredBatches = useMemo(() => {
     return batches.filter((b) => {
-      if (daysFilter !== "ALL" && b.daysPattern !== daysFilter) return false;
       if (statusFilter !== "ALL" && b.status !== statusFilter) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
@@ -94,7 +92,7 @@ export function BatchListPage() {
       }
       return true;
     });
-  }, [batches, daysFilter, statusFilter, searchQuery]);
+  }, [batches, statusFilter, searchQuery]);
 
   // KPIs
   const stats = useMemo(() => {
@@ -235,69 +233,24 @@ export function BatchListPage() {
       </div>
 
       {/* Filter and Control Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
-        {/* Days Filter Pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground px-1">Days:</span>
-          <button
-            onClick={() => setDaysFilter("ALL")}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-              daysFilter === "ALL"
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            All Batches ({batches.length})
-          </button>
-          <button
-            onClick={() => setDaysFilter("MWF")}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-              daysFilter === "MWF"
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Mon • Wed • Fri (MWF)
-          </button>
-          <button
-            onClick={() => setDaysFilter("TTS")}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-              daysFilter === "TTS"
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Tue • Thu • Sat (TTS)
-          </button>
-          <button
-            onClick={() => setDaysFilter("CUSTOM")}
-            className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
-              daysFilter === "CUSTOM"
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Custom
-          </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
+        {/* Search input */}
+        <div className="relative flex-1 sm:max-w-xs md:max-w-sm">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+          />
+          <input
+            type="text"
+            placeholder="Search batch by name, timing, or days..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-xl border border-border bg-background py-2 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+          />
         </div>
 
-        {/* Right side controls: Search, Status, View Mode */}
+        {/* Right side controls: Status, View Mode */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Search input */}
-          <div className="relative flex-1 sm:w-48 md:w-56">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-            />
-            <input
-              type="text"
-              placeholder="Search batch..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background py-2 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
-            />
-          </div>
-
           {/* Status selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-semibold text-muted-foreground">Status:</span>
@@ -406,7 +359,8 @@ export function BatchListPage() {
                   <div className="flex items-center justify-between border-t border-border pt-3 text-xs">
                     <span className="text-muted-foreground">Assigned Trainers:</span>
                     <span className="font-semibold text-foreground">
-                      {b.trainerIds?.length || 2} Trainers
+                      {Array.isArray(b.trainerIds) ? b.trainerIds.length : 0} Trainer
+                      {b.trainerIds?.length === 1 ? "" : "s"}
                     </span>
                   </div>
                 </div>

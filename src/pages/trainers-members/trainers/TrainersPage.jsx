@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Users, UserCheck, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers, createTrainer } from "@/lib/trainersService";
+import { syncTrainerBatches } from "@/lib/batchesService";
 import { DataTable } from "@/components/table";
 import { TrainerModal } from "./TrainerModal";
 import { getTrainerColumns } from "./trainerColumns";
@@ -28,6 +29,9 @@ export default function TrainersPage() {
   const handleSaveTrainer = (formData) => {
     try {
       const created = createTrainer(formData);
+      if (created?.id && Array.isArray(formData.batchIds) && formData.batchIds.length > 0) {
+        syncTrainerBatches(created.id, formData.batchIds);
+      }
       setTrainers((prev) => [created, ...prev]);
     } catch {
       toast.error("Failed to save trainer record.");

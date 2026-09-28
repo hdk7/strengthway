@@ -1,7 +1,6 @@
 import { useRef, useId } from "react";
 import { Upload, X, FileText, Image as ImageIcon } from "lucide-react";
-import FormLabel from "./FormLabel";
-import FormError from "./FormError";
+import { FormLabel, FormError } from "./FormField";
 
 export default function FileUploadField({
   label,

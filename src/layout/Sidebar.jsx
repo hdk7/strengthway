@@ -70,7 +70,6 @@ const navConfig = [
     label: "Masters",
     icon: Database,
     children: [
-      { id: "shift", label: "Shift Master", path: "/admin/masters/shift" },
       {
         id: "membership-plan",
         label: "Membership Plan",

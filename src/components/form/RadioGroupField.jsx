@@ -1,5 +1,4 @@
-import FormLabel from "./FormLabel";
-import FormError from "./FormError";
+import { FormLabel, FormError } from "./FormField";
 
 export default function RadioGroupField({
   label,

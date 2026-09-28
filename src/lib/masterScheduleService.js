@@ -331,7 +331,8 @@ export const SEED_HOLIDAYS = [
     date: "2026-11-08",
     type: "Festival Holiday",
     affectedBatches: "ALL",
-    description: "Festival of Lights & Deepavali. Morning open gym only; regular class batches suspended.",
+    description:
+      "Festival of Lights & Deepavali. Morning open gym only; regular class batches suspended.",
     status: "Active",
   },
   {
@@ -415,16 +416,29 @@ export function calculateSequentialMapping(daysList, totalClasses = 12, startDat
   return items;
 }
 
-// Generate Initial Mock Data for Master Schedules
-function createSeedMasterSchedules() {
-  const initialDate = "2026-10-05"; // Next Monday
+// Resolve assigned batch objects with full metadata
+export function resolveAssignedBatches(batchIds = []) {
+  if (!Array.isArray(batchIds) || batchIds.length === 0) return [];
+  const batches = getBatches();
+  return batchIds.map((id) => batches.find((b) => b.id === id)).filter(Boolean);
+}
 
-  // 1. MWF Morning Program (Batch 1, Dolliee)
+// Resolve assigned batch names string (e.g. "BATCH 1 • BATCH 2")
+export function resolveBatchNames(batchIds = []) {
+  const list = resolveAssignedBatches(batchIds);
+  if (list.length === 0) return "Reusable Template (Unassigned)";
+  return list.map((b) => b.shortName || b.name || b.id).join(" • ");
+}
+
+// Generate Initial Mock Data for Master Scheduled Class Programs (Reusable Programs)
+function createSeedMasterSchedules() {
+  // 1. Reusable Functional Strength Program (Assigned to BATCH 1 & BATCH 2)
   const mcs1 = {
     id: "mcs_001",
-    name: "MWF Morning Program",
+    name: "12-Class Functional Strength Foundations",
+    batchIds: ["BATCH-01", "BATCH-02"],
     batchId: "BATCH-01",
-    batchName: "BATCH 1",
+    batchName: "BATCH 1 • BATCH 2",
     shift: "06:00 AM",
     timing: "06:00 AM - 07:00 AM",
     startTime: "06:00 AM",
@@ -438,41 +452,19 @@ function createSeedMasterSchedules() {
     capacity: 28,
     status: "Active",
     startDate: "2026-09-02", // September 2026 (Active Operational Month)
-    description: "Primary 12-class functional strength curriculum for 6:00 AM morning athletes.",
+    description:
+      "Primary 12-class functional strength curriculum covering foundational movement mechanics, bilateral squats, hinge, core bracing, and progressive barbell overload. Assigned to multiple morning batches.",
     createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 2. MWF 8 AM Program (Batch 2, Ashwin)
+  // 2. Reusable Athletic Conditioning Program (Assigned to BATCH 4 & BATCH 5)
   const mcs2 = {
     id: "mcs_002",
-    name: "MWF 8 AM Program",
-    batchId: "BATCH-02",
-    batchName: "BATCH 2",
-    shift: "08:00 AM",
-    timing: "08:00 AM - 09:00 AM",
-    startTime: "08:00 AM",
-    endTime: "09:00 AM",
-    daysPattern: "MWF",
-    daysLabel: "Monday • Wednesday • Friday",
-    daysList: ["Monday", "Wednesday", "Friday"],
-    coachId: "TRN-102",
-    coachName: "Ashwin Kumar",
-    totalClasses: 12,
-    capacity: 28,
-    status: "Active",
-    startDate: "2026-09-02", // September 2026 (Active Operational Month)
-    description: "Barbell hypertrophy, progressive compound lifts, and core reinforcement.",
-    createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  // 3. TTS Morning Strength (Batch 4, Robert)
-  const mcs3 = {
-    id: "mcs_003",
-    name: "TTS Morning Strength",
+    name: "12-Class Athletic Conditioning & Agility",
+    batchIds: ["BATCH-04", "BATCH-05"],
     batchId: "BATCH-04",
-    batchName: "BATCH 4",
+    batchName: "BATCH 4 • BATCH 5",
     shift: "06:00 AM",
     timing: "06:00 AM - 07:00 AM",
     startTime: "06:00 AM",
@@ -487,15 +479,16 @@ function createSeedMasterSchedules() {
     status: "Active",
     startDate: "2026-10-06",
     description:
-      "Biomechanical focus, joint safety, and progressive overload on Tuesday, Thursday, Saturday.",
-    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+      "High-output athletic conditioning, linear acceleration, multi-directional agility, barbell power cleans, and high-intensity metabolic intervals. Reusable across morning TTS shifts.",
+    createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 4. MWF Evening Hypertrophy (Batch 3, Rengaraj) - SEPTEMBER 2026 (THIS MONTH)
-  const mcs4 = {
-    id: "mcs_004",
-    name: "MWF Evening Hypertrophy",
+  // 3. Evening Hypertrophy Program (Assigned to BATCH 3)
+  const mcs3 = {
+    id: "mcs_003",
+    name: "12-Class Hypertrophy & Power Complex",
+    batchIds: ["BATCH-03"],
     batchId: "BATCH-03",
     batchName: "BATCH 3",
     shift: "06:30 PM",
@@ -511,39 +504,17 @@ function createSeedMasterSchedules() {
     capacity: 28,
     status: "Active",
     startDate: "2026-09-02", // September 2026 (This Month)
-    description: "High-volume evening strength training for working professionals and athletes.",
+    description:
+      "Dedicated September hypertrophy curriculum for evening athletes and working professionals with progressive overload and lactate endurance.",
     createdAt: new Date(Date.now() - 8 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 5. TTS 8 AM Conditioning (Batch 5, Bharath)
-  const mcs5 = {
-    id: "mcs_005",
-    name: "TTS 8 AM Conditioning",
-    batchId: "BATCH-05",
-    batchName: "BATCH 5",
-    shift: "08:00 AM",
-    timing: "08:00 AM - 09:00 AM",
-    startTime: "08:00 AM",
-    endTime: "09:00 AM",
-    daysPattern: "TTS",
-    daysLabel: "Tuesday • Thursday • Saturday",
-    daysList: ["Tuesday", "Thursday", "Saturday"],
-    coachId: "TRN-104",
-    coachName: "Bharath V",
-    totalClasses: 12,
-    capacity: 28,
-    status: "Active",
-    startDate: "2026-10-06",
-    description: "Olympic weightlifting fundamentals, power endurance, and explosive strength.",
-    createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  // 6. TTS Evening Prime (Batch 6, F Coach)
-  const mcs6 = {
-    id: "mcs_006",
-    name: "TTS Evening Prime",
+  // 4. Floor Masterclass & Durability (Assigned to BATCH 6)
+  const mcs4 = {
+    id: "mcs_004",
+    name: "12-Class Floor Masterclass & Durability",
+    batchIds: ["BATCH-06"],
     batchId: "BATCH-06",
     batchName: "BATCH 6",
     shift: "06:30 PM",
@@ -559,20 +530,57 @@ function createSeedMasterSchedules() {
     capacity: 28,
     status: "Active",
     startDate: "2026-10-06",
-    description: "Floor masterclass, metabolic intervals, and athletic durability.",
+    description:
+      "Floor masterclass, metabolic intervals, athletic durability, and functional stamina for evening shifts.",
     createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  return [mcs1, mcs2, mcs3, mcs4, mcs5, mcs6];
+  // 5. Reusable Program Template (Unassigned, ready to assign to batches)
+  const mcs5 = {
+    id: "mcs_005",
+    name: "12-Class Olympic Lifting & Power Specialization",
+    batchIds: [],
+    batchId: "",
+    batchName: "Reusable Template (Unassigned)",
+    shift: "06:00 AM",
+    timing: "Flexible Shift",
+    startTime: "06:00 AM",
+    endTime: "07:00 AM",
+    daysPattern: "MWF",
+    daysLabel: "Monday • Wednesday • Friday",
+    daysList: ["Monday", "Wednesday", "Friday"],
+    coachId: "TRN-104",
+    coachName: "Bharath V",
+    totalClasses: 12,
+    capacity: 28,
+    status: "Active",
+    startDate: "2026-10-05",
+    description:
+      "Olympic weightlifting fundamentals, power cleans, snatch progressions, triple extension, and explosive energy transfer. Standalone reusable curriculum ready to assign to batches.",
+    createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  return [mcs1, mcs2, mcs3, mcs4, mcs5];
 }
 
 // Generate Items for a Master Schedule
 function createItemsForSchedule(schedule, curriculum = null) {
   let activeCurriculum = curriculum;
   if (!activeCurriculum) {
-    if (schedule.batchId === "BATCH-03" || schedule.id === "mcs_004") {
+    if (
+      schedule.id === "mcs_003" ||
+      (Array.isArray(schedule.batchIds) && schedule.batchIds.includes("BATCH-03")) ||
+      schedule.batchId === "BATCH-03"
+    ) {
       activeCurriculum = BATCH_3_SEPTEMBER_CURRICULUM;
+    } else if (
+      schedule.id === "mcs_002" ||
+      schedule.daysPattern === "TTS" ||
+      (Array.isArray(schedule.batchIds) && schedule.batchIds.includes("BATCH-04"))
+    ) {
+      activeCurriculum = ALTERNATIVE_CURRICULUM_ATHLETIC;
     } else {
       activeCurriculum = DEFAULT_12_CLASS_CURRICULUM;
     }
@@ -603,56 +611,95 @@ function createItemsForSchedule(schedule, curriculum = null) {
   });
 }
 
-// Generate Sessions from Schedule and Items
-export function generateSessionsForSchedule(schedule, items) {
-  const mapping = calculateSequentialMapping(
-    schedule.daysList,
-    schedule.totalClasses || 12,
-    schedule.startDate,
-  );
+// Generate Sessions from Schedule and Items (supporting multiple batches with independent tracking)
+export function generateSessionsForSchedule(schedule, items, targetBatchId = null) {
+  const batches = getBatches();
+  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-  return items.map((item, idx) => {
-    const map = mapping[idx] || {};
-    const dateStr = item.sessionDate || map.date || "";
+  let batchIdsToProcess = [];
+  if (targetBatchId) {
+    batchIdsToProcess = [targetBatchId];
+  } else if (Array.isArray(schedule.batchIds) && schedule.batchIds.length > 0) {
+    batchIdsToProcess = schedule.batchIds;
+  } else if (schedule.batchId) {
+    batchIdsToProcess = [schedule.batchId];
+  }
 
-    // Status logic: if date is in past -> COMPLETED, if today -> TODAY, else SCHEDULED
-    const today = new Date().toISOString().slice(0, 10);
-    let sessionStatus = "SCHEDULED";
-    if (dateStr) {
-      if (dateStr < today) {
-        sessionStatus = "COMPLETED";
-      } else if (dateStr === today) {
-        sessionStatus = "TODAY";
+  // If unassigned reusable template, no floor sessions generated yet
+  if (batchIdsToProcess.length === 0) {
+    return [];
+  }
+
+  const allGeneratedSessions = [];
+
+  batchIdsToProcess.forEach((bId) => {
+    const selectedBatch = batches.find((b) => b.id === bId) || {};
+    const batchDays =
+      selectedBatch.daysList && selectedBatch.daysList.length > 0
+        ? selectedBatch.daysList
+        : schedule.daysList && schedule.daysList.length > 0
+          ? schedule.daysList
+          : ["Monday", "Wednesday", "Friday"];
+
+    const mapping = calculateSequentialMapping(
+      batchDays,
+      items.length || schedule.totalClasses || 12,
+      schedule.startDate,
+    );
+
+    const batchName = selectedBatch.name || selectedBatch.shortName || bId;
+    const startTime = selectedBatch.startTime || schedule.startTime || "06:00 AM";
+    const endTime = selectedBatch.endTime || schedule.endTime || "07:00 AM";
+    const timing =
+      selectedBatch.timingLabel ||
+      (selectedBatch.startTime && selectedBatch.endTime
+        ? `${selectedBatch.startTime} - ${selectedBatch.endTime}`
+        : `${startTime} - ${endTime}`);
+    const capacity = selectedBatch.maxPax || schedule.capacity || 28;
+
+    items.forEach((item, idx) => {
+      const map = mapping[idx] || {};
+      const dateStr = map.date || item.sessionDate || "";
+
+      let sessionStatus = "SCHEDULED";
+      if (dateStr) {
+        if (dateStr < today && dateStr < todayLocal) {
+          sessionStatus = "COMPLETED";
+        } else if (dateStr === today || dateStr === todayLocal) {
+          sessionStatus = "TODAY";
+        }
       }
-    }
 
-    return {
-      id: `SES-${schedule.id}-${String(item.classNumber).padStart(2, "0")}`,
-      masterScheduleId: schedule.id,
-      masterScheduleName: schedule.name,
-      masterClassItemId: item.id,
-      classNumber: item.classNumber,
-      weekNumber: item.weekNumber || map.weekNumber || 1,
-      dayOfWeek: item.dayOfWeek || map.dayOfWeek || "Monday",
-      batchId: schedule.batchId,
-      batchName: schedule.batchName,
-      coachId: schedule.coachId,
-      coachName: schedule.coachName,
-      sessionDate: dateStr,
-      displayDate: item.displayDate || map.displayDate || "",
-      startTime: schedule.startTime || "06:00 AM",
-      endTime: schedule.endTime || "07:00 AM",
-      timing:
-        schedule.timing ||
-        `${schedule.startTime || "06:00 AM"} - ${schedule.endTime || "07:00 AM"}`,
-      subject: item.subject,
-      message: item.message,
-      status: sessionStatus,
-      notes: "",
-      capacity: schedule.capacity || 28,
-      createdAt: new Date().toISOString(),
-    };
+      allGeneratedSessions.push({
+        id: `SES-${schedule.id}-${bId}-${String(item.classNumber).padStart(2, "0")}`,
+        masterScheduleId: schedule.id,
+        masterScheduleName: schedule.name,
+        masterClassItemId: item.id,
+        classNumber: item.classNumber,
+        weekNumber: item.weekNumber || map.weekNumber || 1,
+        dayOfWeek: map.dayOfWeek || item.dayOfWeek || "Monday",
+        batchId: bId,
+        batchName,
+        coachId: selectedBatch.trainerIds?.[0] || schedule.coachId || "TRN-101",
+        coachName: schedule.coachName || "Assigned Coach",
+        sessionDate: dateStr,
+        displayDate: map.displayDate || item.displayDate || "",
+        startTime,
+        endTime,
+        timing,
+        subject: item.subject,
+        message: item.message,
+        status: sessionStatus,
+        notes: "",
+        capacity,
+        createdAt: new Date().toISOString(),
+      });
+    });
   });
+
+  return allGeneratedSessions;
 }
 
 // Storage Helpers
@@ -686,44 +733,68 @@ function writeStorage(key, data) {
 export function getMasterSchedules() {
   const seedSchedules = createSeedMasterSchedules();
   let schedules = readStorage(STORAGE_KEY_MASTER_SCHEDULES, seedSchedules);
+  const batches = getBatches();
 
-  // Ensure all seed batches are present (merge missing seeds)
-  const existingIds = new Set(schedules.map((s) => s.id));
-  const missingSeeds = seedSchedules.filter((s) => !existingIds.has(s.id));
-  if (missingSeeds.length > 0) {
-    schedules = [...schedules, ...missingSeeds];
+  let needsSync = false;
+
+  // Normalize all schedules to have batchIds array and resolved batchName
+  schedules = schedules.map((s) => {
+    let updated = { ...s };
+    if (!Array.isArray(updated.batchIds)) {
+      updated.batchIds = updated.batchId ? [updated.batchId] : [];
+      needsSync = true;
+    }
+    if (!updated.batchId && updated.batchIds.length > 0) {
+      updated.batchId = updated.batchIds[0];
+      needsSync = true;
+    }
+    const currentResolvedName = resolveBatchNames(updated.batchIds);
+    if (updated.batchName !== currentResolvedName && updated.batchIds.length > 0) {
+      updated.batchName = currentResolvedName;
+      needsSync = true;
+    }
+    return updated;
+  });
+
+  // Seed migration: ensure mcs_001 is assigned to multiple batches (BATCH-01 and BATCH-02)
+  const mcs1 = schedules.find((s) => s.id === "mcs_001");
+  if (mcs1 && (!mcs1.batchIds.includes("BATCH-02") || mcs1.name === "MWF Morning Program")) {
+    mcs1.name = "12-Class Functional Strength Foundations";
+    mcs1.batchIds = ["BATCH-01", "BATCH-02"];
+    mcs1.batchId = "BATCH-01";
+    mcs1.batchName = "BATCH 1 • BATCH 2";
+    mcs1.startDate = "2026-09-02";
+    needsSync = true;
+  }
+
+  // Seed migration: ensure mcs_002 is assigned to BATCH-04 and BATCH-05
+  const mcs2 = schedules.find((s) => s.id === "mcs_002");
+  if (mcs2 && (!mcs2.batchIds.includes("BATCH-05") || mcs2.name === "MWF 8 AM Program")) {
+    mcs2.name = "12-Class Athletic Conditioning & Agility";
+    mcs2.batchIds = ["BATCH-04", "BATCH-05"];
+    mcs2.batchId = "BATCH-04";
+    mcs2.batchName = "BATCH 4 • BATCH 5";
+    mcs2.daysPattern = "TTS";
+    mcs2.daysList = ["Tuesday", "Thursday", "Saturday"];
+    mcs2.daysLabel = "Tuesday • Thursday • Saturday";
+    needsSync = true;
+  }
+
+  // Ensure mcs_005 exists as reusable unassigned template
+  const hasMcs5 = schedules.some((s) => s.id === "mcs_005");
+  if (!hasMcs5) {
+    const seed5 = seedSchedules.find((s) => s.id === "mcs_005");
+    if (seed5) {
+      schedules.push(seed5);
+      needsSync = true;
+    }
+  }
+
+  if (needsSync) {
     writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
   }
 
-  // Ensure Batch 1 (mcs_001) has September 2026 operational schedule (so Class 11 is Today)
-  const b1Schedule = schedules.find((s) => s.id === "mcs_001" || s.batchId === "BATCH-01");
-  let b1NeedsUpdate = false;
-  if (b1Schedule && b1Schedule.startDate !== "2026-09-02") {
-    b1Schedule.startDate = "2026-09-02";
-    b1NeedsUpdate = true;
-  }
-
-  // Ensure Batch 2 (mcs_002) has September 2026 operational schedule
-  const b2Schedule = schedules.find((s) => s.id === "mcs_002" || s.batchId === "BATCH-02");
-  let b2NeedsUpdate = false;
-  if (b2Schedule && b2Schedule.startDate !== "2026-09-02") {
-    b2Schedule.startDate = "2026-09-02";
-    b2NeedsUpdate = true;
-  }
-
-  // Ensure Batch 3 (mcs_004) has September 2026 mock data
-  const b3Schedule = schedules.find((s) => s.id === "mcs_004" || s.batchId === "BATCH-03");
-  let b3NeedsUpdate = false;
-  if (b3Schedule && b3Schedule.startDate !== "2026-09-02") {
-    b3Schedule.startDate = "2026-09-02";
-    b3NeedsUpdate = true;
-  }
-
-  if (b1NeedsUpdate || b2NeedsUpdate || b3NeedsUpdate) {
-    writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
-  }
-
-  // Ensure items and sessions exist for all schedules
+  // Ensure curriculum items and batch sessions exist
   try {
     const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
     let allItems = rawItems ? JSON.parse(rawItems) : [];
@@ -736,74 +807,31 @@ export function getMasterSchedules() {
     let itemsUpdated = false;
     let sessionsUpdated = false;
 
-    // If Batch 1 was updated or stored items don't reflect September 2026, regenerate
-    if (
-      b1Schedule &&
-      (b1NeedsUpdate ||
-        !allItems.some(
-          (i) => i.masterScheduleId === b1Schedule.id && i.sessionDate === "2026-09-02",
-        ))
-    ) {
-      const b1Items = createItemsForSchedule(b1Schedule, DEFAULT_12_CLASS_CURRICULUM);
-      allItems = allItems.filter((i) => i.masterScheduleId !== b1Schedule.id);
-      allItems = [...allItems, ...b1Items];
-      itemsUpdated = true;
-
-      const b1Sessions = generateSessionsForSchedule(b1Schedule, b1Items);
-      allSessions = allSessions.filter((s) => s.masterScheduleId !== b1Schedule.id);
-      allSessions = [...allSessions, ...b1Sessions];
-      sessionsUpdated = true;
-    }
-
-    // If Batch 2 was updated or stored items don't reflect September 2026, regenerate
-    if (
-      b2Schedule &&
-      (b2NeedsUpdate ||
-        !allItems.some(
-          (i) => i.masterScheduleId === b2Schedule.id && i.sessionDate === "2026-09-02",
-        ))
-    ) {
-      const b2Items = createItemsForSchedule(b2Schedule, DEFAULT_12_CLASS_CURRICULUM);
-      allItems = allItems.filter((i) => i.masterScheduleId !== b2Schedule.id);
-      allItems = [...allItems, ...b2Items];
-      itemsUpdated = true;
-
-      const b2Sessions = generateSessionsForSchedule(b2Schedule, b2Items);
-      allSessions = allSessions.filter((s) => s.masterScheduleId !== b2Schedule.id);
-      allSessions = [...allSessions, ...b2Sessions];
-      sessionsUpdated = true;
-    }
-
-    // If Batch 3 was updated or stored items don't reflect September 2026, regenerate
-    if (
-      b3Schedule &&
-      (b3NeedsUpdate ||
-        !allItems.some(
-          (i) => i.masterScheduleId === b3Schedule.id && i.sessionDate === "2026-09-02",
-        ))
-    ) {
-      const b3Items = createItemsForSchedule(b3Schedule, BATCH_3_SEPTEMBER_CURRICULUM);
-      allItems = allItems.filter((i) => i.masterScheduleId !== b3Schedule.id);
-      allItems = [...allItems, ...b3Items];
-      itemsUpdated = true;
-
-      const b3Sessions = generateSessionsForSchedule(b3Schedule, b3Items);
-      allSessions = allSessions.filter((s) => s.masterScheduleId !== b3Schedule.id);
-      allSessions = [...allSessions, ...b3Sessions];
-      sessionsUpdated = true;
-    }
-
     schedules.forEach((sch) => {
-      const scheduleItems = allItems.filter((i) => i.masterScheduleId === sch.id);
+      let scheduleItems = allItems.filter((i) => i.masterScheduleId === sch.id);
       if (scheduleItems.length === 0) {
-        const items = createItemsForSchedule(sch);
-        allItems = [...allItems, ...items];
+        scheduleItems = createItemsForSchedule(sch);
+        allItems = [...allItems, ...scheduleItems];
         itemsUpdated = true;
-
-        const sessions = generateSessionsForSchedule(sch, items);
-        allSessions = [...allSessions, ...sessions];
-        sessionsUpdated = true;
       }
+
+      // Check sessions for each assigned batch
+      const assignedBatches = Array.isArray(sch.batchIds)
+        ? sch.batchIds
+        : sch.batchId
+          ? [sch.batchId]
+          : [];
+
+      assignedBatches.forEach((bId) => {
+        const batchSessions = allSessions.filter(
+          (s) => s.masterScheduleId === sch.id && s.batchId === bId,
+        );
+        if (batchSessions.length === 0) {
+          const generated = generateSessionsForSchedule(sch, scheduleItems, bId);
+          allSessions = [...allSessions, ...generated];
+          sessionsUpdated = true;
+        }
+      });
     });
 
     if (itemsUpdated) {
@@ -826,7 +854,18 @@ export function getMasterScheduleById(id) {
 
 export function getMasterScheduleByBatchId(batchId) {
   const all = getMasterSchedules();
-  return all.find((s) => s.batchId === batchId) || null;
+  return (
+    all.find(
+      (s) => (Array.isArray(s.batchIds) && s.batchIds.includes(batchId)) || s.batchId === batchId,
+    ) || null
+  );
+}
+
+export function getMasterSchedulesByBatchId(batchId) {
+  const all = getMasterSchedules();
+  return all.filter(
+    (s) => (Array.isArray(s.batchIds) && s.batchIds.includes(batchId)) || s.batchId === batchId,
+  );
 }
 
 export function getScheduleItems(masterScheduleId) {
@@ -850,7 +889,7 @@ export function updateMasterClassItem(itemId, updates) {
     items[idx] = { ...items[idx], ...updates };
     writeStorage(STORAGE_KEY_MASTER_ITEMS, items);
 
-    // Also synchronize generated sessions for this class item
+    // Also synchronize generated sessions for this class item across all batches
     const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
     if (rawSessions) {
       const sessions = JSON.parse(rawSessions);
@@ -916,12 +955,17 @@ export function addMasterClassItem(masterScheduleId, itemData = {}) {
     // Update totalClasses on schedule
     updateMasterSchedule(masterScheduleId, { totalClasses: nextClassNum });
 
-    // Generate and append session
-    const singleSession = generateSessionsForSchedule(schedule, [newItem])[0];
-    if (singleSession) {
+    // Generate sessions for all assigned batches
+    const assignedBatches = Array.isArray(schedule.batchIds)
+      ? schedule.batchIds
+      : schedule.batchId
+        ? [schedule.batchId]
+        : [];
+    if (assignedBatches.length > 0) {
+      const generatedSessions = generateSessionsForSchedule(schedule, [newItem]);
       const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
       const allSessions = rawSessions ? JSON.parse(rawSessions) : [];
-      writeStorage(STORAGE_KEY_SESSIONS, [...allSessions, singleSession]);
+      writeStorage(STORAGE_KEY_SESSIONS, [...allSessions, ...generatedSessions]);
     }
 
     return newItem;
@@ -997,37 +1041,39 @@ export function createMasterSchedule(data, itemsData = []) {
   const schedules = getMasterSchedules();
   const newId = `mcs_${String(schedules.length + 1).padStart(3, "0")}`;
 
-  // Resolve batch details to prevent manual re-entry
   const batches = getBatches();
-  const selectedBatch = batches.find((b) => b.id === data.batchId) || {};
+  const batchIds = Array.isArray(data.batchIds)
+    ? data.batchIds
+    : data.batchId
+      ? [data.batchId]
+      : [];
 
-  const timing =
-    selectedBatch.timingLabel ||
-    (selectedBatch.startTime && selectedBatch.endTime
-      ? `${selectedBatch.startTime} - ${selectedBatch.endTime}`
-      : data.timing || "06:00 AM - 07:00 AM");
+  const firstBatch = batches.find((b) => b.id === batchIds[0]) || {};
+
   const daysList =
-    selectedBatch.daysList ||
-    (data.daysList && data.daysList.length > 0 ? data.daysList : ["Monday", "Wednesday", "Friday"]);
-  const daysLabel = selectedBatch.daysLabel || data.daysLabel || daysList.join(" • ");
-  const daysPattern = selectedBatch.daysPattern || data.daysPattern || "MWF";
+    data.daysList && data.daysList.length > 0
+      ? data.daysList
+      : firstBatch.daysList || ["Monday", "Wednesday", "Friday"];
+  const daysLabel = data.daysLabel || firstBatch.daysLabel || daysList.join(" • ");
+  const daysPattern = data.daysPattern || firstBatch.daysPattern || "MWF";
 
   const newSchedule = {
     id: newId,
-    name: data.name || `${selectedBatch.shortName || selectedBatch.name || "Batch"} Program`,
-    batchId: data.batchId || selectedBatch.id,
-    batchName: selectedBatch.name || selectedBatch.shortName || data.batchName || "Batch",
-    shift: selectedBatch.startTime || data.shift || "06:00 AM",
-    startTime: selectedBatch.startTime || data.startTime || "06:00 AM",
-    endTime: selectedBatch.endTime || data.endTime || "07:00 AM",
-    timing,
+    name: data.name || "New Scheduled Class Program",
+    batchIds,
+    batchId: batchIds[0] || "",
+    batchName: resolveBatchNames(batchIds),
+    shift: firstBatch.startTime || data.shift || "06:00 AM",
+    startTime: firstBatch.startTime || data.startTime || "06:00 AM",
+    endTime: firstBatch.endTime || data.endTime || "07:00 AM",
+    timing: firstBatch.timingLabel || data.timing || "06:00 AM - 07:00 AM",
     daysPattern,
     daysLabel,
     daysList,
     coachId: data.coachId || "TRN-101",
     coachName: data.coachName || "Dolliee Ellens",
     totalClasses: 12,
-    capacity: selectedBatch.maxPax || data.capacity || 28,
+    capacity: firstBatch.maxPax || data.capacity || 28,
     status: data.status || "Active",
     startDate: data.startDate || new Date().toISOString().slice(0, 10),
     description: data.description || "",
@@ -1076,7 +1122,7 @@ export function createMasterSchedule(data, itemsData = []) {
   }
   writeStorage(STORAGE_KEY_MASTER_ITEMS, [...allItems, ...items]);
 
-  // Generate Sessions
+  // Generate Sessions across all assigned batches
   const generatedSessions = generateSessionsForSchedule(newSchedule, items);
   let allSessions = [];
   try {
@@ -1097,9 +1143,16 @@ export function updateMasterSchedule(id, updates, itemsData) {
 
   const current = schedules[index];
   const batches = getBatches();
-  const selectedBatch = batches.find((b) => b.id === (updates.batchId || current.batchId)) || {};
 
-  const daysList = selectedBatch.daysList || updates.daysList || current.daysList;
+  let batchIds = current.batchIds || (current.batchId ? [current.batchId] : []);
+  if (updates.batchIds !== undefined) {
+    batchIds = Array.isArray(updates.batchIds) ? updates.batchIds : [];
+  } else if (updates.batchId !== undefined) {
+    batchIds = updates.batchId ? [updates.batchId] : [];
+  }
+
+  const firstBatch = batches.find((b) => b.id === batchIds[0]) || {};
+  const daysList = updates.daysList || current.daysList || firstBatch.daysList;
   const startDate = updates.startDate || current.startDate;
   const totalClasses =
     itemsData && itemsData.length > 0
@@ -1109,17 +1162,14 @@ export function updateMasterSchedule(id, updates, itemsData) {
   const updatedSchedule = {
     ...current,
     ...updates,
+    batchIds,
+    batchId: batchIds[0] || "",
+    batchName: resolveBatchNames(batchIds),
     totalClasses,
-    batchName:
-      selectedBatch.name || selectedBatch.shortName || updates.batchName || current.batchName,
-    shift: selectedBatch.startTime || updates.startTime || current.startTime,
-    startTime: selectedBatch.startTime || updates.startTime || current.startTime,
-    endTime: selectedBatch.endTime || updates.endTime || current.endTime,
-    timing: selectedBatch.timingLabel || current.timing,
-    daysPattern: selectedBatch.daysPattern || updates.daysPattern || current.daysPattern,
-    daysLabel: selectedBatch.daysLabel || updates.daysLabel || current.daysLabel,
     daysList,
-    capacity: selectedBatch.maxPax || updates.capacity || current.capacity,
+    daysPattern: updates.daysPattern || current.daysPattern || firstBatch.daysPattern || "MWF",
+    daysLabel:
+      updates.daysLabel || current.daysLabel || firstBatch.daysLabel || daysList.join(" • "),
     updatedAt: new Date().toISOString(),
   };
 
@@ -1154,20 +1204,161 @@ export function updateMasterSchedule(id, updates, itemsData) {
     } catch (e) {
       console.error(e);
     }
+  } else {
+    newItems = getScheduleItems(id);
+  }
 
-    // Regenerate Sessions
-    const sessions = generateSessionsForSchedule(updatedSchedule, newItems);
-    try {
-      const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
-      const existingSessions = rawSessions ? JSON.parse(rawSessions) : [];
-      const filteredSessions = existingSessions.filter((s) => s.masterScheduleId !== id);
-      writeStorage(STORAGE_KEY_SESSIONS, [...sessions, ...filteredSessions]);
-    } catch (e) {
-      console.error(e);
-    }
+  // Regenerate Sessions for all assigned batches
+  if (newItems.length > 0) {
+    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const existingSessions = rawSessions ? JSON.parse(rawSessions) : [];
+    // Keep existing session statuses if already present
+    const existingStatusMap = new Map();
+    existingSessions.forEach((s) => {
+      if (s.masterScheduleId === id) {
+        existingStatusMap.set(`${s.batchId}_${s.classNumber}`, {
+          status: s.status,
+          notes: s.notes,
+        });
+      }
+    });
+
+    const newSessions = generateSessionsForSchedule(updatedSchedule, newItems).map((s) => {
+      const key = `${s.batchId}_${s.classNumber}`;
+      if (existingStatusMap.has(key)) {
+        const prev = existingStatusMap.get(key);
+        return { ...s, status: prev.status || s.status, notes: prev.notes || s.notes };
+      }
+      return s;
+    });
+
+    const otherSessions = existingSessions.filter((s) => s.masterScheduleId !== id);
+    writeStorage(STORAGE_KEY_SESSIONS, [...newSessions, ...otherSessions]);
   }
 
   return updatedSchedule;
+}
+
+// Assign or unassign multiple batches to a scheduled class program
+export function assignBatchesToProgram(programId, batchIds) {
+  const schedules = getMasterSchedules();
+  const schedule = schedules.find((s) => s.id === programId);
+  if (!schedule) return null;
+
+  const oldBatchIds = Array.isArray(schedule.batchIds)
+    ? schedule.batchIds
+    : schedule.batchId
+      ? [schedule.batchId]
+      : [];
+  const cleanBatchIds = Array.isArray(batchIds) ? batchIds : [];
+
+  schedule.batchIds = cleanBatchIds;
+  schedule.batchId = cleanBatchIds[0] || "";
+  schedule.batchName = resolveBatchNames(cleanBatchIds);
+  schedule.updatedAt = new Date().toISOString();
+
+  const addedBatches = cleanBatchIds.filter((bId) => !oldBatchIds.includes(bId));
+  const removedBatches = oldBatchIds.filter((bId) => !cleanBatchIds.includes(bId));
+
+  writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
+
+  const items = getScheduleItems(programId);
+  const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+  let allSessions = rawSessions ? JSON.parse(rawSessions) : [];
+
+  // Remove sessions for batches that are no longer assigned
+  if (removedBatches.length > 0) {
+    allSessions = allSessions.filter(
+      (s) => !(s.masterScheduleId === programId && removedBatches.includes(s.batchId)),
+    );
+  }
+
+  // Generate sessions for newly added batches
+  if (addedBatches.length > 0 && items.length > 0) {
+    addedBatches.forEach((bId) => {
+      const newBatchSessions = generateSessionsForSchedule(schedule, items, bId);
+      allSessions = [...newBatchSessions, ...allSessions];
+    });
+  }
+
+  writeStorage(STORAGE_KEY_SESSIONS, allSessions);
+  return schedule;
+}
+
+// Return separate tracking metrics for each batch assigned to a program
+export function getBatchTrackingSummary(programId) {
+  const schedule = getMasterScheduleById(programId);
+  if (!schedule) return [];
+
+  const batches = getBatches();
+  const allSessions = getSessions();
+  const assignedBatchIds = Array.isArray(schedule.batchIds)
+    ? schedule.batchIds
+    : schedule.batchId
+      ? [schedule.batchId]
+      : [];
+
+  const now = new Date();
+  const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const todayUtc = now.toISOString().slice(0, 10);
+
+  return assignedBatchIds.map((bId) => {
+    const batchObj = batches.find((b) => b.id === bId) || { id: bId, name: bId };
+    const batchSessions = allSessions
+      .filter((s) => s.masterScheduleId === programId && s.batchId === bId)
+      .sort((a, b) => a.classNumber - b.classNumber);
+
+    let completed = 0;
+    let today = 0;
+    let scheduled = 0;
+    let cancelled = 0;
+
+    batchSessions.forEach((s) => {
+      if (s.status === "CANCELLED") {
+        cancelled++;
+      } else if (s.status === "COMPLETED") {
+        completed++;
+      } else if (
+        s.status === "TODAY" ||
+        s.sessionDate === todayLocal ||
+        s.sessionDate === todayUtc
+      ) {
+        today++;
+      } else {
+        scheduled++;
+      }
+    });
+
+    const total = batchSessions.length || schedule.totalClasses || 12;
+    const percentComplete = Math.min(100, Math.round((completed / (total || 1)) * 100));
+
+    const nextSession =
+      batchSessions.find((s) => s.status === "TODAY") ||
+      batchSessions.find((s) => s.status === "SCHEDULED") ||
+      null;
+
+    return {
+      batchId: bId,
+      batchName: batchObj.name || batchObj.shortName || bId,
+      startTime: batchObj.startTime || schedule.startTime || "06:00 AM",
+      endTime: batchObj.endTime || schedule.endTime || "07:00 AM",
+      timing:
+        batchObj.timingLabel ||
+        `${batchObj.startTime || "06:00 AM"} - ${batchObj.endTime || "07:00 AM"}`,
+      daysPattern: batchObj.daysPattern || schedule.daysPattern || "MWF",
+      daysLabel: batchObj.daysLabel || schedule.daysLabel || "Monday • Wednesday • Friday",
+      currentPax: batchObj.currentPax || 0,
+      maxPax: batchObj.maxPax || 28,
+      totalSessions: total,
+      completed,
+      today,
+      scheduled,
+      cancelled,
+      percentComplete,
+      nextSession,
+      sessions: batchSessions,
+    };
+  });
 }
 
 export function duplicateMasterSchedule(id) {
@@ -1178,6 +1369,9 @@ export function duplicateMasterSchedule(id) {
   const duplicateData = {
     ...original,
     name: `${original.name} (Copy)`,
+    batchIds: [], // Clone starts as unassigned reusable program
+    batchId: "",
+    batchName: "Reusable Template (Unassigned)",
   };
   delete duplicateData.id;
 
@@ -1295,7 +1489,7 @@ export function getHolidays() {
 
   // Clean out legacy placeholder entries like "Annual Strength Games"
   const cleanedHolidays = holidays.filter(
-    (h) => !h.name?.toLowerCase().includes("annual strength games")
+    (h) => !h.name?.toLowerCase().includes("annual strength games"),
   );
   if (cleanedHolidays.length !== holidays.length) {
     holidays = cleanedHolidays;
@@ -1309,7 +1503,7 @@ export function getHolidays() {
       (h) =>
         h.name?.toLowerCase().trim() === seedName ||
         h.name?.toLowerCase().includes(seedName) ||
-        seedName.includes(h.name?.toLowerCase().trim())
+        seedName.includes(h.name?.toLowerCase().trim()),
     );
     if (!exists) {
       holidays.push(seed);
@@ -1359,9 +1553,7 @@ export function updateHoliday(id, holidayData) {
         ? holidayData.affectedBatches
         : holidays[index].affectedBatches,
     description:
-      holidayData.description !== undefined
-        ? holidayData.description
-        : holidays[index].description,
+      holidayData.description !== undefined ? holidayData.description : holidays[index].description,
     status: holidayData.status !== undefined ? holidayData.status : holidays[index].status,
     updatedAt: new Date().toISOString(),
   };

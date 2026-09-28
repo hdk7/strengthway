@@ -1,7 +1,6 @@
 import { useId } from "react";
 import { Clock } from "lucide-react";
-import FormLabel from "../FormLabel";
-import FormError from "../FormError";
+import { FormLabel, FormError } from "../FormField";
 import ClockPickerPopover from "./ClockPickerPopover";
 import { useTimePicker } from "./useTimePicker";
 

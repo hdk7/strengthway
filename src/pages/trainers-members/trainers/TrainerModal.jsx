@@ -10,10 +10,13 @@ import {
   Upload,
   Trash2,
   Image as ImageIcon,
+  Clock,
+  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trainerSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 import { InputField, SelectField, TextareaField } from "@/components/form";
+import { getBatches, getTrainerBatchIds, syncTrainerBatches } from "@/lib/batchesService";
 
 const INITIAL_FORM = {
   name: "",
@@ -25,17 +28,27 @@ const INITIAL_FORM = {
   quote: "",
   photo: "",
   bio: "",
+  batchIds: [],
 };
 
 export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [batchesList, setBatchesList] = useState([]);
   const photoInputRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
+      const available = getBatches();
+      setBatchesList(available);
+
       if (trainerToEdit) {
+        const assignedFromBatches = getTrainerBatchIds(trainerToEdit.id);
+        const initialBatchIds = Array.from(
+          new Set([...(trainerToEdit.batchIds || []), ...assignedFromBatches])
+        );
+
         setForm({
           name: trainerToEdit.name || "",
           gender: trainerToEdit.gender || "Male",
@@ -50,6 +63,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
           shift: trainerToEdit.shift || "",
           floorZone: trainerToEdit.floorZone || "",
           languages: trainerToEdit.languages || "",
+          batchIds: initialBatchIds,
         });
       } else {
         setForm(INITIAL_FORM);
@@ -57,6 +71,30 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
       setErrors({});
     }
   }, [isOpen, trainerToEdit]);
+
+  const handleToggleBatch = (batchId) => {
+    setForm((prev) => {
+      const current = Array.isArray(prev.batchIds) ? prev.batchIds : [];
+      const next = current.includes(batchId)
+        ? current.filter((id) => id !== batchId)
+        : [...current, batchId];
+      return { ...prev, batchIds: next };
+    });
+  };
+
+  const handleSelectAllBatches = () => {
+    setForm((prev) => ({
+      ...prev,
+      batchIds: batchesList.map((b) => b.id),
+    }));
+  };
+
+  const handleClearAllBatches = () => {
+    setForm((prev) => ({
+      ...prev,
+      batchIds: [],
+    }));
+  };
 
   const handleClose = (e) => {
     if (e && typeof e.preventDefault === "function") {
@@ -132,6 +170,9 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
 
     setIsSubmitting(true);
     try {
+      if (trainerToEdit?.id) {
+        syncTrainerBatches(trainerToEdit.id, form.batchIds || []);
+      }
       onSuccess(form, Boolean(trainerToEdit));
       toast.success(
         trainerToEdit
@@ -359,7 +400,101 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
               </div>
             </div>
 
-            {/* 3. Hero Motto / Quote */}
+            {/* 3. Batch Slots & Shift Timings (Multi-Select) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                <div className="flex items-center gap-2">
+                  <Clock size={15} className="text-accent" />
+                  <h3 className="font-semibold text-foreground text-xs uppercase tracking-wider">
+                    Batch Slots & Shift Timings
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-medium text-muted-foreground mr-1">
+                    {form.batchIds?.length || 0} selected
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllBatches}
+                    className="text-[11px] text-accent hover:underline cursor-pointer font-medium"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-border text-xs">•</span>
+                  <button
+                    type="button"
+                    onClick={handleClearAllBatches}
+                    className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer font-medium"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-muted-foreground">
+                Select the batch slot(s) this trainer is assigned to. Changes will automatically reflect in batch schedules and trainer rosters.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                {batchesList.map((batch) => {
+                  const isSelected = Array.isArray(form.batchIds) && form.batchIds.includes(batch.id);
+                  return (
+                    <div
+                      key={batch.id}
+                      onClick={() => handleToggleBatch(batch.id)}
+                      role="checkbox"
+                      aria-checked={isSelected}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === " " || e.key === "Enter") {
+                          e.preventDefault();
+                          handleToggleBatch(batch.id);
+                        }
+                      }}
+                      className={`flex items-start gap-3 p-3 rounded-xl border text-left cursor-pointer transition-all select-none ${
+                        isSelected
+                          ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30"
+                          : "border-border/70 bg-card hover:bg-accent/10 hover:border-border"
+                      }`}
+                    >
+                      <div
+                        className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-md border transition-colors ${
+                          isSelected
+                            ? "border-primary bg-primary text-background"
+                            : "border-muted-foreground/40 bg-background"
+                        }`}
+                      >
+                        {isSelected && <Check size={11} strokeWidth={3} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold text-xs text-foreground tracking-tight">
+                            {batch.name}
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                              isSelected
+                                ? "bg-primary/20 text-primary"
+                                : "bg-muted text-muted-foreground"
+                            }`}
+                          >
+                            {batch.daysPattern || "MWF"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
+                          <Clock size={11} className="shrink-0" />
+                          <span className="truncate">
+                            {batch.timingLabel || `${batch.startTime} - ${batch.endTime}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4. Hero Motto / Quote */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                 <Quote size={15} className="text-accent" />

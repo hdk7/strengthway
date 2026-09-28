@@ -1,6 +1,5 @@
 import { useId, forwardRef } from "react";
-import FormLabel from "./FormLabel";
-import FormError from "./FormError";
+import { FormLabel, FormError } from "./FormField";
 
 const TextareaField = forwardRef(function TextareaField(
   {

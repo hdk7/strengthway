@@ -1,5 +1,5 @@
 import { useId, forwardRef } from "react";
-import FormError from "./FormError";
+import { FormError } from "./FormField";
 
 const CheckboxField = forwardRef(function CheckboxField(
   {

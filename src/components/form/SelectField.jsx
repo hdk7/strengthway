@@ -1,8 +1,7 @@
 import { useId, forwardRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import FormLabel from "./FormLabel";
-import FormError from "./FormError";
+import { FormLabel, FormError } from "./FormField";
 
 const SelectField = forwardRef(function SelectField(
   {

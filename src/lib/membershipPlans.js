@@ -47,48 +47,6 @@ export const DEFAULT_MEMBERSHIP_PLANS = [
       "Bi-weekly body composition analysis",
     ],
   },
-  {
-    id: "plan-half-yearly",
-    name: "Half-Yearly Elite",
-    durationMonths: 6,
-    price: 32000,
-    formattedPrice: "₹32,000",
-    period: "/6mo",
-    billing: "Billed ₹32,000 every 6 months",
-    description:
-      "Dedicated 6-month transformational track with custom nutritional & strength roadmap.",
-    badge: "BEST VALUE",
-    popular: false,
-    status: "Active",
-    features: [
-      "All Quarterly Pro tier benefits included",
-      "Personalized macro & nutrition consultation",
-      "1 Complimentary 1-on-1 personal training session per month",
-      "Dedicated gear locker reservation",
-      "Exclusive athlete community workshop access",
-    ],
-  },
-  {
-    id: "plan-annual",
-    name: "Annual Champion",
-    durationMonths: 12,
-    price: 58000,
-    formattedPrice: "₹58,000",
-    period: "/yr",
-    billing: "Billed ₹58,000 annually (Save 31%)",
-    description:
-      "Our complete 1-year athletic commitment program. Full VIP privileges across all facilities.",
-    badge: "VIP ACCESS",
-    popular: false,
-    status: "Active",
-    features: [
-      "Complete VIP facility and priority rig access 365 days",
-      "Quarterly personal training intensives with head coaches",
-      "Unlimited guest passes (up to 4 per quarter)",
-      "Complimentary gym apparel & lifting straps pack",
-      "Dedicated nutrition & physique progress check-ins",
-    ],
-  },
 ];
 
 function readStorage() {
@@ -101,7 +59,24 @@ function readStorage() {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+      // Purge removed plans: plan-half-yearly, plan-annual, or anything with Half-Yearly / Annual
+      const sanitized = parsed.filter(
+        (p) =>
+          p.id !== "plan-half-yearly" &&
+          p.id !== "plan-annual" &&
+          !/half-yearly|annual/i.test(p.name || "")
+      );
+      if (sanitized.length !== parsed.length || sanitized.length === 0) {
+        const existingIds = new Set(sanitized.map((p) => p.id));
+        DEFAULT_MEMBERSHIP_PLANS.forEach((dp) => {
+          if (!existingIds.has(dp.id)) {
+            sanitized.push(dp);
+          }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+        return sanitized;
+      }
+      return sanitized;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
     return DEFAULT_MEMBERSHIP_PLANS;

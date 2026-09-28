@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -22,6 +22,7 @@ import {
   updateTrainer,
   deleteTrainer,
 } from "@/lib/trainersService";
+import { getBatches } from "@/lib/batchesService";
 import { TrainerModal } from "./TrainerModal";
 import { CertifiedAccreditations } from "@/pages/trainers-members/trainers/CertifiedAccreditations";
 
@@ -32,6 +33,18 @@ export default function TrainerProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
+  const [assignedBatches, setAssignedBatches] = useState([]);
+
+  const loadAssignedBatches = useCallback(() => {
+    try {
+      const all = getBatches();
+      setAssignedBatches(
+        all.filter((b) => Array.isArray(b.trainerIds) && b.trainerIds.includes(id))
+      );
+    } catch {
+      setAssignedBatches([]);
+    }
+  }, [id]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -39,6 +52,12 @@ export default function TrainerProfilePage() {
     setTrainer(data);
     setIsLoading(false);
   }, [id]);
+
+  useEffect(() => {
+    loadAssignedBatches();
+    window.addEventListener("storage", loadAssignedBatches);
+    return () => window.removeEventListener("storage", loadAssignedBatches);
+  }, [loadAssignedBatches]);
 
   const trainerPhoto = useMemo(() => {
     return getTrainerPhoto(trainer);
@@ -69,6 +88,9 @@ export default function TrainerProfilePage() {
       const updated = updateTrainer(trainer.id, formData);
       if (updated) {
         setTrainer(updated);
+        // Note: syncTrainerBatches is already called inside TrainerModal before onSuccess;
+        // we only refresh the display here.
+        loadAssignedBatches();
         toast.success("Trainer profile updated successfully.");
       }
     } catch {
@@ -289,6 +311,32 @@ export default function TrainerProfilePage() {
                     >
                       {trainer.status || "Active"}
                     </span>
+                  </dd>
+                </div>
+
+                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+                  <dt className="font-medium text-muted-foreground">Assigned Batches</dt>
+                  <dd className="mt-1 sm:col-span-2 sm:mt-0">
+                    {assignedBatches.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {assignedBatches.map((b) => (
+                          <Link
+                            key={b.id}
+                            to={`/admin/batches/${b.id}`}
+                            className="inline-flex items-center gap-1 rounded-lg bg-accent/40 border border-border/80 px-2 py-0.5 text-xs font-semibold text-foreground hover:bg-accent hover:border-accent/60 transition-colors"
+                          >
+                            <span>{b.name}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              ({b.daysPattern})
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs italic">
+                        No batches currently assigned
+                      </span>
+                    )}
                   </dd>
                 </div>
 
