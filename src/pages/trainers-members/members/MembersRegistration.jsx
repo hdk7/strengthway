@@ -14,16 +14,12 @@ import {
   CheckCircle2,
   FileText,
   CreditCard,
-  Clock,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
-  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminMemberRegistrationSchema,
-  validateWithYup,
   validateFieldWithYup,
 } from "@/lib/validation";
 import { InputField, SelectField, TextareaField } from "@/components/form";
@@ -31,7 +27,6 @@ import { createMember, updateMember, convertLeadToMember } from "@/lib/membersSe
 import { getBatches, enrollMemberInBatch } from "@/lib/batchesService";
 import {
   getMembershipPlans,
-  MEMBERSHIP_PLANS,
   PAYMENT_METHODS,
   calculateMembershipDates,
   generateTransactionId,

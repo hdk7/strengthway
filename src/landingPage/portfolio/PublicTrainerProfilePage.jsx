@@ -3,12 +3,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
-  Award,
-  CheckCircle2,
-  Clock,
-  Globe,
   Mail,
-  MapPin,
   Phone,
   ShieldCheck,
   User,

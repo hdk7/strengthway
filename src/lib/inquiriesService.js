@@ -1,5 +1,7 @@
+import { STORAGE_KEYS } from "@/config/storageKeys";
+
 // Inquiries service with localStorage persistence
-const INQUIRIES_STORAGE_KEY = "thestrengthway_inquiries_data_v1";
+export const INQUIRIES_STORAGE_KEY = STORAGE_KEYS.INQUIRIES;
 
 function readStorage() {
   if (typeof window === "undefined") return [];

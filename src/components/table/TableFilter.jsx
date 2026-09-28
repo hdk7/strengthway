@@ -52,7 +52,11 @@ const TableFilter = ({
               type="button"
               key={optVal}
               onClick={() => onChange && onChange(optVal)}
-              className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 ${
+                compact
+                  ? "px-3 sm:px-3.5 py-1 sm:py-1.5 text-xs sm:text-sm"
+                  : "px-3.5 sm:px-4 py-1.5 sm:py-2 text-sm"
+              } rounded-full font-semibold tracking-tight whitespace-nowrap transition-all cursor-pointer ${
                 isSelected
                   ? "bg-primary text-background shadow-xs font-bold"
                   : "bg-card text-muted-foreground hover:text-foreground border border-border hover:bg-muted"

@@ -11,15 +11,12 @@ import {
   MapPin,
   Calendar,
   Award,
-  Sparkles,
   Shield,
   FileCheck,
   Download,
   Copy,
   Check,
   Dumbbell,
-  Quote,
-  Flame,
   AlertCircle,
   ExternalLink,
   ChevronRight,
@@ -33,7 +30,6 @@ import {
   updateMember,
   softDeleteMember,
   restoreMember,
-  convertLeadToMember,
 } from "@/lib/membersService";
 import { AdminMemberRegistrationModal } from "./MembersRegistration";
 

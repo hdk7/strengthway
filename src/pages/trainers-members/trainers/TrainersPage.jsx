@@ -49,14 +49,14 @@ export default function TrainersPage() {
   const columns = useMemo(() => getTrainerColumns({ onNavigate: navigate }), [navigate]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 min-h-0 h-full flex flex-col gap-2">
       {/* Top Banner */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
             Trainers
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Manage your certified fitness instructors, coaches, and staff roster.
           </p>
         </div>
@@ -64,51 +64,63 @@ export default function TrainersPage() {
         <button
           type="button"
           onClick={handleOpenAddModal}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background transition-all hover:opacity-90 shadow-sm cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-foreground px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-background transition-all hover:opacity-90 shadow-xs cursor-pointer"
         >
-          <UserPlus size={16} />
+          <UserPlus size={15} />
           <span>Add Trainer</span>
         </button>
       </div>
 
       {/* KPI Cards (3 Cards: Total Staff, Active Now, Inactive) */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 shrink-0">
+        <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Total Staff</span>
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-accent/10 text-accent">
-              <Users size={16} />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Total Staff
+            </span>
+            <div className="grid h-7 w-7 place-items-center rounded-lg bg-accent/10 text-accent">
+              <Users size={14} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl font-bold text-foreground">{stats.total}</span>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Registered coaches</p>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
+              {stats.total}
+            </span>
+            <p className="text-[11px] text-muted-foreground">Registered coaches</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Active Now</span>
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-500/10 text-emerald-500">
-              <UserCheck size={16} />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Active Now
+            </span>
+            <div className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
+              <UserCheck size={14} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl font-bold text-emerald-500">{stats.active}</span>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Available for training</p>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className="text-xl sm:text-2xl font-extrabold text-emerald-500 tracking-tight">
+              {stats.active}
+            </span>
+            <p className="text-[11px] text-muted-foreground">Available for training</p>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">Inactive</span>
-            <div className="grid h-8 w-8 place-items-center rounded-xl bg-muted text-muted-foreground">
-              <Users size={16} />
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              Inactive
+            </span>
+            <div className="grid h-7 w-7 place-items-center rounded-lg bg-muted text-muted-foreground">
+              <Users size={14} />
             </div>
           </div>
-          <div className="mt-3">
-            <span className="text-2xl font-bold text-muted-foreground">{stats.inactive}</span>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">On break / paused</p>
+          <div className="mt-0.5 flex items-baseline gap-2">
+            <span className="text-xl sm:text-2xl font-extrabold text-muted-foreground tracking-tight">
+              {stats.inactive}
+            </span>
+            <p className="text-[11px] text-muted-foreground">On break / paused</p>
           </div>
         </div>
       </div>
@@ -124,13 +136,15 @@ export default function TrainersPage() {
         filterKey="gender"
         filterOptions={[
           { label: "All", value: "All" },
-          { label: "Female", value: "Female" },
           { label: "Male", value: "Male" },
+          { label: "Female", value: "Female" },
         ]}
-        pageSize={8}
+        pageSize={6}
         itemLabel="trainers"
         emptyTitle="No trainers found"
         emptyMessage="Try adjusting your search query or filters."
+        compact
+        className="flex-1 min-h-0"
       />
 
       {/* Trainer Add/Edit Modal */}

@@ -49,6 +49,7 @@ export default function DataTable({
   filterOptions = [],
   filterMode = "pills",
   filterLabel = "Filter",
+  filterPosition = "right",
   filterValue,
   onFilterChange,
 
@@ -126,7 +127,7 @@ export default function DataTable({
   );
 
   return (
-    <div className={`flex-1 flex flex-col min-h-0 space-y-3 ${className}`}>
+    <div className={`flex-1 min-h-0 h-full flex flex-col gap-2 ${className}`}>
       {/* 1. Unified Toolbar */}
       <DataTableToolbar
         title={title}
@@ -149,41 +150,43 @@ export default function DataTable({
         onFilterChange={handleFilterChange}
         filterMode={filterMode}
         filterLabel={filterLabel}
+        filterPosition={filterPosition}
         compact={compact}
       />
 
-      {/* 2. Content & States */}
-      <DataTableContent
-        columns={columns}
-        paginatedData={paginatedData}
-        keyField={keyField}
-        onRowClick={onRowClick}
-        compact={compact}
-        isLoading={isLoading}
-        loadingRowsCount={loadingRowsCount}
-        emptyIcon={emptyIcon}
-        emptyTitle={emptyTitle}
-        emptyMessage={emptyMessage}
-        emptyAction={emptyAction}
-        hasActiveFilters={hasActiveFilters}
-        onResetFilters={resetAllFilters}
-        tableClassName={tableClassName}
-      />
+      {/* 2. Content & States inside its own card that fills available height */}
+      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs flex flex-col">
+        <DataTableContent
+          columns={columns}
+          paginatedData={paginatedData}
+          keyField={keyField}
+          onRowClick={onRowClick}
+          compact={compact}
+          isLoading={isLoading}
+          loadingRowsCount={loadingRowsCount}
+          emptyIcon={emptyIcon}
+          emptyTitle={emptyTitle}
+          emptyMessage={emptyMessage}
+          emptyAction={emptyAction}
+          hasActiveFilters={hasActiveFilters}
+          onResetFilters={resetAllFilters}
+          tableClassName={tableClassName}
+        />
+      </div>
 
-      {/* 3. Pagination */}
-      {pageSize && totalEntries > 0 && (
-        <div className="shrink-0">
-          <Pagination
-            currentPage={safePage}
-            totalPages={totalPages}
-            totalItems={totalEntries}
-            pageSize={pageSize}
-            onPageChange={(p) => setCurrentPage(p)}
-            itemLabel={itemLabel}
-            compact={compact}
-          />
-        </div>
-      )}
+      {/* 3. Pagination - Fixed in position at bottom of viewport */}
+      {pageSize ? (
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          totalItems={totalEntries}
+          pageSize={pageSize}
+          onPageChange={(p) => setCurrentPage(p)}
+          itemLabel={itemLabel}
+          compact={compact}
+          className="shrink-0"
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,8 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { STORAGE_KEYS } from "@/config/storageKeys";
 
-const STORAGE_KEY = "theme";
+const STORAGE_KEY = STORAGE_KEYS.THEME;
 const ThemeContext = createContext(null);
 
 const STATIC_TITLE = "The Strength Way";

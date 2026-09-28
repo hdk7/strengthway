@@ -15,17 +15,12 @@ import {
   Search,
   Filter,
   CheckCircle2,
-  Calendar,
   Layers,
   Sparkles,
-  ArrowRight,
-  Info,
   X,
-  UserCheck,
   Boxes,
   Check,
   ArrowUpRight,
-  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getBatches } from "@/lib/batchesService";
@@ -44,7 +39,6 @@ import {
   getBatchTrackingSummary,
   updateSessionStatus,
   DEFAULT_12_CLASS_CURRICULUM,
-  ALTERNATIVE_CURRICULUM_ATHLETIC,
   ALL_COACHES,
 } from "@/lib/masterScheduleService";
 import { InputField } from "@/components/form";
@@ -55,7 +49,6 @@ export default function MasterClassSchedulePage() {
   const [schedules, setSchedules] = useState([]);
   const [batches, setBatches] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBatchFilter, setSelectedBatchFilter] = useState("ALL");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("ALL");
 
   // Modal State for Create / Edit Program
@@ -128,14 +121,6 @@ export default function MasterClassSchedulePage() {
     return schedules.filter((s) => {
       const assignedIds = Array.isArray(s.batchIds) ? s.batchIds : s.batchId ? [s.batchId] : [];
 
-      if (selectedBatchFilter !== "ALL") {
-        if (selectedBatchFilter === "UNASSIGNED") {
-          if (assignedIds.length > 0) return false;
-        } else if (!assignedIds.includes(selectedBatchFilter)) {
-          return false;
-        }
-      }
-
       if (selectedStatusFilter !== "ALL" && s.status !== selectedStatusFilter) return false;
 
       if (searchQuery.trim()) {
@@ -152,7 +137,7 @@ export default function MasterClassSchedulePage() {
       }
       return true;
     });
-  }, [schedules, selectedBatchFilter, selectedStatusFilter, searchQuery, batches]);
+  }, [schedules, selectedStatusFilter, searchQuery, batches]);
 
   // Statistics KPIs
   const stats = useMemo(() => {
@@ -245,36 +230,6 @@ export default function MasterClassSchedulePage() {
         : [...prev.batchIds, batchId];
       return { ...prev, batchIds: nextBatchIds };
     });
-  };
-
-  // Quick preset buttons for batch assignment in form
-  const handleSelectBatchesByPattern = (pattern) => {
-    if (pattern === "ALL") {
-      setFormData((prev) => ({ ...prev, batchIds: batches.map((b) => b.id) }));
-    } else if (pattern === "CLEAR") {
-      setFormData((prev) => ({ ...prev, batchIds: [] }));
-    } else {
-      const matchingIds = batches
-        .filter((b) => (b.daysPattern || "").toUpperCase() === pattern.toUpperCase())
-        .map((b) => b.id);
-      setFormData((prev) => ({ ...prev, batchIds: matchingIds, daysPattern: pattern }));
-    }
-  };
-
-  // Quick Curriculum Template Fillers
-  const handleApplyCurriculumTemplate = (type) => {
-    const template =
-      type === "athletic" ? ALTERNATIVE_CURRICULUM_ATHLETIC : DEFAULT_12_CLASS_CURRICULUM;
-    setClassesData(
-      template.map((c) => ({
-        classNumber: c.classNumber,
-        subject: c.subject,
-        message: c.message,
-      })),
-    );
-    toast.success(
-      `Loaded ${type === "athletic" ? "Athletic Conditioning" : "Strength Foundations"} template.`,
-    );
   };
 
   // Handle Class Subject or Message Change
@@ -538,7 +493,7 @@ export default function MasterClassSchedulePage() {
               <CalendarDays size={20} />
             </span>
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Master Class Schedule
+              Class Schedule
             </h1>
           </div>
           <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
@@ -548,14 +503,6 @@ export default function MasterClassSchedulePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate("/admin/batches")}
-            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground transition-all hover:bg-accent/20 cursor-pointer shadow-xs"
-          >
-            <Boxes size={16} className="text-muted-foreground" />
-            <span>Batch Schedule</span>
-          </button>
-
           <button
             onClick={handleOpenCreate}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs sm:text-sm font-semibold text-background shadow-md transition-all hover:bg-primary/90 cursor-pointer active:scale-95"
@@ -638,20 +585,6 @@ export default function MasterClassSchedulePage() {
           </div>
 
           <select
-            value={selectedBatchFilter}
-            onChange={(e) => setSelectedBatchFilter(e.target.value)}
-            className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
-          >
-            <option value="ALL">All Batches</option>
-            <option value="UNASSIGNED">Unassigned Templates</option>
-            {batches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name || b.shortName} ({b.startTime})
-              </option>
-            ))}
-          </select>
-
-          <select
             value={selectedStatusFilter}
             onChange={(e) => setSelectedStatusFilter(e.target.value)}
             className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
@@ -661,11 +594,10 @@ export default function MasterClassSchedulePage() {
             <option value="Inactive">Inactive</option>
           </select>
 
-          {(searchQuery || selectedBatchFilter !== "ALL" || selectedStatusFilter !== "ALL") && (
+          {(searchQuery || selectedStatusFilter !== "ALL") && (
             <button
               onClick={() => {
                 setSearchQuery("");
-                setSelectedBatchFilter("ALL");
                 setSelectedStatusFilter("ALL");
               }}
               className="rounded-xl border border-border/80 px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent/20 hover:text-foreground cursor-pointer"
@@ -685,7 +617,7 @@ export default function MasterClassSchedulePage() {
           </div>
           <h3 className="text-base font-bold text-foreground">No Scheduled Class Programs Found</h3>
           <p className="mt-1 max-w-md text-xs sm:text-sm text-muted-foreground">
-            {searchQuery || selectedBatchFilter !== "ALL"
+            {searchQuery || selectedStatusFilter !== "ALL"
               ? "No programs match your search filters. Try clearing the filters."
               : "No class programs created yet. Create a reusable program and assign it to batches!"}
           </p>
@@ -932,43 +864,12 @@ export default function MasterClassSchedulePage() {
                     <div>
                       <h3 className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
                         <Boxes size={16} />
-                        <span>2. Batch Assignment (Multi-Batch Reuse)</span>
+                        <span>2. Batch Assignment</span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Assign this single program across multiple batches. Each batch maintains its
                         own separate floor session tracking.
                       </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectBatchesByPattern("MWF")}
-                        className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
-                      >
-                        All MWF
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectBatchesByPattern("TTS")}
-                        className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
-                      >
-                        All TTS
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectBatchesByPattern("ALL")}
-                        className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
-                      >
-                        Select All
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectBatchesByPattern("CLEAR")}
-                        className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-accent/20 cursor-pointer"
-                      >
-                        Clear
-                      </button>
                     </div>
                   </div>
 
@@ -1029,13 +930,13 @@ export default function MasterClassSchedulePage() {
                   </p>
                 </div>
 
-                {/* SECTION 3: CURRICULUM SYLLABUS (12 CLASSES) */}
+                {/* SECTION 3: CURRICULUM SYLLABUS */}
                 <div className="space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border/80 pb-2 gap-2">
                     <div>
                       <h3 className="text-sm font-bold uppercase tracking-wider text-primary flex items-center gap-2">
                         <Dumbbell size={16} />
-                        <span>3. Program Curriculum ({classesData.length} Classes)</span>
+                        <span>3. Program Curriculum</span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         The modular syllabus applies to all assigned batches.
@@ -1043,20 +944,6 @@ export default function MasterClassSchedulePage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyCurriculumTemplate("strength")}
-                        className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
-                      >
-                        Strength Template
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApplyCurriculumTemplate("athletic")}
-                        className="rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
-                      >
-                        Athletic Template
-                      </button>
                       <button
                         type="button"
                         onClick={handleAddClassItem}
@@ -1459,9 +1346,6 @@ export default function MasterClassSchedulePage() {
                                   <span className="text-xs font-bold text-foreground">
                                     Editing Class {item.classNumber}
                                   </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    Week {item.weekNumber} • {item.dayOfWeek}
-                                  </span>
                                 </div>
 
                                 <div>
@@ -1528,36 +1412,31 @@ export default function MasterClassSchedulePage() {
                                       {item.subject}
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="rounded-md bg-accent/20 px-2 py-0.5 font-semibold text-foreground text-xs">
-                                      Week {item.weekNumber} • {item.dayOfWeek}
-                                    </span>
-                                    <div className="flex items-center gap-1 border-l border-border/60 pl-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setEditingClassInModalId(item.id);
-                                          setEditingClassForm({
-                                            subject: item.subject,
-                                            message: item.message || "",
-                                          });
-                                        }}
-                                        className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
-                                        title={`Edit Class ${item.classNumber}`}
-                                      >
-                                        <Edit3 size={14} />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleDeleteClassInModal(item.id, item.classNumber)
-                                        }
-                                        className="p-1 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                                        title={`Delete Class ${item.classNumber}`}
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    </div>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingClassInModalId(item.id);
+                                        setEditingClassForm({
+                                          subject: item.subject,
+                                          message: item.message || "",
+                                        });
+                                      }}
+                                      className="p-1 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                      title={`Edit Class ${item.classNumber}`}
+                                    >
+                                      <Edit3 size={14} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeleteClassInModal(item.id, item.classNumber)
+                                      }
+                                      className="p-1 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                      title={`Delete Class ${item.classNumber}`}
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
                                   </div>
                                 </div>
 

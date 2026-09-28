@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useState } from "react";
 import { Mail, MapPin, Phone, User, MessageSquare, ArrowRight } from "lucide-react";
 import { toast } from "sonner";

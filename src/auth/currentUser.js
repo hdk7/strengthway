@@ -1,3 +1,5 @@
+import { STORAGE_KEYS } from "@/config/storageKeys";
+
 const CURRENT_USER = {
   name: "Admin User",
   role: "Administrator",
@@ -8,7 +10,7 @@ export function getCurrentUser() {
   if (typeof window === "undefined") return CURRENT_USER;
 
   try {
-    const raw = localStorage.getItem("tsw-user") || localStorage.getItem("user");
+    const raw = localStorage.getItem(STORAGE_KEYS.AUTH_USER) || localStorage.getItem("user");
     if (raw) {
       const user = JSON.parse(raw);
       let name = user.name;

@@ -1,5 +1,7 @@
 /* eslint-disable max-lines */
-export const STORAGE_KEY = "tsw-registered-members";
+import { STORAGE_KEYS } from "@/config/storageKeys";
+
+export const STORAGE_KEY = STORAGE_KEYS.MEMBERS;
 
 export const SEED_MEMBERS = [
   {

@@ -5,8 +5,9 @@ import trainer2 from "@/assets/trainer-2.jpg";
 import portfolioPhoto1 from "@/assets/portfolio-photo-1.jpg";
 import portfolioPhoto2 from "@/assets/portfolio-photo-2.jpg";
 import portfolioPhoto5 from "@/assets/portfolio-photo-5.jpg";
+import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY = "tsw-trainers";
+export const STORAGE_KEY = STORAGE_KEYS.TRAINERS;
 
 export const TRAINER_PHOTOS = {
   "TRN-101": trainer3,

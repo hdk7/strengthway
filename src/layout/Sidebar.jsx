@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Inbox,
   Users,
-  Boxes,
   ClipboardCheck,
   Wallet,
   BarChart3,
@@ -16,6 +15,7 @@ import {
   Settings,
   CalendarDays,
 } from "lucide-react";
+import { STORAGE_KEYS } from "@/config/storageKeys";
 
 const navConfig = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -37,7 +37,7 @@ const navConfig = [
       { id: "batch-schedule", label: "Batch Schedule", path: "/admin/schedule/batches" },
       {
         id: "master-class-schedule",
-        label: "Master Class Schedule",
+        label: "Class Schedule",
         path: "/admin/schedule/master-class",
       },
     ],
@@ -321,8 +321,8 @@ export default function Sidebar({
 
   const confirmLogout = () => {
     setShowLogoutConfirm(false);
-    localStorage.removeItem("tsw-token");
-    localStorage.removeItem("tsw-user");
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     sessionStorage.clear();
@@ -335,7 +335,7 @@ export default function Sidebar({
       <aside
         className={[
           "flex flex-col bg-card border border-border rounded-xl overflow-hidden",
-          "fixed top-21 bottom-3 left-3",
+          "fixed top-[74px] bottom-3 left-3",
           "w-[var(--sidebar-width,256px)] z-50 shadow-xl transition-transform duration-250 ease-in-out",
           mobileOpen ? "translate-x-0" : "-translate-x-[calc(100%+24px)]",
           "md:z-20 md:shadow-sm md:translate-x-0",

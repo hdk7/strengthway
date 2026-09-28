@@ -52,12 +52,12 @@ export default function AdminLayout() {
   const isCollapsed = tier === "small" ? false : collapsed;
 
   const contentLeftClass =
-    tier === "small" ? "left-3" : isCollapsed ? "left-[96px]" : "left-[280px]";
+    tier === "small" ? "left-3" : isCollapsed ? "left-[92px]" : "left-[276px]";
 
   return (
     <div className="fixed inset-0 bg-background overflow-hidden">
       {/* Fixed floating header */}
-      <div className="fixed top-3 left-3 right-3 z-40">
+      <div className="fixed top-2.5 left-3 right-3 z-40">
         <Header onToggle={handleToggle} sidebarVisible={sidebarVisible} />
       </div>
 
@@ -80,9 +80,9 @@ export default function AdminLayout() {
 
       {/* Scrollable main content */}
       <main
-        className={`fixed top-21 bottom-3 right-3 ${contentLeftClass} transition-[left] duration-200 ease-in-out overflow-y-auto rounded-xl bg-background`}
+        className={`fixed top-[74px] bottom-3 right-3 ${contentLeftClass} transition-[left] duration-200 ease-in-out overflow-y-auto rounded-xl bg-background flex flex-col`}
       >
-        <div className="p-4 sm:p-6">
+        <div className="p-2 sm:px-3.5 sm:py-2 flex flex-col flex-1 h-full min-h-0">
           <Outlet />
         </div>
       </main>

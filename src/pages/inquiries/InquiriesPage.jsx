@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -5,15 +6,12 @@ import {
   Search,
   Mail,
   Phone,
-  MapPin,
   Trash2,
   Eye,
   UserCheck,
   CheckCircle2,
   Clock,
   MessageSquare,
-  X,
-  UserPlus,
   Plus,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -241,7 +239,7 @@ export default function InquiriesPage() {
           <table className="w-full text-left text-sm text-foreground">
             <thead className="border-b border-border bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="px-5 py-3.5">Inquiry / Sender</th>
+                <th className="px-5 py-3.5">Inquiry</th>
                 <th className="px-5 py-3.5">Contact</th>
                 <th className="px-5 py-3.5">Subject & Message</th>
                 <th className="px-5 py-3.5">Received</th>

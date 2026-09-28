@@ -16,8 +16,8 @@ export default function DataTableContent({
   onResetFilters,
   tableClassName = "",
 }) {
-  const cellPadding = compact ? "py-2 px-3" : "py-3.5 px-4";
-  const headerPadding = compact ? "py-2 px-3" : "py-3 px-4";
+  const cellPadding = compact ? "py-2 sm:py-2.5 px-3.5 sm:px-4" : "py-2.5 px-4 sm:px-5";
+  const headerPadding = compact ? "py-2 sm:py-2.5 px-3.5 sm:px-4" : "py-2.5 px-4 sm:px-5";
 
   const getAlignmentClass = (align) => {
     if (align === "right") return "text-right";
@@ -28,9 +28,8 @@ export default function DataTableContent({
   // 1. Loading Skeleton State
   if (isLoading) {
     return (
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className={`w-full text-left border-collapse ${tableClassName}`}>
+      <div className="overflow-x-auto no-scrollbar">
+        <table className={`w-full text-left border-collapse ${tableClassName}`}>
             <thead>
               <tr className="border-b border-border bg-muted/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {columns.map((col) => (
@@ -43,7 +42,7 @@ export default function DataTableContent({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/60 text-xs">
+            <tbody className="divide-y divide-border/60 text-xs sm:text-sm">
               {Array.from({ length: loadingRowsCount }).map((_, rIdx) => (
                 <tr key={`skeleton-${rIdx}`} className="animate-pulse">
                   {columns.map((col) => (
@@ -56,20 +55,19 @@ export default function DataTableContent({
             </tbody>
           </table>
         </div>
-      </div>
     );
   }
 
   // 2. Empty State
   if (paginatedData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-card border border-border rounded-2xl text-center shadow-xs flex-1">
+      <div className="flex flex-col items-center justify-center p-8 text-center flex-1 min-h-0">
         <div className="w-12 h-12 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mb-3">
           <EmptyIcon size={24} />
         </div>
         <h3 className="text-base font-bold text-foreground">{emptyTitle}</h3>
         {emptyMessage && (
-          <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-sm">
             {emptyMessage}
           </p>
         )}
@@ -80,7 +78,7 @@ export default function DataTableContent({
             <button
               type="button"
               onClick={onResetFilters}
-              className="mt-4 px-4 py-2 rounded-xl bg-accent text-background text-xs font-semibold hover:bg-accent/80 transition-colors cursor-pointer"
+              className="mt-4 px-4 py-2 rounded-xl bg-accent text-background text-xs sm:text-sm font-semibold hover:bg-accent/80 transition-colors cursor-pointer"
             >
               Reset Filters
             </button>
@@ -92,11 +90,10 @@ export default function DataTableContent({
 
   // 3. Render Table
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xs">
-      <div className="overflow-x-auto no-scrollbar">
-        <table className={`w-full text-left border-collapse ${tableClassName}`}>
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+    <div className="overflow-x-auto no-scrollbar flex-1 min-h-0 flex flex-col">
+      <table className={`w-full h-full text-left border-collapse ${tableClassName}`}>
+        <thead className="bg-card shrink-0">
+          <tr className="border-b border-border/80 bg-muted/60 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
               {columns.map((col) => {
                 const colKey = col.key || col.accessorKey;
                 return (
@@ -112,7 +109,7 @@ export default function DataTableContent({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border/60 text-xs">
+          <tbody className={`divide-y divide-border/60 h-full ${compact ? "text-xs sm:text-sm" : "text-sm"}`}>
             {paginatedData.map((row, rowIdx) => {
               const rowKey = row[keyField] || `row-${rowIdx}`;
 
@@ -148,6 +145,5 @@ export default function DataTableContent({
           </tbody>
         </table>
       </div>
-    </div>
   );
 }

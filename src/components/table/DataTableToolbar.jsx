@@ -26,6 +26,7 @@ export default function DataTableToolbar({
   filterMode = "pills",
   filterLabel = "Filter",
   compact = false,
+  filterPosition = "right",
 }) {
   const hasControls =
     searchable ||
@@ -34,8 +35,11 @@ export default function DataTableToolbar({
     (sortOptions && sortOptions.length > 0) ||
     Boolean(filterDropdown);
 
+  const hasFilterOptions = filterOptions && filterOptions.length > 0;
+  const isFilterInline = filterPosition === "right" || filterPosition === "inline";
+
   return (
-    <div className="space-y-3 shrink-0">
+    <div className={`${compact ? "space-y-2" : "space-y-3"} shrink-0`}>
       {/* 1. Optional Header Banner */}
       {title && (
         <div className="shrink-0 flex items-center justify-between gap-3 bg-card border border-border px-4 py-3 rounded-2xl shadow-xs">
@@ -64,12 +68,12 @@ export default function DataTableToolbar({
       {/* 2. Controls Toolbar */}
       {hasControls && (
         <div className="space-y-2.5">
-          {/* Row 1: Search Bar (Left) + Utility Icons (Right: Date Range, Sort, Filter Dropdown) */}
-          <div className="flex items-center justify-between gap-3">
+          {/* Main Controls Row: Search Bar (Left) + Filters / Utility Icons / Actions (Right) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             {searchable && (
               <div className="relative flex-1 max-w-sm sm:max-w-md">
                 <Search
-                  size={15}
+                  size={16}
                   className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
                 <input
@@ -77,7 +81,9 @@ export default function DataTableToolbar({
                   placeholder={searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full h-10 pl-10 pr-9 rounded-xl border border-border bg-card text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors shadow-2xs"
+                  className={`w-full ${
+                    compact ? "h-9 sm:h-9.5 text-xs sm:text-sm" : "h-10 sm:h-11 text-sm"
+                  } pl-10 pr-9 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-primary transition-colors shadow-2xs`}
                 />
                 {searchQuery && (
                   <button
@@ -91,7 +97,21 @@ export default function DataTableToolbar({
               </div>
             )}
 
-            <div className="flex items-center gap-2 shrink-0 ml-auto">
+            <div className="flex flex-wrap items-center gap-2 shrink-0 sm:ml-auto">
+              {/* Inline filter pills / dropdown on the right side after search bar */}
+              {hasFilterOptions && isFilterInline && (
+                <div className="overflow-x-auto no-scrollbar">
+                  <TableFilter
+                    options={filterOptions}
+                    value={activeFilter}
+                    onChange={onFilterChange}
+                    mode={filterMode}
+                    label={filterLabel}
+                    compact={compact}
+                  />
+                </div>
+              )}
+
               {showDateFilter && (
                 <DateRangePicker
                   startDate={activeDateRange?.startDate}
@@ -113,24 +133,24 @@ export default function DataTableToolbar({
               )}
 
               {filterDropdown && <TableFilterDropdown {...filterDropdown} />}
+
+              {actions && !title && <div className="shrink-0">{actions}</div>}
             </div>
           </div>
 
-          {/* Row 2: Status Filter Pills (Left) & Actions (Right, if no title) */}
-          {((filterOptions && filterOptions.length > 0) || (actions && !title)) && (
+          {/* Row 2: Only used if filterPosition === "bottom" */}
+          {hasFilterOptions && !isFilterInline && (
             <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-3">
-              {filterOptions && filterOptions.length > 0 && (
-                <div className="flex-1 overflow-x-auto no-scrollbar min-w-0">
-                  <TableFilter
-                    options={filterOptions}
-                    value={activeFilter}
-                    onChange={onFilterChange}
-                    mode={filterMode}
-                    label={filterLabel}
-                    compact={compact}
-                  />
-                </div>
-              )}
+              <div className="flex-1 overflow-x-auto no-scrollbar min-w-0">
+                <TableFilter
+                  options={filterOptions}
+                  value={activeFilter}
+                  onChange={onFilterChange}
+                  mode={filterMode}
+                  label={filterLabel}
+                  compact={compact}
+                />
+              </div>
 
               {actions && !title && <div className="shrink-0 ml-auto">{actions}</div>}
             </div>

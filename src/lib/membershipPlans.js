@@ -4,7 +4,9 @@
  * Features localStorage persistence and dynamic master management.
  */
 
-const STORAGE_KEY = "thestrengthway_membership_plans_v1";
+import { STORAGE_KEYS } from "@/config/storageKeys";
+
+export const STORAGE_KEY = STORAGE_KEYS.MEMBERSHIP_PLANS;
 
 export const DEFAULT_MEMBERSHIP_PLANS = [
   {

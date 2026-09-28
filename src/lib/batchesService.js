@@ -1,10 +1,11 @@
 /* eslint-disable max-lines */
 import { getTrainers, SEED_TRAINERS } from "./trainersService";
 import { getMembers } from "./membersService";
+import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY_BATCHES = "tsw-batches";
-export const STORAGE_KEY_COACH_SHIFTS = "tsw-coach-shifts";
-export const STORAGE_KEY_SCHEDULED_CLASSES = "tsw-scheduled-classes";
+export const STORAGE_KEY_BATCHES = STORAGE_KEYS.BATCHES;
+export const STORAGE_KEY_COACH_SHIFTS = STORAGE_KEYS.COACH_SHIFTS;
+export const STORAGE_KEY_SCHEDULED_CLASSES = STORAGE_KEYS.SCHEDULED_CLASSES;
 
 export const SHIFT_SLOTS = [
   {

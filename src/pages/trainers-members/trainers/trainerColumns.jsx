@@ -19,7 +19,7 @@ export function getTrainerColumns({ onNavigate }) {
               type="button"
               onClick={() => onNavigate(`/admin/trainers-members/trainers/${trainer.id}`)}
               title="View full Trainer profile"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-accent/15 text-accent font-semibold text-xs border border-accent/20 hover:scale-105 hover:ring-2 hover:ring-accent/40 transition-all cursor-pointer focus:outline-none"
+              className="grid h-8.5 w-8.5 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-accent/15 text-accent font-bold text-xs sm:text-sm border border-accent/20 hover:scale-105 hover:ring-2 hover:ring-accent/40 transition-all cursor-pointer focus:outline-none"
             >
               {initials}
             </button>
@@ -27,11 +27,11 @@ export function getTrainerColumns({ onNavigate }) {
               <button
                 type="button"
                 onClick={() => onNavigate(`/admin/trainers-members/trainers/${trainer.id}`)}
-                className="font-semibold text-foreground hover:text-accent hover:underline text-left cursor-pointer transition-colors"
+                className="font-semibold text-xs sm:text-sm text-foreground hover:text-accent hover:underline text-left cursor-pointer transition-colors"
               >
                 {trainer.name}
               </button>
-              <p className="text-[11px] text-muted-foreground font-mono">{trainer.id}</p>
+              <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{trainer.id}</p>
             </div>
           </div>
         );
@@ -41,7 +41,7 @@ export function getTrainerColumns({ onNavigate }) {
       header: "Gender",
       accessorKey: "gender",
       cell: (trainer) => (
-        <span className="inline-flex items-center rounded-full bg-accent/25 border border-accent/30 px-2.5 py-0.5 text-xs font-semibold text-foreground">
+        <span className="inline-flex items-center rounded-full bg-accent/25 border border-accent/30 px-2.5 py-0.5 text-xs font-medium text-foreground">
           {trainer.gender || "—"}
         </span>
       ),
@@ -49,14 +49,14 @@ export function getTrainerColumns({ onNavigate }) {
     {
       header: "Contact",
       cell: (trainer) => (
-        <div className="text-xs space-y-0.5">
+        <div className="text-xs sm:text-sm space-y-0.5">
           <div className="flex items-center gap-1.5 text-foreground">
-            <Phone size={12} className="text-muted-foreground shrink-0" />
+            <Phone size={13.5} className="text-muted-foreground shrink-0" />
             <span>{trainer.phone}</span>
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Mail size={12} className="text-muted-foreground shrink-0" />
-            <span className="truncate max-w-[150px]">{trainer.email}</span>
+            <Mail size={13.5} className="text-muted-foreground shrink-0" />
+            <span className="truncate max-w-[180px]">{trainer.email}</span>
           </div>
         </div>
       ),

@@ -10,6 +10,7 @@ import { loginSchema, validateWithYup, validateFieldWithYup } from "@/lib/valida
 import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS } from "@/auth/authService";
 import ForgotPasswordForm from "@/auth/ForgotPasswordForm";
 import { ThemeToggle } from "@/hooks/theme";
+import { STORAGE_KEYS } from "@/config/storageKeys";
 
 export function LoginForm({ onSuccess }) {
   const [view, setView] = useState("login"); // 'login' | 'forgot'
@@ -147,8 +148,8 @@ export default function LoginPage() {
 
   const handleSuccess = (session) => {
     if (session?.token) {
-      localStorage.setItem("tsw-token", session.token);
-      localStorage.setItem("tsw-user", JSON.stringify(session.user));
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, session.token);
+      localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(session.user));
     }
     navigate("/admin/dashboard");
   };

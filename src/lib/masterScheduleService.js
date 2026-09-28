@@ -1,11 +1,13 @@
 /* eslint-disable max-lines */
 import { getBatches } from "./batchesService";
-import { getTrainers } from "./trainersService";
+import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY_MASTER_SCHEDULES = "tsw-master-class-schedules";
-export const STORAGE_KEY_MASTER_ITEMS = "tsw-master-class-items";
-export const STORAGE_KEY_SESSIONS = "tsw-generated-sessions";
-export const STORAGE_KEY_HOLIDAYS = "tsw-holidays";
+export const STORAGE_KEY_MASTER_SCHEDULES = STORAGE_KEYS.MASTER_SCHEDULES;
+export const STORAGE_KEY_MASTER_ITEMS = STORAGE_KEYS.MASTER_ITEMS;
+export const STORAGE_KEY_SESSIONS = STORAGE_KEYS.SESSIONS;
+export const STORAGE_KEY_HOLIDAYS = STORAGE_KEYS.HOLIDAYS;
+export const STORAGE_KEY_CURRICULUM_VERSION = STORAGE_KEYS.CURRICULUM_VERSION;
+export const SEED_CURRICULUM_VERSION = "2026-v4-batch-distinct-curriculums";
 
 // Default Coaches List matching prompt coaches
 export const ALL_COACHES = [
@@ -176,81 +178,472 @@ export const ALTERNATIVE_CURRICULUM_ATHLETIC = [
   },
 ];
 
-// Dedicated September 2026 (This Month) Hypertrophy Curriculum for Batch 3 (Coach Rengaraj M)
-export const BATCH_3_SEPTEMBER_CURRICULUM = [
+// Dedicated Batch 1 Curriculum: Morning Functional Strength & Core Conditioning (06:00 AM - 07:00 AM MWF)
+export const BATCH_1_CURRICULUM = [
   {
     classNumber: 1,
-    subject: "Movement Screen & Upper Posterior Warmup",
+    subject: "Movement Assessment & Baseline Mobility Screen",
     message:
-      "Assessing overhead squat mobility, thoracic extension, scapular retraction, and setting baseline tempo for evening lifters.",
+      "Baseline movement screen, overhead squat assessment, thoracic spine mobility flows, and core activation protocols.",
   },
   {
     classNumber: 2,
-    subject: "Lower Body Quad Volume & Knee Tracking",
+    subject: "Lower Body Mechanics & Goblet Squat Depth",
     message:
-      "Front squats, Bulgarian split squats, and eccentric quad control with 3-second lowering tempo and hamstring counter-tension.",
+      "Foot tripod pressure, knee tracking alignment, goblet squat depth standards, and eccentric tempo control under moderate load.",
   },
   {
     classNumber: 3,
-    subject: "Horizontal Push/Pull Superset Mechanics",
+    subject: "Horizontal Push/Pull & Scapular Stability",
     message:
-      "Barbell bench press paired with chest-supported dumbbell rows for balanced upper-body tension and glenohumeral safety.",
+      "Dumbbell bench press setups, chest-supported rows, serratus anterior activation, and rotator cuff stability protocols.",
   },
   {
     classNumber: 4,
-    subject: "Posterior Chain Deadlift & Glute Activation",
+    subject: "Hip Hinge Patterning & Romanian Deadlifts",
     message:
-      "Conventional and Romanian deadlift mechanics, hip hinging depth, and glute medius activation under progressive load.",
+      "Posterior chain engagement, Romanian deadlift bar path, hamstring tension without lumbar flexion, and glute squeeze.",
   },
   {
     classNumber: 5,
-    subject: "Overhead Pressing Stability & Deltoid Volume",
+    subject: "Unilateral Lunge Variations & Hip Stability",
     message:
-      "Strict barbell overhead press, lateral raise mechanical dropsets, and rotator cuff integrity drills with light bands.",
+      "Reverse lunges, split squat balance, pelvic leveling drills, and addressing side-to-side strength asymmetries.",
   },
   {
     classNumber: 6,
-    subject: "Mid-Program Conditioning Benchmark",
+    subject: "Core Bracing & Anti-Rotational Protocols",
     message:
-      "High-density metabolic circuit: SkiErg intervals, kettlebell clean & press, battle ropes, and 400m recovery pace.",
+      "Intra-abdominal pressure bracing, Pallof presses, suitcase carries, and plank with reaching taps.",
   },
   {
     classNumber: 7,
-    subject: "Unilateral Leg Strength & Core Bracing",
+    subject: "Barbell Back Squat Introduction & Walkout",
     message:
-      "Walking lunges with farmer carry hold, single-leg Romanian deadlifts, and anti-rotational Pallof holds.",
+      "Barbell positioning across upper traps, rack safety pin heights, walkout cadence, and consistent depth calibration.",
   },
   {
     classNumber: 8,
-    subject: "Upper Body Hypertrophy & Arm Super-Pump",
+    subject: "Overhead Pressing Mechanics & Shoulder Health",
     message:
-      "Incline dumbbell pressing, weighted dips, incline bicep curls, and overhead tricep extensions to near muscular failure.",
+      "Standing strict dumbbell overhead press, active core lockout, rib flare prevention, and rear deltoid accessory work.",
   },
   {
     classNumber: 9,
-    subject: "Explosive Hip Extension & Barbell Cleans",
+    subject: "Barbell Deadlift Setup & Tension Calibration",
     message:
-      "Hang power cleans, kettlebell snatch progressions, and explosive hip drive mechanics with dynamic reset pauses.",
+      "Conventional deadlift setup, bar against shins, lat engagement to pack the bar, and explosive leg drive off the floor.",
   },
   {
     classNumber: 10,
-    subject: "High-Density Lactate Threshold Circuit",
+    subject: "Compound Super-Set Density & Work Capacity",
     message:
-      "Rowing sprints, wall-ball shots, box step-overs, and functional athletic endurance testing for maximum work capacity.",
+      "Pairing barbell squats with inverted bodyweight rows for cardiovascular demand and time-under-tension overload.",
   },
   {
     classNumber: 11,
-    subject: "Restorative Mobility, Fascia & Deload",
+    subject: "Mobility Decompression & Fascial Recovery",
     message:
-      "Active myofascial release, hip capsule distraction, thoracic mobility flows, and recovery breath work prior to PR testing.",
+      "Active recovery flow, hip flexor release, latissimus dorsi foam rolling, and parasympathetic diaphragmatic breathing.",
   },
   {
     classNumber: 12,
-    subject: "Final Benchmark PR Testing & Progression Review",
+    subject: "Strength Benchmark Testing & PR Validation",
     message:
-      "3-rep max testing on bench and squat, cycle PR celebration, individual feedback dossiers, and graduation into next phase.",
+      "3-rep working max assessment across squat and deadlift, movement milestone celebration, and individual progression reviews.",
   },
 ];
+
+// Dedicated Batch 2 Curriculum: Hypertrophy & Barbell Fundamentals (08:00 AM - 09:00 AM MWF)
+export const BATCH_2_CURRICULUM = [
+  {
+    classNumber: 1,
+    subject: "Hypertrophy Primer & Kinetic Chain Warmup",
+    message:
+      "Dynamic kinetic chain activation, motor unit recruitment drills, and establishing 3-second eccentric tempo baseline.",
+  },
+  {
+    classNumber: 2,
+    subject: "Quad Hypertrophy & Front Squat Mechanics",
+    message:
+      "Front rack positioning, clean grip vs crossed arm setups, quad isolation, and high-volume goblet squat dropsets.",
+  },
+  {
+    classNumber: 3,
+    subject: "Pectoral Hypertrophy & Incline Dumbbell Press",
+    message:
+      "Incline dumbbell bench pressing, 45-degree angle path, chest contraction squeeze at apex, and cable chest flyes.",
+  },
+  {
+    classNumber: 4,
+    subject: "Hamstring Hypertrophy & Stiff-Leg Deadlifts",
+    message:
+      "Stiff-leg barbell deadlifts, hamstring stretch under load, seated leg curl control, and glute-ham tie-in development.",
+  },
+  {
+    classNumber: 5,
+    subject: "Back Thickness & Barbell Bent-Over Rows",
+    message:
+      "Pendlay rows, lat pull-down squeeze techniques, scapular depression, and mid-trap hypertrophy volume.",
+  },
+  {
+    classNumber: 6,
+    subject: "Deltoid Sculpting & Lateral Raise Mechanics",
+    message:
+      "Dumbbell lateral raise form, overhead push press, upright row variations, and rear deltoid fly volume.",
+  },
+  {
+    classNumber: 7,
+    subject: "Arm Hypertrophy Superset Specialization",
+    message:
+      "Bicep barbell curls paired with tricep skull crushers, pump volume protocols, and forearm grip endurance.",
+  },
+  {
+    classNumber: 8,
+    subject: "Bulgarian Split Squat & Glute Focus",
+    message:
+      "Rear foot elevated split squats, forward torso lean for glute recruitment, and walking lunges with dumbbells.",
+  },
+  {
+    classNumber: 9,
+    subject: "Close-Grip Bench Press & Tricep Overload",
+    message:
+      "Close-grip barbell pressing for triceps and inner chest, dip progressions, and diamond pushup volume.",
+  },
+  {
+    classNumber: 10,
+    subject: "Metabolic Hypertrophy Circuit (Giant Sets)",
+    message:
+      "4-station non-stop giant sets for maximum metabolic fatigue, glycogen depletion, and vascular pump.",
+  },
+  {
+    classNumber: 11,
+    subject: "Fascial Stretch Therapy & Muscle Recovery",
+    message:
+      "Inter-muscular fascial stretching, soft tissue lacrosse ball release on traps and pecs, and recovery hydration.",
+  },
+  {
+    classNumber: 12,
+    subject: "Hypertrophy Volume Assessment & PR Pump",
+    message:
+      "8-rep max benchmark challenges on primary lifts, body composition milestone tracking, and certificate awards.",
+  },
+];
+
+// Dedicated Batch 3 Curriculum: Evening Prime Strength & Olympic Lifting (06:30 PM - 07:30 PM MWF)
+export const BATCH_3_CURRICULUM = [
+  {
+    classNumber: 1,
+    subject: "Olympic Movement Screen & Ankle/Wrist Mobility",
+    message:
+      "Front rack wrist mobility, ankle dorsiflexion screening, PVC pipe snatch balance drills, and thoracic extension.",
+  },
+  {
+    classNumber: 2,
+    subject: "Hang Power Clean Mechanics & Elbow Speed",
+    message:
+      "Triple extension from hang position, aggressive hip pop, rapid elbow turnover, and stable front rack catch.",
+  },
+  {
+    classNumber: 3,
+    subject: "Heavy Barbell Back Squat & Core Stability",
+    message:
+      "Low bar vs high bar back squats, breathing into weight belt, driving out of the hole, and heavy 5x5 protocols.",
+  },
+  {
+    classNumber: 4,
+    subject: "Snatch High Pull & Hip Contact Drills",
+    message:
+      "Snatch grip width measurement, brushing the hip crease, explosive vertical jump shrug, and bar path tracking.",
+  },
+  {
+    classNumber: 5,
+    subject: "Push Press & Split Jerk Footwork Dynamics",
+    message:
+      "Dip and drive mechanics, vertical torso alignment, split footwork chalk drill, and catching with locked elbows.",
+  },
+  {
+    classNumber: 6,
+    subject: "Deadlift Velocity & Deficit Pull Power",
+    message:
+      "1-inch deficit deadlifts, building explosive starting speed off floor, and heavy trap bar pulls for neural drive.",
+  },
+  {
+    classNumber: 7,
+    subject: "Full Power Clean & Front Squat Complex",
+    message:
+      "Transitioning from power clean into full squat clean, catching in deep squat, and standing tall with composure.",
+  },
+  {
+    classNumber: 8,
+    subject: "Overhead Squat Balance & Core Bracing",
+    message:
+      "Wide grip overhead squats, active shoulder push into the bar, maintaining balance over mid-foot, and bailout safety.",
+  },
+  {
+    classNumber: 9,
+    subject: "Clean and Jerk Combination Execution",
+    message:
+      "Putting clean and jerk together, pacing between clean and dip-drive, mental focus under heavy barbell loads.",
+  },
+  {
+    classNumber: 10,
+    subject: "Olympic Barbell Complex & High Power Output",
+    message:
+      "1 Clean + 1 Hang Clean + 1 Front Squat + 1 Jerk unbroken complexes for peak power endurance.",
+  },
+  {
+    classNumber: 11,
+    subject: "Spinal Decompression & Barbell Deload Flow",
+    message:
+      "Hanging bar decompressions, hip capsule mobilization with monster bands, and central nervous system recovery.",
+  },
+  {
+    classNumber: 12,
+    subject: "Olympic Lifting Max Testing & PR Celebration",
+    message:
+      "Testing 1RM/3RM Clean & Jerk and Snatch benchmarks, technical video analysis review, and ceremony.",
+  },
+];
+export const BATCH_3_SEPTEMBER_CURRICULUM = BATCH_3_CURRICULUM;
+
+// Dedicated Batch 4 Curriculum: Early Athletic Speed, Agility & Plyometrics (06:00 AM - 07:00 AM TTS)
+export const BATCH_4_CURRICULUM = [
+  {
+    classNumber: 1,
+    subject: "Athletic Movement Screen & Dynamic Primer",
+    message:
+      "Linear dynamic warmup, A-skips, B-skips, ankle stiffness drills, and multi-planar joint preparation.",
+  },
+  {
+    classNumber: 2,
+    subject: "Linear Acceleration & 10m Sprint Starts",
+    message:
+      "45-degree forward lean posture, positive shin angles, explosive first three steps, and wall acceleration drills.",
+  },
+  {
+    classNumber: 3,
+    subject: "Multi-Directional Agility & Lateral Shuffle",
+    message:
+      "Lateral bounding, low center of gravity shuffles, cone drill reactions, and knee stabilization cues.",
+  },
+  {
+    classNumber: 4,
+    subject: "Deceleration Mechanics & Landing Control",
+    message:
+      "Bilateral stick-and-land mechanics, shock absorption through ankles/knees/hips, and preventing valgus collapse.",
+  },
+  {
+    classNumber: 5,
+    subject: "Box Jumps & Explosive Vertical Power",
+    message:
+      "Step-down plyometric box jumps, triple extension power, seated explosive jumps, and landing soft on balls of feet.",
+  },
+  {
+    classNumber: 6,
+    subject: "Pro Agility (5-10-5 Shuttle) Benchmark",
+    message:
+      "Pro agility shuttle setup, touch-and-turn pivot mechanics, crossover steps, and timed sprint runs.",
+  },
+  {
+    classNumber: 7,
+    subject: "Depth Jumps & Reactive Elastic Stiffness",
+    message:
+      "18-inch box depth drops, minimizing ground contact time, rebound vertical jumps, and Achilles tendon stiffness.",
+  },
+  {
+    classNumber: 8,
+    subject: "Medicine Ball Rotational Throws & Core Power",
+    message:
+      "Rotational scoop throws against solid wall, transverse plane force transmission, and anti-flexion bracing.",
+  },
+  {
+    classNumber: 9,
+    subject: "Agility Ladder Footwork & Coordination",
+    message:
+      "Ickey shuffle, in-out fast feet, reactive tennis ball drops, and spatial awareness under fatigue.",
+  },
+  {
+    classNumber: 10,
+    subject: "Sled Pushes & Resisted Sprint Acceleration",
+    message:
+      "Heavy prowler sled push sprints, overcoming static inertia, leg drive turnover, and anaerobic power output.",
+  },
+  {
+    classNumber: 11,
+    subject: "Joint Restoration, Ankle Mobility & Soft Tissue",
+    message:
+      "Calf and Achilles fascial release, band-assisted ankle mobilization, hamstring stretches, and mobility.",
+  },
+  {
+    classNumber: 12,
+    subject: "Athletic Combine Benchmark & Graduation",
+    message:
+      "Official 10m sprint, vertical jump measurement, pro agility shuttle scores, and athletic graduation awards.",
+  },
+];
+
+// Dedicated Batch 5 Curriculum: Tactical Conditioning & Metabolic Stamina (08:00 AM - 09:00 AM TTS)
+export const BATCH_5_CURRICULUM = [
+  {
+    classNumber: 1,
+    subject: "Metabolic Conditioning Baseline & Pacing Test",
+    message:
+      "500m rowing sprint benchmark, breathing rhythm, lactate threshold awareness, and heart rate recovery rate.",
+  },
+  {
+    classNumber: 2,
+    subject: "Kettlebell Swing Mechanics & Hip Snap",
+    message:
+      "Russian vs American kettlebell swings, posterior hinge snap, avoiding shoulder elevation, and continuous rhythm.",
+  },
+  {
+    classNumber: 3,
+    subject: "Tactical Sandbag Carries & Core Endurance",
+    message:
+      "Front bear-hug sandbag carries, shoulder carries, pacing under heavy unstable load, and grip endurance.",
+  },
+  {
+    classNumber: 4,
+    subject: "EMOM Aerobic Conditioning (SkiErg & Burpees)",
+    message:
+      "16-minute Every Minute on the Minute (EMOM): alternating SkiErg calories with chest-to-floor burpees.",
+  },
+  {
+    classNumber: 5,
+    subject: "Kettlebell Clean & Push Press Density",
+    message:
+      "Double kettlebell cleans, rack hold breathing, push press dip-drive, and building upper-body stamina.",
+  },
+  {
+    classNumber: 6,
+    subject: "Assault Bike Sprint Ladders & Mental Resilience",
+    message:
+      "10-20-30 second calorie sprint ladders on Assault AirBike with active recovery intervals.",
+  },
+  {
+    classNumber: 7,
+    subject: "Battle Rope Waves & Rotational Slams",
+    message:
+      "Alternating waves, double slams, lateral wave lunges, and sustained upper extremity anaerobic capacity.",
+  },
+  {
+    classNumber: 8,
+    subject: "Farmer Walk Grip Gauntlet & Trap Stamina",
+    message:
+      "Heavy trap bar farmer walks for distance, suitcase carries, dead hangs from pullup bar, and pinch grip hold.",
+  },
+  {
+    classNumber: 9,
+    subject: "Cross-Training AMRAP Circuit (Chippers)",
+    message:
+      "20-minute As Many Rounds As Possible: wall balls, kettlebell snatches, box jump-overs, and rowing.",
+  },
+  {
+    classNumber: 10,
+    subject: "Tactical Obstacle Course & Work Capacity",
+    message:
+      "Heavy tire flips, sled drags, sandbag clean-over-shoulder, and continuous pacing under metabolic fatigue.",
+  },
+  {
+    classNumber: 11,
+    subject: "Diaphragmatic Recovery & Heat Regulation",
+    message:
+      "Parasympathetic recovery drills, controlled nasal breathing, hip opener flows, and spinal mobility.",
+  },
+  {
+    classNumber: 12,
+    subject: "Grand Metabolic Gauntlet & Cycle Certification",
+    message:
+      "The ultimate 12-minute work capacity test, milestone badges, performance score recording, and celebration.",
+  },
+];
+
+// Dedicated Batch 6 Curriculum: Night Shift Power & Athletic Durability (08:00 PM - 09:00 PM MWF)
+export const BATCH_6_CURRICULUM = [
+  {
+    classNumber: 1,
+    subject: "Postural Decompression & Evening Warmup Flow",
+    message:
+      "Reversing desk posture, thoracic extension with foam rollers, glute activation, and evening joint prep.",
+  },
+  {
+    classNumber: 2,
+    subject: "Lower Body Bilateral Power & Trap Bar Deadlifts",
+    message:
+      "Trap bar high handle deadlifts, vertical torso alignment, quadriceps and glute drive, and sub-maximal loading.",
+  },
+  {
+    classNumber: 3,
+    subject: "Upper Body Posterior Chain & Face Pull Dynamics",
+    message:
+      "Banded and cable face pulls, chest-supported dumbbell rows, external shoulder rotation, and posture building.",
+  },
+  {
+    classNumber: 4,
+    subject: "Core Bracing & Anti-Extension Stability",
+    message:
+      "Ab wheel rollouts, dead bugs with kettlebell counterbalance, hollow body holds, and lumbar protection.",
+  },
+  {
+    classNumber: 5,
+    subject: "Kettlebell Snatch Progressions & Hip Snap",
+    message:
+      "Single-arm kettlebell high pulls to snatches, punch-through at lockout, and explosive posterior hip snap.",
+  },
+  {
+    classNumber: 6,
+    subject: "Evening Metabolic Density & Controlled Pace",
+    message:
+      "Dumbbell thrusters, rowing steady-state intervals, jump rope double-unders, and aerobic tempo maintenance.",
+  },
+  {
+    classNumber: 7,
+    subject: "Unilateral Strength & Step-Up Overload",
+    message:
+      "High box dumbbell step-ups, single-leg calf raises, balance stability under fatigue, and hip stabilizer work.",
+  },
+  {
+    classNumber: 8,
+    subject: "Overhead Dumbbell Push Press & Core Lockout",
+    message:
+      "Neutral-grip dumbbell overhead pressing, slight leg dip, strict overhead finish, and tricep pushdown burnout.",
+  },
+  {
+    classNumber: 9,
+    subject: "Loaded Heavy Carries & Evening Grit",
+    message:
+      "Dual dumbbell farmer walks, zercher barbell carry, core anti-lateral flexion, and forearm grip stamina.",
+  },
+  {
+    classNumber: 10,
+    subject: "Full-Body Functional Strength Circuit",
+    message:
+      "Kettlebell renegade rows, pushups, goblet squats, and sled pushes for total-body athletic durability.",
+  },
+  {
+    classNumber: 11,
+    subject: "Fascial Release & Parasympathetic Sleep Prep",
+    message:
+      "Deep tissue release, hamstring contract-relax stretching, guided down-regulation breathing for restful sleep.",
+  },
+  {
+    classNumber: 12,
+    subject: "Final Durability Assessment & Milestone PRs",
+    message:
+      "Functional movement re-test, strength benchmark verification, awards presentation, and graduation toast.",
+  },
+];
+
+// Map of all batch-specific curricula
+export const BATCH_CURRICULUMS = {
+  "BATCH-01": BATCH_1_CURRICULUM,
+  "BATCH-02": BATCH_2_CURRICULUM,
+  "BATCH-03": BATCH_3_CURRICULUM,
+  "BATCH-04": BATCH_4_CURRICULUM,
+  "BATCH-05": BATCH_5_CURRICULUM,
+  "BATCH-06": BATCH_6_CURRICULUM,
+};
 
 export const SEED_HOLIDAYS = [
   {
@@ -372,7 +765,7 @@ export function calculateSequentialMapping(daysList, totalClasses = 12, startDat
       const classNum = count + 1;
       const weekNum = Math.floor(count / cleanDays.length) + 1;
       const dayIndex = count % cleanDays.length;
-      const mappedDayName = cleanDays[dayIndex];
+      const mappedDayName = dayName;
 
       const yyyy = currentDate.getFullYear();
       const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
@@ -430,15 +823,15 @@ export function resolveBatchNames(batchIds = []) {
   return list.map((b) => b.shortName || b.name || b.id).join(" • ");
 }
 
-// Generate Initial Mock Data for Master Scheduled Class Programs (Reusable Programs)
+// Generate Initial Mock Data for Master Scheduled Class Programs (Reusable Programs with Batch-Specific Curricula)
 function createSeedMasterSchedules() {
-  // 1. Reusable Functional Strength Program (Assigned to BATCH 1 & BATCH 2)
+  // 1. Batch 1 Program: Morning Functional Strength & Core Conditioning (Assigned to BATCH 1)
   const mcs1 = {
     id: "mcs_001",
-    name: "12-Class Functional Strength Foundations",
-    batchIds: ["BATCH-01", "BATCH-02"],
+    name: "12-Class Functional Strength & Core Conditioning",
+    batchIds: ["BATCH-01"],
     batchId: "BATCH-01",
-    batchName: "BATCH 1 • BATCH 2",
+    batchName: "BATCH 1",
     shift: "06:00 AM",
     timing: "06:00 AM - 07:00 AM",
     startTime: "06:00 AM",
@@ -451,43 +844,43 @@ function createSeedMasterSchedules() {
     totalClasses: 12,
     capacity: 28,
     status: "Active",
-    startDate: "2026-09-02", // September 2026 (Active Operational Month)
+    startDate: "2026-08-31", // Aligned to Monday
     description:
-      "Primary 12-class functional strength curriculum covering foundational movement mechanics, bilateral squats, hinge, core bracing, and progressive barbell overload. Assigned to multiple morning batches.",
+      "Early morning foundational strength curriculum targeting movement assessment, bilateral squatting mechanics, posterior chain activation, core bracing, and progressive barbell overload.",
     createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 2. Reusable Athletic Conditioning Program (Assigned to BATCH 4 & BATCH 5)
+  // 2. Batch 2 Program: Hypertrophy & Barbell Fundamentals (Assigned to BATCH 2)
   const mcs2 = {
     id: "mcs_002",
-    name: "12-Class Athletic Conditioning & Agility",
-    batchIds: ["BATCH-04", "BATCH-05"],
-    batchId: "BATCH-04",
-    batchName: "BATCH 4 • BATCH 5",
-    shift: "06:00 AM",
-    timing: "06:00 AM - 07:00 AM",
-    startTime: "06:00 AM",
-    endTime: "07:00 AM",
-    daysPattern: "TTS",
-    daysLabel: "Tuesday • Thursday • Saturday",
-    daysList: ["Tuesday", "Thursday", "Saturday"],
-    coachId: "TRN-103",
-    coachName: "Robert Creflo",
+    name: "12-Class Hypertrophy & Barbell Fundamentals",
+    batchIds: ["BATCH-02"],
+    batchId: "BATCH-02",
+    batchName: "BATCH 2",
+    shift: "08:00 AM",
+    timing: "08:00 AM - 09:00 AM",
+    startTime: "08:00 AM",
+    endTime: "09:00 AM",
+    daysPattern: "MWF",
+    daysLabel: "Monday • Wednesday • Friday",
+    daysList: ["Monday", "Wednesday", "Friday"],
+    coachId: "TRN-102",
+    coachName: "Ashwin Kumar",
     totalClasses: 12,
     capacity: 28,
     status: "Active",
-    startDate: "2026-10-06",
+    startDate: "2026-08-31", // Aligned to Monday
     description:
-      "High-output athletic conditioning, linear acceleration, multi-directional agility, barbell power cleans, and high-intensity metabolic intervals. Reusable across morning TTS shifts.",
+      "Mid-morning hypertrophy and barbell mastery program designed to build lean muscle mass, strict movement tempo, and upper/lower body symmetry.",
     createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 3. Evening Hypertrophy Program (Assigned to BATCH 3)
+  // 3. Batch 3 Program: Prime Strength & Olympic Lifting (Assigned to BATCH 3)
   const mcs3 = {
     id: "mcs_003",
-    name: "12-Class Hypertrophy & Power Complex",
+    name: "12-Class Prime Strength & Olympic Lifting",
     batchIds: ["BATCH-03"],
     batchId: "BATCH-03",
     batchName: "BATCH 3",
@@ -503,43 +896,95 @@ function createSeedMasterSchedules() {
     totalClasses: 12,
     capacity: 28,
     status: "Active",
-    startDate: "2026-09-02", // September 2026 (This Month)
+    startDate: "2026-08-31", // Aligned to Monday
     description:
-      "Dedicated September hypertrophy curriculum for evening athletes and working professionals with progressive overload and lactate endurance.",
+      "High-intensity evening strength and Olympic lifting program focusing on power cleans, snatches, explosive triple extension, and maximum force generation.",
+    createdAt: new Date(Date.now() - 10 * 86400000).toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // 4. Batch 4 Program: Early Athletic Speed, Agility & Plyometrics (Assigned to BATCH 4)
+  const mcs4 = {
+    id: "mcs_004",
+    name: "12-Class Athletic Speed, Agility & Plyometrics",
+    batchIds: ["BATCH-04"],
+    batchId: "BATCH-04",
+    batchName: "BATCH 4",
+    shift: "06:00 AM",
+    timing: "06:00 AM - 07:00 AM",
+    startTime: "06:00 AM",
+    endTime: "07:00 AM",
+    daysPattern: "TTS",
+    daysLabel: "Tuesday • Thursday • Saturday",
+    daysList: ["Tuesday", "Thursday", "Saturday"],
+    coachId: "TRN-103",
+    coachName: "Robert Creflo",
+    totalClasses: 12,
+    capacity: 28,
+    status: "Active",
+    startDate: "2026-09-01", // Aligned to Tuesday
+    description:
+      "Early morning TTS athletic program focusing on sprint acceleration, multi-directional footwork, deceleration control, and reactive plyometric power.",
     createdAt: new Date(Date.now() - 8 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 4. Floor Masterclass & Durability (Assigned to BATCH 6)
-  const mcs4 = {
-    id: "mcs_004",
-    name: "12-Class Floor Masterclass & Durability",
-    batchIds: ["BATCH-06"],
-    batchId: "BATCH-06",
-    batchName: "BATCH 6",
-    shift: "06:30 PM",
-    timing: "06:30 PM - 07:30 PM",
-    startTime: "06:30 PM",
-    endTime: "07:30 PM",
+  // 5. Batch 5 Program: Tactical Conditioning & Metabolic Stamina (Assigned to BATCH 5)
+  const mcs5 = {
+    id: "mcs_005",
+    name: "12-Class Tactical Conditioning & Metabolic Stamina",
+    batchIds: ["BATCH-05"],
+    batchId: "BATCH-05",
+    batchName: "BATCH 5",
+    shift: "08:00 AM",
+    timing: "08:00 AM - 09:00 AM",
+    startTime: "08:00 AM",
+    endTime: "09:00 AM",
     daysPattern: "TTS",
     daysLabel: "Tuesday • Thursday • Saturday",
     daysList: ["Tuesday", "Thursday", "Saturday"],
+    coachId: "TRN-101",
+    coachName: "Dolliee Ellens",
+    totalClasses: 12,
+    capacity: 28,
+    status: "Active",
+    startDate: "2026-09-01", // Aligned to Tuesday
+    description:
+      "TTS mid-morning endurance, high-density kettlebell complexes, tactical conditioning, and cardiovascular resilience for functional stamina.",
+    createdAt: new Date(Date.now() - 6 * 86400000).toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  // 6. Batch 6 Program: Night Shift Power & Athletic Durability (Assigned to BATCH 6)
+  const mcs6 = {
+    id: "mcs_006",
+    name: "12-Class Night Shift Power & Athletic Durability",
+    batchIds: ["BATCH-06"],
+    batchId: "BATCH-06",
+    batchName: "BATCH 6",
+    shift: "08:00 PM",
+    timing: "08:00 PM - 09:00 PM",
+    startTime: "08:00 PM",
+    endTime: "09:00 PM",
+    daysPattern: "MWF",
+    daysLabel: "Monday • Wednesday • Friday",
+    daysList: ["Monday", "Wednesday", "Friday"],
     coachId: "TRN-106",
     coachName: "F Coach",
     totalClasses: 12,
     capacity: 28,
     status: "Active",
-    startDate: "2026-10-06",
+    startDate: "2026-08-31", // Aligned to Monday
     description:
-      "Floor masterclass, metabolic intervals, athletic durability, and functional stamina for evening shifts.",
+      "Late evening power, functional stamina, postural realignment, and athletic durability tailored for evening athletes and working professionals.",
     createdAt: new Date(Date.now() - 4 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  // 5. Reusable Program Template (Unassigned, ready to assign to batches)
-  const mcs5 = {
-    id: "mcs_005",
-    name: "12-Class Olympic Lifting & Power Specialization",
+  // 7. Standalone Reusable Program Template (Unassigned, ready to assign to any batch)
+  const mcs7 = {
+    id: "mcs_007",
+    name: "12-Class Functional Movement Essentials (Template)",
     batchIds: [],
     batchId: "",
     batchName: "Reusable Template (Unassigned)",
@@ -557,34 +1002,42 @@ function createSeedMasterSchedules() {
     status: "Active",
     startDate: "2026-10-05",
     description:
-      "Olympic weightlifting fundamentals, power cleans, snatch progressions, triple extension, and explosive energy transfer. Standalone reusable curriculum ready to assign to batches.",
+      "Modular movement prep, hinge, squat, pull, press, and mobility foundation program. Ready to assign to new batches or custom cycles.",
     createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
-  return [mcs1, mcs2, mcs3, mcs4, mcs5];
+  return [mcs1, mcs2, mcs3, mcs4, mcs5, mcs6, mcs7];
 }
 
-// Generate Items for a Master Schedule
+// Generate Items for a Master Schedule with Batch-Specific Curricula
 function createItemsForSchedule(schedule, curriculum = null) {
   let activeCurriculum = curriculum;
   if (!activeCurriculum) {
-    if (
-      schedule.id === "mcs_003" ||
-      (Array.isArray(schedule.batchIds) && schedule.batchIds.includes("BATCH-03")) ||
-      schedule.batchId === "BATCH-03"
-    ) {
-      activeCurriculum = BATCH_3_SEPTEMBER_CURRICULUM;
-    } else if (
-      schedule.id === "mcs_002" ||
-      schedule.daysPattern === "TTS" ||
-      (Array.isArray(schedule.batchIds) && schedule.batchIds.includes("BATCH-04"))
-    ) {
-      activeCurriculum = ALTERNATIVE_CURRICULUM_ATHLETIC;
+    const assignedBatchId =
+      Array.isArray(schedule.batchIds) && schedule.batchIds.length > 0
+        ? schedule.batchIds[0]
+        : schedule.batchId;
+
+    if (assignedBatchId && BATCH_CURRICULUMS[assignedBatchId]) {
+      activeCurriculum = BATCH_CURRICULUMS[assignedBatchId];
+    } else if (schedule.id === "mcs_001") {
+      activeCurriculum = BATCH_1_CURRICULUM;
+    } else if (schedule.id === "mcs_002") {
+      activeCurriculum = BATCH_2_CURRICULUM;
+    } else if (schedule.id === "mcs_003") {
+      activeCurriculum = BATCH_3_CURRICULUM;
+    } else if (schedule.id === "mcs_004") {
+      activeCurriculum = BATCH_4_CURRICULUM;
+    } else if (schedule.id === "mcs_005") {
+      activeCurriculum = BATCH_5_CURRICULUM;
+    } else if (schedule.id === "mcs_006") {
+      activeCurriculum = BATCH_6_CURRICULUM;
     } else {
       activeCurriculum = DEFAULT_12_CLASS_CURRICULUM;
     }
   }
+
   const mapping = calculateSequentialMapping(
     schedule.daysList,
     schedule.totalClasses || 12,
@@ -732,9 +1185,31 @@ function writeStorage(key, data) {
 
 export function getMasterSchedules() {
   const seedSchedules = createSeedMasterSchedules();
-  let schedules = readStorage(STORAGE_KEY_MASTER_SCHEDULES, seedSchedules);
-  const batches = getBatches();
 
+  // Version-based auto-migration to initialize batch-distinct curricula
+  try {
+    const currentVersion = localStorage.getItem(STORAGE_KEY_CURRICULUM_VERSION);
+    if (currentVersion !== SEED_CURRICULUM_VERSION) {
+      writeStorage(STORAGE_KEY_MASTER_SCHEDULES, seedSchedules);
+
+      const allItems = [];
+      const allSessions = [];
+      seedSchedules.forEach((sch) => {
+        const items = createItemsForSchedule(sch);
+        allItems.push(...items);
+        const sessions = generateSessionsForSchedule(sch, items);
+        allSessions.push(...sessions);
+      });
+
+      writeStorage(STORAGE_KEY_MASTER_ITEMS, allItems);
+      writeStorage(STORAGE_KEY_SESSIONS, allSessions);
+      localStorage.setItem(STORAGE_KEY_CURRICULUM_VERSION, SEED_CURRICULUM_VERSION);
+    }
+  } catch (err) {
+    console.error("Curriculum migration error:", err);
+  }
+
+  let schedules = readStorage(STORAGE_KEY_MASTER_SCHEDULES, seedSchedules);
   let needsSync = false;
 
   // Normalize all schedules to have batchIds array and resolved batchName
@@ -755,40 +1230,6 @@ export function getMasterSchedules() {
     }
     return updated;
   });
-
-  // Seed migration: ensure mcs_001 is assigned to multiple batches (BATCH-01 and BATCH-02)
-  const mcs1 = schedules.find((s) => s.id === "mcs_001");
-  if (mcs1 && (!mcs1.batchIds.includes("BATCH-02") || mcs1.name === "MWF Morning Program")) {
-    mcs1.name = "12-Class Functional Strength Foundations";
-    mcs1.batchIds = ["BATCH-01", "BATCH-02"];
-    mcs1.batchId = "BATCH-01";
-    mcs1.batchName = "BATCH 1 • BATCH 2";
-    mcs1.startDate = "2026-09-02";
-    needsSync = true;
-  }
-
-  // Seed migration: ensure mcs_002 is assigned to BATCH-04 and BATCH-05
-  const mcs2 = schedules.find((s) => s.id === "mcs_002");
-  if (mcs2 && (!mcs2.batchIds.includes("BATCH-05") || mcs2.name === "MWF 8 AM Program")) {
-    mcs2.name = "12-Class Athletic Conditioning & Agility";
-    mcs2.batchIds = ["BATCH-04", "BATCH-05"];
-    mcs2.batchId = "BATCH-04";
-    mcs2.batchName = "BATCH 4 • BATCH 5";
-    mcs2.daysPattern = "TTS";
-    mcs2.daysList = ["Tuesday", "Thursday", "Saturday"];
-    mcs2.daysLabel = "Tuesday • Thursday • Saturday";
-    needsSync = true;
-  }
-
-  // Ensure mcs_005 exists as reusable unassigned template
-  const hasMcs5 = schedules.some((s) => s.id === "mcs_005");
-  if (!hasMcs5) {
-    const seed5 = seedSchedules.find((s) => s.id === "mcs_005");
-    if (seed5) {
-      schedules.push(seed5);
-      needsSync = true;
-    }
-  }
 
   if (needsSync) {
     writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
@@ -871,9 +1312,23 @@ export function getMasterSchedulesByBatchId(batchId) {
 export function getScheduleItems(masterScheduleId) {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
-    if (!raw) return [];
+    if (!raw) {
+      getMasterSchedules();
+      const updatedRaw = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+      if (!updatedRaw) return [];
+      const all = JSON.parse(updatedRaw);
+      return Array.isArray(all) ? all.filter((i) => i.masterScheduleId === masterScheduleId) : [];
+    }
     const all = JSON.parse(raw);
-    return Array.isArray(all) ? all.filter((i) => i.masterScheduleId === masterScheduleId) : [];
+    let items = Array.isArray(all) ? all.filter((i) => i.masterScheduleId === masterScheduleId) : [];
+    if (items.length === 0) {
+      const schedule = getMasterScheduleById(masterScheduleId);
+      if (schedule) {
+        items = createItemsForSchedule(schedule);
+        writeStorage(STORAGE_KEY_MASTER_ITEMS, [...all, ...items]);
+      }
+    }
+    return items;
   } catch {
     return [];
   }

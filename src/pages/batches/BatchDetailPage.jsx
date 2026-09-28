@@ -9,8 +9,6 @@ import {
   UserCheck,
   Edit3,
   Dumbbell,
-  Flame,
-  MapPin,
   Sparkles,
   ArrowLeft,
   Search,
@@ -24,12 +22,8 @@ import {
   X,
   Plus,
   Phone,
-  Mail,
   ShieldCheck,
-  ExternalLink,
-  BookOpen,
   Trash2,
-  UserPlus,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
@@ -350,20 +344,7 @@ export default function BatchDetailPage() {
     }));
   }, [sessions, batch, masterClassItems, masterSchedule]);
 
-  // Calculate batch-specific curriculum progress
-  const batchProgress = useMemo(() => {
-    const total = currentBatchSessions.length || 12;
-    const completed = currentBatchSessions.filter((s) => s.status === "COMPLETED").length;
-    const percent = Math.min(100, Math.round((completed / (total || 1)) * 100));
-    return { completed, total, percent };
-  }, [currentBatchSessions]);
 
-  // Other batches sharing this program
-  const sharedBatches = useMemo(() => {
-    if (!masterSchedule) return [];
-    const allAssigned = resolveAssignedBatches(masterSchedule.batchIds);
-    return allAssigned.filter((b) => b.id !== batch?.id);
-  }, [masterSchedule, batch]);
 
   const getTodayStrings = () => {
     const now = new Date();
@@ -732,7 +713,6 @@ export default function BatchDetailPage() {
         <div className="space-y-8">
           {/* Overview 3 Metric Cards */}
           <div>
-            <h3 className="text-lg font-bold text-foreground mb-4">Overview</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {/* Card 1: Members */}
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -777,168 +757,15 @@ export default function BatchDetailPage() {
 
           {/* Master Class Schedule Mapped to Batch Section */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Sparkles size={16} />
-                  </span>
-                  <h3 className="text-lg font-bold text-foreground">Scheduled Class Program</h3>
-                  {masterSchedule && (
-                    <span className="rounded-full bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 text-xs font-semibold">
-                      {masterSchedule.name}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Reusable master program curriculum tracked independently for {batch.name} (
-                  {batch.daysLabel}).
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                {masterSchedule && (
-                  <button
-                    type="button"
-                    onClick={() => setIsAssignProgramOpen(true)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent/20 transition-colors shadow-2xs cursor-pointer"
-                  >
-                    <Layers size={13} className="text-primary" />
-                    <span>Change Program</span>
-                  </button>
-                )}
-                <Link
-                  to="/admin/schedule/master-class"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent/20 transition-colors shadow-2xs"
-                  title="Open Master Class Schedule management"
-                >
-                  <ExternalLink size={13} />
-                  <span>Master Class Hub</span>
-                </Link>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Sparkles size={16} />
+              </span>
+              <h3 className="text-lg font-bold text-foreground">Scheduled Class Program</h3>
             </div>
 
             {masterSchedule ? (
               <div className="space-y-4">
-                {/* Master Schedule Meta Card */}
-                <div className="rounded-2xl border border-border bg-card/60 p-4 sm:p-5 backdrop-blur-sm shadow-sm space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 border-b border-border/60 pb-3.5">
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-base text-foreground">
-                          {masterSchedule.name}
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          {masterSchedule.status}
-                        </span>
-                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/25 px-2.5 py-0.5 text-[11px] font-semibold">
-                          <Layers size={11} />
-                          Reusable Program
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">
-                        {masterSchedule.description ||
-                          "Modular scheduled class program mapped sequentially across shifts and batch days."}
-                      </p>
-
-                      {/* Batches Assigned to this Program */}
-                      <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
-                        <span className="text-[11px] font-semibold text-muted-foreground">
-                          Assigned Batches:
-                        </span>
-                        {resolveAssignedBatches(masterSchedule.batchIds).map((b) => (
-                          <Link
-                            key={b.id}
-                            to={`/admin/batches/${b.id}`}
-                            className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold transition-colors ${
-                              b.id === batch.id
-                                ? "bg-primary text-background font-bold"
-                                : "bg-accent/40 text-foreground hover:bg-accent hover:underline"
-                            }`}
-                          >
-                            <span>{b.shortName || b.name}</span>
-                            {b.id === batch.id && (
-                              <span className="text-[9px] opacity-80">(This Batch)</span>
-                            )}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setIsAssignProgramOpen(true)}
-                        className="rounded-xl border border-border bg-card hover:bg-accent/20 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
-                      >
-                        Switch Program
-                      </button>
-                      <Link
-                        to="/admin/schedule/master-class"
-                        className="rounded-xl bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 text-xs font-bold transition-colors"
-                      >
-                        Edit in Master Hub
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* 4 Metadata Badges */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                    <div className="rounded-xl border border-border/70 bg-accent/10 px-3 py-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-                        Assigned Coach
-                      </span>
-                      <span className="font-bold text-foreground truncate block">
-                        {masterSchedule.coachName || "Dolliee Ellens"}
-                      </span>
-                    </div>
-
-                    <div className="rounded-xl border border-border/70 bg-accent/10 px-3 py-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-                        Curriculum
-                      </span>
-                      <span className="font-bold text-foreground truncate block">
-                        12 Classes • 4 Weeks
-                      </span>
-                    </div>
-
-                    <div className="rounded-xl border border-border/70 bg-accent/10 px-3 py-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-                        Batch Progress
-                      </span>
-                      <span className="font-bold text-foreground truncate block">
-                        {batchProgress.completed} / {batchProgress.total} Completed (
-                        {batchProgress.percent}%)
-                      </span>
-                    </div>
-
-                    <div className="rounded-xl border border-border/70 bg-accent/10 px-3 py-2">
-                      <span className="text-[10px] uppercase font-bold text-muted-foreground block">
-                        Shift & Days
-                      </span>
-                      <span className="font-bold text-foreground truncate block">
-                        {batch.daysPattern} • {batch.timingLabel}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Batch-specific progress track line */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
-                      <span>{batch.name} Curriculum Tracking</span>
-                      <span className="text-foreground font-bold">
-                        {batchProgress.percent}% Done
-                      </span>
-                    </div>
-                    <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-emerald-500 transition-all duration-500"
-                        style={{ width: `${batchProgress.percent}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 {/* Sessions Submodule Workflow Tabs inside Batch */}
                 <div className="flex flex-wrap items-center gap-2 border-b border-border/70 pb-3 pt-1">
