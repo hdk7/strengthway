@@ -2,11 +2,6 @@
 import { getBatches } from "./batchesService";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY_MASTER_SCHEDULES = STORAGE_KEYS.MASTER_SCHEDULES;
-export const STORAGE_KEY_MASTER_ITEMS = STORAGE_KEYS.MASTER_ITEMS;
-export const STORAGE_KEY_SESSIONS = STORAGE_KEYS.SESSIONS;
-export const STORAGE_KEY_HOLIDAYS = STORAGE_KEYS.HOLIDAYS;
-export const STORAGE_KEY_CURRICULUM_VERSION = STORAGE_KEYS.CURRICULUM_VERSION;
 export const SEED_CURRICULUM_VERSION = "2026-v4-batch-distinct-curriculums";
 
 // Default Coaches List matching prompt coaches
@@ -1188,9 +1183,9 @@ export function getMasterSchedules() {
 
   // Version-based auto-migration to initialize batch-distinct curricula
   try {
-    const currentVersion = localStorage.getItem(STORAGE_KEY_CURRICULUM_VERSION);
+    const currentVersion = localStorage.getItem(STORAGE_KEYS.CURRICULUM_VERSION);
     if (currentVersion !== SEED_CURRICULUM_VERSION) {
-      writeStorage(STORAGE_KEY_MASTER_SCHEDULES, seedSchedules);
+      writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, seedSchedules);
 
       const allItems = [];
       const allSessions = [];
@@ -1201,15 +1196,15 @@ export function getMasterSchedules() {
         allSessions.push(...sessions);
       });
 
-      writeStorage(STORAGE_KEY_MASTER_ITEMS, allItems);
-      writeStorage(STORAGE_KEY_SESSIONS, allSessions);
-      localStorage.setItem(STORAGE_KEY_CURRICULUM_VERSION, SEED_CURRICULUM_VERSION);
+      writeStorage(STORAGE_KEYS.MASTER_ITEMS, allItems);
+      writeStorage(STORAGE_KEYS.SESSIONS, allSessions);
+      localStorage.setItem(STORAGE_KEYS.CURRICULUM_VERSION, SEED_CURRICULUM_VERSION);
     }
   } catch (err) {
     console.error("Curriculum migration error:", err);
   }
 
-  let schedules = readStorage(STORAGE_KEY_MASTER_SCHEDULES, seedSchedules);
+  let schedules = readStorage(STORAGE_KEYS.MASTER_SCHEDULES, seedSchedules);
   let needsSync = false;
 
   // Normalize all schedules to have batchIds array and resolved batchName
@@ -1232,16 +1227,16 @@ export function getMasterSchedules() {
   });
 
   if (needsSync) {
-    writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
+    writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, schedules);
   }
 
   // Ensure curriculum items and batch sessions exist
   try {
-    const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     let allItems = rawItems ? JSON.parse(rawItems) : [];
     if (!Array.isArray(allItems)) allItems = [];
 
-    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     let allSessions = rawSessions ? JSON.parse(rawSessions) : [];
     if (!Array.isArray(allSessions)) allSessions = [];
 
@@ -1276,10 +1271,10 @@ export function getMasterSchedules() {
     });
 
     if (itemsUpdated) {
-      writeStorage(STORAGE_KEY_MASTER_ITEMS, allItems);
+      writeStorage(STORAGE_KEYS.MASTER_ITEMS, allItems);
     }
     if (sessionsUpdated) {
-      writeStorage(STORAGE_KEY_SESSIONS, allSessions);
+      writeStorage(STORAGE_KEYS.SESSIONS, allSessions);
     }
   } catch (err) {
     console.error("Error synchronizing master schedule items/sessions:", err);
@@ -1311,10 +1306,10 @@ export function getMasterSchedulesByBatchId(batchId) {
 
 export function getScheduleItems(masterScheduleId) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const raw = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     if (!raw) {
       getMasterSchedules();
-      const updatedRaw = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+      const updatedRaw = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
       if (!updatedRaw) return [];
       const all = JSON.parse(updatedRaw);
       return Array.isArray(all) ? all.filter((i) => i.masterScheduleId === masterScheduleId) : [];
@@ -1325,7 +1320,7 @@ export function getScheduleItems(masterScheduleId) {
       const schedule = getMasterScheduleById(masterScheduleId);
       if (schedule) {
         items = createItemsForSchedule(schedule);
-        writeStorage(STORAGE_KEY_MASTER_ITEMS, [...all, ...items]);
+        writeStorage(STORAGE_KEYS.MASTER_ITEMS, [...all, ...items]);
       }
     }
     return items;
@@ -1336,16 +1331,16 @@ export function getScheduleItems(masterScheduleId) {
 
 export function updateMasterClassItem(itemId, updates) {
   try {
-    const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     if (!rawItems) return null;
     const items = JSON.parse(rawItems);
     const idx = items.findIndex((i) => i.id === itemId);
     if (idx === -1) return null;
     items[idx] = { ...items[idx], ...updates };
-    writeStorage(STORAGE_KEY_MASTER_ITEMS, items);
+    writeStorage(STORAGE_KEYS.MASTER_ITEMS, items);
 
     // Also synchronize generated sessions for this class item across all batches
-    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     if (rawSessions) {
       const sessions = JSON.parse(rawSessions);
       const updatedSessions = sessions.map((s) => {
@@ -1358,7 +1353,7 @@ export function updateMasterClassItem(itemId, updates) {
         }
         return s;
       });
-      writeStorage(STORAGE_KEY_SESSIONS, updatedSessions);
+      writeStorage(STORAGE_KEYS.SESSIONS, updatedSessions);
     }
     return items[idx];
   } catch (e) {
@@ -1372,7 +1367,7 @@ export function addMasterClassItem(masterScheduleId, itemData = {}) {
   if (!schedule) return null;
 
   try {
-    const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     let allItems = rawItems ? JSON.parse(rawItems) : [];
     if (!Array.isArray(allItems)) allItems = [];
 
@@ -1405,7 +1400,7 @@ export function addMasterClassItem(masterScheduleId, itemData = {}) {
     };
 
     const updatedItems = [...allItems, newItem];
-    writeStorage(STORAGE_KEY_MASTER_ITEMS, updatedItems);
+    writeStorage(STORAGE_KEYS.MASTER_ITEMS, updatedItems);
 
     // Update totalClasses on schedule
     updateMasterSchedule(masterScheduleId, { totalClasses: nextClassNum });
@@ -1418,9 +1413,9 @@ export function addMasterClassItem(masterScheduleId, itemData = {}) {
         : [];
     if (assignedBatches.length > 0) {
       const generatedSessions = generateSessionsForSchedule(schedule, [newItem]);
-      const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+      const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
       const allSessions = rawSessions ? JSON.parse(rawSessions) : [];
-      writeStorage(STORAGE_KEY_SESSIONS, [...allSessions, ...generatedSessions]);
+      writeStorage(STORAGE_KEYS.SESSIONS, [...allSessions, ...generatedSessions]);
     }
 
     return newItem;
@@ -1432,7 +1427,7 @@ export function addMasterClassItem(masterScheduleId, itemData = {}) {
 
 export function deleteMasterClassItem(itemId) {
   try {
-    const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     if (!rawItems) return false;
     let allItems = JSON.parse(rawItems);
     if (!Array.isArray(allItems)) return false;
@@ -1471,18 +1466,18 @@ export function deleteMasterClassItem(itemId) {
     });
 
     const otherItems = allItems.filter((i) => i.masterScheduleId !== masterScheduleId);
-    writeStorage(STORAGE_KEY_MASTER_ITEMS, [...otherItems, ...renumbered]);
+    writeStorage(STORAGE_KEYS.MASTER_ITEMS, [...otherItems, ...renumbered]);
 
     if (schedule) {
       updateMasterSchedule(masterScheduleId, { totalClasses: renumbered.length });
     }
 
     // Synchronize sessions
-    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     if (rawSessions) {
       const allSessions = JSON.parse(rawSessions);
       const filteredSessions = allSessions.filter((s) => s.masterClassItemId !== itemId);
-      writeStorage(STORAGE_KEY_SESSIONS, filteredSessions);
+      writeStorage(STORAGE_KEYS.SESSIONS, filteredSessions);
     }
 
     return true;
@@ -1565,28 +1560,28 @@ export function createMasterSchedule(data, itemsData = []) {
 
   // Save Schedule
   const updatedSchedules = [newSchedule, ...schedules];
-  writeStorage(STORAGE_KEY_MASTER_SCHEDULES, updatedSchedules);
+  writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, updatedSchedules);
 
   // Save Items
   let allItems = [];
   try {
-    const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     allItems = rawItems ? JSON.parse(rawItems) : [];
   } catch {
     allItems = [];
   }
-  writeStorage(STORAGE_KEY_MASTER_ITEMS, [...allItems, ...items]);
+  writeStorage(STORAGE_KEYS.MASTER_ITEMS, [...allItems, ...items]);
 
   // Generate Sessions across all assigned batches
   const generatedSessions = generateSessionsForSchedule(newSchedule, items);
   let allSessions = [];
   try {
-    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     allSessions = rawSessions ? JSON.parse(rawSessions) : [];
   } catch {
     allSessions = [];
   }
-  writeStorage(STORAGE_KEY_SESSIONS, [...generatedSessions, ...allSessions]);
+  writeStorage(STORAGE_KEYS.SESSIONS, [...generatedSessions, ...allSessions]);
 
   return { schedule: newSchedule, items, sessions: generatedSessions };
 }
@@ -1629,7 +1624,7 @@ export function updateMasterSchedule(id, updates, itemsData) {
   };
 
   schedules[index] = updatedSchedule;
-  writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
+  writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, schedules);
 
   // Update Items if provided
   let newItems = [];
@@ -1652,10 +1647,10 @@ export function updateMasterSchedule(id, updates, itemsData) {
     });
 
     try {
-      const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+      const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
       const existingItems = rawItems ? JSON.parse(rawItems) : [];
       const filtered = existingItems.filter((i) => i.masterScheduleId !== id);
-      writeStorage(STORAGE_KEY_MASTER_ITEMS, [...filtered, ...newItems]);
+      writeStorage(STORAGE_KEYS.MASTER_ITEMS, [...filtered, ...newItems]);
     } catch (e) {
       console.error(e);
     }
@@ -1665,7 +1660,7 @@ export function updateMasterSchedule(id, updates, itemsData) {
 
   // Regenerate Sessions for all assigned batches
   if (newItems.length > 0) {
-    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     const existingSessions = rawSessions ? JSON.parse(rawSessions) : [];
     // Keep existing session statuses if already present
     const existingStatusMap = new Map();
@@ -1688,7 +1683,7 @@ export function updateMasterSchedule(id, updates, itemsData) {
     });
 
     const otherSessions = existingSessions.filter((s) => s.masterScheduleId !== id);
-    writeStorage(STORAGE_KEY_SESSIONS, [...newSessions, ...otherSessions]);
+    writeStorage(STORAGE_KEYS.SESSIONS, [...newSessions, ...otherSessions]);
   }
 
   return updatedSchedule;
@@ -1715,10 +1710,10 @@ export function assignBatchesToProgram(programId, batchIds) {
   const addedBatches = cleanBatchIds.filter((bId) => !oldBatchIds.includes(bId));
   const removedBatches = oldBatchIds.filter((bId) => !cleanBatchIds.includes(bId));
 
-  writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
+  writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, schedules);
 
   const items = getScheduleItems(programId);
-  const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+  const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
   let allSessions = rawSessions ? JSON.parse(rawSessions) : [];
 
   // Remove sessions for batches that are no longer assigned
@@ -1736,7 +1731,7 @@ export function assignBatchesToProgram(programId, batchIds) {
     });
   }
 
-  writeStorage(STORAGE_KEY_SESSIONS, allSessions);
+  writeStorage(STORAGE_KEYS.SESSIONS, allSessions);
   return schedule;
 }
 
@@ -1839,22 +1834,22 @@ export function toggleMasterScheduleStatus(id) {
   if (!schedule) return null;
 
   schedule.status = schedule.status === "Active" ? "Inactive" : "Active";
-  writeStorage(STORAGE_KEY_MASTER_SCHEDULES, schedules);
+  writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, schedules);
   return schedule;
 }
 
 export function deleteMasterSchedule(id) {
   const schedules = getMasterSchedules();
   const filtered = schedules.filter((s) => s.id !== id);
-  writeStorage(STORAGE_KEY_MASTER_SCHEDULES, filtered);
+  writeStorage(STORAGE_KEYS.MASTER_SCHEDULES, filtered);
 
   // Remove related items
   try {
-    const rawItems = localStorage.getItem(STORAGE_KEY_MASTER_ITEMS);
+    const rawItems = localStorage.getItem(STORAGE_KEYS.MASTER_ITEMS);
     if (rawItems) {
       const items = JSON.parse(rawItems);
       writeStorage(
-        STORAGE_KEY_MASTER_ITEMS,
+        STORAGE_KEYS.MASTER_ITEMS,
         items.filter((i) => i.masterScheduleId !== id),
       );
     }
@@ -1864,11 +1859,11 @@ export function deleteMasterSchedule(id) {
 
   // Remove related sessions
   try {
-    const rawSessions = localStorage.getItem(STORAGE_KEY_SESSIONS);
+    const rawSessions = localStorage.getItem(STORAGE_KEYS.SESSIONS);
     if (rawSessions) {
       const sessions = JSON.parse(rawSessions);
       writeStorage(
-        STORAGE_KEY_SESSIONS,
+        STORAGE_KEYS.SESSIONS,
         sessions.filter((s) => s.masterScheduleId !== id),
       );
     }
@@ -1884,7 +1879,7 @@ export function deleteMasterSchedule(id) {
 export function getSessions() {
   // Ensure master schedules are loaded first so sessions get seeded if needed
   getMasterSchedules();
-  const sessions = readStorage(STORAGE_KEY_SESSIONS, []);
+  const sessions = readStorage(STORAGE_KEYS.SESSIONS, []);
 
   // Synchronize status with current date (today -> TODAY, past -> COMPLETED, future -> SCHEDULED)
   const now = new Date();
@@ -1909,7 +1904,7 @@ export function getSessions() {
   });
 
   if (updated) {
-    writeStorage(STORAGE_KEY_SESSIONS, synchronizedSessions);
+    writeStorage(STORAGE_KEYS.SESSIONS, synchronizedSessions);
     return synchronizedSessions;
   }
 
@@ -1922,7 +1917,7 @@ export function updateSessionStatus(sessionId, newStatus) {
   if (index === -1) return null;
 
   sessions[index].status = newStatus;
-  writeStorage(STORAGE_KEY_SESSIONS, sessions);
+  writeStorage(STORAGE_KEYS.SESSIONS, sessions);
   return sessions[index];
 }
 
@@ -1932,14 +1927,14 @@ export function updateSession(sessionId, updates) {
   if (index === -1) return null;
 
   sessions[index] = { ...sessions[index], ...updates };
-  writeStorage(STORAGE_KEY_SESSIONS, sessions);
+  writeStorage(STORAGE_KEYS.SESSIONS, sessions);
   return sessions[index];
 }
 
 // --- HOLIDAYS API ---
 
 export function getHolidays() {
-  let holidays = readStorage(STORAGE_KEY_HOLIDAYS, SEED_HOLIDAYS);
+  let holidays = readStorage(STORAGE_KEYS.HOLIDAYS, SEED_HOLIDAYS);
   let needsSync = false;
 
   // Clean out legacy placeholder entries like "Annual Strength Games"
@@ -1968,7 +1963,7 @@ export function getHolidays() {
 
   if (needsSync) {
     holidays.sort((a, b) => new Date(a.date) - new Date(b.date));
-    writeStorage(STORAGE_KEY_HOLIDAYS, holidays);
+    writeStorage(STORAGE_KEYS.HOLIDAYS, holidays);
   }
 
   return holidays;
@@ -1989,7 +1984,7 @@ export function addHoliday(holidayData) {
   };
 
   const updated = [...holidays, newHoliday].sort((a, b) => new Date(a.date) - new Date(b.date));
-  writeStorage(STORAGE_KEY_HOLIDAYS, updated);
+  writeStorage(STORAGE_KEYS.HOLIDAYS, updated);
   return newHoliday;
 }
 
@@ -2014,13 +2009,13 @@ export function updateHoliday(id, holidayData) {
   };
 
   const sorted = [...holidays].sort((a, b) => new Date(a.date) - new Date(b.date));
-  writeStorage(STORAGE_KEY_HOLIDAYS, sorted);
+  writeStorage(STORAGE_KEYS.HOLIDAYS, sorted);
   return holidays[index];
 }
 
 export function deleteHoliday(id) {
   const holidays = getHolidays();
   const filtered = holidays.filter((h) => h.id !== id);
-  writeStorage(STORAGE_KEY_HOLIDAYS, filtered);
+  writeStorage(STORAGE_KEYS.HOLIDAYS, filtered);
   return true;
 }

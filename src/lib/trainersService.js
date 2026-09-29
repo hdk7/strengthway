@@ -7,8 +7,6 @@ import portfolioPhoto2 from "@/assets/portfolio-photo-2.jpg";
 import portfolioPhoto5 from "@/assets/portfolio-photo-5.jpg";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY = STORAGE_KEYS.TRAINERS;
-
 export const TRAINER_PHOTOS = {
   "TRN-101": trainer3,
   "TRN-102": portfolioPhoto3,
@@ -23,7 +21,6 @@ export const SEED_TRAINERS = [
     id: "TRN-101",
     name: "Dolliee Ellens",
     gender: "Female",
-    specialization: "Functional Fitness",
     experience: "5 Years",
     phone: "+91 98200 11223",
     email: "dolliee.ellens@strengthway.com",
@@ -31,16 +28,12 @@ export const SEED_TRAINERS = [
     status: "Active",
     bio: "Certified CrossFit Level 2 trainer specializing in high-intensity functional movements, endurance, and mobility optimization. Committed to helping athletes move pain-free with maximum power.",
     photo: trainer3,
-    floorZone: "Ground Floor Turf & Rig Zone",
     certifications: [
       "CrossFit Level 2 Coach",
       "CSCS Specialist",
       "ACE Certified Personal Trainer",
       "Functional Movement Screen (FMS)",
     ],
-    languages: ["English", "Hindi"],
-    rating: 4.9,
-    reviewsCount: 84,
     quote:
       "Consistency beats intensity every single day. Build the habits, and the results become inevitable.",
     programs: [
@@ -53,7 +46,6 @@ export const SEED_TRAINERS = [
       clients: "250+",
       successRate: "98%",
       hours: "1,400+",
-      rating: "4.9",
     },
     joinedAt: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -61,7 +53,6 @@ export const SEED_TRAINERS = [
     id: "TRN-102",
     name: "Ashwin Kumar",
     gender: "Male",
-    specialization: "Strength & Conditioning",
     experience: "7 Years",
     phone: "+91 98450 33445",
     email: "ashwin.kumar@strengthway.com",
@@ -69,16 +60,12 @@ export const SEED_TRAINERS = [
     status: "Active",
     bio: "CSCS certified strength and conditioning specialist. Trains competitive powerlifters and athletes in barbell mechanics, progressive overload, and athletic speed-strength development.",
     photo: portfolioPhoto3,
-    floorZone: "Heavy Iron & Olympic Platforms",
     certifications: [
       "CSCS (Certified Strength & Conditioning Specialist)",
       "USA Weightlifting (USAW-1)",
       "ISSA Elite Master Trainer",
       "Precision Nutrition Level 1",
     ],
-    languages: ["English", "Hindi", "Tamil"],
-    rating: 4.95,
-    reviewsCount: 112,
     quote:
       "True strength is built from precision, patience, and unwavering discipline under the bar.",
     programs: [
@@ -91,7 +78,6 @@ export const SEED_TRAINERS = [
       clients: "380+",
       successRate: "99%",
       hours: "2,200+",
-      rating: "5.0",
     },
     joinedAt: new Date(Date.now() - 320 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -99,7 +85,6 @@ export const SEED_TRAINERS = [
     id: "TRN-103",
     name: "Robert Creflo",
     gender: "Male",
-    specialization: "Hypertrophy & Rehabilitation",
     experience: "6 Years",
     phone: "+91 97110 55667",
     email: "robert.creflo@strengthway.com",
@@ -107,16 +92,12 @@ export const SEED_TRAINERS = [
     status: "Active",
     bio: "Focuses on biomechanics, muscle hypertrophy, and post-injury athletic rehabilitation with custom resistance periodization. Helps trainees rebuild joint resilience and sculpt symmetrical muscle.",
     photo: trainer2,
-    floorZone: "Resistance Machine & Rehab Studio",
     certifications: [
       "NASM Corrective Exercise Specialist (CES)",
       "EXOS Performance Specialist",
       "Sports Physical Therapy Associate",
       "TRX Suspension Master Coach",
     ],
-    languages: ["English", "Hindi"],
-    rating: 4.88,
-    reviewsCount: 76,
     quote:
       "Rebuilding strength requires respect for anatomy and relentless focus on flawless form.",
     programs: [
@@ -129,7 +110,6 @@ export const SEED_TRAINERS = [
       clients: "290+",
       successRate: "97%",
       hours: "1,800+",
-      rating: "4.9",
     },
     joinedAt: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -137,7 +117,6 @@ export const SEED_TRAINERS = [
     id: "TRN-104",
     name: "Bharath V",
     gender: "Male",
-    specialization: "Olympic Weightlifting & Power",
     experience: "8 Years",
     phone: "+91 98860 77889",
     email: "bharath.v@strengthway.com",
@@ -145,15 +124,11 @@ export const SEED_TRAINERS = [
     status: "Active",
     bio: "National-level weightlifter and strength specialist. Focuses on explosive triple extension, barbell snatch and clean & jerk mechanics, and maximum athletic power output.",
     photo: portfolioPhoto1,
-    floorZone: "Olympic Platforms & Heavy Rigs",
     certifications: [
       "USAW Level 2 Weightlifting Coach",
       "CSCS Specialist",
       "Kettlebell Athletics Specialist",
     ],
-    languages: ["English", "Kannada", "Hindi"],
-    rating: 4.92,
-    reviewsCount: 68,
     quote: "Precision under tension turns potential into pure explosive power.",
     programs: [
       "Olympic Snatch & Clean",
@@ -164,7 +139,6 @@ export const SEED_TRAINERS = [
       clients: "220+",
       successRate: "98%",
       hours: "1,600+",
-      rating: "4.9",
     },
     joinedAt: new Date(Date.now() - 240 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -172,7 +146,6 @@ export const SEED_TRAINERS = [
     id: "TRN-105",
     name: "Rengaraj M",
     gender: "Male",
-    specialization: "Conditioning & Mobility",
     experience: "6 Years",
     phone: "+91 98451 88990",
     email: "rengaraj.m@strengthway.com",
@@ -180,15 +153,11 @@ export const SEED_TRAINERS = [
     status: "Active",
     bio: "Specializes in multi-directional agility, metabolic conditioning, and joint fascial decompression. Champions fluid functional movement without compromising raw strength.",
     photo: portfolioPhoto2,
-    floorZone: "Turf Track & Functional Rig",
     certifications: [
       "FMS (Functional Movement Screen)",
       "ACE Certified Personal Trainer",
       "Animal Flow Master Instructor",
     ],
-    languages: ["English", "Tamil", "Hindi"],
-    rating: 4.89,
-    reviewsCount: 54,
     quote: "Move well before you move fast; build resilient foundations that last.",
     programs: [
       "Metabolic Conditioning",
@@ -199,7 +168,6 @@ export const SEED_TRAINERS = [
       clients: "190+",
       successRate: "96%",
       hours: "1,250+",
-      rating: "4.9",
     },
     joinedAt: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -207,7 +175,6 @@ export const SEED_TRAINERS = [
     id: "TRN-106",
     name: "F Coach",
     gender: "Female",
-    specialization: "Floor Master & Functional Strength",
     experience: "7 Years",
     phone: "+91 98210 99001",
     email: "fcoach@strengthway.com",
@@ -215,11 +182,7 @@ export const SEED_TRAINERS = [
     status: "Active",
     bio: "Floor Master Coach orchestrating high-intensity functional classes, barbell posture alignment, and tactical metabolic workouts across morning and evening shifts.",
     photo: portfolioPhoto5,
-    floorZone: "Main Arena & Functional Floor",
     certifications: ["CrossFit Level 2 Trainer", "ISSA Master Coach", "Precision Nutrition L2"],
-    languages: ["English", "Hindi"],
-    rating: 4.96,
-    reviewsCount: 92,
     quote: "Discipline on the gym floor translates to unbreakable resilience in life.",
     programs: [
       "Master Class Floor Supervision",
@@ -230,7 +193,6 @@ export const SEED_TRAINERS = [
       clients: "310+",
       successRate: "99%",
       hours: "2,100+",
-      rating: "5.0",
     },
     joinedAt: new Date(Date.now() - 280 * 24 * 60 * 60 * 1000).toISOString(),
   },
@@ -242,11 +204,22 @@ export function getTrainerPhoto(trainer) {
   return TRAINER_PHOTOS[trainer.id] || null;
 }
 
+function cleanseTrainer(trainer) {
+  if (!trainer || typeof trainer !== "object") return trainer;
+  const { specialization, floorZone, languages, rating, reviewsCount, ...rest } = trainer;
+  let stats = rest.stats;
+  if (stats && typeof stats === "object") {
+    const { rating: _r, ...statsRest } = stats;
+    stats = statsRest;
+  }
+  return { ...rest, stats };
+}
+
 function readStorage() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.TRAINERS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_TRAINERS));
+      localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(SEED_TRAINERS));
       return [...SEED_TRAINERS];
     }
     const parsed = JSON.parse(raw);
@@ -255,30 +228,28 @@ function readStorage() {
       const missingSeeds = SEED_TRAINERS.filter((s) => !existingIds.has(s.id));
       const merged = [
         ...parsed.map((trainer) => {
-          const seed = SEED_TRAINERS.find((s) => s.id === trainer.id);
+          const cleaned = cleanseTrainer(trainer);
+          const seed = SEED_TRAINERS.find((s) => s.id === cleaned.id);
           if (seed) {
             return {
               ...seed,
-              ...trainer,
-              photo: trainer.photo || seed.photo,
-              certifications: trainer.certifications || seed.certifications,
-              stats: trainer.stats || seed.stats,
-              programs: trainer.programs || seed.programs,
-              quote: trainer.quote || seed.quote,
-              floorZone: trainer.floorZone || seed.floorZone,
-              gender: trainer.gender || seed.gender,
+              ...cleaned,
+              photo: cleaned.photo || seed.photo,
+              certifications: cleaned.certifications || seed.certifications,
+              stats: cleaned.stats || seed.stats,
+              programs: cleaned.programs || seed.programs,
+              quote: cleaned.quote || seed.quote,
+              gender: cleaned.gender || seed.gender,
             };
           }
-          return trainer;
+          return cleaned;
         }),
         ...missingSeeds,
       ];
-      if (merged.length !== parsed.length) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-      }
+      localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(merged));
       return merged;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_TRAINERS));
+    localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(SEED_TRAINERS));
     return [...SEED_TRAINERS];
   } catch {
     return [...SEED_TRAINERS];
@@ -287,7 +258,8 @@ function readStorage() {
 
 function writeStorage(trainers) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trainers));
+    const cleanedTrainers = Array.isArray(trainers) ? trainers.map(cleanseTrainer) : trainers;
+    localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(cleanedTrainers));
   } catch {
     // ignore
   }
@@ -313,18 +285,16 @@ export function getTrainerById(id) {
 
 export function createTrainer(data) {
   const all = readStorage();
-  const newTrainer = {
+  const rawTrainer = {
     id: data.id || `TRN-${Date.now().toString().slice(-3)}`,
     name: data.name || "",
     gender: data.gender || "Male",
-    specialization: data.specialization || "General Fitness",
     experience: data.experience || "1 Year",
     phone: data.phone || "",
     email: data.email || "",
     shift: data.shift || "Morning (06:00 - 14:00)",
     status: data.status || "Active",
     quote: data.quote || "",
-    floorZone: data.floorZone || "",
     programs: Array.isArray(data.programs)
       ? data.programs
       : data.programs
@@ -333,19 +303,12 @@ export function createTrainer(data) {
             .map((s) => s.trim())
             .filter(Boolean)
         : ["Functional Strength", "Athletic Conditioning"],
-    languages: Array.isArray(data.languages)
-      ? data.languages
-      : data.languages
-        ? data.languages
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : ["English"],
     bio: data.bio || "",
     photo: data.photo || null,
     joinedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+  const newTrainer = cleanseTrainer(rawTrainer);
   const updated = [newTrainer, ...all];
   writeStorage(updated);
   return newTrainer;
@@ -357,23 +320,22 @@ export function updateTrainer(id, updates) {
   const updated = all.map((t) => {
     if (t.id === id) {
       const formattedUpdates = { ...updates };
+      delete formattedUpdates.specialization;
+      delete formattedUpdates.floorZone;
+      delete formattedUpdates.languages;
+      delete formattedUpdates.rating;
+      delete formattedUpdates.reviewsCount;
       if (typeof formattedUpdates.programs === "string") {
         formattedUpdates.programs = formattedUpdates.programs
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean);
       }
-      if (typeof formattedUpdates.languages === "string") {
-        formattedUpdates.languages = formattedUpdates.languages
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      updatedTrainer = {
+      updatedTrainer = cleanseTrainer({
         ...t,
         ...formattedUpdates,
         updatedAt: new Date().toISOString(),
-      };
+      });
       return updatedTrainer;
     }
     return t;

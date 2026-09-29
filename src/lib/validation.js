@@ -271,9 +271,6 @@ export const trainerSchema = yup.object().shape({
   programs: yup.mixed().nullable(),
   photo: yup.string().trim().nullable(),
   bio: textValidator("Bio", 10, 1000, true),
-  specialization: yup.string().trim().nullable(),
   shift: yup.string().trim().nullable(),
-  floorZone: yup.string().trim().nullable(),
-  languages: yup.mixed().nullable(),
   batchIds: yup.array().nullable(),
 });

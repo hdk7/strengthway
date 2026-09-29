@@ -3,10 +3,6 @@ import { getTrainers, SEED_TRAINERS } from "./trainersService";
 import { getMembers } from "./membersService";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY_BATCHES = STORAGE_KEYS.BATCHES;
-export const STORAGE_KEY_COACH_SHIFTS = STORAGE_KEYS.COACH_SHIFTS;
-export const STORAGE_KEY_SCHEDULED_CLASSES = STORAGE_KEYS.SCHEDULED_CLASSES;
-
 export const SHIFT_SLOTS = [
   {
     key: "6_00_am_mwf",
@@ -608,7 +604,7 @@ function readStorage(key, defaultData) {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      if (key === STORAGE_KEY_BATCHES) {
+      if (key === STORAGE_KEYS.BATCHES) {
         if (parsed.length === 0) {
           localStorage.setItem(key, JSON.stringify(defaultData));
           return [...defaultData];
@@ -647,14 +643,14 @@ function readStorage(key, defaultData) {
         }
         return parsed;
       }
-      if (key === STORAGE_KEY_SCHEDULED_CLASSES) {
+      if (key === STORAGE_KEYS.SCHEDULED_CLASSES) {
         if (parsed.length === 0 || parsed.length < defaultData.length) {
           localStorage.setItem(key, JSON.stringify(defaultData));
           return [...defaultData];
         }
         return parsed;
       }
-      if (key === STORAGE_KEY_COACH_SHIFTS) {
+      if (key === STORAGE_KEYS.COACH_SHIFTS) {
         const expectedCoachIds = ["TRN-101", "TRN-103", "TRN-104", "TRN-105", "TRN-106"];
         const hasAllCoaches = expectedCoachIds.every((id) => parsed.some((c) => c.coachId === id));
         if (!hasAllCoaches || parsed.length !== expectedCoachIds.length) {
@@ -686,7 +682,7 @@ function writeStorage(key, data) {
 // --- Batches CRUD ---
 
 export function getBatches() {
-  return readStorage(STORAGE_KEY_BATCHES, SEED_BATCHES);
+  return readStorage(STORAGE_KEYS.BATCHES, SEED_BATCHES);
 }
 
 export function getBatchById(id) {
@@ -784,7 +780,7 @@ export function createBatch(data) {
   };
 
   const updated = [...batches, newBatch];
-  writeStorage(STORAGE_KEY_BATCHES, updated);
+  writeStorage(STORAGE_KEYS.BATCHES, updated);
   return newBatch;
 }
 
@@ -820,21 +816,21 @@ export function updateBatch(id, updates) {
   };
 
   batches[index] = updatedBatch;
-  writeStorage(STORAGE_KEY_BATCHES, batches);
+  writeStorage(STORAGE_KEYS.BATCHES, batches);
   return updatedBatch;
 }
 
 export function deleteBatch(id) {
   const batches = getBatches();
   const filtered = batches.filter((b) => b.id !== id);
-  writeStorage(STORAGE_KEY_BATCHES, filtered);
+  writeStorage(STORAGE_KEYS.BATCHES, filtered);
   return true;
 }
 
 // --- Coach Shift Matrix Operations ---
 
 export function getCoachShiftMatrix() {
-  return readStorage(STORAGE_KEY_COACH_SHIFTS, SEED_COACH_SHIFTS);
+  return readStorage(STORAGE_KEYS.COACH_SHIFTS, SEED_COACH_SHIFTS);
 }
 
 export function toggleCoachSlot(coachId, slotKey) {
@@ -845,7 +841,7 @@ export function toggleCoachSlot(coachId, slotKey) {
   const currentVal = !!coach.shifts[slotKey];
   coach.shifts[slotKey] = !currentVal;
 
-  writeStorage(STORAGE_KEY_COACH_SHIFTS, matrix);
+  writeStorage(STORAGE_KEYS.COACH_SHIFTS, matrix);
 
   // Sync with batch trainerIds if applicable
   const slot = SHIFT_SLOTS.find((s) => s.key === slotKey);
@@ -860,7 +856,7 @@ export function toggleCoachSlot(coachId, slotKey) {
       } else {
         batch.trainerIds = batch.trainerIds.filter((t) => t !== coachId);
       }
-      writeStorage(STORAGE_KEY_BATCHES, batches);
+      writeStorage(STORAGE_KEYS.BATCHES, batches);
     }
   }
 
@@ -870,7 +866,7 @@ export function toggleCoachSlot(coachId, slotKey) {
 // --- Scheduled Classes Operations ---
 
 export function getAllScheduledClasses() {
-  return readStorage(STORAGE_KEY_SCHEDULED_CLASSES, SEED_SCHEDULED_CLASSES);
+  return readStorage(STORAGE_KEYS.SCHEDULED_CLASSES, SEED_SCHEDULED_CLASSES);
 }
 
 export function getScheduledClassesByBatch(batchId) {
@@ -884,7 +880,7 @@ export function updateDayClass(classId, updates) {
   if (index === -1) return null;
 
   classes[index] = { ...classes[index], ...updates };
-  writeStorage(STORAGE_KEY_SCHEDULED_CLASSES, classes);
+  writeStorage(STORAGE_KEYS.SCHEDULED_CLASSES, classes);
   return classes[index];
 }
 
@@ -896,7 +892,7 @@ export function createDayClass(classData) {
     ...classData,
   };
   classes.push(newClass);
-  writeStorage(STORAGE_KEY_SCHEDULED_CLASSES, classes);
+  writeStorage(STORAGE_KEYS.SCHEDULED_CLASSES, classes);
   return newClass;
 }
 
@@ -951,7 +947,7 @@ export function enrollMemberInBatch(batchId, memberId) {
   };
 
   batches[index] = updatedBatch;
-  writeStorage(STORAGE_KEY_BATCHES, batches);
+  writeStorage(STORAGE_KEYS.BATCHES, batches);
   return updatedBatch;
 }
 
@@ -998,7 +994,7 @@ export function syncTrainerBatches(trainerId, selectedBatchIds = []) {
   });
 
   if (batchesChanged) {
-    writeStorage(STORAGE_KEY_BATCHES, updatedBatches);
+    writeStorage(STORAGE_KEYS.BATCHES, updatedBatches);
   }
 
   // Also sync coach shift matrix if coach exists in shift matrix
@@ -1019,7 +1015,7 @@ export function syncTrainerBatches(trainerId, selectedBatchIds = []) {
         }
       });
       if (shiftChanged) {
-        writeStorage(STORAGE_KEY_COACH_SHIFTS, matrix);
+        writeStorage(STORAGE_KEYS.COACH_SHIFTS, matrix);
       }
     }
   } catch (err) {

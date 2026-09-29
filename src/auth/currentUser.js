@@ -10,7 +10,7 @@ export function getCurrentUser() {
   if (typeof window === "undefined") return CURRENT_USER;
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.AUTH_USER) || localStorage.getItem("user");
+    const raw = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
     if (raw) {
       const user = JSON.parse(raw);
       let name = user.name;

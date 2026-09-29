@@ -197,7 +197,6 @@ export default function BatchDetailPage() {
     try {
       const created = createTrainer({
         name: newTrainerForm.name.trim(),
-        specialization: newTrainerForm.specialization,
         phone: newTrainerForm.phone.trim(),
         email: newTrainerForm.email.trim(),
         experience: newTrainerForm.experience,
@@ -212,7 +211,6 @@ export default function BatchDetailPage() {
       toast.success(`${created.name} registered and assigned to ${batch.name}!`);
       setNewTrainerForm({
         name: "",
-        specialization: "Functional Strength & Conditioning",
         phone: "",
         email: "",
         experience: "3+ Years",
@@ -312,7 +310,6 @@ export default function BatchDetailPage() {
     const q = trainerSearch.toLowerCase();
     return (
       t.name?.toLowerCase().includes(q) ||
-      t.specialization?.toLowerCase().includes(q) ||
       t.phone?.includes(q) ||
       t.id?.toLowerCase().includes(q)
     );
@@ -1113,7 +1110,7 @@ export default function BatchDetailPage() {
               </p>
               <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                 {trainerSearch
-                  ? "Try searching with a different coach name or specialization."
+                  ? "Try searching with a different coach name or phone number."
                   : `No coaches are currently assigned to ${batch.name}. Assign an existing trainer to this batch.`}
               </p>
               {!trainerSearch && (
@@ -1164,7 +1161,7 @@ export default function BatchDetailPage() {
                       </div>
                     </div>
                     <p className="text-xs font-medium text-muted-foreground truncate">
-                      {trn.specialization || "Fitness Coach"}
+                      Faculty Coach
                     </p>
 
                     <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-muted-foreground">
@@ -1620,7 +1617,7 @@ export default function BatchDetailPage() {
                     />
                     <input
                       type="text"
-                      placeholder="Search coaches by name or specialization..."
+                      placeholder="Search coaches by name..."
                       value={trainerSearchQuery}
                       onChange={(e) => setTrainerSearchQuery(e.target.value)}
                       className="w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
@@ -1632,10 +1629,7 @@ export default function BatchDetailPage() {
                     {allTrainers
                       .filter((t) => {
                         const q = trainerSearchQuery.toLowerCase();
-                        return (
-                          t.name?.toLowerCase().includes(q) ||
-                          t.specialization?.toLowerCase().includes(q)
-                        );
+                        return t.name?.toLowerCase().includes(q);
                       })
                       .map((t) => {
                         const isAssigned = (batch.trainerIds || []).includes(t.id);
@@ -1661,7 +1655,7 @@ export default function BatchDetailPage() {
                                   {t.name}
                                 </h4>
                                 <p className="text-[11px] text-muted-foreground truncate">
-                                  {t.specialization || "Fitness Coach"} • {t.experience || "3+ Yrs"}
+                                  Faculty Coach • {t.experience || "3+ Yrs"}
                                 </p>
                               </div>
                             </div>

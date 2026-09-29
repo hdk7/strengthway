@@ -1,12 +1,9 @@
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-// Inquiries service with localStorage persistence
-export const INQUIRIES_STORAGE_KEY = STORAGE_KEYS.INQUIRIES;
-
 function readStorage() {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(INQUIRIES_STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.INQUIRIES);
     if (!raw) return [];
     return JSON.parse(raw);
   } catch {
@@ -17,7 +14,7 @@ function readStorage() {
 function writeStorage(items) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(INQUIRIES_STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(STORAGE_KEYS.INQUIRIES, JSON.stringify(items));
     window.dispatchEvent(new Event("storage"));
   } catch {
     // ignore storage write errors

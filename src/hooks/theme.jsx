@@ -3,14 +3,13 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-const STORAGE_KEY = STORAGE_KEYS.THEME;
 const ThemeContext = createContext(null);
 
 const STATIC_TITLE = "The Strength Way";
 
 function getInitialTheme() {
   if (typeof window === "undefined") return "dark";
-  const saved = localStorage.getItem(STORAGE_KEY);
+  const saved = localStorage.getItem(STORAGE_KEYS.THEME);
   if (saved === "light" || saved === "dark") return saved;
   return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
 }
@@ -22,7 +21,7 @@ export function ThemeProvider({ children }) {
     document.documentElement.classList.remove("dark", "light");
     document.documentElement.classList.add(theme);
     document.documentElement.style.colorScheme = theme;
-    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(STORAGE_KEYS.THEME, theme);
 
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {

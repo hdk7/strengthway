@@ -323,8 +323,6 @@ export default function Sidebar({
     setShowLogoutConfirm(false);
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
     sessionStorage.clear();
     onMobileClose?.();
     navigate("/admin/login", { replace: true });

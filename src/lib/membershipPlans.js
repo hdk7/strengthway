@@ -6,8 +6,6 @@
 
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY = STORAGE_KEYS.MEMBERSHIP_PLANS;
-
 export const DEFAULT_MEMBERSHIP_PLANS = [
   {
     id: "plan-monthly",
@@ -54,9 +52,9 @@ export const DEFAULT_MEMBERSHIP_PLANS = [
 function readStorage() {
   if (typeof window === "undefined") return DEFAULT_MEMBERSHIP_PLANS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.MEMBERSHIP_PLANS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
+      localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
       return DEFAULT_MEMBERSHIP_PLANS;
     }
     const parsed = JSON.parse(raw);
@@ -75,12 +73,12 @@ function readStorage() {
             sanitized.push(dp);
           }
         });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+        localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(sanitized));
         return sanitized;
       }
       return sanitized;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
+    localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
     return DEFAULT_MEMBERSHIP_PLANS;
   } catch {
     return DEFAULT_MEMBERSHIP_PLANS;
@@ -90,7 +88,7 @@ function readStorage() {
 function writeStorage(plans) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(plans));
+    localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(plans));
     window.dispatchEvent(new Event("storage"));
   } catch {
     // ignore storage write errors

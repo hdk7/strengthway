@@ -59,10 +59,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
           quote: trainerToEdit.quote || "",
           photo: trainerToEdit.photo || "",
           bio: trainerToEdit.bio || "",
-          specialization: trainerToEdit.specialization || "",
           shift: trainerToEdit.shift || "",
-          floorZone: trainerToEdit.floorZone || "",
-          languages: trainerToEdit.languages || "",
           batchIds: initialBatchIds,
         });
       } else {

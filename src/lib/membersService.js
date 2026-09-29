@@ -1,8 +1,6 @@
 /* eslint-disable max-lines */
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
-export const STORAGE_KEY = STORAGE_KEYS.MEMBERS;
-
 export const SEED_MEMBERS = [
   {
     id: "MEM-2001",
@@ -5135,16 +5133,16 @@ const LEGACY_MOCK_IDS = ["MEM-1001", "MEM-1002", "MEM-1003", "MEM-1004"];
 
 function readStorage() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEYS.MEMBERS);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MEMBERS));
+      localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(SEED_MEMBERS));
       return [...SEED_MEMBERS];
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
       const sanitized = parsed.filter((m) => !LEGACY_MOCK_IDS.includes(m.id));
       if (sanitized.length === 0) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MEMBERS));
+        localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(SEED_MEMBERS));
         return [...SEED_MEMBERS];
       }
       // If storage has fewer members than SEED_MEMBERS, merge in missing seed members
@@ -5175,13 +5173,13 @@ function readStorage() {
       });
 
       if (missingSeeds.length > 0 || plansMigrated) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(normalized));
         return normalized;
       }
       return normalized;
     }
     // If empty array was previously in storage, populate SEED_MEMBERS
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_MEMBERS));
+    localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(SEED_MEMBERS));
     return [...SEED_MEMBERS];
   } catch {
     return [...SEED_MEMBERS];
@@ -5190,7 +5188,7 @@ function readStorage() {
 
 function writeStorage(members) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(members));
+    localStorage.setItem(STORAGE_KEYS.MEMBERS, JSON.stringify(members));
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("storage"));
     }
