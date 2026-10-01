@@ -1,11 +1,19 @@
-/* eslint-disable max-lines */
+/**
+ * Trainers Service — API Layer
+ *
+ * All business data is fetched from / persisted to the backend API.
+ * No localStorage is used for trainers data.
+ *
+ * Backend base: /api/v1/trainers
+ */
+
+import { api } from "@/lib/apiClient";
 import trainer3 from "@/assets/trainer-3.webp";
 import portfolioPhoto3 from "@/assets/portfolio-photo-3.jpg";
 import trainer2 from "@/assets/trainer-2.jpg";
 import portfolioPhoto1 from "@/assets/portfolio-photo-1.jpg";
 import portfolioPhoto2 from "@/assets/portfolio-photo-2.jpg";
 import portfolioPhoto5 from "@/assets/portfolio-photo-5.jpg";
-import { STORAGE_KEYS } from "@/config/storageKeys";
 
 export const TRAINER_PHOTOS = {
   "TRN-101": trainer3,
@@ -16,6 +24,7 @@ export const TRAINER_PHOTOS = {
   "TRN-106": portfolioPhoto5,
 };
 
+// Static seed reference retained for backwards compatibility with cross-entity helpers
 export const SEED_TRAINERS = [
   {
     id: "TRN-101",
@@ -198,170 +207,139 @@ export const SEED_TRAINERS = [
   },
 ];
 
+/**
+ * Resolve display photo for a trainer record.
+ * Falls back to mapped static photo or null.
+ */
 export function getTrainerPhoto(trainer) {
   if (!trainer) return null;
   if (trainer.photo) return trainer.photo;
   return TRAINER_PHOTOS[trainer.id] || null;
 }
 
-function cleanseTrainer(trainer) {
-  if (!trainer || typeof trainer !== "object") return trainer;
-  const { specialization, floorZone, languages, rating, reviewsCount, ...rest } = trainer;
-  let stats = rest.stats;
-  if (stats && typeof stats === "object") {
-    const { rating: _r, ...statsRest } = stats;
-    stats = statsRest;
-  }
-  return { ...rest, stats };
+// ── Read ───────────────────────────────────────────────────────────────────────
+
+/**
+ * Fetch all trainers.
+ *
+ * @param {boolean} includeDeleted  Include deactivated / soft-deleted trainers.
+ * @returns {Promise<object[]>}
+ */
+export async function getTrainers(includeDeleted = false) {
+  const params = new URLSearchParams({ pageSize: "5000" });
+  if (includeDeleted) params.set("includeDeleted", "true");
+  const result = await api.get(`/v1/trainers?${params}`);
+  if (Array.isArray(result)) return result;
+  if (result?.data && Array.isArray(result.data)) return result.data;
+  return [];
 }
 
-function readStorage() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.TRAINERS);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(SEED_TRAINERS));
-      return [...SEED_TRAINERS];
-    }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      const existingIds = new Set(parsed.map((t) => t.id));
-      const missingSeeds = SEED_TRAINERS.filter((s) => !existingIds.has(s.id));
-      const merged = [
-        ...parsed.map((trainer) => {
-          const cleaned = cleanseTrainer(trainer);
-          const seed = SEED_TRAINERS.find((s) => s.id === cleaned.id);
-          if (seed) {
-            return {
-              ...seed,
-              ...cleaned,
-              photo: cleaned.photo || seed.photo,
-              certifications: cleaned.certifications || seed.certifications,
-              stats: cleaned.stats || seed.stats,
-              programs: cleaned.programs || seed.programs,
-              quote: cleaned.quote || seed.quote,
-              gender: cleaned.gender || seed.gender,
-            };
-          }
-          return cleaned;
-        }),
-        ...missingSeeds,
-      ];
-      localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(merged));
-      return merged;
-    }
-    localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(SEED_TRAINERS));
-    return [...SEED_TRAINERS];
-  } catch {
-    return [...SEED_TRAINERS];
-  }
-}
-
-function writeStorage(trainers) {
-  try {
-    const cleanedTrainers = Array.isArray(trainers) ? trainers.map(cleanseTrainer) : trainers;
-    localStorage.setItem(STORAGE_KEYS.TRAINERS, JSON.stringify(cleanedTrainers));
-  } catch {
-    // ignore
-  }
-}
-
-export function getTrainers() {
-  return readStorage();
-}
-
-export function getTrainerById(id) {
+/**
+ * Fetch a single trainer by ID.
+ *
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+export async function getTrainerById(id) {
   if (!id) return null;
-  const all = readStorage();
-  const cleanId = String(id).trim().toLowerCase();
-  return (
-    all.find(
-      (t) =>
-        t.id?.toLowerCase() === cleanId ||
-        t.name?.toLowerCase().replace(/\s+/g, "-") === cleanId ||
-        t.name?.toLowerCase() === cleanId,
-    ) || null
-  );
+  try {
+    return await api.get(`/v1/trainers/${encodeURIComponent(id)}`);
+  } catch {
+    return null;
+  }
 }
 
-export function createTrainer(data) {
-  const all = readStorage();
-  const rawTrainer = {
-    id: data.id || `TRN-${Date.now().toString().slice(-3)}`,
-    name: data.name || "",
-    gender: data.gender || "Male",
-    experience: data.experience || "1 Year",
-    phone: data.phone || "",
-    email: data.email || "",
-    shift: data.shift || "Morning (06:00 - 14:00)",
-    status: data.status || "Active",
-    quote: data.quote || "",
-    programs: Array.isArray(data.programs)
-      ? data.programs
-      : data.programs
-        ? data.programs
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean)
-        : ["Functional Strength", "Athletic Conditioning"],
-    bio: data.bio || "",
-    photo: data.photo || null,
-    joinedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-  const newTrainer = cleanseTrainer(rawTrainer);
-  const updated = [newTrainer, ...all];
-  writeStorage(updated);
-  return newTrainer;
+// ── Write ──────────────────────────────────────────────────────────────────────
+
+/**
+ * Create a new trainer profile.
+ *
+ * @param {object} data
+ * @returns {Promise<object>}
+ */
+export async function createTrainer(data) {
+  return api.post("/v1/trainers", data);
 }
 
-export function updateTrainer(id, updates) {
-  const all = readStorage();
-  let updatedTrainer = null;
-  const updated = all.map((t) => {
-    if (t.id === id) {
-      const formattedUpdates = { ...updates };
-      delete formattedUpdates.specialization;
-      delete formattedUpdates.floorZone;
-      delete formattedUpdates.languages;
-      delete formattedUpdates.rating;
-      delete formattedUpdates.reviewsCount;
-      if (typeof formattedUpdates.programs === "string") {
-        formattedUpdates.programs = formattedUpdates.programs
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-      }
-      updatedTrainer = cleanseTrainer({
-        ...t,
-        ...formattedUpdates,
-        updatedAt: new Date().toISOString(),
-      });
-      return updatedTrainer;
-    }
-    return t;
-  });
-  writeStorage(updated);
-  return updatedTrainer;
+/**
+ * Update an existing trainer profile.
+ *
+ * @param {string} id
+ * @param {object} updates
+ * @returns {Promise<object>}
+ */
+export async function updateTrainer(id, updates) {
+  return api.put(`/v1/trainers/${encodeURIComponent(id)}`, updates);
 }
 
-export function deleteTrainer(id) {
-  const all = readStorage();
-  const updated = all.filter((t) => t.id !== id);
-  writeStorage(updated);
+/**
+ * Permanently delete a trainer record.
+ *
+ * @param {string} id
+ * @returns {Promise<boolean>}
+ */
+export async function deleteTrainer(id) {
+  await api.delete(`/v1/trainers/${encodeURIComponent(id)}`);
   return true;
 }
 
-export function toggleTrainerStatus(id) {
-  const all = readStorage();
-  let toggled = null;
-  const updated = all.map((t) => {
-    if (t.id === id) {
-      const nextStatus = t.status === "Active" ? "Inactive" : "Active";
-      toggled = { ...t, status: nextStatus, updatedAt: new Date().toISOString() };
-      return toggled;
-    }
-    return t;
-  });
-  writeStorage(updated);
-  return toggled;
+/**
+ * Deactivate / soft-delete a trainer.
+ *
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export async function softDeleteTrainer(id) {
+  return api.patch(`/v1/trainers/${encodeURIComponent(id)}/soft-delete`);
 }
+
+/**
+ * Restore a deactivated trainer back to active status.
+ *
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export async function restoreTrainer(id) {
+  return api.patch(`/v1/trainers/${encodeURIComponent(id)}/restore`);
+}
+
+/**
+ * Toggle a trainer's status between Active and Inactive.
+ *
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export async function toggleTrainerStatus(id) {
+  return api.patch(`/v1/trainers/${encodeURIComponent(id)}/toggle-status`);
+}
+
+/**
+ * Sync batch assignments for a trainer.
+ *
+ * @param {string} id
+ * @param {string[]} batchIds
+ * @returns {Promise<object>}
+ */
+export async function syncTrainerBatches(id, batchIds) {
+  return api.patch(`/v1/trainers/${encodeURIComponent(id)}/sync-batches`, { batchIds });
+}
+
+/**
+ * Retrieves month-wise tracking for an individual trainer:
+ * - Assigned batches
+ * - Total classes scheduled vs conducted
+ * - Total coaching hours and attendees coached
+ * - Conduction history ledger
+ *
+ * @param {string} id Trainer ID
+ * @param {string} [yearMonth] Format: YYYY-MM (defaults to current month)
+ * @returns {Promise<object>}
+ */
+export async function getTrainerMonthTracking(id, yearMonth) {
+  if (!id) return null;
+  const ym = yearMonth && /^\d{4}-\d{2}$/.test(yearMonth)
+    ? yearMonth
+    : new Date().toISOString().slice(0, 7);
+  return api.get(`/v1/trainers/${encodeURIComponent(id)}/month-tracking?month=${encodeURIComponent(ym)}`);
+}
+

@@ -82,6 +82,7 @@ export function AdminMemberRegistrationModal({
   const [batches, setBatches] = useState([]);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     selectedPlanId: "plan-quarterly",
     paymentMethod: "UPI",
@@ -96,71 +97,79 @@ export function AdminMemberRegistrationModal({
 
   // Sync form with leadToConfirm / memberToEdit or reset on open
   useEffect(() => {
-    if (isOpen) {
-      setStep(1);
-      const activeBatches = getBatches();
-      setBatches(activeBatches);
-      const activePlans = getMembershipPlans(false);
-      const plansList = activePlans.length > 0 ? activePlans : getMembershipPlans(true);
-      setAvailablePlans(plansList);
+    if (!isOpen) return;
+    setStep(1);
+    setErrors({});
+    setIsLoadingData(true);
 
-      const defaultPlan = plansList.find((p) => p.popular) || plansList[0];
-      setPaymentForm({
-        selectedPlanId: defaultPlan?.id || "",
-        paymentMethod: "UPI",
-        transactionId: generateTransactionId("UPI"),
-        amountPaid: defaultPlan?.price || 0,
-        paymentDate: new Date().toISOString().split("T")[0],
-        paymentNotes: isConfirmingLead
-          ? `Enrollment payment for inquiry ${activeLead.firstName || "Athlete"}`
-          : "",
-      });
+    // Load batches and membership plans from API in parallel
+    Promise.all([getBatches(), getMembershipPlans(false)])
+      .then(([activeBatches, activePlans]) => {
+        const resolvedBatches = Array.isArray(activeBatches) ? activeBatches : [];
+        const resolvedPlans = activePlans?.length > 0 ? activePlans : [];
+        setBatches(resolvedBatches);
+        setAvailablePlans(resolvedPlans);
 
-      const sourceData = activeLead || memberToEdit;
-      if (sourceData) {
-        const rawName = (sourceData.name || sourceData.fullName || "").trim();
-        const nameParts = rawName ? rawName.split(/\s+/) : [];
-        const derivedFirst = sourceData.firstName || nameParts[0] || "";
-        const derivedLast =
-          sourceData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
-
-        setForm({
-          firstName: derivedFirst,
-          lastName: derivedLast,
-          dob: sourceData.dob || "",
-          gender: sourceData.gender || "",
-          mobile: sourceData.mobile || "",
-          email: sourceData.email || "",
-          photo: sourceData.photo || null,
-          photoName: sourceData.photoName || "",
-          address: sourceData.address || "",
-          city: sourceData.city || "",
-          state: sourceData.state || "",
-          country: sourceData.country || "India",
-          pincode: sourceData.pincode || "",
-          emergencyName: sourceData.emergencyName || "",
-          emergencyRelationship: sourceData.emergencyRelationship || "",
-          emergencyNumber: sourceData.emergencyNumber || "",
-          height: sourceData.height ? String(sourceData.height) : "",
-          weight: sourceData.weight ? String(sourceData.weight) : "",
-          medicalDoc: sourceData.medicalDoc || null,
-          medicalDocName: sourceData.medicalDocName || "",
-          medicalDocSize: sourceData.medicalDocSize || "",
-          bio:
-            sourceData.bio ||
-            (isConfirmingLead
-              ? "Active club member pursuing functional training and athletic progression."
-              : ""),
-          batchId: sourceData.batchId || activeBatches[0]?.id || "",
+        const defaultPlan = resolvedPlans.find((p) => p.popular) || resolvedPlans[0];
+        setPaymentForm({
+          selectedPlanId: defaultPlan?.id || "",
+          paymentMethod: "UPI",
+          transactionId: generateTransactionId("UPI"),
+          amountPaid: defaultPlan?.price || 0,
+          paymentDate: new Date().toISOString().split("T")[0],
+          paymentNotes: isConfirmingLead
+            ? `Enrollment payment for inquiry ${activeLead?.firstName || "Athlete"}`
+            : "",
         });
-      } else {
-        setForm({
-          ...INITIAL_FORM,
-          batchId: activeBatches[0]?.id || "",
-        });
-      }
-      setErrors({});
-    }
+
+        const sourceData = activeLead || memberToEdit;
+        if (sourceData) {
+          const rawName = (sourceData.name || sourceData.fullName || "").trim();
+          const nameParts = rawName ? rawName.split(/\s+/) : [];
+          const derivedFirst = sourceData.firstName || nameParts[0] || "";
+          const derivedLast =
+            sourceData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
+
+          setForm({
+            firstName: derivedFirst,
+            lastName: derivedLast,
+            dob: sourceData.dob || "",
+            gender: sourceData.gender || "",
+            mobile: sourceData.mobile || "",
+            email: sourceData.email || "",
+            photo: sourceData.photo || null,
+            photoName: sourceData.photoName || "",
+            address: sourceData.address || "",
+            city: sourceData.city || "",
+            state: sourceData.state || "",
+            country: sourceData.country || "India",
+            pincode: sourceData.pincode || "",
+            emergencyName: sourceData.emergencyName || "",
+            emergencyRelationship: sourceData.emergencyRelationship || "",
+            emergencyNumber: sourceData.emergencyNumber || "",
+            height: sourceData.height ? String(sourceData.height) : "",
+            weight: sourceData.weight ? String(sourceData.weight) : "",
+            medicalDoc: sourceData.medicalDoc || null,
+            medicalDocName: sourceData.medicalDocName || "",
+            medicalDocSize: sourceData.medicalDocSize || "",
+            bio:
+              sourceData.bio ||
+              (isConfirmingLead
+                ? "Active club member pursuing functional training and athletic progression."
+                : ""),
+            batchId: sourceData.batchId || resolvedBatches[0]?.id || "",
+          });
+        } else {
+          setForm({
+            ...INITIAL_FORM,
+            batchId: resolvedBatches[0]?.id || "",
+          });
+        }
+      })
+      .catch(() => {
+        toast.error("Failed to load plans or batches. Please close and retry.");
+      })
+      .finally(() => setIsLoadingData(false));
   }, [isOpen, memberToEdit, leadToConfirm, activeLead, isConfirmingLead]);
 
   const selectedBatch = batches.find((b) => b.id === form.batchId);
@@ -298,7 +307,7 @@ export function AdminMemberRegistrationModal({
     setStep(2);
   };
 
-  const handleCompleteRegistration = (e) => {
+  const handleCompleteRegistration = async (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
 
     const isStep1Valid = validateStep1();
@@ -362,16 +371,14 @@ export function AdminMemberRegistrationModal({
 
       let resultMember;
       if (isConfirmingLead) {
-        resultMember = convertLeadToMember(activeLead.id, {
-          ...form,
-          batchId: form.batchId || selectedBatchInfo?.id || "",
-          batchName: scheduleDetails?.batchName || "General Access",
-          batchTiming: scheduleDetails?.batchTiming || "",
-          shift: scheduleDetails?.batchTiming || "",
-          assignedBatch: scheduleDetails?.batchName || "General Access",
-          schedule: scheduleDetails,
-          membershipPlan,
-          paymentDetails,
+        resultMember = await convertLeadToMember(activeLead.id, {
+          paymentPlanId: plan.id,
+          paymentMethod: paymentForm.paymentMethod,
+          paymentAmount: Number(paymentForm.amountPaid),
+          transactionId: paymentDetails.transactionId,
+          paymentDate: paymentForm.paymentDate,
+          paymentNotes: paymentForm.paymentNotes,
+          batchId: form.batchId || undefined,
         });
 
         toast.success(
@@ -382,7 +389,7 @@ export function AdminMemberRegistrationModal({
           },
         );
       } else {
-        resultMember = createMember({
+        resultMember = await createMember({
           ...form,
           batchId: form.batchId || selectedBatchInfo?.id || "",
           batchName: scheduleDetails?.batchName || "General Access",
@@ -391,8 +398,24 @@ export function AdminMemberRegistrationModal({
           assignedBatch: scheduleDetails?.batchName || "General Access",
           schedule: scheduleDetails,
           status: "Active",
+          paymentPlanId: plan.id,
+          planId: plan.id,
+          paymentMethod: paymentForm.paymentMethod,
+          paymentAmount: Number(paymentForm.amountPaid),
+          transactionId: paymentDetails.transactionId,
+          paymentDate: paymentForm.paymentDate,
+          paymentNotes: paymentForm.paymentNotes,
           membershipPlan,
           paymentDetails,
+          medicalDoc: form.medicalDoc
+            ? {
+                submitted: true,
+                clearanceDate: new Date().toISOString().split("T")[0],
+                notes: form.medicalDocName || form.medicalDoc || "Medical Fitness Certificate",
+              }
+            : undefined,
+          medicalDocName: form.medicalDocName || "",
+          medicalDocSize: form.medicalDocSize || "",
         });
 
         toast.success(
@@ -406,7 +429,11 @@ export function AdminMemberRegistrationModal({
 
       // Automatically assign member to the corresponding chosen batch timing
       if (form.batchId && resultMember?.id) {
-        enrollMemberInBatch(form.batchId, resultMember.id);
+        try {
+          await enrollMemberInBatch(form.batchId, resultMember.id);
+        } catch {
+          // Non-fatal: member created, batch enroll failed silently
+        }
       }
 
       setForm(INITIAL_FORM);
@@ -416,14 +443,14 @@ export function AdminMemberRegistrationModal({
         onSuccess(resultMember, isConfirmingLead);
       }
       handleClose();
-    } catch {
-      toast.error("An error occurred while saving registration. Please try again.");
+    } catch (e) {
+      toast.error(e?.message || "An error occurred while saving registration. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isEditingActiveMember) {
       const isStep1Valid = validateStep1();
@@ -434,7 +461,19 @@ export function AdminMemberRegistrationModal({
       }
       setIsSubmitting(true);
       try {
-        const updated = updateMember(memberToEdit.id, form);
+        const updatePayload = {
+          ...form,
+          medicalDoc: form.medicalDoc
+            ? typeof form.medicalDoc === "object"
+              ? form.medicalDoc
+              : {
+                  submitted: true,
+                  clearanceDate: new Date().toISOString().split("T")[0],
+                  notes: form.medicalDocName || form.medicalDoc || "Medical Fitness Certificate",
+                }
+            : undefined,
+        };
+        const updated = await updateMember(memberToEdit.id, updatePayload);
         toast.success(
           `Member ${form.firstName} ${form.lastName}`.trim() + " updated successfully!",
           {
@@ -445,8 +484,8 @@ export function AdminMemberRegistrationModal({
           onSuccess(updated, true);
         }
         handleClose();
-      } catch {
-        toast.error("An error occurred while saving updates.");
+      } catch (e) {
+        toast.error(e?.message || "An error occurred while saving updates.");
       } finally {
         setIsSubmitting(false);
       }
@@ -454,7 +493,7 @@ export function AdminMemberRegistrationModal({
       if (step === 1) {
         handleProceedToBalanceDetails(e);
       } else {
-        handleCompleteRegistration(e);
+        await handleCompleteRegistration(e);
       }
     }
   };
@@ -484,7 +523,7 @@ export function AdminMemberRegistrationModal({
                 <span
                   className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
                     step === 1
-                      ? "bg-accent text-background shadow-sm"
+                      ? "bg-primary text-background shadow-xs"
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
@@ -529,7 +568,7 @@ export function AdminMemberRegistrationModal({
 
             <DialogPrimitive.Close
               onClick={handleClose}
-              className="absolute right-4 top-4 sm:right-6 sm:top-5 rounded-full p-2 text-muted-foreground hover:bg-accent/10 hover:text-foreground transition-colors cursor-pointer"
+              className="absolute right-4 top-4 sm:right-6 sm:top-5 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -1043,7 +1082,7 @@ export function AdminMemberRegistrationModal({
                         <button
                           type="button"
                           onClick={() => docInputRef.current?.click()}
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 hover:border-accent/40 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:border-border transition-colors cursor-pointer"
                         >
                           <Upload className="h-3.5 w-3.5" />
                           <span>Upload Medical Clearance Document</span>
@@ -1094,7 +1133,7 @@ export function AdminMemberRegistrationModal({
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 <ArrowLeft size={14} />
                 <span>Back to Registration &amp; Payment</span>
@@ -1108,7 +1147,7 @@ export function AdminMemberRegistrationModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="rounded-xl border border-border bg-background px-5 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
+                  className="rounded-xl border border-border bg-card px-5 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

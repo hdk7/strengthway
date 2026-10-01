@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 export function useDataTable({
   data = [],
   columns = [],
-  pageSize = 6,
+  pageSize = 5,
   dateField,
   filterKey,
   searchFields = [],

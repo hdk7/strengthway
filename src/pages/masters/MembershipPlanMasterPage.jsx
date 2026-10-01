@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import {
   CreditCard,
@@ -19,6 +19,8 @@ import {
   IndianRupee,
   Archive,
   RotateCcw,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,10 +33,14 @@ import {
   toggleMembershipPlanStatus,
 } from "@/lib/membershipPlans";
 import { getMembers } from "@/lib/membersService";
+import { Pagination } from "@/components/table";
 
 export default function MembershipPlanMasterPage() {
   const [plans, setPlans] = useState([]);
   const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "table"
@@ -57,33 +63,43 @@ export default function MembershipPlanMasterPage() {
     features: [],
   });
 
-  useEffect(() => {
-    loadData();
-    window.addEventListener("storage", loadData);
-    return () => window.removeEventListener("storage", loadData);
+  const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [plansData, membersData] = await Promise.all([
+        getMembershipPlans(true, true),
+        getMembers(true).catch(() => []),
+      ]);
+      setPlans(Array.isArray(plansData) ? plansData : []);
+      setMembers(Array.isArray(membersData) ? membersData : []);
+    } catch (err) {
+      console.error("Failed to load membership plans:", err);
+      setError(err.message || "Failed to load membership plans from server.");
+      toast.error("Failed to load membership plans from server.");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const loadData = () => {
-    setPlans(getMembershipPlans(true, true));
-    try {
-      setMembers(getMembers(true) || []);
-    } catch {
-      setMembers([]);
-    }
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Map enrolled members count per plan
   const enrolledCountByPlan = useMemo(() => {
     const counts = {};
-    members.forEach((m) => {
-      if (!m.isDeleted && m.membershipPlan) {
-        const planKey = m.membershipPlan.id || m.membershipPlan.name;
-        counts[planKey] = (counts[planKey] || 0) + 1;
-        if (m.membershipPlan.id) {
-          counts[m.membershipPlan.id] = (counts[m.membershipPlan.id] || 0) + 1;
+    if (Array.isArray(members)) {
+      members.forEach((m) => {
+        if (!m.isDeleted && m.membershipPlan) {
+          const planKey = m.membershipPlan.id || m.membershipPlan.name;
+          counts[planKey] = (counts[planKey] || 0) + 1;
+          if (m.membershipPlan.id) {
+            counts[m.membershipPlan.id] = (counts[m.membershipPlan.id] || 0) + 1;
+          }
         }
-      }
-    });
+      });
+    }
     return counts;
   }, [members]);
 
@@ -119,6 +135,19 @@ export default function MembershipPlanMasterPage() {
       );
     });
   }, [plans, statusFilter, searchQuery]);
+
+  // Viewport Pagination State
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, searchQuery]);
+  const totalPages = Math.max(1, Math.ceil(filteredPlans.length / pageSize));
+  const safePage = Math.max(1, Math.min(page, totalPages));
+  const paginatedPlans = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return filteredPlans.slice(start, start + pageSize);
+  }, [filteredPlans, safePage, pageSize]);
 
   // Modal Handlers
   const handleOpenAdd = () => {
@@ -184,19 +213,19 @@ export default function MembershipPlanMasterPage() {
     }));
   };
 
-  const handleToggleStatus = (id) => {
+  const handleToggleStatus = async (id) => {
     try {
-      const updated = toggleMembershipPlanStatus(id);
+      const updated = await toggleMembershipPlanStatus(id);
       if (updated) {
         setPlans((prev) => prev.map((p) => (p.id === id ? updated : p)));
         toast.success(`Plan marked as ${updated.status}.`);
       }
-    } catch {
-      toast.error("Failed to toggle plan status.");
+    } catch (err) {
+      toast.error(err.message || "Failed to toggle plan status.");
     }
   };
 
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     const enrolled = enrolledCountByPlan[id] || 0;
     const warningMsg =
       enrolled > 0
@@ -204,33 +233,53 @@ export default function MembershipPlanMasterPage() {
         : `Are you sure you want to archive (soft delete) "${name}"? You can restore it anytime from the Archived tab.`;
 
     if (window.confirm(warningMsg)) {
-      softDeleteMembershipPlan(id);
-      loadData();
-      toast.success(`"${name}" plan archived.`);
+      try {
+        const updated = await softDeleteMembershipPlan(id);
+        if (updated) {
+          setPlans((prev) => prev.map((p) => (p.id === id ? updated : p)));
+        } else {
+          await loadData();
+        }
+        toast.success(`"${name}" plan archived.`);
+      } catch (err) {
+        toast.error(err.message || "Failed to archive plan.");
+      }
     }
   };
 
-  const handleRestore = (id, name) => {
-    restoreMembershipPlan(id);
-    loadData();
-    toast.success(`"${name}" restored to Active status.`);
+  const handleRestore = async (id, name) => {
+    try {
+      const restored = await restoreMembershipPlan(id);
+      if (restored) {
+        setPlans((prev) => prev.map((p) => (p.id === id ? restored : p)));
+      } else {
+        await loadData();
+      }
+      toast.success(`"${name}" restored to Active status.`);
+    } catch (err) {
+      toast.error(err.message || "Failed to restore plan.");
+    }
   };
 
-  const handlePermanentDelete = (id, name) => {
+  const handlePermanentDelete = async (id, name) => {
     const enrolled = enrolledCountByPlan[id] || 0;
     const warningMsg =
       enrolled > 0
-        ? `CAUTION: ${enrolled} member(s) are enrolled in "${name}". Permanently deleting will completely erase this plan from storage. Are you sure?`
+        ? `CAUTION: ${enrolled} member(s) are enrolled in "${name}". Permanently deleting will completely erase this plan from database. Are you sure?`
         : `Are you sure you want to permanently delete "${name}"? This action cannot be undone.`;
 
     if (window.confirm(warningMsg)) {
-      permanentDeleteMembershipPlan(id);
-      loadData();
-      toast.success(`"${name}" permanently deleted.`);
+      try {
+        await permanentDeleteMembershipPlan(id);
+        setPlans((prev) => prev.filter((p) => p.id !== id));
+        toast.success(`"${name}" permanently deleted.`);
+      } catch (err) {
+        toast.error(err.message || "Failed to delete plan.");
+      }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
       toast.error("Plan name is required.");
@@ -241,33 +290,36 @@ export default function MembershipPlanMasterPage() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       if (editingPlan) {
-        const updated = updateMembershipPlan(editingPlan.id, form);
+        const updated = await updateMembershipPlan(editingPlan.id, form);
         if (updated) {
           setPlans((prev) => prev.map((p) => (p.id === editingPlan.id ? updated : p)));
           toast.success(`${updated.name} updated successfully!`);
         }
       } else {
-        const created = createMembershipPlan(form);
+        const created = await createMembershipPlan(form);
         setPlans((prev) => [...prev, created]);
         toast.success(`${created.name} plan created!`);
       }
       setIsModalOpen(false);
-    } catch {
-      toast.error("Failed to save membership plan.");
+    } catch (err) {
+      toast.error(err.message || "Failed to save membership plan.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-2.5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-display">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-display">
             Membership Plan
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Configure gym commitment tiers, pricing, and benefits mapped dynamically across member
             registration and the landing page.
           </p>
@@ -276,7 +328,7 @@ export default function MembershipPlanMasterPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-xs font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer shadow-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-foreground px-3.5 py-1.5 text-xs font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
           >
             <Plus size={15} />
             <span>Create New Plan</span>
@@ -284,49 +336,65 @@ export default function MembershipPlanMasterPage() {
         </div>
       </div>
 
+      {/* Error Alert Banner */}
+      {error && (
+        <div className="shrink-0 flex items-center justify-between rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={loadData}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-3 py-1 font-semibold text-destructive-foreground hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="shrink-0 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Plans</span>
-            <CreditCard size={18} className="text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Total Plans</span>
+            <CreditCard size={16} className="text-muted-foreground" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-foreground">{stats.total}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Configured membership tiers</p>
+          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">{stats.total}</div>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Configured membership tiers</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Active Tiers</span>
-            <CheckCircle2 size={18} className="text-emerald-400" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Active Tiers</span>
+            <CheckCircle2 size={16} className="text-emerald-400" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-emerald-400">{stats.active}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Available for enrollment</p>
+          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-emerald-400">{stats.active}</div>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Available for enrollment</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">
+            <span className="text-[11px] font-semibold uppercase tracking-wider">
               Enrolled Athletes
             </span>
-            <Users size={18} className="text-blue-400" />
+            <Users size={16} className="text-blue-400" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-foreground">{stats.totalEnrolled}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Active subscriptions</p>
+          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">{stats.totalEnrolled}</div>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Active subscriptions</p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Archived</span>
-            <Archive size={18} className="text-muted-foreground" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Archived</span>
+            <Archive size={16} className="text-muted-foreground" />
           </div>
-          <div className="mt-2 text-3xl font-extrabold text-foreground">{stats.archived}</div>
-          <p className="mt-1 text-xs text-muted-foreground">Soft-deleted plans</p>
+          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">{stats.archived}</div>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Soft-deleted plans</p>
         </div>
       </div>
 
       {/* Toolbar: Search, Filters & View Toggle */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="shrink-0 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           {["ALL", "Active", "Inactive", "Archived"].map((s) => (
             <button
@@ -390,29 +458,58 @@ export default function MembershipPlanMasterPage() {
         </div>
       </div>
 
-      {/* Main Content: Grid or Table */}
-      {filteredPlans.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
-          <CreditCard className="mb-3 h-10 w-10 text-muted-foreground/40" />
-          <h3 className="text-base font-semibold text-foreground">No membership plans found</h3>
-          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-            {searchQuery
-              ? "Try adjusting your search criteria."
-              : "Create your first membership plan to make it available for member enrollment."}
-          </p>
-          <button
-            onClick={handleOpenAdd}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-xs font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            <Plus size={14} />
-            Create Plan
-          </button>
-        </div>
-      ) : viewMode === "grid" ? (
-        /* --- GRID CARDS VIEW --- */
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredPlans.map((plan) => {
-            const enrolled = enrolledCountByPlan[plan.id] || 0;
+      {/* Main Content: Loading Skeleton, Grid or Table */}
+      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs flex flex-col">
+        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 p-3 sm:p-4 no-scrollbar">
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="flex flex-col justify-between rounded-3xl border border-border bg-card p-6 shadow-sm animate-pulse space-y-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="h-5 w-32 bg-muted rounded-lg" />
+                      <div className="h-4 w-14 bg-muted rounded-full" />
+                    </div>
+                    <div className="h-8 w-24 bg-muted rounded-lg" />
+                    <div className="h-3 w-40 bg-muted rounded" />
+                    <div className="border-t border-border pt-3 space-y-2">
+                      <div className="h-3 w-3/4 bg-muted rounded" />
+                      <div className="h-3 w-5/6 bg-muted rounded" />
+                      <div className="h-3 w-2/3 bg-muted rounded" />
+                    </div>
+                  </div>
+                  <div className="border-t border-border pt-4 flex justify-between">
+                    <div className="h-4 w-20 bg-muted rounded" />
+                    <div className="h-6 w-16 bg-muted rounded-lg" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredPlans.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border py-16 text-center">
+              <CreditCard className="mb-3 h-10 w-10 text-muted-foreground/40" />
+              <h3 className="text-base font-semibold text-foreground">No membership plans found</h3>
+              <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+                {searchQuery
+                  ? "Try adjusting your search criteria."
+                  : "Create your first membership plan to make it available for member enrollment."}
+              </p>
+              <button
+                onClick={handleOpenAdd}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-xs font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                <Plus size={14} />
+                Create Plan
+              </button>
+            </div>
+          ) : viewMode === "grid" ? (
+            /* --- GRID CARDS VIEW --- */
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {paginatedPlans.map((plan) => {
+                const enrolled = enrolledCountByPlan[plan.id] || 0;
             return (
               <div
                 key={plan.id}
@@ -556,7 +653,7 @@ export default function MembershipPlanMasterPage() {
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleOpenEdit(plan)}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                         title="Edit Plan"
                       >
                         <Edit3 size={15} />
@@ -576,149 +673,174 @@ export default function MembershipPlanMasterPage() {
           })}
         </div>
       ) : (
-        /* --- TABLE VIEW --- */
-        <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
-          <table className="w-full text-left text-sm text-foreground">
-            <thead className="border-b border-border bg-muted/40 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-5 py-3.5">Plan Name</th>
-                <th className="px-5 py-3.5">Duration</th>
-                <th className="px-5 py-3.5">Price & Billing</th>
-                <th className="px-5 py-3.5 text-center">Benefits</th>
-                <th className="px-5 py-3.5 text-center">Enrolled Athletes</th>
-                <th className="px-5 py-3.5 text-center">Status</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border font-medium">
-              {filteredPlans.map((plan) => {
-                const enrolled = enrolledCountByPlan[plan.id] || 0;
-                return (
-                  <tr
-                    key={plan.id}
-                    className={`hover:bg-muted/20 transition-colors ${
-                      plan.isDeleted
-                        ? "opacity-75 bg-muted/20"
-                        : plan.popular
-                          ? "bg-amber-500/[0.03]"
-                          : ""
-                    }`}
-                  >
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-foreground text-sm font-display">
-                          {plan.name}
+        /* --- TABLE VIEW WITH SEPARATED ROWS & INDEPENDENT SCROLL --- */
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
+          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
+            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
+              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
+                <tr>
+                  <th className="py-2.5 px-4 sm:px-5">Plan ID</th>
+                  <th className="py-2.5 px-4 sm:px-5">Plan Name</th>
+                  <th className="py-2.5 px-4 sm:px-5">Duration</th>
+                  <th className="py-2.5 px-4 sm:px-5">Price & Billing</th>
+                  <th className="py-2.5 px-4 sm:px-5 text-center">Benefits</th>
+                  <th className="py-2.5 px-4 sm:px-5 text-center">Enrolled Athletes</th>
+                  <th className="py-2.5 px-4 sm:px-5 text-center">Status</th>
+                  <th className="py-2.5 px-4 sm:px-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm font-medium">
+                {paginatedPlans.map((plan) => {
+                  const enrolled = enrolledCountByPlan[plan.id] || 0;
+                  return (
+                    <tr
+                      key={plan.id}
+                      className={`group transition-all duration-150 hover:translate-y-[-1px] ${
+                        plan.isDeleted ? "opacity-75" : ""
+                      }`}
+                    >
+                      {/* Plan ID Badge */}
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/70 text-foreground/85 font-mono text-xs font-semibold tracking-tight shadow-2xs">
+                          #{plan.id}
                         </span>
+                      </td>
+
+                      {/* Plan Name */}
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-foreground text-sm font-display">
+                            {plan.name}
+                          </span>
+                          {plan.isDeleted ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-destructive border border-destructive/30">
+                              <Archive size={9} />
+                              Archived
+                            </span>
+                          ) : plan.popular ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/30">
+                              <Sparkles size={10} />
+                              {plan.badge || "Featured"}
+                            </span>
+                          ) : (
+                            plan.badge && (
+                              <span className="rounded-full bg-accent/20 px-2 py-0.2 text-[9px] font-bold uppercase tracking-wider text-accent border border-accent/30">
+                                {plan.badge}
+                              </span>
+                            )
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-xs font-semibold text-foreground">
+                        {plan.durationMonths} Month{plan.durationMonths > 1 ? "s" : ""}
+                      </td>
+
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
+                        <div className="font-bold text-foreground text-sm font-display">
+                          {plan.formattedPrice}
+                          <span className="text-xs font-normal text-muted-foreground ml-1">
+                            {plan.period}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center text-xs font-semibold text-muted-foreground">
+                        {plan.features?.length || 0} features
+                      </td>
+
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500 border border-blue-500/20">
+                          {enrolled} Athletes
+                        </span>
+                      </td>
+
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
                         {plan.isDeleted ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-destructive border border-destructive/30">
-                            <Archive size={9} />
+                          <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-destructive/15 text-destructive border border-destructive/30">
                             Archived
                           </span>
-                        ) : plan.popular ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/30">
-                            <Sparkles size={10} />
-                            {plan.badge || "Featured"}
-                          </span>
                         ) : (
-                          plan.badge && (
-                            <span className="rounded-full bg-accent/20 px-2 py-0.2 text-[9px] font-bold uppercase tracking-wider text-accent border border-accent/30">
-                              {plan.badge}
-                            </span>
-                          )
+                          <button
+                            onClick={() => handleToggleStatus(plan.id)}
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-bold border cursor-pointer transition-all inline-flex items-center gap-1.5 ${
+                              plan.status === "Active"
+                                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                                : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                            }`}
+                            title={`Click to ${plan.status === "Active" ? "deactivate" : "activate"}`}
+                          >
+                            <span
+                              className={`h-1.5 w-1.5 rounded-full ${
+                                plan.status === "Active" ? "bg-emerald-500" : "bg-muted-foreground"
+                              }`}
+                            />
+                            <span>{plan.status}</span>
+                          </button>
                         )}
-                      </div>
-                      <span className="text-[11px] font-mono text-muted-foreground">{plan.id}</span>
-                    </td>
+                      </td>
 
-                    <td className="px-5 py-4 text-xs font-semibold text-foreground">
-                      {plan.durationMonths} Month{plan.durationMonths > 1 ? "s" : ""}
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <div className="font-bold text-foreground text-sm font-display">
-                        {plan.formattedPrice}
-                        <span className="text-xs font-normal text-muted-foreground ml-1">
-                          {plan.period}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="px-5 py-4 text-center text-xs font-semibold text-muted-foreground">
-                      {plan.features?.length || 0} features
-                    </td>
-
-                    <td className="px-5 py-4 text-center">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-400 border border-blue-500/20">
-                        {enrolled} Athletes
-                      </span>
-                    </td>
-
-                    <td className="px-5 py-4 text-center">
-                      {plan.isDeleted ? (
-                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold bg-destructive/15 text-destructive border border-destructive/30">
-                          Archived
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleToggleStatus(plan.id)}
-                          className={`rounded-full px-2.5 py-0.5 text-xs font-bold border cursor-pointer transition-all ${
-                            plan.status === "Active"
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
-                              : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
-                          }`}
-                          title={`Click to ${plan.status === "Active" ? "deactivate" : "activate"}`}
-                        >
-                          {plan.status}
-                        </button>
-                      )}
-                    </td>
-
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {plan.isDeleted ? (
-                          <>
-                            <button
-                              onClick={() => handleRestore(plan.id, plan.name)}
-                              className="rounded-lg p-1.5 text-emerald-400 hover:bg-emerald-500/15 transition-colors cursor-pointer"
-                              title="Restore Plan to Active"
-                            >
-                              <RotateCcw size={15} />
-                            </button>
-                            <button
-                              onClick={() => handlePermanentDelete(plan.id, plan.name)}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/15 hover:text-destructive transition-colors cursor-pointer"
-                              title="Delete Permanently"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleOpenEdit(plan)}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors cursor-pointer"
-                              title="Edit Plan"
-                            >
-                              <Edit3 size={15} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(plan.id, plan.name)}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
-                              title="Archive Plan (Soft Delete)"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {plan.isDeleted ? (
+                            <>
+                              <button
+                                onClick={() => handleRestore(plan.id, plan.name)}
+                                className="rounded-lg p-1.5 text-emerald-500 hover:bg-emerald-500/15 transition-colors cursor-pointer"
+                                title="Restore Plan to Active"
+                              >
+                                <RotateCcw size={15} />
+                              </button>
+                              <button
+                                onClick={() => handlePermanentDelete(plan.id, plan.name)}
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/15 hover:text-destructive transition-colors cursor-pointer"
+                                title="Delete Permanently"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleOpenEdit(plan)}
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                                title="Edit Plan"
+                              >
+                                <Edit3 size={15} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(plan.id, plan.name)}
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                                title="Archive Plan (Soft Delete)"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+        </div>
+      </div>
+
+      {/* Pinned Bottom Pagination */}
+      <Pagination
+        currentPage={safePage}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalItems={filteredPlans.length}
+        pageSize={pageSize}
+        itemName="plans"
+        compact
+        className="shrink-0 mt-auto"
+      />
 
       {/* --- PROPER, USER-FRIENDLY CREATE / EDIT PLAN MODAL (PORTALED TO BODY TO PREVENT HEADER OVERLAP) --- */}
       <DialogPrimitive.Root open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -1019,7 +1141,7 @@ export default function MembershipPlanMasterPage() {
                 <DialogPrimitive.Close asChild>
                   <button
                     type="button"
-                    className="rounded-xl px-4 py-2.5 font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                    className="rounded-xl border border-border bg-card px-4 py-2.5 font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -1027,10 +1149,20 @@ export default function MembershipPlanMasterPage() {
                 <button
                   type="submit"
                   form="plan-form"
-                  className="inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 rounded-xl bg-foreground px-5 py-2.5 font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  <Check size={16} />
-                  <span>{editingPlan ? "Save Changes" : "Create Plan"}</span>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} />
+                      <span>{editingPlan ? "Save Changes" : "Create Plan"}</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

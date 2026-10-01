@@ -84,7 +84,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
     setForm((prev) => ({ ...prev, gender: g }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
@@ -106,12 +106,12 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
 
     setIsSubmitting(true);
     try {
-      const created = createInquiry(form);
+      const created = await createInquiry(form);
       toast.success("Inquiry logged successfully!");
       onSuccess?.(created);
       onClose();
-    } catch {
-      toast.error("Failed to create inquiry.");
+    } catch (err) {
+      toast.error(err.message || "Failed to create inquiry.");
     } finally {
       setIsSubmitting(false);
     }
@@ -140,7 +140,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
             <DialogPrimitive.Close asChild>
               <button
                 type="button"
-                className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-accent/15 hover:text-foreground transition-colors cursor-pointer"
+                className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Close"
               >
                 <X size={16} />
@@ -375,7 +375,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
+              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
             >
               Cancel
             </button>

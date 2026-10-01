@@ -84,14 +84,14 @@ export default function ClockPickerPopover({
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 rounded-xl border border-border py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+          className="flex-1 rounded-xl border border-border bg-card py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="button"
           onClick={onConfirm}
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-accent text-background py-2 text-xs font-bold hover:bg-accent/90 transition-colors cursor-pointer shadow-sm"
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-background py-2 text-xs font-bold hover:bg-primary/90 transition-colors cursor-pointer shadow-sm"
         >
           <Check size={13} />
           Set {displayTime}

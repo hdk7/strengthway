@@ -68,7 +68,11 @@ export function AppRoutes() {
         <Route path="schedule" element={<Navigate to="/admin/schedule/batches" replace />} />
         <Route path="schedule/calendar" element={<Navigate to="/admin/schedule/batches" replace />} />
         <Route path="schedule/batches" element={<BatchListPage />} />
+        <Route path="schedule/batches/:id" element={<BatchDetailPage />} />
         <Route path="schedule/master-class" element={<MasterClassSchedulePage />} />
+        <Route path="schedule/classes" element={<Navigate to="/admin/schedule/master-class" replace />} />
+        <Route path="schedule/class" element={<Navigate to="/admin/schedule/master-class" replace />} />
+        <Route path="schedule/class-schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
         <Route path="schedule/sessions" element={<Navigate to="/admin/schedule/master-class" replace />} />
         <Route path="schedule/holidays" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
 

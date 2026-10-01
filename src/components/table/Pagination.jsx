@@ -8,15 +8,18 @@ const Pagination = ({
   currentPage = 1,
   totalPages = 1,
   totalItems,
-  pageSize,
+  pageSize = 5,
   pageSizeOptions,
   onPageSizeChange,
   onPageChange,
   itemLabel = "entries",
+  itemName,
   showItemCount = true,
   compact = false,
+  variant = "transparent",
   className = "",
 }) => {
+  const effectiveItemLabel = itemName || itemLabel;
   const effectiveTotalPages = Math.max(1, totalPages || 1);
   const safePage = Math.max(1, Math.min(currentPage, effectiveTotalPages));
 
@@ -62,31 +65,31 @@ const Pagination = ({
       ? Math.min(safePage * pageSize, totalItems)
       : totalItems || 0;
 
-  const btnSize = compact ? "w-8 h-8 sm:w-8.5 sm:h-8.5 text-xs sm:text-sm" : "w-8.5 h-8.5 sm:w-9 sm:h-9 text-xs sm:text-sm";
+  const btnSize = compact ? "w-7.5 h-7.5 text-xs" : "w-8 h-8 text-xs sm:text-sm";
 
   return (
     <div
-      className={`flex flex-col sm:flex-row items-center justify-between gap-2 px-1 sm:px-2 py-1 text-xs sm:text-sm text-muted-foreground select-none shrink-0 ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-muted-foreground select-none shrink-0 bg-transparent px-1 py-2 sm:py-2.5 ${className}`}
     >
       {/* Left: Item Counter & optional Page Size Selector */}
       <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
         {showItemCount && totalItems !== undefined && (
-          <span className="text-xs sm:text-sm font-normal text-muted-foreground">
+          <span className="text-xs font-normal text-muted-foreground">
             Showing{" "}
             <span className="font-semibold text-foreground">{startItem}</span> to{" "}
             <span className="font-semibold text-foreground">{endItem}</span> of{" "}
             <span className="font-semibold text-foreground">{totalItems}</span>{" "}
-            {itemLabel}
+            {effectiveItemLabel}
           </span>
         )}
 
         {pageSizeOptions && pageSizeOptions.length > 0 && onPageSizeChange && (
-          <div className="flex items-center gap-2 pl-3 border-l border-border">
+          <div className="flex items-center gap-2 pl-3 border-l border-border/60">
             <span className="text-xs text-muted-foreground whitespace-nowrap">Per page:</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="h-7.5 px-2 rounded-lg border border-border bg-card text-xs text-foreground focus:outline-none focus:border-primary cursor-pointer transition-colors"
+              className="h-7 px-2 rounded-lg border border-border bg-card text-xs text-foreground focus:outline-none focus:border-primary cursor-pointer transition-colors shadow-2xs"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -98,7 +101,7 @@ const Pagination = ({
         )}
       </div>
 
-      {/* Page Navigation Controls */}
+      {/* Page Navigation Controls matching reference styling */}
       <div className="flex items-center gap-1.5 ml-auto">
         {/* Previous Page Button */}
         <button
@@ -106,9 +109,9 @@ const Pagination = ({
           disabled={safePage === 1 || totalItems === 0}
           onClick={() => onPageChange && onPageChange(safePage - 1)}
           aria-label="Previous page"
-          className={`${btnSize} rounded-xl border border-border hover:border-foreground/40 bg-card text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-all`}
+          className={`${btnSize} rounded-full border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-all shadow-2xs active:scale-95`}
         >
-          <ChevronLeft size={compact ? 15 : 16} />
+          <ChevronLeft size={compact ? 13 : 14} />
         </button>
 
         {/* Page Number Buttons */}
@@ -117,7 +120,7 @@ const Pagination = ({
             return (
               <span
                 key={`ellipsis-${idx}`}
-                className={`${btnSize} flex items-center justify-center text-muted-foreground select-none`}
+                className={`${btnSize} flex items-center justify-center text-muted-foreground text-xs select-none`}
               >
                 •••
               </span>
@@ -132,10 +135,10 @@ const Pagination = ({
               disabled={totalItems === 0}
               onClick={() => onPageChange && onPageChange(p)}
               aria-current={isActive ? "page" : undefined}
-              className={`${btnSize} rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+              className={`${btnSize} rounded-full transition-all cursor-pointer flex items-center justify-center ${
                 isActive && totalItems !== 0
-                  ? "bg-primary text-background font-bold shadow-xs"
-                  : "border border-border hover:border-foreground/40 bg-card text-foreground hover:bg-muted font-normal disabled:opacity-40 disabled:cursor-not-allowed"
+                  ? "bg-[#c57463] text-white font-bold shadow-xs ring-2 ring-[#c57463]/20"
+                  : "border border-border/80 hover:border-foreground/30 bg-card text-foreground hover:bg-muted font-medium disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs active:scale-95"
               }`}
             >
               {p}
@@ -149,9 +152,9 @@ const Pagination = ({
           disabled={safePage === effectiveTotalPages || totalItems === 0}
           onClick={() => onPageChange && onPageChange(safePage + 1)}
           aria-label="Next page"
-          className={`${btnSize} rounded-xl border border-border hover:border-foreground/40 bg-card text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-all`}
+          className={`${btnSize} rounded-full border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center transition-all shadow-2xs active:scale-95`}
         >
-          <ChevronRight size={compact ? 15 : 16} />
+          <ChevronRight size={compact ? 13 : 14} />
         </button>
       </div>
     </div>

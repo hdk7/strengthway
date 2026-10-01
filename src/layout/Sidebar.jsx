@@ -95,9 +95,21 @@ function findNavItemByPath(pathname) {
       (c) =>
         c.path === pathname ||
         pathname.startsWith(`${c.path}/`) ||
-        (c.id === "batch-schedule" && (pathname === "/admin/batches" || pathname.startsWith("/admin/batches/"))) ||
-        (c.id === "master-class-schedule" && pathname === "/admin/masters/schedule") ||
-        (c.id === "attendance-policy" && (pathname === "/admin/masters/holiday" || pathname === "/admin/schedule/holidays")),
+        (c.id === "batch-schedule" &&
+          (pathname === "/admin/batches" ||
+            pathname.startsWith("/admin/batches/") ||
+            pathname === "/admin/schedule/batches" ||
+            pathname.startsWith("/admin/schedule/batches/"))) ||
+        (c.id === "master-class-schedule" &&
+          (pathname === "/admin/masters/schedule" ||
+            pathname === "/admin/schedule/master-class" ||
+            pathname.startsWith("/admin/schedule/master-class/") ||
+            pathname === "/admin/schedule/classes" ||
+            pathname === "/admin/schedule/class" ||
+            pathname === "/admin/schedule/class-schedule" ||
+            pathname === "/admin/schedule/sessions")) ||
+        (c.id === "attendance-policy" &&
+          (pathname === "/admin/masters/holiday" || pathname === "/admin/schedule/holidays")),
     );
     if (child) return { top, child };
   }
@@ -105,10 +117,49 @@ function findNavItemByPath(pathname) {
 }
 
 const itemBase =
-  "group relative flex items-center gap-3 w-full py-2.5 px-3 border border-transparent rounded-xl text-muted-foreground text-sm no-underline cursor-pointer text-left hover:bg-accent/20 hover:text-foreground transition-all duration-150";
+  "group relative flex items-center gap-3 w-full py-2.5 px-3 border border-transparent rounded-xl text-muted-foreground text-sm no-underline cursor-pointer text-left hover:bg-muted hover:text-foreground transition-all duration-150";
 const itemActive = "bg-primary/10 border-primary/25 text-foreground font-bold shadow-xs";
 
-function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggleGroup }) {
+function isSubmoduleActive(child, currentPath) {
+  if (currentPath === child.path || (child.path && currentPath.startsWith(`${child.path}/`))) {
+    return true;
+  }
+  if (child.id === "batch-schedule") {
+    return (
+      currentPath === "/admin/batches" ||
+      currentPath.startsWith("/admin/batches/") ||
+      currentPath === "/admin/schedule/batches" ||
+      currentPath.startsWith("/admin/schedule/batches/")
+    );
+  }
+  if (child.id === "master-class-schedule") {
+    return (
+      currentPath === "/admin/schedule/master-class" ||
+      currentPath.startsWith("/admin/schedule/master-class/") ||
+      currentPath === "/admin/schedule/classes" ||
+      currentPath === "/admin/schedule/class" ||
+      currentPath === "/admin/schedule/class-schedule" ||
+      currentPath === "/admin/schedule/sessions" ||
+      currentPath === "/admin/masters/schedule"
+    );
+  }
+  if (child.id === "attendance-policy") {
+    return (
+      currentPath === "/admin/masters/holiday" ||
+      currentPath === "/admin/schedule/holidays"
+    );
+  }
+  return false;
+}
+
+function SidebarNavItem({
+  item,
+  isCollapsed,
+  isGroupOpen,
+  isGroupActive,
+  onToggleGroup,
+  currentPath,
+}) {
   const Icon = item.icon;
   const paddingClass = isCollapsed ? "justify-center px-0" : "px-3";
 
@@ -184,34 +235,16 @@ function SidebarNavItem({ item, isCollapsed, isGroupOpen, isGroupActive, onToggl
               <NavLink
                 to={child.path}
                 className={({ isActive }) => {
-                  const isCurrentActive =
-                    isActive ||
-                    (child.id === "batch-schedule" &&
-                      (location.pathname === "/admin/batches" ||
-                        location.pathname.startsWith("/admin/batches/"))) ||
-                    (child.id === "master-class-schedule" &&
-                      location.pathname === "/admin/masters/schedule") ||
-                    (child.id === "attendance-policy" &&
-                      (location.pathname === "/admin/masters/holiday" ||
-                        location.pathname === "/admin/schedule/holidays"));
+                  const isCurrentActive = isActive || isSubmoduleActive(child, currentPath);
                   return `flex items-center justify-between px-3 py-2 pl-9 ml-2.5 border-l-2 text-[13px] no-underline rounded-r-xl transition-all duration-150 ${
                     isCurrentActive
                       ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs"
-                      : "border-border/60 text-muted-foreground hover:border-border hover:bg-accent/15 hover:text-foreground"
+                      : "border-border/60 text-muted-foreground hover:border-border hover:bg-muted hover:text-foreground"
                   }`;
                 }}
               >
                 {({ isActive }) => {
-                  const isCurrentActive =
-                    isActive ||
-                    (child.id === "batch-schedule" &&
-                      (location.pathname === "/admin/batches" ||
-                        location.pathname.startsWith("/admin/batches/"))) ||
-                    (child.id === "master-class-schedule" &&
-                      location.pathname === "/admin/masters/schedule") ||
-                    (child.id === "attendance-policy" &&
-                      (location.pathname === "/admin/masters/holiday" ||
-                        location.pathname === "/admin/schedule/holidays"));
+                  const isCurrentActive = isActive || isSubmoduleActive(child, currentPath);
                   return (
                     <>
                       <span className="truncate">{child.label}</span>
@@ -265,7 +298,7 @@ function SignOutModal({ open, onClose, onConfirm }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-transparent text-foreground text-sm font-medium hover:bg-accent/10 transition-colors cursor-pointer"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -309,14 +342,7 @@ export default function Sidebar({
 
   const toggleGroup = (item) => {
     const isAlreadyOpen = openGroupId === item.id;
-    if (isAlreadyOpen) {
-      setOpenGroupId(null);
-    } else {
-      setOpenGroupId(item.id);
-      if (item.children?.[0]?.path && activeMatch?.top.id !== item.id) {
-        navigate(item.children[0].path);
-      }
-    }
+    setOpenGroupId(isAlreadyOpen ? null : item.id);
   };
 
   const confirmLogout = () => {
@@ -357,6 +383,7 @@ export default function Sidebar({
               isGroupOpen={openGroupId === item.id}
               isGroupActive={activeMatch?.top.id === item.id && Boolean(activeMatch.child)}
               onToggleGroup={toggleGroup}
+              currentPath={location.pathname}
             />
           ))}
         </nav>

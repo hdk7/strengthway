@@ -2,19 +2,33 @@ import { useState, useEffect } from "react";
 import { Check } from "lucide-react";
 import { Reveal } from "@/landingPage/Reveal";
 import { SpotlightCard } from "@/landingPage/SpotlightCard";
-import { getMembershipPlans } from "@/lib/membershipPlans";
+import { getMembershipPlans, DEFAULT_MEMBERSHIP_PLANS } from "@/lib/membershipPlans";
 
 export function PlansSection() {
-  const [plans, setPlans] = useState([]);
+  const [plans, setPlans] = useState(DEFAULT_MEMBERSHIP_PLANS);
 
   useEffect(() => {
-    const load = () => {
-      const active = getMembershipPlans(false);
-      setPlans(active.length > 0 ? active : getMembershipPlans(true));
-    };
+    let isMounted = true;
+    async function load() {
+      try {
+        const active = await getMembershipPlans(false);
+        if (!isMounted) return;
+        if (Array.isArray(active) && active.length > 0) {
+          setPlans(active);
+        } else {
+          const all = await getMembershipPlans(true);
+          if (isMounted && Array.isArray(all) && all.length > 0) {
+            setPlans(all);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not load plans from API, using default plans:", err);
+      }
+    }
     load();
-    window.addEventListener("storage", load);
-    return () => window.removeEventListener("storage", load);
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

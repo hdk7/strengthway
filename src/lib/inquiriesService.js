@@ -1,90 +1,127 @@
-import { STORAGE_KEYS } from "@/config/storageKeys";
+/**
+ * Inquiries Service — Backend API Integration
+ *
+ * All inquiries are retrieved from and persisted to the Strengthway backend API.
+ * No localStorage persistence is used.
+ *
+ * Backend base endpoint: /api/v1/inquiries
+ */
 
-function readStorage() {
-  if (typeof window === "undefined") return [];
+import { api } from "@/lib/apiClient";
+
+/**
+ * Fetch all inquiries from the backend API.
+ * @param {object} [params] - Optional filters { status, search, includeDeleted }
+ * @returns {Promise<Array>} List of inquiry objects
+ */
+export async function getInquiries(params = {}) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.INQUIRIES);
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
+    const query = new URLSearchParams();
+    if (params.status && params.status !== "All") {
+      query.append("status", params.status);
+    }
+    if (params.search) {
+      query.append("search", params.search.trim());
+    }
+    if (params.includeDeleted) {
+      query.append("includeDeleted", "true");
+    }
+
+    const queryStr = query.toString() ? `?${query.toString()}` : "";
+    const response = await api.get(`/v1/inquiries${queryStr}`);
+    return Array.isArray(response) ? response : (response?.inquiries || []);
+  } catch (err) {
+    console.error("Failed to fetch inquiries:", err);
+    throw err;
   }
 }
 
-function writeStorage(items) {
-  if (typeof window === "undefined") return;
+/**
+ * Fetch a single inquiry by its ID.
+ * @param {string} id - Inquiry ID (e.g. "INQ-123456")
+ * @returns {Promise<object|null>} The inquiry record or null
+ */
+export async function getInquiryById(id) {
+  if (!id) return null;
   try {
-    localStorage.setItem(STORAGE_KEYS.INQUIRIES, JSON.stringify(items));
-    window.dispatchEvent(new Event("storage"));
-  } catch {
-    // ignore storage write errors
+    const response = await api.get(`/v1/inquiries/${encodeURIComponent(id)}`);
+    return response || null;
+  } catch (err) {
+    console.error(`Failed to fetch inquiry ${id}:`, err);
+    throw err;
   }
 }
 
-export function getInquiries() {
-  return readStorage();
-}
-
-export function getInquiryById(id) {
-  const all = readStorage();
-  return all.find((item) => item.id === id) || null;
-}
-
-export function createInquiry(data) {
-  const all = readStorage();
-  const newInquiry = {
-    id: `INQ-${Date.now().toString().slice(-6)}`,
-    name: data.name?.trim() || "",
-    gender: data.gender || "",
-    mobile: data.mobile?.trim() || "",
-    email: data.email?.trim() || "",
+/**
+ * Create a new customer inquiry via backend API.
+ * @param {object} data - Form data
+ * @returns {Promise<object>} Created inquiry record
+ */
+export async function createInquiry(data) {
+  const payload = {
+    id: data.id?.trim() || undefined,
+    name: data.name?.trim(),
+    gender: data.gender || "Male",
+    mobile: data.mobile?.trim(),
+    email: data.email?.trim().toLowerCase(),
     address: data.address?.trim() || "",
     subject: data.subject?.trim() || "General Inquiry",
     message: data.message?.trim() || "",
-    status: data.status === "Lead" ? "Inquiry" : data.status || "Inquiry", // "Inquiry" | "Contacted" | "Converted" | "Archived"
-    createdAt: new Date().toISOString(),
+    status: data.status === "Lead" ? "Inquiry" : data.status || "Inquiry",
   };
 
-  const updated = [newInquiry, ...all];
-  writeStorage(updated);
-  return newInquiry;
+  const created = await api.post("/v1/inquiries", payload);
+  return created;
 }
 
-export function updateInquiryStatus(id, status) {
-  const all = readStorage();
-  let updatedInquiry = null;
-  const updated = all.map((item) => {
-    if (item.id === id) {
-      updatedInquiry = { ...item, status, updatedAt: new Date().toISOString() };
-      return updatedInquiry;
-    }
-    return item;
-  });
-  if (updatedInquiry) {
-    writeStorage(updated);
-  }
-  return updatedInquiry;
+/**
+ * Update the status of an existing inquiry.
+ * @param {string} id - Inquiry ID
+ * @param {string} status - New status ("Inquiry" | "Contacted" | "Converted" | "Archived")
+ * @returns {Promise<object>} Updated inquiry record
+ */
+export async function updateInquiryStatus(id, status) {
+  const updated = await api.patch(`/v1/inquiries/${encodeURIComponent(id)}/status`, { status });
+  return updated;
 }
 
-export function updateInquiry(id, patch) {
-  const all = readStorage();
-  let updatedInquiry = null;
-  const updated = all.map((item) => {
-    if (item.id === id) {
-      updatedInquiry = { ...item, ...patch, updatedAt: new Date().toISOString() };
-      return updatedInquiry;
-    }
-    return item;
-  });
-  if (updatedInquiry) {
-    writeStorage(updated);
-  }
-  return updatedInquiry;
+/**
+ * Update fields of an existing inquiry.
+ * @param {string} id - Inquiry ID
+ * @param {object} patch - Updates
+ * @returns {Promise<object>} Updated inquiry record
+ */
+export async function updateInquiry(id, patch) {
+  const updated = await api.put(`/v1/inquiries/${encodeURIComponent(id)}`, patch);
+  return updated;
 }
 
-export function deleteInquiry(id) {
-  const all = readStorage();
-  const filtered = all.filter((item) => item.id !== id);
-  writeStorage(filtered);
+/**
+ * Permanently delete an inquiry record.
+ * @param {string} id - Inquiry ID
+ * @returns {Promise<boolean>} Success confirmation
+ */
+export async function deleteInquiry(id) {
+  await api.delete(`/v1/inquiries/${encodeURIComponent(id)}`);
   return true;
+}
+
+/**
+ * Soft-delete / archive an inquiry record.
+ * @param {string} id - Inquiry ID
+ * @returns {Promise<object>} Soft deleted inquiry record
+ */
+export async function softDeleteInquiry(id) {
+  const deleted = await api.patch(`/v1/inquiries/${encodeURIComponent(id)}/soft-delete`);
+  return deleted;
+}
+
+/**
+ * Restore an archived inquiry record.
+ * @param {string} id - Inquiry ID
+ * @returns {Promise<object>} Restored inquiry record
+ */
+export async function restoreInquiry(id) {
+  const restored = await api.patch(`/v1/inquiries/${encodeURIComponent(id)}/restore`);
+  return restored;
 }

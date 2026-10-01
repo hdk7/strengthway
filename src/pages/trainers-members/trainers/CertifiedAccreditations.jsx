@@ -489,7 +489,7 @@ export function CertifiedAccreditations({
                   setShowUploadModal(false);
                   setPendingFile(null);
                 }}
-                className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
+                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 Cancel
               </button>

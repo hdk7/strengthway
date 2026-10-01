@@ -1,84 +1,93 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
+import { ApiError } from "@/lib/apiClient";
 
-// Demo mode defaults to true unless explicitly disabled with VITE_DEMO_MODE=false.
-// This ensures that deployed previews (such as on Vercel) work out-of-the-box without requiring a live backend.
-export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE !== "false";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api";
+
+// Re-exported so LoginPage can show the demo credentials hint in the UI.
+// DEMO_MODE is now always false — the backend is live.
+export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
 export const DEMO_CREDENTIALS = { email: "admin@thestrengthway.com", password: "Admin@12345" };
 
-export class AuthError extends Error {
-  constructor(message, status) {
-    super(message);
-    this.name = "AuthError";
-    this.status = status;
-  }
-}
+// Re-export ApiError under the legacy name so imports in LoginPage keep working.
+export { ApiError as AuthError };
 
+/**
+ * Authenticate an admin user against the backend.
+ *
+ * @param {{ email: string, password: string }} credentials
+ * @returns {Promise<{ token: string, user: object }>}
+ * @throws {ApiError} on network failure or invalid credentials
+ */
 export async function loginAdmin({ email, password }) {
-  const normalizedEmail = (email || "").trim().toLowerCase();
-  const isDemoCredentialMatch =
-    normalizedEmail === DEMO_CREDENTIALS.email.toLowerCase() &&
-    password === DEMO_CREDENTIALS.password;
-
-  // If in demo mode OR using demo credentials, authenticate immediately
-  if (DEMO_MODE || isDemoCredentialMatch) {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    if (isDemoCredentialMatch) {
-      return {
-        token: `demo-token-${Date.now()}`,
-        user: {
-          id: "ADM-001",
-          email: DEMO_CREDENTIALS.email,
-          name: "Administrator",
-          role: "admin",
-        },
-      };
-    }
-    throw new AuthError("Incorrect email or password. Please use the demo credentials.", 401);
-  }
-
-  // Live backend authentication attempt
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}/admin/login`, {
+    response = await fetch(`${API_BASE_URL}/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
   } catch {
-    throw new AuthError("Unable to reach the backend server. Please verify your connection or use demo credentials.");
+    throw new ApiError(
+      "Unable to reach the server. Check your connection and try again.",
+      0,
+    );
+  }
+
+  let json;
+  try {
+    json = await response.json();
+  } catch {
+    throw new ApiError("Unexpected server response. Please try again.", response.status);
   }
 
   if (!response.ok) {
-    if (response.status === 401) {
-      throw new AuthError("Incorrect email or password.", 401);
-    }
-    throw new AuthError("Something went wrong. Please try again.", response.status);
+    const msg =
+      json?.message ||
+      (response.status === 401
+        ? "Incorrect email or password."
+        : "Something went wrong. Please try again.");
+    throw new ApiError(msg, response.status, json);
   }
 
-  return response.json();
+  // Backend returns { success, data: { token, user }, message }
+  return json.data ?? json;
 }
 
+/**
+ * Request a password-reset link for the given email.
+ *
+ * @param {string} email
+ * @returns {Promise<{ message: string }>}
+ * @throws {ApiError}
+ */
 export async function forgotPassword(email) {
-  if (DEMO_MODE || !import.meta.env.VITE_API_BASE_URL) {
-    // Simulate network delay without leaking whether the email exists
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    return { message: "If the email is registered, a password reset link has been sent." };
-  }
-
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}/admin/forgot-password`, {
+    response = await fetch(`${API_BASE_URL}/v1/auth/forgot-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
     });
   } catch {
-    throw new AuthError("Unable to reach the server. Check your connection and try again.");
+    throw new ApiError(
+      "Unable to reach the server. Check your connection and try again.",
+      0,
+    );
+  }
+
+  let json;
+  try {
+    json = await response.json();
+  } catch {
+    throw new ApiError("Unexpected server response.", response.status);
   }
 
   if (!response.ok) {
-    throw new AuthError("Something went wrong. Please try again.", response.status);
+    throw new ApiError(
+      json?.message || "Something went wrong. Please try again.",
+      response.status,
+      json,
+    );
   }
 
-  return response.json();
+  return json.data ?? json;
 }

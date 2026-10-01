@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -50,6 +50,9 @@ export default function MasterClassSchedulePage() {
   const [batches, setBatches] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState("ALL");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Modal State for Create / Edit Program
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
@@ -74,6 +77,7 @@ export default function MasterClassSchedulePage() {
   const [viewingSchedule, setViewingSchedule] = useState(null);
   const [viewModalTab, setViewModalTab] = useState("curriculum"); // "curriculum" | "tracking"
   const [viewingItems, setViewingItems] = useState([]);
+  const [viewingBatchTracking, setViewingBatchTracking] = useState([]);
   const [editingClassInModalId, setEditingClassInModalId] = useState(null);
   const [editingClassForm, setEditingClassForm] = useState({ subject: "", message: "" });
   const [isAddingClassInModal, setIsAddingClassInModal] = useState(false);
@@ -83,18 +87,28 @@ export default function MasterClassSchedulePage() {
   const [assigningSchedule, setAssigningSchedule] = useState(null);
   const [assigningBatchIds, setAssigningBatchIds] = useState([]);
 
-  useEffect(() => {
-    loadData();
-    window.addEventListener("storage", loadData);
-    return () => window.removeEventListener("storage", loadData);
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [allSchedules, allBatches] = await Promise.all([
+        getMasterSchedules(),
+        getBatches(),
+      ]);
+      setSchedules(Array.isArray(allSchedules) ? allSchedules : []);
+      setBatches(Array.isArray(allBatches) ? allBatches : []);
+    } catch (err) {
+      console.error("Failed to load schedules:", err);
+      setError(err.message || "Failed to load schedules");
+      toast.error("Failed to load schedules.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const loadData = () => {
-    const allSchedules = getMasterSchedules();
-    const allBatches = getBatches();
-    setSchedules(allSchedules);
-    setBatches(allBatches);
-  };
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Derive days list from pattern
   const currentDaysList = useMemo(() => {
@@ -182,8 +196,15 @@ export default function MasterClassSchedulePage() {
   };
 
   // Open Edit Modal
-  const handleOpenEdit = (schedule) => {
-    const items = getScheduleItems(schedule.id);
+  const handleOpenEdit = async (schedule) => {
+    let items = schedule.items;
+    if (!items || items.length === 0) {
+      try {
+        items = await getScheduleItems(schedule.id);
+      } catch {
+        items = [];
+      }
+    }
     let classesToLoad = [];
     if (items && items.length > 0) {
       classesToLoad = items.map((i) => ({
@@ -288,13 +309,14 @@ export default function MasterClassSchedulePage() {
   };
 
   // Save Program Form
-  const handleSaveSchedule = (e) => {
+  const handleSaveSchedule = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       toast.error("Please enter a Program Name.");
       return;
     }
 
+    setSubmitting(true);
     try {
       const selectedCoach = ALL_COACHES.find((c) => c.id === formData.coachId);
       const coachName = selectedCoach ? selectedCoach.name : "Assigned Coach";
@@ -313,65 +335,71 @@ export default function MasterClassSchedulePage() {
       };
 
       if (editingScheduleId) {
-        updateMasterSchedule(editingScheduleId, programPayload, classesData);
+        await updateMasterSchedule(editingScheduleId, programPayload, classesData);
         toast.success(
           `Program "${formData.name}" updated with ${formData.batchIds.length} assigned batches!`,
         );
       } else {
-        createMasterSchedule(programPayload, classesData);
+        await createMasterSchedule(programPayload, classesData);
         toast.success(
           `Created reusable program "${formData.name}" with ${formData.batchIds.length} assigned batches!`,
         );
       }
 
       setIsFormModalOpen(false);
-      loadData();
+      await loadData();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save program.");
+      toast.error(err.message || "Failed to save program.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-
   // Toggle Status
-  const handleToggleStatus = (id) => {
+  const handleToggleStatus = async (id) => {
     try {
-      const updated = toggleMasterScheduleStatus(id);
+      const updated = await toggleMasterScheduleStatus(id);
       if (updated) {
         toast.success(`Program status changed to ${updated.status}.`);
-        loadData();
+        await loadData();
       }
-    } catch {
-      toast.error("Failed to update status.");
+    } catch (err) {
+      toast.error(err.message || "Failed to update status.");
     }
   };
 
   // Delete Schedule
-  const handleDelete = (id, name) => {
+  const handleDelete = async (id, name) => {
     if (
       window.confirm(
         `Are you sure you want to delete "${name}"? This will remove all batch tracking sessions for this program.`,
       )
     ) {
       try {
-        deleteMasterSchedule(id);
+        await deleteMasterSchedule(id);
         toast.success(`Deleted program "${name}".`);
-        loadData();
-      } catch {
-        toast.error("Failed to delete program.");
+        await loadData();
+      } catch (err) {
+        toast.error(err.message || "Failed to delete program.");
       }
     }
   };
 
   // Open View Modal (Curriculum or Tracking)
-  const handleOpenViewClasses = (schedule, tab = "curriculum") => {
-    const items = getScheduleItems(schedule.id);
+  const handleOpenViewClasses = async (schedule, tab = "curriculum") => {
     setViewingSchedule(schedule);
     setViewModalTab(tab);
-    setViewingItems(items);
     setEditingClassInModalId(null);
     setIsAddingClassInModal(false);
     setNewClassForm({ subject: "", message: "" });
+    try {
+      const items = await getScheduleItems(schedule.id);
+      setViewingItems(Array.isArray(items) ? items : []);
+    } catch (err) {
+      console.error("Failed to load schedule items:", err);
+      setViewingItems([]);
+    }
   };
 
   // Quick Batch Assignment Modal
@@ -391,96 +419,126 @@ export default function MasterClassSchedulePage() {
     );
   };
 
-  const handleSaveBatchAssignments = () => {
+  const handleSaveBatchAssignments = async () => {
     if (!assigningSchedule) return;
+    setSubmitting(true);
     try {
-      assignBatchesToProgram(assigningSchedule.id, assigningBatchIds);
+      await assignBatchesToProgram(assigningSchedule.id, assigningBatchIds);
       toast.success(
         `Updated batches for "${assigningSchedule.name}" (${assigningBatchIds.length} assigned).`,
       );
       setAssigningSchedule(null);
-      loadData();
+      await loadData();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update batch assignments.");
+      toast.error(err.message || "Failed to update batch assignments.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   // Save Edited Class in Syllabus Modal
-  const handleSaveClassInModal = (itemId, classNumber) => {
+  const handleSaveClassInModal = async (itemId, classNumber) => {
     if (!editingClassForm.subject.trim()) {
       toast.error("Please enter a class subject.");
       return;
     }
-    const updated = updateMasterClassItem(itemId, {
-      subject: editingClassForm.subject,
-      message: editingClassForm.message,
-    });
-    if (updated) {
-      toast.success(
-        `Class ${classNumber} updated! Updated across all assigned batches while preserving batch session tracking.`,
-      );
-      setEditingClassInModalId(null);
-      if (viewingSchedule) {
-        setViewingItems(getScheduleItems(viewingSchedule.id));
+    try {
+      const updated = await updateMasterClassItem(itemId, {
+        subject: editingClassForm.subject,
+        message: editingClassForm.message,
+      });
+      if (updated) {
+        toast.success(
+          `Class ${classNumber} updated! Updated across all assigned batches while preserving batch session tracking.`,
+        );
+        setEditingClassInModalId(null);
+        if (viewingSchedule) {
+          const items = await getScheduleItems(viewingSchedule.id);
+          setViewingItems(Array.isArray(items) ? items : []);
+        }
+        await loadData();
       }
-      loadData();
+    } catch (err) {
+      toast.error(err.message || "Failed to update class details.");
     }
   };
 
   // Delete a Class in Syllabus Modal
-  const handleDeleteClassInModal = (itemId, classNumber) => {
+  const handleDeleteClassInModal = async (itemId, classNumber) => {
     if (viewingItems.length <= 1) {
       toast.error("A program must contain at least 1 class.");
       return;
     }
-    deleteMasterClassItem(itemId);
-    toast.info(`Class ${classNumber} removed. Remaining classes renumbered.`);
-    if (viewingSchedule) {
-      setViewingItems(getScheduleItems(viewingSchedule.id));
-      const updatedSch = getMasterSchedules().find((s) => s.id === viewingSchedule.id);
-      if (updatedSch) setViewingSchedule(updatedSch);
+    try {
+      await deleteMasterClassItem(itemId);
+      toast.info(`Class ${classNumber} removed. Remaining classes renumbered.`);
+      if (viewingSchedule) {
+        const items = await getScheduleItems(viewingSchedule.id);
+        setViewingItems(Array.isArray(items) ? items : []);
+        const updatedSch = await getMasterScheduleById(viewingSchedule.id);
+        if (updatedSch) setViewingSchedule(updatedSch);
+      }
+      await loadData();
+    } catch (err) {
+      toast.error(err.message || "Failed to remove class.");
     }
-    loadData();
   };
 
   // Save New Class in Syllabus Modal
-  const handleSaveNewClassInModal = (e) => {
+  const handleSaveNewClassInModal = async (e) => {
     e.preventDefault();
     if (!newClassForm.subject.trim()) {
       toast.error("Please enter a class subject.");
       return;
     }
-    const added = addMasterClassItem(viewingSchedule.id, newClassForm);
-    if (added) {
-      toast.success(`Class ${added.classNumber} added to program and mapped to assigned batches!`);
-      setNewClassForm({ subject: "", message: "" });
-      setIsAddingClassInModal(false);
-      if (viewingSchedule) {
-        setViewingItems(getScheduleItems(viewingSchedule.id));
-        const updatedSch = getMasterSchedules().find((s) => s.id === viewingSchedule.id);
-        if (updatedSch) setViewingSchedule(updatedSch);
+    try {
+      const added = await addMasterClassItem(viewingSchedule.id, newClassForm);
+      if (added) {
+        toast.success(`Class ${added.classNumber} added to program and mapped to assigned batches!`);
+        setNewClassForm({ subject: "", message: "" });
+        setIsAddingClassInModal(false);
+        if (viewingSchedule) {
+          const items = await getScheduleItems(viewingSchedule.id);
+          setViewingItems(Array.isArray(items) ? items : []);
+          const updatedSch = await getMasterScheduleById(viewingSchedule.id);
+          if (updatedSch) setViewingSchedule(updatedSch);
+        }
+        await loadData();
       }
-      loadData();
+    } catch (err) {
+      toast.error(err.message || "Failed to add class.");
     }
   };
 
   // Update session status for specific batch
-  const handleUpdateBatchSessionStatus = (sessionId, newStatus) => {
+  const handleUpdateBatchSessionStatus = async (sessionId, newStatus) => {
     try {
-      updateSessionStatus(sessionId, newStatus);
+      await updateSessionStatus(sessionId, newStatus);
       toast.success(`Session status updated to ${newStatus}.`);
-      loadData();
-    } catch {
-      toast.error("Failed to update session status.");
+      await loadData();
+    } catch (err) {
+      toast.error(err.message || "Failed to update session status.");
     }
   };
 
   // Tracking summary for viewing modal
-  const viewingBatchTracking = useMemo(() => {
-    if (!viewingSchedule) return [];
-    return getBatchTrackingSummary(viewingSchedule.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!viewingSchedule) {
+      setViewingBatchTracking([]);
+      return;
+    }
+    let cancelled = false;
+    getBatchTrackingSummary(viewingSchedule.id)
+      .then((data) => {
+        if (!cancelled) setViewingBatchTracking(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        console.error("Failed to load batch tracking:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [viewingSchedule, schedules]);
 
   return (
@@ -600,7 +658,7 @@ export default function MasterClassSchedulePage() {
                 setSearchQuery("");
                 setSelectedStatusFilter("ALL");
               }}
-              className="rounded-xl border border-border/80 px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent/20 hover:text-foreground cursor-pointer"
+              className="rounded-xl border border-border/80 px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               title="Reset filters"
             >
               Reset
@@ -610,7 +668,27 @@ export default function MasterClassSchedulePage() {
       </div>
 
       {/* Program Cards Grid */}
-      {filteredSchedules.length === 0 ? (
+      {loading ? (
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
+            <span className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          </div>
+          <h3 className="text-base font-bold text-foreground">Loading Class Programs...</h3>
+          <p className="mt-1 max-w-md text-xs sm:text-sm text-muted-foreground">
+            Fetching programs and curriculum from the database.
+          </p>
+        </div>
+      ) : error ? (
+        <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/5 p-8 text-center">
+          <p className="text-sm font-semibold text-destructive">{error}</p>
+          <button
+            onClick={loadData}
+            className="mt-4 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-background hover:bg-primary/90 cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      ) : filteredSchedules.length === 0 ? (
         <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
             <CalendarDays size={28} />
@@ -737,7 +815,7 @@ export default function MasterClassSchedulePage() {
 
                     <button
                       onClick={() => handleOpenEdit(schedule)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card hover:bg-accent/20 px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card hover:bg-muted px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors cursor-pointer"
                       title="Edit program configuration"
                     >
                       <Edit3 size={14} />
@@ -806,7 +884,7 @@ export default function MasterClassSchedulePage() {
                 </div>
                 <button
                   onClick={() => setIsFormModalOpen(false)}
-                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent/20 hover:text-foreground cursor-pointer"
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
                 >
                   <X size={18} />
                 </button>
@@ -884,7 +962,7 @@ export default function MasterClassSchedulePage() {
                           className={`cursor-pointer rounded-xl border p-3.5 transition-all select-none ${
                             isSelected
                               ? "border-primary bg-primary/10 shadow-xs"
-                              : "border-border bg-card hover:border-border/80 hover:bg-accent/5"
+                              : "border-border bg-card hover:border-border/80 hover:bg-muted/50"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -902,7 +980,7 @@ export default function MasterClassSchedulePage() {
                                 {b.name || b.shortName}
                               </span>
                             </div>
-                            <span className="text-[10px] font-semibold rounded-md bg-accent/20 px-2 py-0.5 text-foreground">
+                            <span className="text-[10px] font-semibold rounded-md bg-muted border border-border/70 px-2 py-0.5 text-foreground">
                               {b.daysPattern || "MWF"}
                             </span>
                           </div>
@@ -1036,15 +1114,20 @@ export default function MasterClassSchedulePage() {
                   <button
                     type="button"
                     onClick={() => setIsFormModalOpen(false)}
-                    className="rounded-xl border border-border bg-transparent px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-accent/15 cursor-pointer"
+                    className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-bold text-background hover:bg-primary/90 shadow-md cursor-pointer active:scale-95"
+                    disabled={submitting}
+                    className="rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-bold text-background hover:bg-primary/90 shadow-md cursor-pointer active:scale-95 disabled:opacity-50"
                   >
-                    {editingScheduleId ? "Update Program" : "Save Program"}
+                    {submitting
+                      ? "Saving..."
+                      : editingScheduleId
+                        ? "Update Program"
+                        : "Save Program"}
                   </button>
                 </div>
               </form>
@@ -1080,7 +1163,7 @@ export default function MasterClassSchedulePage() {
                 </div>
                 <button
                   onClick={() => setAssigningSchedule(null)}
-                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent/20 hover:text-foreground cursor-pointer"
+                  className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -1102,7 +1185,7 @@ export default function MasterClassSchedulePage() {
                         className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer select-none transition-all ${
                           isSelected
                             ? "border-primary bg-primary/10 shadow-2xs"
-                            : "border-border bg-card hover:bg-accent/10"
+                            : "border-border bg-card hover:bg-muted/50"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -1141,15 +1224,16 @@ export default function MasterClassSchedulePage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setAssigningSchedule(null)}
-                    className="rounded-xl border border-border px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
+                    className="rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveBatchAssignments}
-                    className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-background hover:bg-primary/90 shadow-xs cursor-pointer"
+                    disabled={submitting}
+                    className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-background hover:bg-primary/90 shadow-xs cursor-pointer disabled:opacity-50"
                   >
-                    Save Batch Assignments
+                    {submitting ? "Saving..." : "Save Batch Assignments"}
                   </button>
                 </div>
               </div>
@@ -1196,7 +1280,7 @@ export default function MasterClassSchedulePage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setViewingSchedule(null)}
-                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent/20 hover:text-foreground cursor-pointer"
+                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
                     >
                       <X size={18} />
                     </button>
@@ -1312,7 +1396,7 @@ export default function MasterClassSchedulePage() {
                             <button
                               type="button"
                               onClick={() => setIsAddingClassInModal(false)}
-                              className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent/20 cursor-pointer"
+                              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted cursor-pointer transition-colors"
                             >
                               Cancel
                             </button>
@@ -1386,7 +1470,7 @@ export default function MasterClassSchedulePage() {
                                   <button
                                     type="button"
                                     onClick={() => setEditingClassInModalId(null)}
-                                    className="rounded-lg border border-border px-3 py-1 text-xs font-semibold text-foreground hover:bg-accent/20 cursor-pointer"
+                                    className="rounded-lg border border-border bg-card px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
                                   >
                                     Cancel
                                   </button>
@@ -1471,7 +1555,7 @@ export default function MasterClassSchedulePage() {
                           setViewingSchedule(null);
                           handleOpenAssignModal(sch);
                         }}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-bold text-foreground hover:bg-accent/20 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
                       >
                         <Users size={14} />
                         <span>Assign More Batches</span>
@@ -1518,7 +1602,7 @@ export default function MasterClassSchedulePage() {
                                     <h4 className="font-bold text-base text-foreground">
                                       {batchTrack.batchName}
                                     </h4>
-                                    <span className="rounded-md bg-accent/20 px-2 py-0.5 text-xs font-semibold text-foreground">
+                                    <span className="rounded-md bg-muted border border-border/70 px-2 py-0.5 text-xs font-semibold text-foreground">
                                       {batchTrack.timing}
                                     </span>
                                   </div>
@@ -1535,7 +1619,7 @@ export default function MasterClassSchedulePage() {
                                     setViewingSchedule(null);
                                     navigate(`/admin/batches/${batchTrack.batchId}`);
                                   }}
-                                  className="inline-flex items-center gap-1 rounded-xl bg-accent/30 hover:bg-accent/50 text-foreground px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1 rounded-xl border border-border bg-card hover:bg-muted text-foreground px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
                                 >
                                   <span>View Batch Page</span>
                                   <ArrowUpRight size={13} />
@@ -1554,7 +1638,7 @@ export default function MasterClassSchedulePage() {
                                   {batchTrack.percentComplete}%
                                 </span>
                               </div>
-                              <div className="w-full bg-accent/20 rounded-full h-2.5 overflow-hidden">
+                              <div className="w-full bg-muted border border-border/50 rounded-full h-2.5 overflow-hidden">
                                 <div
                                   className="bg-primary h-full transition-all duration-300 rounded-full"
                                   style={{ width: `${batchTrack.percentComplete}%` }}
@@ -1660,7 +1744,7 @@ export default function MasterClassSchedulePage() {
                 </span>
                 <button
                   onClick={() => setViewingSchedule(null)}
-                  className="rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent/80 cursor-pointer"
+                  className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
                 >
                   Close
                 </button>

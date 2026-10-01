@@ -1,10 +1,10 @@
-/* eslint-disable max-lines */
 /**
  * Standard gym membership plans and payment configuration for The Strength Way.
- * Features localStorage persistence and dynamic master management.
+ * Features backend API persistence (/api/v1/plans) and dynamic master management.
+ * All localStorage reads/writes for business plan data have been replaced by API calls.
  */
 
-import { STORAGE_KEYS } from "@/config/storageKeys";
+import { api } from "@/lib/apiClient";
 
 export const DEFAULT_MEMBERSHIP_PLANS = [
   {
@@ -49,77 +49,61 @@ export const DEFAULT_MEMBERSHIP_PLANS = [
   },
 ];
 
-function readStorage() {
-  if (typeof window === "undefined") return DEFAULT_MEMBERSHIP_PLANS;
+/**
+ * Fetch membership plans from the backend API.
+ * @param {boolean} includeInactive - Whether to include Inactive plans (default: true)
+ * @param {boolean} includeDeleted  - Whether to include soft-deleted/archived plans (default: false)
+ * @returns {Promise<Array>} List of membership plan objects
+ */
+export async function getMembershipPlans(includeInactive = true, includeDeleted = false) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.MEMBERSHIP_PLANS);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
-      return DEFAULT_MEMBERSHIP_PLANS;
+    const params = new URLSearchParams();
+    if (includeDeleted) {
+      params.append("includeDeleted", "true");
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      // Purge removed plans: plan-half-yearly, plan-annual, or anything with Half-Yearly / Annual
-      const sanitized = parsed.filter(
-        (p) =>
-          p.id !== "plan-half-yearly" &&
-          p.id !== "plan-annual" &&
-          !/half-yearly|annual/i.test(p.name || "")
-      );
-      if (sanitized.length !== parsed.length || sanitized.length === 0) {
-        const existingIds = new Set(sanitized.map((p) => p.id));
-        DEFAULT_MEMBERSHIP_PLANS.forEach((dp) => {
-          if (!existingIds.has(dp.id)) {
-            sanitized.push(dp);
-          }
-        });
-        localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(sanitized));
-        return sanitized;
-      }
-      return sanitized;
+    if (!includeInactive) {
+      params.append("status", "Active");
     }
-    localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(DEFAULT_MEMBERSHIP_PLANS));
-    return DEFAULT_MEMBERSHIP_PLANS;
-  } catch {
-    return DEFAULT_MEMBERSHIP_PLANS;
+
+    const queryStr = params.toString() ? `?${params.toString()}` : "";
+    const response = await api.get(`/v1/plans${queryStr}`);
+    return Array.isArray(response) ? response : (response?.plans || []);
+  } catch (err) {
+    console.error("Failed to fetch membership plans:", err);
+    throw err;
   }
 }
 
-function writeStorage(plans) {
-  if (typeof window === "undefined") return;
+/**
+ * Fetch a single membership plan by ID from backend.
+ * @param {string} id - Plan ID (e.g. "plan-monthly")
+ * @returns {Promise<object|null>} Plan object or null
+ */
+export async function getMembershipPlanById(id) {
+  if (!id) return null;
   try {
-    localStorage.setItem(STORAGE_KEYS.MEMBERSHIP_PLANS, JSON.stringify(plans));
-    window.dispatchEvent(new Event("storage"));
-  } catch {
-    // ignore storage write errors
+    const response = await api.get(`/v1/plans/${encodeURIComponent(id)}`);
+    return response || null;
+  } catch (err) {
+    console.error(`Failed to fetch membership plan ${id}:`, err);
+    throw err;
   }
 }
 
-export function getMembershipPlans(includeInactive = true, includeDeleted = false) {
-  const all = readStorage();
-  return all.filter((p) => {
-    if (!includeDeleted && p.isDeleted) return false;
-    if (!includeInactive && p.status !== "Active") return false;
-    return true;
-  });
-}
-
-export function getMembershipPlanById(id) {
-  const all = readStorage();
-  return all.find((p) => p.id === id) || null;
-}
-
-export function createMembershipPlan(planData) {
-  const all = readStorage();
+/**
+ * Create a new membership plan via backend API.
+ * @param {object} planData - Plan details
+ * @returns {Promise<object>} Created plan object
+ */
+export async function createMembershipPlan(planData) {
   const priceNum = Number(planData.price) || 0;
   const durationMonths = Number(planData.durationMonths) || 1;
 
-  const newPlan = {
-    id: planData.id?.trim() || `plan-${Date.now().toString().slice(-6)}`,
-    name: planData.name?.trim() || "New Plan",
+  const payload = {
+    id: planData.id?.trim() || undefined,
+    name: planData.name?.trim(),
     durationMonths,
     price: priceNum,
-    formattedPrice: `₹${priceNum.toLocaleString("en-IN")}`,
     period: planData.period?.trim() || (durationMonths === 1 ? "/mo" : `/${durationMonths}mo`),
     billing:
       planData.billing?.trim() ||
@@ -128,130 +112,84 @@ export function createMembershipPlan(planData) {
     badge: planData.badge?.trim() || null,
     popular: Boolean(planData.popular),
     status: planData.status || "Active",
-    isDeleted: false,
-    deletedAt: null,
     features: Array.isArray(planData.features) ? planData.features.filter(Boolean) : [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
   };
 
-  const updated = [...all, newPlan];
-  writeStorage(updated);
-  return newPlan;
+  const created = await api.post("/v1/plans", payload);
+  return created;
 }
 
-export function updateMembershipPlan(id, patch) {
-  const all = readStorage();
-  let updatedPlan = null;
-
-  const updated = all.map((plan) => {
-    if (plan.id === id) {
-      const priceNum = patch.price !== undefined ? Number(patch.price) : plan.price;
-      const durationMonths =
-        patch.durationMonths !== undefined ? Number(patch.durationMonths) : plan.durationMonths;
-
-      updatedPlan = {
-        ...plan,
-        ...patch,
-        price: priceNum,
-        formattedPrice: `₹${priceNum.toLocaleString("en-IN")}`,
-        durationMonths,
-        period: patch.period !== undefined ? patch.period : plan.period,
-        billing:
-          patch.billing !== undefined
-            ? patch.billing
-            : `Billed ₹${priceNum.toLocaleString("en-IN")} for ${durationMonths} month(s)`,
-        features: Array.isArray(patch.features) ? patch.features.filter(Boolean) : plan.features,
-        updatedAt: new Date().toISOString(),
-      };
-      return updatedPlan;
-    }
-    return plan;
-  });
-
-  if (updatedPlan) {
-    writeStorage(updated);
+/**
+ * Update an existing membership plan by ID.
+ * @param {string} id - Plan ID
+ * @param {object} patch - Partial plan updates
+ * @returns {Promise<object>} Updated plan object
+ */
+export async function updateMembershipPlan(id, patch) {
+  const payload = { ...patch };
+  if (payload.price !== undefined) {
+    payload.price = Number(payload.price);
   }
-  return updatedPlan;
-}
-
-export function toggleMembershipPlanStatus(id) {
-  const all = readStorage();
-  let toggled = null;
-  const updated = all.map((p) => {
-    if (p.id === id) {
-      toggled = {
-        ...p,
-        status: p.status === "Active" ? "Inactive" : "Active",
-        updatedAt: new Date().toISOString(),
-      };
-      return toggled;
-    }
-    return p;
-  });
-  if (toggled) {
-    writeStorage(updated);
+  if (payload.durationMonths !== undefined) {
+    payload.durationMonths = Number(payload.durationMonths);
   }
-  return toggled;
-}
-
-export function softDeleteMembershipPlan(id) {
-  const all = readStorage();
-  let deletedPlan = null;
-  const updated = all.map((plan) => {
-    if (plan.id === id) {
-      deletedPlan = {
-        ...plan,
-        isDeleted: true,
-        deletedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      return deletedPlan;
-    }
-    return plan;
-  });
-  if (deletedPlan) {
-    writeStorage(updated);
+  if (Array.isArray(payload.features)) {
+    payload.features = payload.features.filter(Boolean);
   }
-  return deletedPlan;
+
+  const updated = await api.put(`/v1/plans/${encodeURIComponent(id)}`, payload);
+  return updated;
 }
 
-export function restoreMembershipPlan(id) {
-  const all = readStorage();
-  let restoredPlan = null;
-  const updated = all.map((plan) => {
-    if (plan.id === id) {
-      restoredPlan = {
-        ...plan,
-        isDeleted: false,
-        deletedAt: null,
-        status: "Active",
-        updatedAt: new Date().toISOString(),
-      };
-      return restoredPlan;
-    }
-    return plan;
-  });
-  if (restoredPlan) {
-    writeStorage(updated);
-  }
-  return restoredPlan;
+/**
+ * Toggle Active / Inactive status of a plan.
+ * @param {string} id - Plan ID
+ * @returns {Promise<object>} Updated plan object
+ */
+export async function toggleMembershipPlanStatus(id) {
+  const updated = await api.patch(`/v1/plans/${encodeURIComponent(id)}/toggle-status`);
+  return updated;
 }
 
-export function permanentDeleteMembershipPlan(id) {
-  const all = readStorage();
-  const filtered = all.filter((p) => p.id !== id);
-  writeStorage(filtered);
-  return true;
+/**
+ * Soft delete (archive) a membership plan.
+ * @param {string} id - Plan ID
+ * @returns {Promise<object>} Archived plan object
+ */
+export async function softDeleteMembershipPlan(id) {
+  const deleted = await api.patch(`/v1/plans/${encodeURIComponent(id)}/soft-delete`);
+  return deleted;
 }
 
+/**
+ * Alias for softDeleteMembershipPlan.
+ */
 export function deleteMembershipPlan(id) {
   return softDeleteMembershipPlan(id);
 }
 
-// Backward compatible static export - dynamically evaluates current storage if in browser
-export const MEMBERSHIP_PLANS =
-  typeof window !== "undefined" ? readStorage() : DEFAULT_MEMBERSHIP_PLANS;
+/**
+ * Restore an archived (soft-deleted) membership plan.
+ * @param {string} id - Plan ID
+ * @returns {Promise<object>} Restored plan object
+ */
+export async function restoreMembershipPlan(id) {
+  const restored = await api.patch(`/v1/plans/${encodeURIComponent(id)}/restore`);
+  return restored;
+}
+
+/**
+ * Permanently delete a membership plan from the database.
+ * @param {string} id - Plan ID
+ * @returns {Promise<boolean>} Success confirmation
+ */
+export async function permanentDeleteMembershipPlan(id) {
+  await api.delete(`/v1/plans/${encodeURIComponent(id)}`);
+  return true;
+}
+
+// Backward compatible static export
+export const MEMBERSHIP_PLANS = DEFAULT_MEMBERSHIP_PLANS;
 
 export const PAYMENT_METHODS = [
   {
@@ -282,6 +220,7 @@ export const PAYMENT_METHODS = [
 
 /**
  * Calculates start and expiry dates for a membership plan.
+ * Pure utility function — remains synchronous.
  */
 export function calculateMembershipDates(durationMonths, startDate = new Date()) {
   const start = new Date(startDate);
@@ -306,6 +245,7 @@ export function calculateMembershipDates(durationMonths, startDate = new Date())
 
 /**
  * Generates an official transaction reference number.
+ * Pure utility function — remains synchronous.
  */
 export function generateTransactionId(method = "UPI") {
   const prefix = method.toUpperCase().slice(0, 3);
@@ -316,6 +256,7 @@ export function generateTransactionId(method = "UPI") {
 
 /**
  * Generates a formal membership receipt number.
+ * Pure utility function — remains synchronous.
  */
 export function generateReceiptNumber() {
   const year = new Date().getFullYear();

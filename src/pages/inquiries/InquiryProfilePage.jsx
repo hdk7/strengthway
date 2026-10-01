@@ -28,10 +28,23 @@ export default function InquiryProfilePage() {
   const [copiedField, setCopiedField] = useState(null);
 
   useEffect(() => {
+    let isMounted = true;
     setIsLoading(true);
-    const data = getInquiryById(id);
-    setInquiry(data);
-    setIsLoading(false);
+    getInquiryById(id)
+      .then((data) => {
+        if (isMounted) setInquiry(data);
+      })
+      .catch((err) => {
+        console.error("Failed to load inquiry:", err);
+        if (isMounted) setInquiry(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
 
@@ -60,16 +73,16 @@ export default function InquiryProfilePage() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!window.confirm(`Are you sure you want to remove inquiry from ${inquiry.name || "this user"}?`)) {
       return;
     }
     try {
-      deleteInquiry(inquiry.id);
+      await deleteInquiry(inquiry.id);
       toast.success("Inquiry has been deleted.");
       navigate("/admin/inquiries");
-    } catch {
-      toast.error("Failed to delete inquiry.");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete inquiry.");
     }
   };
 
@@ -123,7 +136,7 @@ export default function InquiryProfilePage() {
           <button
             type="button"
             onClick={() => navigate("/admin/inquiries")}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-accent/10 hover:border-accent/40 transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-sm cursor-pointer"
           >
             <ArrowLeft size={14} />
             <span>Back to Inquiries</span>

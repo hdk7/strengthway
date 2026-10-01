@@ -28,6 +28,4 @@ dist
 *.sw?
 scratch/
 
-# Package files
-package.json
-package-lock.json
+

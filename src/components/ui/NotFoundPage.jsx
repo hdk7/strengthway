@@ -7,7 +7,7 @@ import {
   SearchX,
   TriangleAlert,
   Home,
-  RefreshCw,
+  RotateCcw,
   KeyRound,
 } from "lucide-react";
 import { Logo } from "@/landingPage/Logo";
@@ -146,7 +146,7 @@ export function ErrorPage({ status = 404, embedded = false }) {
           onClick={() => window.location.reload()}
           className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer transition-all duration-150 hover:brightness-110 shadow-md ${cfg.badgeBg} ${cfg.badgeText} border ${cfg.badgeBorder}`}
         >
-          <RefreshCw size={15} /> Try again
+          <RotateCcw size={15} /> Try again
         </button>,
       );
     }

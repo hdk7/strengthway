@@ -22,14 +22,33 @@ export default function PublicTrainerProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [allTrainers, setAllTrainers] = useState(() => getTrainers());
-  const [trainer, setTrainer] = useState(() => getTrainerById(id));
+  const [allTrainers, setAllTrainers] = useState([]);
+  const [trainer, setTrainer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    const trainersList = getTrainers();
-    setAllTrainers(trainersList);
-    setTrainer(getTrainerById(id));
+    let cancelled = false;
+    setIsLoading(true);
+    Promise.all([getTrainers(), getTrainerById(id)])
+      .then(([trainersList, trainerData]) => {
+        if (!cancelled) {
+          setAllTrainers(Array.isArray(trainersList) ? trainersList : []);
+          setTrainer(trainerData);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAllTrainers([]);
+          setTrainer(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useDocumentTitle("The Strength Way");
@@ -53,6 +72,19 @@ export default function PublicTrainerProfilePage() {
       }
     }, 120);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
+        <Navbar />
+        <main className="pt-32 pb-20 px-6 text-center max-w-xl mx-auto space-y-4">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-accent border-r-transparent" />
+          <p className="text-sm text-muted-foreground">Loading trainer profile…</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!trainer) {
     return (
@@ -108,7 +140,7 @@ export default function PublicTrainerProfilePage() {
             <button
               type="button"
               onClick={handleRedirectToTrainers}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-foreground hover:text-foreground bg-muted/60 hover:bg-accent/20 border border-border rounded-full px-4 py-2 transition-all cursor-pointer self-start sm:self-auto"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-border rounded-full px-4 py-2 transition-all cursor-pointer self-start sm:self-auto shadow-2xs"
             >
               <ArrowLeft size={14} />
               <span>Back to All Trainers</span>

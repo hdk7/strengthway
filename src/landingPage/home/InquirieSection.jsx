@@ -89,7 +89,7 @@ function ContactForm() {
     return Object.keys(errs).length === 0;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     if (!validate()) {
@@ -99,7 +99,7 @@ function ContactForm() {
 
     setSubmitting(true);
     try {
-      createInquiry(form);
+      await createInquiry(form);
       toast.success("Inquiry sent — we'll get back to you shortly.");
       setForm({
         name: "",
@@ -111,8 +111,8 @@ function ContactForm() {
         message: "",
       });
       setErrors({});
-    } catch {
-      toast.error("Failed to send inquiry. Please try again.");
+    } catch (err) {
+      toast.error(err.message || "Failed to send inquiry. Please try again.");
     } finally {
       setSubmitting(false);
     }

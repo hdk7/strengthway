@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, UserCheck, UserPlus } from "lucide-react";
+import { Users, UserCheck, UserPlus, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers, createTrainer } from "@/lib/trainersService";
 import { syncTrainerBatches } from "@/lib/batchesService";
@@ -11,30 +11,52 @@ import { getTrainerColumns } from "./trainerColumns";
 export default function TrainersPage() {
   const navigate = useNavigate();
   const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const fetchTrainers = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    getTrainers()
+      .then((data) => setTrainers(Array.isArray(data) ? data : []))
+      .catch((e) => setError(e?.message || "Failed to load trainers."))
+      .finally(() => setLoading(false));
+  }, []);
+
   useEffect(() => {
-    try {
-      const data = getTrainers();
-      setTrainers(data);
-    } catch {
-      setTrainers([]);
-    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    getTrainers()
+      .then((data) => {
+        if (!cancelled) setTrainers(Array.isArray(data) ? data : []);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e?.message || "Failed to load trainers.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleOpenAddModal = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveTrainer = (formData) => {
+  const handleSaveTrainer = async (formData) => {
     try {
-      const created = createTrainer(formData);
+      const created = await createTrainer(formData);
       if (created?.id && Array.isArray(formData.batchIds) && formData.batchIds.length > 0) {
-        syncTrainerBatches(created.id, formData.batchIds);
+        await syncTrainerBatches(created.id, formData.batchIds).catch(() => null);
       }
       setTrainers((prev) => [created, ...prev]);
-    } catch {
-      toast.error("Failed to save trainer record.");
+      toast.success(`Trainer ${created.name} added successfully!`);
+    } catch (e) {
+      toast.error(e?.message || "Failed to save trainer record.");
     }
   };
 
@@ -71,6 +93,20 @@ export default function TrainersPage() {
         </button>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive shrink-0">
+          <AlertCircle size={15} className="shrink-0" />
+          <span>{error}</span>
+          <button
+            onClick={fetchTrainers}
+            className="ml-auto text-xs font-semibold underline cursor-pointer hover:no-underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* KPI Cards (3 Cards: Total Staff, Active Now, Inactive) */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 shrink-0">
         <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
@@ -84,7 +120,11 @@ export default function TrainersPage() {
           </div>
           <div className="mt-0.5 flex items-baseline gap-2">
             <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
-              {stats.total}
+              {loading ? (
+                <Loader2 size={20} className="animate-spin text-muted-foreground" />
+              ) : (
+                stats.total
+              )}
             </span>
             <p className="text-[11px] text-muted-foreground">Registered coaches</p>
           </div>
@@ -101,7 +141,11 @@ export default function TrainersPage() {
           </div>
           <div className="mt-0.5 flex items-baseline gap-2">
             <span className="text-xl sm:text-2xl font-extrabold text-emerald-500 tracking-tight">
-              {stats.active}
+              {loading ? (
+                <Loader2 size={20} className="animate-spin text-emerald-500" />
+              ) : (
+                stats.active
+              )}
             </span>
             <p className="text-[11px] text-muted-foreground">Available for training</p>
           </div>
@@ -118,7 +162,11 @@ export default function TrainersPage() {
           </div>
           <div className="mt-0.5 flex items-baseline gap-2">
             <span className="text-xl sm:text-2xl font-extrabold text-muted-foreground tracking-tight">
-              {stats.inactive}
+              {loading ? (
+                <Loader2 size={20} className="animate-spin text-muted-foreground" />
+              ) : (
+                stats.inactive
+              )}
             </span>
             <p className="text-[11px] text-muted-foreground">On break / paused</p>
           </div>
@@ -130,6 +178,7 @@ export default function TrainersPage() {
         columns={columns}
         data={trainers}
         keyField="id"
+        loading={loading}
         searchable
         searchPlaceholder="Search trainers by name, gender, email, or phone…"
         searchFields={["name", "gender", "phone", "email", "id"]}
@@ -139,7 +188,7 @@ export default function TrainersPage() {
           { label: "Male", value: "Male" },
           { label: "Female", value: "Female" },
         ]}
-        pageSize={6}
+        pageSize={5}
         itemLabel="trainers"
         emptyTitle="No trainers found"
         emptyMessage="Try adjusting your search query or filters."

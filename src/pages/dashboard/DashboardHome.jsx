@@ -1,27 +1,46 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Users, Dumbbell, ArrowUpRight } from "lucide-react";
+import { Users, Dumbbell, ArrowUpRight, Loader2, AlertCircle } from "lucide-react";
 import { getMembers } from "@/lib/membersService";
 import { getTrainers } from "@/lib/trainersService";
 
 export default function DashboardHome() {
   const [members, setMembers] = useState([]);
   const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const loadData = () => {
+    setLoading(true);
+    setError(null);
+    Promise.all([getMembers(true), getTrainers()])
+      .then(([membersData, trainersData]) => {
+        setMembers(membersData || []);
+        setTrainers(trainersData || []);
+      })
+      .catch((e) => setError(e?.message || "Failed to load dashboard data."))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    const loadData = () => {
-      setMembers(getMembers(true) || []);
-      setTrainers(getTrainers() || []);
-    };
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
-    loadData();
+    Promise.all([getMembers(true), getTrainers()])
+      .then(([membersData, trainersData]) => {
+        if (cancelled) return;
+        setMembers(membersData || []);
+        setTrainers(trainersData || []);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e?.message || "Failed to load dashboard data.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    window.addEventListener("focus", loadData);
-    window.addEventListener("storage", loadData);
-    return () => {
-      window.removeEventListener("focus", loadData);
-      window.removeEventListener("storage", loadData);
-    };
+    return () => { cancelled = true; };
   }, []);
 
   // Real calculations - Members
@@ -56,7 +75,6 @@ export default function DashboardHome() {
       icon: Users,
       path: "/admin/trainers-members/members",
       badge: `${memberActiveRate}% Active`,
-      badgeColor: "emerald",
       description: "Registered gym athletes, active memberships, and fitness records",
     },
     {
@@ -66,7 +84,6 @@ export default function DashboardHome() {
       icon: Dumbbell,
       path: "/admin/trainers-members/trainers",
       badge: `${trainerActiveRate}% Active`,
-      badgeColor: "emerald",
       description: "Certified coaches, coaching specialties, and roster status",
     },
   ];
@@ -81,30 +98,47 @@ export default function DashboardHome() {
         </p>
       </div>
 
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <AlertCircle size={16} className="shrink-0" />
+          <span>{error}</span>
+          <button
+            onClick={loadData}
+            className="ml-auto shrink-0 text-xs font-semibold underline cursor-pointer hover:no-underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* 2 Primary Calculated Stat Cards: Total Members & Total Trainers */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {stats.map((stat) => {
           const Icon = stat.icon;
-
           return (
             <Link
               key={stat.title}
               to={stat.path}
-              className="group relative overflow-hidden block rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:border-accent/50 hover:shadow-md cursor-pointer"
+              className="group relative overflow-hidden block rounded-2xl border border-border bg-card p-6 shadow-sm transition-all hover:border-foreground/30 hover:shadow-md cursor-pointer"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   {stat.title}
                 </span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/15 text-accent transition-colors group-hover:bg-accent group-hover:text-background">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-background">
                   <Icon size={20} />
                 </div>
               </div>
 
               <div className="mt-4 flex items-baseline justify-between gap-2">
-                <span className="text-4xl font-extrabold font-display tracking-tight text-foreground">
-                  {stat.value}
-                </span>
+                {loading ? (
+                  <Loader2 size={28} className="animate-spin text-muted-foreground" />
+                ) : (
+                  <span className="text-4xl font-extrabold font-display tracking-tight text-foreground">
+                    {stat.value}
+                  </span>
+                )}
                 <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-500">
                   {stat.badge}
                 </span>
@@ -114,7 +148,7 @@ export default function DashboardHome() {
 
               <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
                 <span>{stat.description}</span>
-                <span className="inline-flex items-center gap-1 font-semibold text-accent group-hover:underline">
+                <span className="inline-flex items-center gap-1 font-semibold text-primary group-hover:underline">
                   <span>View Details</span>
                   <ArrowUpRight size={13} />
                 </span>

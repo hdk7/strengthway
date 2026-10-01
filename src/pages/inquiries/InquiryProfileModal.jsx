@@ -83,7 +83,7 @@ export function InquiryProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-accent/15 hover:text-foreground transition-colors cursor-pointer"
+            className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X size={16} />

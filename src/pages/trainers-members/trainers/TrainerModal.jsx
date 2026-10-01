@@ -40,31 +40,57 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
 
   useEffect(() => {
     if (isOpen) {
-      const available = getBatches();
-      setBatchesList(available);
+      Promise.all([
+        getBatches(),
+        trainerToEdit ? getTrainerBatchIds(trainerToEdit.id) : Promise.resolve([]),
+      ])
+        .then(([available, assignedFromBatches]) => {
+          setBatchesList(Array.isArray(available) ? available : []);
+          if (trainerToEdit) {
+            const initialBatchIds = Array.from(
+              new Set([
+                ...(trainerToEdit.batchIds || []),
+                ...(Array.isArray(assignedFromBatches) ? assignedFromBatches : []),
+              ])
+            );
 
-      if (trainerToEdit) {
-        const assignedFromBatches = getTrainerBatchIds(trainerToEdit.id);
-        const initialBatchIds = Array.from(
-          new Set([...(trainerToEdit.batchIds || []), ...assignedFromBatches])
-        );
-
-        setForm({
-          name: trainerToEdit.name || "",
-          gender: trainerToEdit.gender || "Male",
-          experience: trainerToEdit.experience || "",
-          phone: trainerToEdit.phone || "",
-          email: trainerToEdit.email || "",
-          status: trainerToEdit.status || "Active",
-          quote: trainerToEdit.quote || "",
-          photo: trainerToEdit.photo || "",
-          bio: trainerToEdit.bio || "",
-          shift: trainerToEdit.shift || "",
-          batchIds: initialBatchIds,
+            setForm({
+              name: trainerToEdit.name || "",
+              gender: trainerToEdit.gender || "Male",
+              experience: trainerToEdit.experience || "",
+              phone: trainerToEdit.phone || "",
+              email: trainerToEdit.email || "",
+              status: trainerToEdit.status || "Active",
+              quote: trainerToEdit.quote || "",
+              photo: trainerToEdit.photo || "",
+              bio: trainerToEdit.bio || "",
+              shift: trainerToEdit.shift || "",
+              batchIds: initialBatchIds,
+            });
+          } else {
+            setForm(INITIAL_FORM);
+          }
+        })
+        .catch(() => {
+          setBatchesList([]);
+          if (trainerToEdit) {
+            setForm({
+              name: trainerToEdit.name || "",
+              gender: trainerToEdit.gender || "Male",
+              experience: trainerToEdit.experience || "",
+              phone: trainerToEdit.phone || "",
+              email: trainerToEdit.email || "",
+              status: trainerToEdit.status || "Active",
+              quote: trainerToEdit.quote || "",
+              photo: trainerToEdit.photo || "",
+              bio: trainerToEdit.bio || "",
+              shift: trainerToEdit.shift || "",
+              batchIds: trainerToEdit.batchIds || [],
+            });
+          } else {
+            setForm(INITIAL_FORM);
+          }
         });
-      } else {
-        setForm(INITIAL_FORM);
-      }
       setErrors({});
     }
   }, [isOpen, trainerToEdit]);
@@ -156,7 +182,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
     setForm((prev) => ({ ...prev, photo: "" }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validateWithYup(trainerSchema, form);
     setErrors(errs);
@@ -168,17 +194,12 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
     setIsSubmitting(true);
     try {
       if (trainerToEdit?.id) {
-        syncTrainerBatches(trainerToEdit.id, form.batchIds || []);
+        await syncTrainerBatches(trainerToEdit.id, form.batchIds || []).catch(() => null);
       }
-      onSuccess(form, Boolean(trainerToEdit));
-      toast.success(
-        trainerToEdit
-          ? `Trainer ${form.name} updated successfully!`
-          : `Trainer ${form.name} added successfully!`,
-      );
+      await onSuccess(form, Boolean(trainerToEdit));
       handleClose();
-    } catch {
-      toast.error("Failed to save trainer details.");
+    } catch (e) {
+      toast.error(e?.message || "Failed to save trainer details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -215,7 +236,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
             </DialogPrimitive.Description>
             <DialogPrimitive.Close
               onClick={handleClose}
-              className="absolute right-4 top-4 sm:right-6 sm:top-5 rounded-full p-2 text-muted-foreground hover:bg-accent/10 hover:text-foreground transition-colors cursor-pointer"
+              className="absolute right-4 top-4 sm:right-6 sm:top-5 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
               aria-label="Close"
             >
               <X className="h-5 w-5" />
@@ -451,7 +472,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                       className={`flex items-start gap-3 p-3 rounded-xl border text-left cursor-pointer transition-all select-none ${
                         isSelected
                           ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30"
-                          : "border-border/70 bg-card hover:bg-accent/10 hover:border-border"
+                          : "border-border/70 bg-card hover:bg-muted/50 hover:border-border"
                       }`}
                     >
                       <div
@@ -543,7 +564,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground hover:bg-accent/10 transition-colors cursor-pointer"
+                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
               >
                 Cancel
               </button>

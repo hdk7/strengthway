@@ -1,7 +1,16 @@
 /* eslint-disable max-lines */
+/**
+ * Batches Service — API Layer
+ *
+ * All business data is fetched from / persisted to the Strengthway backend API.
+ * No localStorage is used for batch data, coach shifts, or scheduled classes.
+ *
+ * Backend base: /api/v1/batches
+ */
+
+import { api } from "@/lib/apiClient";
 import { getTrainers, SEED_TRAINERS } from "./trainersService";
 import { getMembers } from "./membersService";
-import { STORAGE_KEYS } from "@/config/storageKeys";
 
 export const SHIFT_SLOTS = [
   {
@@ -48,657 +57,8 @@ export const SHIFT_SLOTS = [
   },
 ];
 
-export const SEED_BATCHES = [
-  {
-    id: "BATCH-01",
-    name: "BATCH 1",
-    shortName: "Batch 1",
-    startTime: "06:00 AM",
-    endTime: "07:00 AM",
-    timingLabel: "06:00 AM - 07:00 AM",
-    daysPattern: "MWF",
-    daysLabel: "Monday • Wednesday • Friday",
-    daysList: ["Monday", "Wednesday", "Friday"],
-    maxPax: 28,
-    currentPax: 21,
-    status: "Active",
-    trainerIds: ["TRN-101", "TRN-103", "TRN-106"],
-    description: "Morning functional strength and athletic conditioning batch.",
-    memberIds: [
-      "MEM-2001",
-      "MEM-2002",
-      "MEM-2003",
-      "MEM-2004",
-      "MEM-2005",
-      "MEM-2006",
-      "MEM-2007",
-      "MEM-2008",
-      "MEM-2009",
-      "MEM-2010",
-      "MEM-2011",
-      "MEM-2012",
-      "MEM-2013",
-      "MEM-2014",
-      "MEM-2015",
-      "MEM-2016",
-      "MEM-2017",
-      "MEM-2018",
-      "MEM-2019",
-      "MEM-2020",
-      "MEM-2122",
-    ],
-    createdAt: "2026-01-01T06:00:00.000Z",
-  },
-  {
-    id: "BATCH-02",
-    name: "BATCH 2",
-    shortName: "Batch 2",
-    startTime: "08:00 AM",
-    endTime: "09:00 AM",
-    timingLabel: "08:00 AM - 09:00 AM",
-    daysPattern: "MWF",
-    daysLabel: "Monday • Wednesday • Friday",
-    daysList: ["Monday", "Wednesday", "Friday"],
-    maxPax: 28,
-    currentPax: 23,
-    status: "Active",
-    trainerIds: ["TRN-101", "TRN-103", "TRN-106"],
-    description: "Mid-morning hypertrophy and barbell foundation batch.",
-    memberIds: [
-      "MEM-2021",
-      "MEM-2022",
-      "MEM-2023",
-      "MEM-2024",
-      "MEM-2025",
-      "MEM-2026",
-      "MEM-2027",
-      "MEM-2028",
-      "MEM-2029",
-      "MEM-2030",
-      "MEM-2031",
-      "MEM-2032",
-      "MEM-2033",
-      "MEM-2034",
-      "MEM-2035",
-      "MEM-2036",
-      "MEM-2037",
-      "MEM-2038",
-      "MEM-2039",
-      "MEM-2040",
-      "MEM-2041",
-      "MEM-2042",
-      "MEM-2123",
-    ],
-    createdAt: "2026-01-01T08:00:00.000Z",
-  },
-  {
-    id: "BATCH-03",
-    name: "BATCH 3",
-    shortName: "Batch 3",
-    startTime: "06:30 PM",
-    endTime: "07:30 PM",
-    timingLabel: "06:30 PM - 07:30 PM",
-    daysPattern: "MWF",
-    daysLabel: "Monday • Wednesday • Friday",
-    daysList: ["Monday", "Wednesday", "Friday"],
-    maxPax: 28,
-    currentPax: 25,
-    status: "Active",
-    trainerIds: ["TRN-103", "TRN-104", "TRN-106"],
-    description: "Evening prime strength, Olympic lifting, and power conditioning program.",
-    memberIds: [
-      "MEM-2043",
-      "MEM-2044",
-      "MEM-2045",
-      "MEM-2046",
-      "MEM-2047",
-      "MEM-2048",
-      "MEM-2049",
-      "MEM-2050",
-      "MEM-2051",
-      "MEM-2052",
-      "MEM-2053",
-      "MEM-2054",
-      "MEM-2055",
-      "MEM-2056",
-      "MEM-2057",
-      "MEM-2058",
-      "MEM-2059",
-      "MEM-2060",
-      "MEM-2061",
-      "MEM-2062",
-      "MEM-2063",
-      "MEM-2064",
-      "MEM-2065",
-      "MEM-2066",
-      "MEM-2124",
-    ],
-    createdAt: "2026-01-01T18:30:00.000Z",
-  },
-  {
-    id: "BATCH-04",
-    name: "BATCH 4",
-    shortName: "Batch 4",
-    startTime: "06:00 AM",
-    endTime: "07:00 AM",
-    timingLabel: "06:00 AM - 07:00 AM",
-    daysPattern: "TTS",
-    daysLabel: "Tuesday • Thursday • Saturday",
-    daysList: ["Tuesday", "Thursday", "Saturday"],
-    maxPax: 28,
-    currentPax: 19,
-    status: "Active",
-    trainerIds: ["TRN-101", "TRN-105"],
-    description: "Tuesday-Thursday-Saturday early athletic power and mobility track.",
-    memberIds: [
-      "MEM-2067",
-      "MEM-2068",
-      "MEM-2069",
-      "MEM-2070",
-      "MEM-2071",
-      "MEM-2072",
-      "MEM-2073",
-      "MEM-2074",
-      "MEM-2075",
-      "MEM-2076",
-      "MEM-2077",
-      "MEM-2078",
-      "MEM-2079",
-      "MEM-2080",
-      "MEM-2081",
-      "MEM-2082",
-      "MEM-2083",
-      "MEM-2084",
-      "MEM-2125",
-    ],
-    createdAt: "2026-01-01T06:00:00.000Z",
-  },
-  {
-    id: "BATCH-05",
-    name: "BATCH 5",
-    shortName: "Batch 5",
-    startTime: "08:00 AM",
-    endTime: "09:00 AM",
-    timingLabel: "08:00 AM - 09:00 AM",
-    daysPattern: "TTS",
-    daysLabel: "Tuesday • Thursday • Saturday",
-    daysList: ["Tuesday", "Thursday", "Saturday"],
-    maxPax: 28,
-    currentPax: 21,
-    status: "Active",
-    trainerIds: ["TRN-101", "TRN-105"],
-    description: "TTS mid-morning progressive overload, endurance, and conditioning.",
-    memberIds: [
-      "MEM-2085",
-      "MEM-2086",
-      "MEM-2087",
-      "MEM-2088",
-      "MEM-2089",
-      "MEM-2090",
-      "MEM-2091",
-      "MEM-2092",
-      "MEM-2093",
-      "MEM-2094",
-      "MEM-2095",
-      "MEM-2096",
-      "MEM-2097",
-      "MEM-2098",
-      "MEM-2099",
-      "MEM-2100",
-      "MEM-2101",
-      "MEM-2102",
-      "MEM-2103",
-      "MEM-2104",
-      "MEM-2105",
-    ],
-    createdAt: "2026-01-01T08:00:00.000Z",
-  },
-  {
-    id: "BATCH-06",
-    name: "BATCH 6",
-    shortName: "Batch 6",
-    startTime: "08:00 PM",
-    endTime: "09:00 PM",
-    timingLabel: "08:00 PM - 09:00 PM",
-    daysPattern: "MWF",
-    daysLabel: "Monday • Wednesday • Friday",
-    daysList: ["Monday", "Wednesday", "Friday"],
-    maxPax: 28,
-    currentPax: 16,
-    status: "Active",
-    trainerIds: ["TRN-103", "TRN-104", "TRN-105", "TRN-106"],
-    description: "Night shift athletic power, metabolic conditioning, and recovery session.",
-    memberIds: [
-      "MEM-2106",
-      "MEM-2107",
-      "MEM-2108",
-      "MEM-2109",
-      "MEM-2110",
-      "MEM-2111",
-      "MEM-2112",
-      "MEM-2113",
-      "MEM-2114",
-      "MEM-2115",
-      "MEM-2116",
-      "MEM-2117",
-      "MEM-2118",
-      "MEM-2119",
-      "MEM-2120",
-      "MEM-2121",
-    ],
-    createdAt: "2026-01-01T20:00:00.000Z",
-  },
-];
-
-export const SEED_COACH_SHIFTS = [
-  {
-    coachId: "TRN-101",
-    coachName: "Dolliee",
-    fullName: "Dolliee Ellens",
-    role: "Head Functional Coach",
-    shifts: {
-      "6_00_am_mwf": true,
-      "8_00_am_mwf": true,
-      "6_00_am_tts": true,
-      "8_00_am_tts": true,
-      "6_30_pm_mwf": false,
-      "8_00_pm_mwf": false,
-    },
-  },
-  {
-    coachId: "TRN-103",
-    coachName: "Robert",
-    fullName: "Robert Creflo",
-    role: "Senior Strength and Rehab Specialist",
-    shifts: {
-      "6_00_am_mwf": true,
-      "8_00_am_mwf": true,
-      "6_00_am_tts": false,
-      "8_00_am_tts": false,
-      "6_30_pm_mwf": true,
-      "8_00_pm_mwf": true,
-    },
-  },
-  {
-    coachId: "TRN-104",
-    coachName: "Bharath",
-    fullName: "Bharath V",
-    role: "Barbell & Strength Coach",
-    shifts: {
-      "6_00_am_mwf": false,
-      "8_00_am_mwf": false,
-      "6_00_am_tts": false,
-      "8_00_am_tts": false,
-      "6_30_pm_mwf": true,
-      "8_00_pm_mwf": true,
-    },
-  },
-  {
-    coachId: "TRN-105",
-    coachName: "Rengaraj",
-    fullName: "Rengaraj M",
-    role: "High Performance Conditioning Coach",
-    shifts: {
-      "6_00_am_mwf": false,
-      "8_00_am_mwf": false,
-      "6_00_am_tts": true,
-      "8_00_am_tts": true,
-      "6_30_pm_mwf": false,
-      "8_00_pm_mwf": true,
-    },
-  },
-  {
-    coachId: "TRN-106",
-    coachName: "F Coach",
-    fullName: "F Coach",
-    role: "Functional Movements & Kettlebell Specialist",
-    shifts: {
-      "6_00_am_mwf": true,
-      "8_00_am_mwf": true,
-      "6_00_am_tts": false,
-      "8_00_am_tts": false,
-      "6_30_pm_mwf": true,
-      "8_00_pm_mwf": true,
-    },
-  },
-];
-
-export const SEED_SCHEDULED_CLASSES = [
-  // BATCH 1 Classes (MWF 06:00 AM)
-  {
-    id: "CLS-101",
-    batchId: "BATCH-01",
-    day: "Monday",
-    title: "Squat Depth & Hip Drive Mechanics",
-    category: "Strength & Hypertrophy",
-    focus: "Bilateral back squat biomechanics, depth screening, and hip mobility",
-    intensity: "High",
-    room: "Main Rig & Platforms",
-    coachName: "Dolliee Ellens",
-    time: "06:00 AM - 07:00 AM",
-  },
-  {
-    id: "CLS-102",
-    batchId: "BATCH-01",
-    day: "Wednesday",
-    title: "Upper Body Press & Scapular Stability",
-    category: "Strength & Hypertrophy",
-    focus: "Barbell bench press, overhead dumbbell press, and scapular retraction",
-    intensity: "High",
-    room: "Olympic Bench Area",
-    coachName: "Robert Creflo",
-    time: "06:00 AM - 07:00 AM",
-  },
-  {
-    id: "CLS-103",
-    batchId: "BATCH-01",
-    day: "Friday",
-    title: "Deadlift & Posterior Chain Conditioning",
-    category: "Functional Fitness",
-    focus: "Conventional deadlifts, Romanian deadlifts, and kettlebell swings",
-    intensity: "High",
-    room: "Deadlift Platforms",
-    coachName: "F Coach",
-    time: "06:00 AM - 07:00 AM",
-  },
-
-  // BATCH 2 Classes (MWF 08:00 AM)
-  {
-    id: "CLS-201",
-    batchId: "BATCH-02",
-    day: "Monday",
-    title: "Olympic Barbell Technique & Speed",
-    category: "Olympic Weightlifting",
-    focus: "Power clean turnover, front rack positioning, and triple extension",
-    intensity: "High",
-    room: "Olympic Lifting Floor",
-    coachName: "F Coach",
-    time: "08:00 AM - 09:00 AM",
-  },
-  {
-    id: "CLS-202",
-    batchId: "BATCH-02",
-    day: "Wednesday",
-    title: "Hypertrophy Push-Pull Supersets",
-    category: "Strength & Hypertrophy",
-    focus: "Incline dumbbell press superset with chest-supported rows",
-    intensity: "Medium",
-    room: "Free Weights Zone",
-    coachName: "Dolliee Ellens",
-    time: "08:00 AM - 09:00 AM",
-  },
-  {
-    id: "CLS-203",
-    batchId: "BATCH-02",
-    day: "Friday",
-    title: "Conditioning, Agility & Sled Finisher",
-    category: "Functional Fitness",
-    focus: "Turf sled pushes, battle ropes, and shuttle intervals",
-    intensity: "High",
-    room: "Turf & Sled Track",
-    coachName: "Robert Creflo",
-    time: "08:00 AM - 09:00 AM",
-  },
-
-  // BATCH 3 Classes (MWF 06:30 PM)
-  {
-    id: "CLS-301",
-    batchId: "BATCH-03",
-    day: "Monday",
-    title: "Olympic Clean & Jerk Progression",
-    category: "Olympic Weightlifting",
-    focus: "Split jerk footwork, elbow drive, and bar speed",
-    intensity: "High",
-    room: "Olympic Lifting Floor",
-    coachName: "Bharath V",
-    time: "06:30 PM - 07:30 PM",
-  },
-  {
-    id: "CLS-302",
-    batchId: "BATCH-03",
-    day: "Wednesday",
-    title: "Heavy Barbell Bench Press & Lockout",
-    category: "Strength & Hypertrophy",
-    focus: "Powerlifting arch setup, triceps lockout, and pause reps",
-    intensity: "High",
-    room: "Olympic Bench Area",
-    coachName: "Robert Creflo",
-    time: "06:30 PM - 07:30 PM",
-  },
-  {
-    id: "CLS-303",
-    batchId: "BATCH-03",
-    day: "Friday",
-    title: "Metabolic Conditioning & Strongman Carries",
-    category: "Functional Fitness",
-    focus: "Farmer carries, trap bar deadlift intervals, and core bracing",
-    intensity: "High",
-    room: "Turf & Sled Track",
-    coachName: "F Coach",
-    time: "06:30 PM - 07:30 PM",
-  },
-
-  // BATCH 4 Classes (TTS 06:00 AM)
-  {
-    id: "CLS-401",
-    batchId: "BATCH-04",
-    day: "Tuesday",
-    title: "Dynamic Joint Mobility & Squatting",
-    category: "Strength & Hypertrophy",
-    focus: "Tempo squats, ankle mobility, and core stabilization",
-    intensity: "High",
-    room: "Main Rig & Platforms",
-    coachName: "Dolliee Ellens",
-    time: "06:00 AM - 07:00 AM",
-  },
-  {
-    id: "CLS-402",
-    batchId: "BATCH-04",
-    day: "Thursday",
-    title: "Overhead Press & Pull Stability",
-    category: "Strength & Hypertrophy",
-    focus: "Military barbell press, weighted pull-ups, and core bracing",
-    intensity: "High",
-    room: "Main Rig & Platforms",
-    coachName: "Rengaraj M",
-    time: "06:00 AM - 07:00 AM",
-  },
-  {
-    id: "CLS-403",
-    batchId: "BATCH-04",
-    day: "Saturday",
-    title: "Full Body Barbell Complex Challenge",
-    category: "Functional Fitness",
-    focus: "Continuous multi-exercise barbell complex without resting between movements",
-    intensity: "High",
-    room: "Main Rig & Platforms",
-    coachName: "Rengaraj M",
-    time: "06:00 AM - 07:00 AM",
-  },
-
-  // BATCH 5 Classes (TTS 08:00 AM)
-  {
-    id: "CLS-501",
-    batchId: "BATCH-05",
-    day: "Tuesday",
-    title: "Front Squat Mechanics & Quad Drive",
-    category: "Strength & Hypertrophy",
-    focus: "Thoracic upright posture, front rack grip, and eccentric control",
-    intensity: "High",
-    room: "Main Rig & Platforms",
-    coachName: "Dolliee Ellens",
-    time: "08:00 AM - 09:00 AM",
-  },
-  {
-    id: "CLS-502",
-    batchId: "BATCH-05",
-    day: "Thursday",
-    title: "Snatch Technique & Overhead Squat Stability",
-    category: "Olympic Weightlifting",
-    focus: "Snatch balance, wide grip turnover, and shoulder girdle lock",
-    intensity: "High",
-    room: "Olympic Lifting Floor",
-    coachName: "Rengaraj M",
-    time: "08:00 AM - 09:00 AM",
-  },
-  {
-    id: "CLS-503",
-    batchId: "BATCH-05",
-    day: "Saturday",
-    title: "Team Conditioning & Turf Sled Gauntlet",
-    category: "Functional Fitness",
-    focus: "Partner sled pushes, assault bike sprints, and high-intensity interval ladders",
-    intensity: "High",
-    room: "Turf & Sled Track",
-    coachName: "Dolliee Ellens",
-    time: "08:00 AM - 09:00 AM",
-  },
-
-  // BATCH 6 Classes (MWF 08:00 PM)
-  {
-    id: "CLS-601",
-    batchId: "BATCH-06",
-    day: "Monday",
-    title: "Late-Night Heavy Squat Complex",
-    category: "Strength & Hypertrophy",
-    focus: "Safety squat bar, paused box squats, and glute-ham tie-in",
-    intensity: "High",
-    room: "Main Rig & Platforms",
-    coachName: "Robert Creflo",
-    time: "08:00 PM - 09:00 PM",
-  },
-  {
-    id: "CLS-602",
-    batchId: "BATCH-06",
-    day: "Wednesday",
-    title: "Deadlift Variations & Spinal Neutrality",
-    category: "Strength & Hypertrophy",
-    focus: "Deficit deadlifts, barbell rows, and lat engagement",
-    intensity: "High",
-    room: "Deadlift Platforms",
-    coachName: "Bharath V",
-    time: "08:00 PM - 09:00 PM",
-  },
-  {
-    id: "CLS-603",
-    batchId: "BATCH-06",
-    day: "Friday",
-    title: "Full Body Functional Capacity & Sled Finisher",
-    category: "Functional Fitness",
-    focus: "Kettlebell clean & press, sandbag carries, and metabolic flush",
-    intensity: "High",
-    room: "Turf & Sled Track",
-    coachName: "F Coach",
-    time: "08:00 PM - 09:00 PM",
-  },
-];
-
-// --- Storage Utilities ---
-
-function readStorage(key, defaultData) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      localStorage.setItem(key, JSON.stringify(defaultData));
-      return [...defaultData];
-    }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      if (key === STORAGE_KEYS.BATCHES) {
-        if (parsed.length === 0) {
-          localStorage.setItem(key, JSON.stringify(defaultData));
-          return [...defaultData];
-        }
-        const needsSync = parsed.some(
-          (b) =>
-            b.maxPax !== 28 ||
-            !Array.isArray(b.memberIds) ||
-            b.memberIds.length < 15 ||
-            !Array.isArray(b.trainerIds),
-        );
-        if (needsSync && defaultData && defaultData.length > 0) {
-          const merged = defaultData.map((seedBatch) => {
-            const existing = parsed.find((b) => b.id === seedBatch.id);
-            if (!existing) return seedBatch;
-            return {
-              ...existing,
-              name: seedBatch.name,
-              shortName: seedBatch.shortName,
-              startTime: seedBatch.startTime,
-              endTime: seedBatch.endTime,
-              timingLabel: seedBatch.timingLabel,
-              daysPattern: seedBatch.daysPattern,
-              daysLabel: seedBatch.daysLabel,
-              daysList: seedBatch.daysList,
-              maxPax: 28,
-              currentPax: seedBatch.memberIds?.length || existing.currentPax || 0,
-              trainerIds: Array.isArray(existing.trainerIds) && existing.trainerIds.length > 0
-                ? existing.trainerIds
-                : seedBatch.trainerIds,
-              memberIds: seedBatch.memberIds,
-            };
-          });
-          localStorage.setItem(key, JSON.stringify(merged));
-          return merged;
-        }
-        return parsed;
-      }
-      if (key === STORAGE_KEYS.SCHEDULED_CLASSES) {
-        if (parsed.length === 0 || parsed.length < defaultData.length) {
-          localStorage.setItem(key, JSON.stringify(defaultData));
-          return [...defaultData];
-        }
-        return parsed;
-      }
-      if (key === STORAGE_KEYS.COACH_SHIFTS) {
-        const expectedCoachIds = ["TRN-101", "TRN-103", "TRN-104", "TRN-105", "TRN-106"];
-        const hasAllCoaches = expectedCoachIds.every((id) => parsed.some((c) => c.coachId === id));
-        if (!hasAllCoaches || parsed.length !== expectedCoachIds.length) {
-          localStorage.setItem(key, JSON.stringify(defaultData));
-          return [...defaultData];
-        }
-        return parsed;
-      }
-      return parsed;
-    }
-    localStorage.setItem(key, JSON.stringify(defaultData));
-    return [...defaultData];
-  } catch {
-    return [...defaultData];
-  }
-}
-
-function writeStorage(key, data) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new Event("storage"));
-    }
-  } catch (err) {
-    console.error("LocalStorage write failed:", err);
-  }
-}
-
-// --- Batches CRUD ---
-
-export function getBatches() {
-  return readStorage(STORAGE_KEYS.BATCHES, SEED_BATCHES);
-}
-
-export function getBatchById(id) {
-  const batches = getBatches();
-  return batches.find((b) => b.id === id || b.id.toLowerCase() === id?.toLowerCase());
-}
-
+// Pure schedule utility
 export function resolveDaysDetails(daysPattern, customLabel, customList) {
-  if (customLabel && customList && Array.isArray(customList) && customList.length > 0) {
-    return {
-      daysPattern: daysPattern || "CUSTOM",
-      daysLabel: customLabel,
-      daysList: customList,
-    };
-  }
-
   const p = (daysPattern || "MWF").trim();
   if (p === "MWF") {
     return {
@@ -743,6 +103,14 @@ export function resolveDaysDetails(daysPattern, customLabel, customList) {
     };
   }
 
+  if (customLabel && customList && Array.isArray(customList) && customList.length > 0) {
+    return {
+      daysPattern: daysPattern || "CUSTOM",
+      daysLabel: customLabel,
+      daysList: customList,
+    };
+  }
+
   return {
     daysPattern: p,
     daysLabel: customLabel || p,
@@ -750,278 +118,541 @@ export function resolveDaysDetails(daysPattern, customLabel, customList) {
   };
 }
 
-export function createBatch(data) {
-  const batches = getBatches();
-  const maxNum = batches.reduce((max, b) => {
-    const match = b.id?.match(/BATCH-(\d+)/i);
-    return match ? Math.max(max, parseInt(match[1], 10)) : max;
-  }, 0);
-  const nextNumber = maxNum + 1;
-  const newId = data.id || `BATCH-${String(nextNumber).padStart(2, "0")}`;
-  const daysInfo = resolveDaysDetails(data.daysPattern, data.daysLabel, data.daysList);
+// ── Batches Read ─────────────────────────────────────────────────────────────
 
-  const newBatch = {
-    id: newId,
-    name: data.name?.toUpperCase() || `BATCH ${nextNumber}`,
-    shortName: data.shortName || `Batch ${nextNumber}`,
-    startTime: data.startTime || "06:00 AM",
-    endTime: data.endTime || "07:00 AM",
-    timingLabel: `${data.startTime || "06:00 AM"} - ${data.endTime || "07:00 AM"}`,
+/**
+ * Fetch all training batches from backend API.
+ *
+ * @param {string} [status] Optional filter ("Active" | "Inactive")
+ * @returns {Promise<object[]>}
+ */
+export async function getBatches(status) {
+  try {
+    const query = status && status !== "ALL" && status !== "All" ? `?status=${encodeURIComponent(status)}` : "";
+    const result = await api.get(`/v1/batches${query}`);
+    if (Array.isArray(result)) return result;
+    if (result?.data && Array.isArray(result.data)) return result.data;
+    return [];
+  } catch (err) {
+    console.error("Failed to fetch batches:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch a single batch by ID.
+ *
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+export async function getBatchById(id) {
+  if (!id) return null;
+  try {
+    return await api.get(`/v1/batches/${encodeURIComponent(id)}`);
+  } catch {
+    return null;
+  }
+}
+
+// ── Batches Write ────────────────────────────────────────────────────────────
+
+/**
+ * Create a new batch.
+ *
+ * @param {object} data
+ * @returns {Promise<object>}
+ */
+export async function createBatch(data) {
+  const daysInfo = resolveDaysDetails(data.daysPattern, data.daysLabel, data.daysList || data.customDays);
+  const payload = {
+    ...data,
     daysPattern: daysInfo.daysPattern,
     daysLabel: daysInfo.daysLabel,
     daysList: daysInfo.daysList,
-    maxPax: Number(data.maxPax) || 28,
-    currentPax: Number(data.currentPax) || 0,
-    status: data.status || "Active",
-    trainerIds: data.trainerIds || [],
-    description: data.description || "General fitness training batch.",
-    memberIds: Array.isArray(data.memberIds) ? data.memberIds : [],
-    createdAt: new Date().toISOString(),
   };
-
-  const updated = [...batches, newBatch];
-  writeStorage(STORAGE_KEYS.BATCHES, updated);
-  return newBatch;
+  if (!payload.id) {
+    const existing = await getBatches();
+    const maxNum = existing.reduce((max, b) => {
+      const match = b.id?.match(/BATCH-(\d+)/i);
+      return match ? Math.max(max, parseInt(match[1], 10)) : max;
+    }, 0);
+    payload.id = `BATCH-${String(maxNum + 1).padStart(2, "0")}`;
+  }
+  return api.post("/v1/batches", payload);
 }
 
-export function updateBatch(id, updates) {
-  const batches = getBatches();
-  const index = batches.findIndex((b) => b.id === id);
-  if (index === -1) return null;
-
-  const current = batches[index];
-  const daysInfo =
-    updates.daysPattern || updates.daysLabel || updates.daysList
-      ? resolveDaysDetails(
-          updates.daysPattern !== undefined ? updates.daysPattern : current.daysPattern,
-          updates.daysLabel !== undefined ? updates.daysLabel : current.daysLabel,
-          updates.daysList !== undefined ? updates.daysList : current.daysList,
-        )
-      : null;
-
-  const updatedBatch = {
-    ...current,
-    ...updates,
-    timingLabel:
-      updates.startTime && updates.endTime
-        ? `${updates.startTime} - ${updates.endTime}`
-        : current.timingLabel,
-    ...(daysInfo
-      ? {
-          daysPattern: daysInfo.daysPattern,
-          daysLabel: daysInfo.daysLabel,
-          daysList: daysInfo.daysList,
-        }
-      : {}),
-  };
-
-  batches[index] = updatedBatch;
-  writeStorage(STORAGE_KEYS.BATCHES, batches);
-  return updatedBatch;
+/**
+ * Update an existing batch.
+ *
+ * @param {string} id
+ * @param {object} updates
+ * @returns {Promise<object>}
+ */
+export async function updateBatch(id, updates) {
+  return api.put(`/v1/batches/${encodeURIComponent(id)}`, updates);
 }
 
-export function deleteBatch(id) {
-  const batches = getBatches();
-  const filtered = batches.filter((b) => b.id !== id);
-  writeStorage(STORAGE_KEYS.BATCHES, filtered);
+/**
+ * Delete a batch.
+ *
+ * @param {string} id
+ * @returns {Promise<boolean>}
+ */
+export async function deleteBatch(id) {
+  await api.delete(`/v1/batches/${encodeURIComponent(id)}`);
   return true;
 }
 
-// --- Coach Shift Matrix Operations ---
-
-export function getCoachShiftMatrix() {
-  return readStorage(STORAGE_KEYS.COACH_SHIFTS, SEED_COACH_SHIFTS);
+/**
+ * Toggle a batch's status between Active and Inactive.
+ *
+ * @param {string} id
+ * @returns {Promise<object>}
+ */
+export async function toggleBatchStatus(id) {
+  return api.patch(`/v1/batches/${encodeURIComponent(id)}/toggle-status`);
 }
 
-export function toggleCoachSlot(coachId, slotKey) {
-  const matrix = getCoachShiftMatrix();
-  const coach = matrix.find((c) => c.coachId === coachId);
-  if (!coach) return null;
-
-  const currentVal = !!coach.shifts[slotKey];
-  coach.shifts[slotKey] = !currentVal;
-
-  writeStorage(STORAGE_KEYS.COACH_SHIFTS, matrix);
-
-  // Sync with batch trainerIds if applicable
-  const slot = SHIFT_SLOTS.find((s) => s.key === slotKey);
-  if (slot && slot.batchId) {
-    const batches = getBatches();
-    const batch = batches.find((b) => b.id === slot.batchId);
-    if (batch) {
-      if (!currentVal) {
-        if (!batch.trainerIds.includes(coachId)) {
-          batch.trainerIds.push(coachId);
-        }
-      } else {
-        batch.trainerIds = batch.trainerIds.filter((t) => t !== coachId);
-      }
-      writeStorage(STORAGE_KEYS.BATCHES, batches);
-    }
-  }
-
-  return coach;
+/**
+ * Enroll a member into a batch.
+ *
+ * @param {string} batchId
+ * @param {string} memberId
+ * @returns {Promise<object>}
+ */
+export async function enrollMemberInBatch(batchId, memberId) {
+  return api.patch(`/v1/batches/${encodeURIComponent(batchId)}/enroll`, { memberId });
 }
 
-// --- Scheduled Classes Operations ---
-
-export function getAllScheduledClasses() {
-  return readStorage(STORAGE_KEYS.SCHEDULED_CLASSES, SEED_SCHEDULED_CLASSES);
+/**
+ * Unenroll a member from a batch.
+ *
+ * @param {string} batchId
+ * @param {string} memberId
+ * @returns {Promise<object>}
+ */
+export async function unenrollMemberFromBatch(batchId, memberId) {
+  return api.patch(`/v1/batches/${encodeURIComponent(batchId)}/unenroll`, { memberId });
 }
 
-export function getScheduledClassesByBatch(batchId) {
-  const classes = getAllScheduledClasses();
-  return classes.filter((c) => c.batchId === batchId);
+/**
+ * Sync trainers assigned to a batch.
+ *
+ * @param {string} batchId
+ * @param {string[]} trainerIds
+ * @returns {Promise<object>}
+ */
+export async function syncBatchTrainers(batchId, trainerIds) {
+  return api.patch(`/v1/batches/${encodeURIComponent(batchId)}/sync-trainers`, { trainerIds });
 }
 
-export function updateDayClass(classId, updates) {
-  const classes = getAllScheduledClasses();
-  const index = classes.findIndex((c) => c.id === classId);
-  if (index === -1) return null;
+export const syncTrainerBatchesFromBatch = syncBatchTrainers;
 
-  classes[index] = { ...classes[index], ...updates };
-  writeStorage(STORAGE_KEYS.SCHEDULED_CLASSES, classes);
-  return classes[index];
-}
+// ── Coach Shift Matrix ───────────────────────────────────────────────────────
 
-export function createDayClass(classData) {
-  const classes = getAllScheduledClasses();
-  const newId = `CLS-${Date.now().toString().slice(-4)}`;
-  const newClass = {
-    id: newId,
-    ...classData,
-  };
-  classes.push(newClass);
-  writeStorage(STORAGE_KEYS.SCHEDULED_CLASSES, classes);
-  return newClass;
-}
-
-// --- Cross-Entity Helpers ---
-
-export function getBatchTrainers(trainerIds = []) {
+/**
+ * Get the coach shift matrix.
+ *
+ * @returns {Promise<object[]>}
+ */
+export async function getCoachShiftMatrix() {
   try {
-    const allTrainers = getTrainers();
-    return allTrainers.filter((t) => trainerIds.includes(t.id));
-  } catch {
-    return SEED_TRAINERS.filter((t) => trainerIds.includes(t.id));
-  }
-}
-
-export function getBatchMembers(batchId, maxCount = 18) {
-  try {
-    const members = getMembers();
-    const assigned = members.filter(
-      (m) =>
-        !m.isDeleted &&
-        (m.batchId === batchId ||
-          m.schedule?.batchId === batchId ||
-          m.batchTiming?.toLowerCase() === batchId.toLowerCase()),
-    );
-    if (assigned.length > 0) return assigned;
-    return members.slice(0, maxCount);
+    const result = await api.get("/v1/batches/coach-shifts");
+    return Array.isArray(result) ? result : [];
   } catch {
     return [];
   }
 }
 
-export function enrollMemberInBatch(batchId, memberId) {
-  if (!batchId) return null;
-  const batches = getBatches();
-  const index = batches.findIndex(
-    (b) => b.id === batchId || b.id.toLowerCase() === batchId.toLowerCase(),
-  );
-  if (index === -1) return null;
+/**
+ * Toggle a specific coach's shift slot.
+ *
+ * @param {string} coachId
+ * @param {string} slotKey
+ * @returns {Promise<object>}
+ */
+export async function toggleCoachSlot(coachId, slotKey) {
+  return api.patch("/v1/batches/coach-shifts/toggle", { coachId, slotKey });
+}
 
-  const batch = batches[index];
-  const currentPax = Number(batch.currentPax) || 0;
-  const maxPax = Number(batch.maxPax) || 28;
-  const memberIds = Array.isArray(batch.memberIds) ? [...batch.memberIds] : [];
-  if (memberId && !memberIds.includes(memberId)) {
-    memberIds.push(memberId);
+// ── Scheduled Classes ────────────────────────────────────────────────────────
+
+/**
+ * Get all scheduled curriculum classes across all batches.
+ *
+ * @returns {Promise<object[]>}
+ */
+export async function getAllScheduledClasses() {
+  try {
+    const result = await api.get("/v1/batches/classes");
+    return Array.isArray(result) ? result : [];
+  } catch {
+    return [];
   }
+}
 
-  const updatedBatch = {
-    ...batch,
-    currentPax: Math.min(maxPax, Math.max(currentPax + 1, memberIds.length)),
-    memberIds,
-  };
+/**
+ * Get scheduled classes for a specific batch.
+ *
+ * @param {string} batchId
+ * @returns {Promise<object[]>}
+ */
+export async function getScheduledClassesByBatch(batchId) {
+  if (!batchId) return [];
+  try {
+    const result = await api.get(`/v1/batches/${encodeURIComponent(batchId)}/classes`);
+    return Array.isArray(result) ? result : [];
+  } catch {
+    return [];
+  }
+}
 
-  batches[index] = updatedBatch;
-  writeStorage(STORAGE_KEYS.BATCHES, batches);
-  return updatedBatch;
+/**
+ * Create a scheduled class for a batch.
+ *
+ * @param {string} batchId
+ * @param {object} classData
+ * @returns {Promise<object>}
+ */
+export async function createDayClass(batchId, classData) {
+  const targetBatchId = typeof batchId === "string" ? batchId : classData?.batchId;
+  return api.post(`/v1/batches/${encodeURIComponent(targetBatchId)}/classes`, classData);
+}
+
+/**
+ * Update a scheduled class.
+ *
+ * @param {string} classId
+ * @param {object} updates
+ * @param {string} [batchId]
+ * @returns {Promise<object>}
+ */
+export async function updateDayClass(classId, updates, batchId) {
+  if (batchId) {
+    return api.put(
+      `/v1/batches/${encodeURIComponent(batchId)}/classes/${encodeURIComponent(classId)}`,
+      updates
+    );
+  }
+  return api.put(`/v1/batches/classes/${encodeURIComponent(classId)}`, updates);
+}
+
+/**
+ * Delete a scheduled class.
+ *
+ * @param {string} classId
+ * @param {string} [batchId]
+ * @returns {Promise<boolean>}
+ */
+export async function deleteDayClass(classId, batchId) {
+  if (batchId) {
+    await api.delete(
+      `/v1/batches/${encodeURIComponent(batchId)}/classes/${encodeURIComponent(classId)}`
+    );
+  } else {
+    await api.delete(`/v1/batches/classes/${encodeURIComponent(classId)}`);
+  }
+  return true;
+}
+
+// ── Cross-Entity Helpers ─────────────────────────────────────────────────────
+
+/**
+ * Resolve trainer objects from an array of trainer IDs.
+ * Accepts cached trainers to avoid redundant network calls.
+ *
+ * @param {string[]} trainerIds
+ * @param {object[]} [cachedTrainers]
+ * @returns {object[]}
+ */
+export function getBatchTrainers(trainerIds = [], cachedTrainers = null, batchId = null) {
+  const allTrainers = Array.isArray(cachedTrainers)
+    ? cachedTrainers
+    : Array.isArray(SEED_TRAINERS)
+      ? SEED_TRAINERS
+      : [];
+  return allTrainers.filter(
+    (t) =>
+      !t.isDeleted &&
+      ((Array.isArray(trainerIds) && trainerIds.includes(t.id)) ||
+        (batchId && Array.isArray(t.batchIds) && t.batchIds.includes(batchId)))
+  );
+}
+
+/**
+ * Resolve member objects assigned to a batch.
+ * Accepts cached members or returns empty/filtered.
+ *
+ * @param {string} batchId
+ * @param {number} [maxCount=18]
+ * @param {object[]} [cachedMembers]
+ * @returns {object[]}
+ */
+export function getBatchMembers(batchId, maxCount = 18, cachedMembers = null) {
+  if (!batchId) return [];
+  const members = Array.isArray(cachedMembers) ? cachedMembers : [];
+  return members.filter(
+    (m) =>
+      !m.isDeleted &&
+      (m.batchId === batchId || m.schedule?.batchId === batchId)
+  );
 }
 
 /**
  * Returns an array of batch IDs that the given trainer is currently assigned to.
+ *
+ * @param {string} trainerId
+ * @returns {Promise<string[]>}
  */
-export function getTrainerBatchIds(trainerId) {
+export async function getTrainerBatchIds(trainerId) {
   if (!trainerId) return [];
-  const batches = getBatches();
-  return batches
-    .filter((b) => Array.isArray(b.trainerIds) && b.trainerIds.includes(trainerId))
-    .map((b) => b.id);
+  try {
+    const batches = await getBatches();
+    const list = Array.isArray(batches) ? batches : [];
+    return list
+      .filter((b) => Array.isArray(b.trainerIds) && b.trainerIds.includes(trainerId))
+      .map((b) => b.id);
+  } catch {
+    return [];
+  }
 }
 
 /**
- * Synchronizes batch assignments for a specific trainer across all batches and coach shifts.
- * Any batch ID in selectedBatchIds will include trainerId; any batch ID not in selectedBatchIds will remove trainerId.
+ * Synchronizes batch assignments for a specific trainer across all batches.
+ *
+ * @param {string} trainerId
+ * @param {string[]} selectedBatchIds
+ * @returns {Promise<object>}
  */
-export function syncTrainerBatches(trainerId, selectedBatchIds = []) {
+export async function syncTrainerBatches(trainerId, selectedBatchIds = []) {
   if (!trainerId) return [];
-  const batches = getBatches();
-  const targetBatchIds = Array.isArray(selectedBatchIds) ? selectedBatchIds : [];
-  let batchesChanged = false;
-
-  const updatedBatches = batches.map((batch) => {
-    const isSelected = targetBatchIds.includes(batch.id);
-    const currentTrainers = Array.isArray(batch.trainerIds) ? [...batch.trainerIds] : [];
-    const hasTrainer = currentTrainers.includes(trainerId);
-
-    if (isSelected && !hasTrainer) {
-      batchesChanged = true;
-      return {
-        ...batch,
-        trainerIds: [...currentTrainers, trainerId],
-      };
-    } else if (!isSelected && hasTrainer) {
-      batchesChanged = true;
-      return {
-        ...batch,
-        trainerIds: currentTrainers.filter((id) => id !== trainerId),
-      };
-    }
-    return batch;
-  });
-
-  if (batchesChanged) {
-    writeStorage(STORAGE_KEYS.BATCHES, updatedBatches);
-  }
-
-  // Also sync coach shift matrix if coach exists in shift matrix
   try {
-    const matrix = getCoachShiftMatrix();
-    const coach = matrix.find(
-      (c) => c.coachId === trainerId || c.fullName?.toLowerCase() === trainerId?.toLowerCase(),
-    );
-    if (coach && coach.shifts) {
-      let shiftChanged = false;
-      SHIFT_SLOTS.forEach((slot) => {
-        if (slot.batchId) {
-          const shouldBeActive = targetBatchIds.includes(slot.batchId);
-          if (coach.shifts[slot.key] !== shouldBeActive) {
-            coach.shifts[slot.key] = shouldBeActive;
-            shiftChanged = true;
-          }
-        }
-      });
-      if (shiftChanged) {
-        writeStorage(STORAGE_KEYS.COACH_SHIFTS, matrix);
-      }
-    }
+    return await api.patch(`/v1/trainers/${encodeURIComponent(trainerId)}/sync-batches`, {
+      batchIds: selectedBatchIds,
+    });
   } catch (err) {
-    console.error("Failed to sync coach shifts:", err);
+    console.error("Failed to sync trainer batches:", err);
+    return [];
+  }
+}
+
+// ── Batch Transfers & Flexible Assignments ─────────────────────────────────────
+
+/**
+ * Executes a permanent transfer of a member from their current batch to a target batch.
+ * Supports both object payload and positional arguments:
+ *   executeBatchTransfer({ memberId, targetBatchId, effectiveDate, reason, transferredBy })
+ *   executeBatchTransfer(memberId, targetBatchId, reason)
+ *
+ * @param {object|string} payloadOrMemberId
+ * @param {string} [targetBatchId]
+ * @param {string} [effectiveDateOrReason]
+ * @param {string} [reason]
+ * @param {string} [transferredBy]
+ * @returns {Promise<object>}
+ */
+export async function executeBatchTransfer(
+  payloadOrMemberId,
+  targetBatchId,
+  effectiveDateOrReason,
+  reason,
+  transferredBy = "Admin"
+) {
+  let memberId, targetBatch, effectiveDate, transferReason, by;
+  if (payloadOrMemberId && typeof payloadOrMemberId === "object") {
+    memberId = payloadOrMemberId.memberId;
+    targetBatch = payloadOrMemberId.targetBatchId;
+    effectiveDate = payloadOrMemberId.effectiveDate || new Date().toISOString().slice(0, 10);
+    transferReason = payloadOrMemberId.reason;
+    by = payloadOrMemberId.transferredBy || "Admin";
+  } else {
+    memberId = payloadOrMemberId;
+    targetBatch = targetBatchId;
+    if (typeof effectiveDateOrReason === "string" && /^\d{4}-\d{2}-\d{2}$/.test(effectiveDateOrReason)) {
+      effectiveDate = effectiveDateOrReason;
+      transferReason = reason;
+    } else {
+      effectiveDate = new Date().toISOString().slice(0, 10);
+      transferReason = effectiveDateOrReason;
+    }
+    by = transferredBy || "Admin";
   }
 
-  return updatedBatches;
+  return api.post("/v1/batches/assignments/transfer", {
+    memberId,
+    targetBatchId: targetBatch,
+    effectiveDate,
+    reason: transferReason,
+    transferredBy: by,
+  });
 }
+
+/**
+ * Creates a flexible / temporary multi-day batch assignment for a member.
+ * Supports both object payload and positional arguments:
+ *   createFlexibleBatchAssignment({ memberId, targetBatchId, selectedDays, startDate, endDate, reason, transferredBy })
+ *   createFlexibleBatchAssignment(data)
+ *
+ * @param {object|string} dataOrMemberId
+ * @param {string} [targetBatchId]
+ * @param {string[]} [selectedDays] e.g. ["Monday", "Wednesday"]
+ * @param {string} [startDate] YYYY-MM-DD
+ * @param {string} [endDate] YYYY-MM-DD
+ * @param {string} [reason]
+ * @param {string} [transferredBy]
+ * @returns {Promise<object>}
+ */
+export async function createFlexibleBatchAssignment(
+  dataOrMemberId,
+  targetBatchId,
+  selectedDays,
+  startDate,
+  endDate = null,
+  reason = "",
+  transferredBy = "Admin"
+) {
+  let payload;
+  if (dataOrMemberId && typeof dataOrMemberId === "object" && !Array.isArray(dataOrMemberId)) {
+    payload = {
+      memberId: dataOrMemberId.memberId,
+      targetBatchId: dataOrMemberId.targetBatchId,
+      selectedDays: dataOrMemberId.selectedDays,
+      startDate: dataOrMemberId.startDate,
+      endDate: dataOrMemberId.endDate || null,
+      reason: dataOrMemberId.reason,
+      transferredBy: dataOrMemberId.transferredBy || "Admin",
+    };
+  } else {
+    payload = {
+      memberId: dataOrMemberId,
+      targetBatchId,
+      selectedDays,
+      startDate,
+      endDate,
+      reason,
+      transferredBy,
+    };
+  }
+
+  return api.post("/v1/batches/assignments/flex", payload);
+}
+
+/**
+ * Retrieves all assignment history (primary, transfer, flex) for a specific member.
+ *
+ * @param {string} memberId
+ * @returns {Promise<object>} { memberId, primaryBatch, activeFlexAssignments, batchHistory, allAssignments }
+ */
+export async function getMemberBatchAssignments(memberId) {
+  if (!memberId) return null;
+  return api.get(`/v1/batches/assignments/member/${encodeURIComponent(memberId)}`);
+}
+
+/**
+ * Revokes an active flexible batch assignment.
+ * Supports both:
+ *   revokeFlexibleAssignment(assignmentId, reason)
+ *   revokeFlexibleAssignment(assignmentId, { reason, revokedBy })
+ *
+ * @param {string} assignmentId
+ * @param {string|object} [reasonOrOptions]
+ * @returns {Promise<object>}
+ */
+export async function revokeFlexibleAssignment(assignmentId, reasonOrOptions = {}) {
+  if (!assignmentId) return null;
+  let reason = "Revoked by admin";
+  let revokedBy = "Admin";
+
+  if (typeof reasonOrOptions === "string") {
+    reason = reasonOrOptions;
+  } else if (reasonOrOptions && typeof reasonOrOptions === "object") {
+    if (reasonOrOptions.reason !== undefined) reason = reasonOrOptions.reason;
+    if (reasonOrOptions.revokedBy !== undefined) revokedBy = reasonOrOptions.revokedBy;
+  }
+
+  return api.delete(`/v1/batches/assignments/${encodeURIComponent(assignmentId)}/revoke`, {
+    reason,
+    revokedBy,
+  });
+}
+
+// ── Month-Wise Category Tracking & Capacity ────────────────────────────────────
+
+/**
+ * Retrieves month-wise 3-category tracking for a batch:
+ * Category 1: Assigned Trainers & Conduction logs
+ * Category 2: Enrolled Members (Primary + Active Flex In)
+ * Category 3: Scheduled Classes & Sessions in this Month
+ *
+ * @param {string} batchId
+ * @param {string} [yearMonth] Format: YYYY-MM (defaults to current month)
+ * @returns {Promise<object>}
+ */
+export async function getBatchMonthTracking(batchId, yearMonth) {
+  if (!batchId) return null;
+  const ym = yearMonth && /^\d{4}-\d{2}$/.test(yearMonth)
+    ? yearMonth
+    : new Date().toISOString().slice(0, 7);
+  return api.get(`/v1/batches/${encodeURIComponent(batchId)}/month-tracking?month=${encodeURIComponent(ym)}`);
+}
+
+/**
+ * Checks live capacity and available headroom for a batch on any target calendar date.
+ *
+ * @param {string} batchId
+ * @param {string} [date] Format: YYYY-MM-DD (defaults to today)
+ * @returns {Promise<object>} { batchId, date, dayOfWeek, maxPax, effectivePax, spotsRemaining, isFull }
+ */
+export async function getBatchCapacityCheck(batchId, date) {
+  if (!batchId) return null;
+  const targetDate = date || new Date().toISOString().slice(0, 10);
+  return api.get(`/v1/batches/${encodeURIComponent(batchId)}/capacity-check?date=${encodeURIComponent(targetDate)}`);
+}
+
+/**
+ * Retrieves the effective attendee roster for a batch on a specific calendar date
+ * (primary members not flexed out + inbound flex members).
+ *
+ * @param {string} batchId
+ * @param {string} [date] Format: YYYY-MM-DD (defaults to today)
+ * @returns {Promise<object>} { batchId, date, dayOfWeek, totalAttendeesCount, maxPax, attendees }
+ */
+export async function getBatchEffectiveAttendees(batchId, date) {
+  if (!batchId) return null;
+  const targetDate = date || new Date().toISOString().slice(0, 10);
+  return api.get(`/v1/batches/${encodeURIComponent(batchId)}/effective-attendees?date=${encodeURIComponent(targetDate)}`);
+}
+
+export default {
+  SHIFT_SLOTS,
+  resolveDaysDetails,
+  getBatches,
+  getBatchById,
+  createBatch,
+  updateBatch,
+  deleteBatch,
+  toggleBatchStatus,
+  enrollMemberInBatch,
+  unenrollMemberFromBatch,
+  syncBatchTrainers,
+  syncTrainerBatchesFromBatch,
+  getCoachShiftMatrix,
+  toggleCoachSlot,
+  getAllScheduledClasses,
+  getScheduledClassesByBatch,
+  createDayClass,
+  updateDayClass,
+  deleteDayClass,
+  getBatchTrainers,
+  getBatchMembers,
+  getTrainerBatchIds,
+  syncTrainerBatches,
+  executeBatchTransfer,
+  createFlexibleBatchAssignment,
+  getMemberBatchAssignments,
+  revokeFlexibleAssignment,
+  getBatchMonthTracking,
+  getBatchCapacityCheck,
+  getBatchEffectiveAttendees,
+};
 

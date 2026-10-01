@@ -7,7 +7,7 @@ import { useTheme } from "@/hooks/theme";
 import logo from "@/assets/gym_logo.png";
 
 const iconBtnClass =
-  "inline-flex items-center justify-center w-[34px] h-[34px] rounded-full border border-border bg-transparent text-muted-foreground cursor-pointer hover:bg-accent/10 hover:text-accent transition-colors";
+  "inline-flex items-center justify-center w-[34px] h-[34px] rounded-full border border-border bg-transparent text-muted-foreground cursor-pointer hover:bg-muted hover:text-foreground transition-colors";
 
 export default function Header({ onToggle, sidebarVisible }) {
   const { theme, toggleTheme } = useTheme();
@@ -46,7 +46,7 @@ export default function Header({ onToggle, sidebarVisible }) {
         {/* View Site Link */}
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-background text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-card text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           title="View Landing Page"
         >
           <Globe size={14} />

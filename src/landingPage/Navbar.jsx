@@ -158,7 +158,7 @@ export function Navbar() {
             <ThemeToggle className={scrolled ? "rounded-full" : "rounded-xl"} />
             <Link
               to="/admin/login"
-              className={`whitespace-nowrap border border-border px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-accent/15 ${
+              className={`whitespace-nowrap border border-border px-4 py-2 text-sm font-medium text-foreground transition-all hover:bg-muted ${
                 scrolled ? "rounded-full" : "rounded-lg"
               }`}
             >
@@ -212,7 +212,7 @@ export function Navbar() {
               <Link
                 to="/admin/login"
                 onClick={() => setOpen(false)}
-                className="rounded-lg border border-border px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-accent/10 transition-colors"
+                className="rounded-lg border border-border px-4 py-2 text-center text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
                 Sign In
               </Link>

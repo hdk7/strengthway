@@ -65,12 +65,12 @@ export default function DataTable({
   onSort,
 
   // Built-in Pagination
-  pageSize = 6,
+  pageSize = 5,
   itemLabel = "entries",
 
   // Loading & Empty States
   isLoading = false,
-  loadingRowsCount = 6,
+  loadingRowsCount = 5,
   emptyIcon,
   emptyTitle,
   emptyMessage,
@@ -127,7 +127,7 @@ export default function DataTable({
   );
 
   return (
-    <div className={`flex-1 min-h-0 h-full flex flex-col gap-2 ${className}`}>
+    <div className={`flex-1 min-h-0 h-full flex flex-col justify-between gap-2 ${className}`}>
       {/* 1. Unified Toolbar */}
       <DataTableToolbar
         title={title}
@@ -154,8 +154,8 @@ export default function DataTable({
         compact={compact}
       />
 
-      {/* 2. Content & States inside its own card that fills available height */}
-      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs flex flex-col">
+      {/* 2. Independent Scrollable Content Area for Separated Card Rows */}
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         <DataTableContent
           columns={columns}
           paginatedData={paginatedData}
