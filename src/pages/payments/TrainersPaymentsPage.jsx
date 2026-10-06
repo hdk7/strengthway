@@ -61,7 +61,7 @@ export default function TrainersPaymentsPage() {
     return trainers.map((t) => {
       // Find conducted sessions and substitute coverages
       const conductedLogs = trainerLogs.filter(
-        (l) => l.trainerId === t.id && l.status === "CONDUCTED",
+        (l) => l.trainerId === t.id && (l.status === "CONDUCTED" || l.status === "PRESENT"),
       );
       const substituteLogs = trainerLogs.filter(
         (l) => l.substituteTrainerId === t.id,

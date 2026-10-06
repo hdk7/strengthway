@@ -1,62 +1,64 @@
-import { Users, CheckCircle2, Clock, Repeat } from "lucide-react";
+import { Users, ShieldCheck, XCircle, Repeat } from "lucide-react";
 
-export function TrainerAttendanceStats({ dailyKpis, selectedDate }) {
+export function TrainerAttendanceStats({ dailyKpis = {} }) {
+  const totalFaculty = dailyKpis.totalFaculty ?? dailyKpis.totalOnDuty ?? 0;
+  const presentCount = dailyKpis.presentCount ?? dailyKpis.classesConducted ?? 0;
+  const absentCount = dailyKpis.absentCount ?? 0;
+  const turnoutRate = dailyKpis.turnoutRate ?? (totalFaculty > 0 ? Math.round((presentCount / totalFaculty) * 100) : 0);
+
+  const substituteCount = dailyKpis.substituteCount ?? 0;
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-      {/* On Roster */}
-      <div className="rounded-2xl border border-border/80 bg-card p-3 sm:p-3.5 shadow-xs">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0">
+      {/* 1. Faculty on Roster */}
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs">
         <div className="flex items-center justify-between text-muted-foreground">
-          <span className="text-[11px] font-bold uppercase tracking-wider">Faculty On Roster</span>
-          <Users size={16} className="text-accent" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Faculty Roster</span>
+          <Users size={14} className="text-accent" />
         </div>
-        <div className="mt-2.5 flex items-baseline gap-2">
-          <span className="text-3xl font-black text-foreground">{dailyKpis.totalOnDuty}</span>
-          <span className="text-xs text-muted-foreground">coaches</span>
+        <div className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-xl sm:text-2xl font-black text-foreground">{totalFaculty}</span>
+          <span className="text-[10px] text-muted-foreground">coaches</span>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">Active coaches registered</p>
       </div>
 
-      {/* Classes Conducted */}
-      <div className="rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs">
+      {/* 2. Present Today */}
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs">
         <div className="flex items-center justify-between text-muted-foreground">
-          <span className="text-[11px] font-bold uppercase tracking-wider">Classes Conducted</span>
-          <CheckCircle2 size={16} className="text-emerald-500" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Present</span>
+          <ShieldCheck size={14} className="text-emerald-500" />
         </div>
-        <div className="mt-2.5 flex items-baseline gap-2">
-          <span className="text-3xl font-black text-emerald-500">
-            {dailyKpis.classesConducted}
+        <div className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-xl sm:text-2xl font-black text-emerald-500">{presentCount}</span>
+          <span className="text-[10px] font-bold text-emerald-400/80">
+            ({turnoutRate}%)
           </span>
-          <span className="text-xs text-muted-foreground">sessions</span>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">Conducted on {selectedDate}</p>
       </div>
 
-      {/* Hours Logged */}
-      <div className="rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs">
+      {/* 3. Absent / Missed */}
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs">
         <div className="flex items-center justify-between text-muted-foreground">
-          <span className="text-[11px] font-bold uppercase tracking-wider">Floor Hours</span>
-          <Clock size={16} className="text-primary" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Absent</span>
+          <XCircle size={14} className="text-rose-500" />
         </div>
-        <div className="mt-2.5 flex items-baseline gap-2">
-          <span className="text-3xl font-black text-primary">{dailyKpis.totalHours}</span>
-          <span className="text-xs text-muted-foreground">hrs logged</span>
+        <div className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-xl sm:text-2xl font-black text-rose-500">{absentCount}</span>
+          <span className="text-[10px] text-muted-foreground">missed</span>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">Cumulative coaching duration</p>
       </div>
 
-      {/* Substitute Reassignments */}
-      <div className="rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs">
+
+      {/* 5. Substitute Logs */}
+      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs">
         <div className="flex items-center justify-between text-muted-foreground">
-          <span className="text-[11px] font-bold uppercase tracking-wider">Substitute Logs</span>
-          <Repeat size={16} className="text-amber-500" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Substitutes</span>
+          <Repeat size={14} className="text-amber-500" />
         </div>
-        <div className="mt-2.5 flex items-baseline gap-2">
-          <span className="text-3xl font-black text-amber-500">
-            {dailyKpis.substituteCount}
-          </span>
-          <span className="text-xs text-muted-foreground">substitutions</span>
+        <div className="mt-1 flex items-baseline gap-1.5">
+          <span className="text-xl sm:text-2xl font-black text-amber-500">{substituteCount}</span>
+          <span className="text-[10px] text-muted-foreground">reassigned</span>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">Reassigned sessions today</p>
       </div>
     </div>
   );

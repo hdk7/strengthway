@@ -117,7 +117,6 @@ export function RegistrationStep1({
               { value: "Male", label: "Male" },
               { value: "Female", label: "Female" },
               { value: "Other", label: "Other" },
-              { value: "Prefer not to say", label: "Prefer not to say" },
             ]}
           />
         </div>

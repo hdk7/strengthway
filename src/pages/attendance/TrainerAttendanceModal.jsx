@@ -1,4 +1,4 @@
-import { Repeat, X, Loader2 } from "lucide-react";
+import { CalendarCheck, X, Loader2 } from "lucide-react";
 
 export function TrainerAttendanceModal({
   isOpen,
@@ -18,14 +18,14 @@ export function TrainerAttendanceModal({
         <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-2.5">
             <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent/10 text-accent">
-              <Repeat size={18} />
+              <CalendarCheck size={18} />
             </div>
             <div>
               <h3 className="text-base font-bold text-foreground">
-                Log Class Conduction & Substitute
+                Log Class Conduction
               </h3>
               <p className="text-xs text-muted-foreground">
-                Record session execution or reassign to a substitute faculty coach.
+                Record session execution and floor hours for the scheduled batch session.
               </p>
             </div>
           </div>
@@ -105,44 +105,14 @@ export function TrainerAttendanceModal({
               }
               className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer font-bold"
             >
+              <option value="PRESENT">PRESENT (Checked in)</option>
               <option value="CONDUCTED">CONDUCTED (Conducted normally)</option>
-              <option value="SUBSTITUTE">SUBSTITUTE (Covered by another trainer)</option>
               <option value="ABSENT">ABSENT (Missed class)</option>
               <option value="LEAVE">LEAVE (Approved faculty leave)</option>
             </select>
           </div>
 
-          {/* Substitute Coach Selector (Conditional) */}
-          {modalFormData.status === "SUBSTITUTE" && (
-            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-2">
-              <div className="flex items-center gap-1.5 text-amber-500 font-bold">
-                <Repeat size={14} />
-                <span>Assign Substitute Faculty Coach</span>
-              </div>
-              <select
-                value={modalFormData.substituteTrainerId}
-                onChange={(e) =>
-                  setModalFormData((prev) => ({
-                    ...prev,
-                    substituteTrainerId: e.target.value,
-                  }))
-                }
-                required
-                className="w-full rounded-xl border border-amber-500/40 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-              >
-                <option value="">Select Substitute Coach</option>
-                {trainers
-                  .filter((t) => t.id !== modalFormData.trainerId)
-                  .map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.shift || "General Shift"})
-                    </option>
-                  ))}
-              </select>
-            </div>
-          )}
-
-          {/* Check-in Time & Duration */}
+          {/* Check-in & Check-out Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="font-bold text-foreground block mb-1">Check-in Time</label>
@@ -157,15 +127,15 @@ export function TrainerAttendanceModal({
               />
             </div>
             <div>
-              <label className="font-bold text-foreground block mb-1">Attendees Count</label>
+              <label className="font-bold text-foreground block mb-1">Check-out Time</label>
               <input
-                type="number"
-                min="0"
-                value={modalFormData.attendeesCount}
+                type="text"
+                value={modalFormData.checkOutTime || ""}
                 onChange={(e) =>
-                  setModalFormData((prev) => ({ ...prev, attendeesCount: e.target.value }))
+                  setModalFormData((prev) => ({ ...prev, checkOutTime: e.target.value }))
                 }
-                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent font-mono"
+                placeholder="e.g. 02:00 PM"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
               />
             </div>
           </div>

@@ -6,6 +6,7 @@ import {
   Clock,
   CheckCircle2,
   Repeat,
+  UserCheck,
   Users,
 } from "lucide-react";
 
@@ -18,6 +19,7 @@ export function TrainerDailyRoster({
   batches,
   selectedDate,
   handleOpenSubstituteModal,
+  handleEditLog,
   handleQuickMark,
 }) {
   return (
@@ -175,7 +177,11 @@ export function TrainerDailyRoster({
 
                               <button
                                 type="button"
-                                onClick={() => handleOpenSubstituteModal(trainer, l.batchId)}
+                                onClick={() =>
+                                  handleEditLog
+                                    ? handleEditLog(trainer, l)
+                                    : handleOpenSubstituteModal(trainer, l.batchId, l)
+                                }
                                 className="rounded-xl border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
                               >
                                 Edit Log
@@ -207,7 +213,7 @@ export function TrainerDailyRoster({
                       onClick={() => handleOpenSubstituteModal(trainer, trainer.batchIds?.[0])}
                       className="inline-flex items-center gap-1 rounded-xl bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-xs"
                     >
-                      <Repeat size={13} />
+                      <UserCheck size={13} />
                       <span>Assign Substitute</span>
                     </button>
 

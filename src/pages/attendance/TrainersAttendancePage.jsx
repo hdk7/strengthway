@@ -1,12 +1,9 @@
 /* eslint-disable max-lines */
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
-  Calendar,
   CalendarCheck,
   Grid3X3,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/lib/trainersService";
@@ -18,10 +15,22 @@ import {
 import { Pagination } from "@/components/table";
 import { TrainerAttendanceStats } from "./TrainerAttendanceStats";
 import { TrainerAttendanceModal } from "./TrainerAttendanceModal";
-import { TrainerDailyRoster } from "./TrainerDailyRoster";
+import { TrainerDailyCheckInTable } from "./TrainerDailyCheckInTable";
 import { TrainerMonthlyLedger } from "./TrainerMonthlyLedger";
 import { TrainerAttendanceToolbar } from "./TrainerAttendanceToolbar";
-
+import { TrainerAttendanceDetailModal } from "./TrainerAttendanceDetailModal";
+import SubstituteCoachModal from "@/pages/batches/detail/SubstituteCoachModal";
+import {
+  isDateToday,
+  isDatePast,
+  checkTrainerScheduleAccess,
+  getTrainerScheduleDetails,
+  getEffectiveTrainerStatus,
+  isTrainerAttendancePeriodExpired,
+  calculateTrainerDailyKpis,
+  getCurrentTimeString,
+  parseTimeToMinutes,
+} from "./trainerAttendanceUtils";
 
 const SHIFT_OPTIONS = ["All", "Morning", "Evening", "General"];
 
@@ -35,6 +44,8 @@ export default function TrainersAttendancePage() {
     new Date().toISOString().slice(0, 7)
   );
   const [selectedShift, setSelectedShift] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("ALL"); // "ALL" | "PRESENT" | "ABSENT" | "SUBSTITUTE"
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Data State
   const [trainers, setTrainers] = useState([]);
@@ -42,8 +53,15 @@ export default function TrainersAttendancePage() {
   const [trainerLogs, setTrainerLogs] = useState([]);
   const [monthlyLogs, setMonthlyLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
 
-  // Modal State
+  // View Record Modal State
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewModalTrainer, setViewModalTrainer] = useState(null);
+  const [viewModalRecord, setViewModalRecord] = useState(null);
+  const [viewModalSchedule, setViewModalSchedule] = useState(null);
+
+  // Manual Conduction Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalFormData, setModalFormData] = useState({
@@ -51,15 +69,23 @@ export default function TrainersAttendancePage() {
     trainerId: "",
     batchId: "",
     status: "CONDUCTED",
-    substituteTrainerId: "",
     checkInTime: "06:00 AM",
+    checkOutTime: "",
     durationMinutes: 60,
     attendeesCount: 15,
     notes: "",
   });
 
-  // Search Filter
-  const [searchQuery, setSearchQuery] = useState("");
+  // Substitute Modal State (shared standard form)
+  const [isSubstituteModalOpen, setIsSubstituteModalOpen] = useState(false);
+  const [isSubstituteSubmitting, setIsSubstituteSubmitting] = useState(false);
+  const [substituteForm, setSubstituteForm] = useState({
+    batchId: "",
+    primaryTrainerId: "",
+    substituteTrainerId: "",
+    date: new Date().toISOString().slice(0, 10),
+    reason: "",
+  });
 
   // ─── 1. Load Trainers & Batches on Mount ───────────────────────────────────────
   useEffect(() => {
@@ -116,56 +142,234 @@ export default function TrainersAttendancePage() {
     }
   }, [viewMode, selectedMonth, loadMonthlyLogs]);
 
-  // ─── 4. Quick Actions on Trainers ───────────────────────────────────────────
-  const handleQuickMark = async (trainer, batchId, status) => {
-    const checkInTime = new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+  // Daily records map keyed by trainerId
+  const dailyRecordsMap = useMemo(() => {
+    const map = {};
+    (trainerLogs || []).forEach((log) => {
+      if (log.trainerId) {
+        map[log.trainerId] = log;
+      }
     });
+    return map;
+  }, [trainerLogs]);
+
+  // ─── 4. Quick Check-In (Automatically Marks Status as Present) ───────────────
+  const handleQuickCheckIn = async (trainer) => {
+    if (!isDateToday(selectedDate)) {
+      return toast.error("Check-in is permitted only for the current day.");
+    }
+    const access = checkTrainerScheduleAccess(selectedDate, trainer, batches);
+    if (!access.isAllowed) {
+      return toast.error(access.reason);
+    }
+
+    const schedule = getTrainerScheduleDetails(trainer, batches, selectedDate);
+    const nowTime = getCurrentTimeString();
 
     try {
       await recordTrainerLog({
         date: selectedDate,
         trainerId: trainer.id,
         trainerName: trainer.name,
-        batchId: batchId || trainer.batchIds?.[0] || "BATCH-DEFAULT",
-        status,
-        checkInTime,
+        batchId: schedule.primaryBatchId || trainer.batchIds?.[0] || "BATCH-DEFAULT",
+        status: "PRESENT",
+        checkInTime: nowTime,
         durationMinutes: 60,
-        attendeesCount: status === "CONDUCTED" ? 15 : 0,
-        notes: `Quick marked as ${status} on ${selectedDate}`,
+        attendeesCount: 0,
+        notes: `Checked in on ${selectedDate} at ${nowTime}`,
       });
-      toast.success(`${trainer.name} marked as ${status}.`);
+      toast.success(`${trainer.name} checked in (Status: Present).`);
       loadDailyLogs();
     } catch (err) {
-      console.error("Failed to record trainer status:", err);
-      toast.error("Failed to record coaching status.");
+      console.error("Failed to check in trainer:", err);
+      toast.error(err?.message || "Failed to check in faculty coach.");
     }
   };
 
-  const handleOpenSubstituteModal = (trainer, batchId) => {
-    setModalFormData({
-      date: selectedDate,
-      trainerId: trainer.id,
-      batchId: batchId || trainer.batchIds?.[0] || batches[0]?.id || "",
-      status: "SUBSTITUTE",
-      substituteTrainerId: "",
-      checkInTime: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      durationMinutes: 60,
-      attendeesCount: 15,
-      notes: "",
-    });
-    setIsModalOpen(true);
+  // ─── 5. Quick Check-Out (Only Available After Successful Check-In) ───────────
+  const handleQuickCheckOut = async (trainer, record) => {
+    if (!isDateToday(selectedDate)) {
+      return toast.error("Check-out is permitted only for the current day.");
+    }
+    if (!record?.checkInTime) {
+      return toast.error("Check Out is available only after a successful check-in.");
+    }
+
+    const schedule = getTrainerScheduleDetails(trainer, batches, selectedDate);
+    const nowTime = getCurrentTimeString();
+    const inM = parseTimeToMinutes(record.checkInTime);
+    const outM = parseTimeToMinutes(nowTime);
+    let durationMinutes = record.durationMinutes || 60;
+    if (inM !== null && outM !== null && outM > inM) {
+      durationMinutes = outM - inM;
+    }
+
+    try {
+      await recordTrainerLog({
+        ...record,
+        date: selectedDate,
+        trainerId: trainer.id,
+        trainerName: trainer.name,
+        batchId: record.batchId || schedule.primaryBatchId || "BATCH-DEFAULT",
+        status: "PRESENT",
+        checkInTime: record.checkInTime,
+        checkOutTime: nowTime,
+        durationMinutes,
+        notes: record.notes || `Checked out at ${nowTime}`,
+      });
+      toast.success(`${trainer.name} checked out at ${nowTime}.`);
+      loadDailyLogs();
+    } catch (err) {
+      console.error("Failed to check out trainer:", err);
+      toast.error(err?.message || "Failed to check out faculty coach.");
+    }
   };
 
+  // ─── 6. Bulk Mark Present ────────────────────────────────────────────────────
+  const handleMarkAllPresent = async () => {
+    if (!isDateToday(selectedDate)) {
+      return toast.error("Bulk check-in is permitted only for the current day.");
+    }
+
+    const eligibleCoaches = trainers.filter((t) => {
+      if (t.status === "Inactive") return false;
+      const rec = dailyRecordsMap[t.id];
+      if (rec?.checkInTime) return false;
+      const access = checkTrainerScheduleAccess(selectedDate, t, batches);
+      return access.isAllowed;
+    });
+
+    if (eligibleCoaches.length === 0) {
+      return toast.error("No eligible coaches currently have an open shift to mark present.");
+    }
+
+    setIsBulkSubmitting(true);
+    const nowTime = getCurrentTimeString();
+
+    try {
+      await Promise.all(
+        eligibleCoaches.map((t) => {
+          const schedule = getTrainerScheduleDetails(t, batches, selectedDate);
+          return recordTrainerLog({
+            date: selectedDate,
+            trainerId: t.id,
+            trainerName: t.name,
+            batchId: schedule.primaryBatchId || t.batchIds?.[0] || "BATCH-DEFAULT",
+            status: "PRESENT",
+            checkInTime: nowTime,
+            durationMinutes: 60,
+            attendeesCount: 0,
+            notes: `Bulk checked in on ${selectedDate} at ${nowTime}`,
+          });
+        })
+      );
+      toast.success(`Marked all ${eligibleCoaches.length} eligible coaches present.`);
+      loadDailyLogs();
+    } catch (err) {
+      console.error("Failed to bulk check in trainers:", err);
+      toast.error("Failed to mark all coaches present.");
+    } finally {
+      setIsBulkSubmitting(false);
+    }
+  };
+
+  // ─── 7. View Record Modal Handler ─────────────────────────────────────────────
+  const onOpenViewModal = (trainer, record) => {
+    const schedule = getTrainerScheduleDetails(trainer, batches, selectedDate);
+    setViewModalTrainer(trainer);
+    setViewModalRecord(record);
+    setViewModalSchedule(schedule);
+    setIsViewModalOpen(true);
+  };
+
+  // ─── 8. Substitute Modal Handlers ─────────────────────────────────────────────
+  const handleOpenSubstituteModal = (trainer = null, batchId = null, log = null) => {
+    const defaultTrainer = trainer || trainers[0];
+    const defaultBatchId =
+      log?.batchId ||
+      batchId ||
+      defaultTrainer?.batchIds?.[0] ||
+      batches[0]?.id ||
+      "";
+
+    const priId =
+      log?.status === "SUBSTITUTE"
+        ? log.substituteTrainerId || defaultTrainer?.id || ""
+        : defaultTrainer?.id || "";
+
+    const subId =
+      log?.status === "SUBSTITUTE" ? log.trainerId || "" : "";
+
+    setSubstituteForm({
+      batchId: defaultBatchId,
+      primaryTrainerId: priId,
+      substituteTrainerId: subId,
+      date: log?.date || selectedDate || new Date().toISOString().slice(0, 10),
+      reason: log?.notes || "",
+    });
+    setIsSubstituteModalOpen(true);
+  };
+
+  const handleAssignSubstitute = async (e) => {
+    e.preventDefault();
+    if (!substituteForm.batchId) {
+      toast.error("Please select a batch container.");
+      return;
+    }
+    if (!substituteForm.substituteTrainerId) {
+      toast.error("Please select a substitute coach.");
+      return;
+    }
+    if (substituteForm.substituteTrainerId === substituteForm.primaryTrainerId) {
+      toast.error("Substitute coach cannot be the same as the primary coach.");
+      return;
+    }
+
+    setIsSubstituteSubmitting(true);
+    const subTrainer = trainers.find((t) => t.id === substituteForm.substituteTrainerId);
+    const priTrainer = trainers.find((t) => t.id === substituteForm.primaryTrainerId);
+    const chosenBatch = batches.find((b) => b.id === substituteForm.batchId);
+
+    try {
+      await recordTrainerLog({
+        date: substituteForm.date || selectedDate || new Date().toISOString().slice(0, 10),
+        trainerId: substituteForm.substituteTrainerId,
+        trainerName: subTrainer?.name || "Substitute Coach",
+        batchId: substituteForm.batchId,
+        batchName: chosenBatch?.name || substituteForm.batchId,
+        status: "SUBSTITUTE",
+        substituteTrainerId: substituteForm.primaryTrainerId || null,
+        durationMinutes: 60,
+        attendeesCount: 15,
+        notes: substituteForm.reason || `Substitute coach for ${priTrainer?.name || "Primary Coach"}`,
+      });
+
+      toast.success(
+        `${subTrainer?.name || "Coach"} assigned as substitute coach${chosenBatch ? ` for ${chosenBatch.name}` : ""}!`
+      );
+      setIsSubstituteModalOpen(false);
+      setSubstituteForm({
+        batchId: "",
+        primaryTrainerId: "",
+        substituteTrainerId: "",
+        date: selectedDate || new Date().toISOString().slice(0, 10),
+        reason: "",
+      });
+      loadDailyLogs();
+      if (viewMode === "monthly") loadMonthlyLogs();
+    } catch (err) {
+      console.error("Failed to assign substitute coach:", err);
+      toast.error("Failed to assign substitute coach.");
+    } finally {
+      setIsSubstituteSubmitting(false);
+    }
+  };
+
+  // ─── 9. Manual Class Conduction Log Modal ─────────────────────────────────────
   const handleSaveModal = async (e) => {
     e.preventDefault();
     if (!modalFormData.trainerId || !modalFormData.batchId) {
       toast.error("Trainer and batch container are required.");
-      return;
-    }
-    if (modalFormData.status === "SUBSTITUTE" && !modalFormData.substituteTrainerId) {
-      toast.error("Please select a substitute coach from faculty.");
       return;
     }
 
@@ -191,8 +395,9 @@ export default function TrainersAttendancePage() {
     }
   };
 
-  // ─── 5. Filtered Faculty Computation ─────────────────────────────────────────
+  // ─── 10. Filtered Faculty Computation ────────────────────────────────────────
   const filteredTrainers = useMemo(() => {
+    const isPast = isDatePast(selectedDate);
     return trainers.filter((t) => {
       // Shift filter
       if (selectedShift !== "All" && t.shift !== selectedShift) return false;
@@ -206,25 +411,29 @@ export default function TrainersAttendancePage() {
         if (!matchesName && !matchesId && !matchesPhone) return false;
       }
 
+      // Status filter
+      if (statusFilter !== "ALL") {
+        const record = dailyRecordsMap[t.id];
+        const scheduleAccess = checkTrainerScheduleAccess(selectedDate, t, batches);
+        const periodExpired = isTrainerAttendancePeriodExpired(selectedDate, t, batches);
+        const effectiveStatus = getEffectiveTrainerStatus(
+          t,
+          record,
+          scheduleAccess,
+          isPast,
+          periodExpired
+        );
+        if (effectiveStatus !== statusFilter) return false;
+      }
+
       return true;
     });
-  }, [trainers, selectedShift, searchQuery]);
+  }, [trainers, selectedShift, searchQuery, statusFilter, selectedDate, dailyRecordsMap, batches]);
 
   // Daily KPIs
   const dailyKpis = useMemo(() => {
-    const totalOnDuty = trainers.filter((t) => t.status !== "Inactive").length;
-    const conducted = trainerLogs.filter((l) => l.status === "CONDUCTED");
-    const substitutes = trainerLogs.filter((l) => l.status === "SUBSTITUTE" || l.substituteTrainerId);
-    const totalMinutes = conducted.reduce((acc, l) => acc + (l.durationMinutes || 60), 0);
-    const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
-
-    return {
-      totalOnDuty,
-      classesConducted: conducted.length,
-      totalHours,
-      substituteCount: substitutes.length,
-    };
-  }, [trainers, trainerLogs]);
+    return calculateTrainerDailyKpis(trainers, dailyRecordsMap, selectedDate, batches);
+  }, [trainers, dailyRecordsMap, selectedDate, batches]);
 
   // Monthly Faculty Summary Matrix
   const monthlySummary = useMemo(() => {
@@ -244,7 +453,7 @@ export default function TrainersAttendancePage() {
     monthlyLogs.forEach((log) => {
       // Primary coach log
       if (summaryMap[log.trainerId]) {
-        if (log.status === "CONDUCTED") {
+        if (log.status === "CONDUCTED" || log.status === "PRESENT") {
           summaryMap[log.trainerId].conductedCount++;
           summaryMap[log.trainerId].totalMinutes += log.durationMinutes || 60;
           summaryMap[log.trainerId].totalAttendees += log.attendeesCount || 0;
@@ -271,12 +480,12 @@ export default function TrainersAttendancePage() {
     );
   }, [monthlyLogs]);
 
-  // Pagination State for Daily Faculty Conduction
+  // Pagination State for Daily Faculty Roster
   const [dailyPage, setDailyPage] = useState(1);
   const dailyPageSize = 5;
   useEffect(() => {
     setDailyPage(1);
-  }, [selectedShift, searchQuery, selectedDate]);
+  }, [selectedShift, searchQuery, selectedDate, statusFilter]);
 
   const totalDailyPages = Math.max(1, Math.ceil(filteredTrainers.length / dailyPageSize));
   const safeDailyPage = Math.max(1, Math.min(dailyPage, totalDailyPages));
@@ -332,7 +541,7 @@ export default function TrainersAttendancePage() {
             Trainer Attendance
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
-            Faculty shift logs, daily scheduled class conduction, substitute coach reassignments, and floor hours ledger.
+            Faculty shift, daily check-in / check-out operations and substitute Trainer reassignments.
           </p>
         </div>
 
@@ -349,7 +558,7 @@ export default function TrainersAttendancePage() {
               }`}
             >
               <CalendarCheck size={15} />
-              <span>Daily Conduction</span>
+              <span>Daily Check-In</span>
             </button>
             <button
               type="button"
@@ -365,26 +574,15 @@ export default function TrainersAttendancePage() {
             </button>
           </div>
 
+
+
           <button
             type="button"
-            onClick={() => {
-              setModalFormData({
-                date: selectedDate,
-                trainerId: trainers[0]?.id || "",
-                batchId: batches[0]?.id || "",
-                status: "CONDUCTED",
-                substituteTrainerId: "",
-                checkInTime: "06:00 AM",
-                durationMinutes: 60,
-                attendeesCount: 15,
-                notes: "",
-              });
-              setIsModalOpen(true);
-            }}
+            onClick={() => handleOpenSubstituteModal()}
             className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-accent-foreground shadow-xs hover:bg-accent/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
           >
-            <Plus size={15} />
-            <span>Log Class / Substitute</span>
+            <UserCheck size={15} />
+            <span>Assign Substitute</span>
           </button>
         </div>
       </div>
@@ -404,26 +602,32 @@ export default function TrainersAttendancePage() {
         formattedSelectedMonth={formattedSelectedMonth}
       />
 
-
       {/* ─── Top KPI Cards ──────────────────────────────────────────────────── */}
       <TrainerAttendanceStats dailyKpis={dailyKpis} selectedDate={selectedDate} />
 
-      {/* ─── VIEW 1: DAILY CLASS CONDUCTION ROSTER ───────────────────────────── */}
+      {/* ─── VIEW 1: DAILY FACULTY CHECK-IN TABLE ────────────────────────────── */}
       {viewMode === "daily" && (
-        <TrainerDailyRoster
+        <TrainerDailyCheckInTable
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          isLoading={isLoading}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          handleMarkAllPresent={handleMarkAllPresent}
+          isBulkSubmitting={isBulkSubmitting}
+          isLoadingDaily={isLoading}
+          filteredTrainers={filteredTrainers}
           paginatedTrainers={paginatedTrainers}
-          trainerLogs={trainerLogs}
+          dailyRecordsMap={dailyRecordsMap}
+          handleQuickCheckIn={handleQuickCheckIn}
+          handleQuickCheckOut={handleQuickCheckOut}
+          handleOpenSubstituteModal={handleOpenSubstituteModal}
+          onOpenViewModal={onOpenViewModal}
           batches={batches}
           selectedDate={selectedDate}
-          handleOpenSubstituteModal={handleOpenSubstituteModal}
-          handleQuickMark={handleQuickMark}
         />
       )}
 
-      {/* ─── VIEW 2: MONTHLY FACULTY CONDUCTION SUMMARY ──────────────────────── */}
+      {/* ─── VIEW 2: MONTHLY FACULTY SUMMARY MATRIX ──────────────────────────── */}
       {viewMode === "monthly" && (
         <TrainerMonthlyLedger
           formattedSelectedMonth={formattedSelectedMonth}
@@ -457,7 +661,7 @@ export default function TrainersAttendancePage() {
         )}
       </div>
 
-      {/* ─── MODAL: Log Class Conduction / Substitute Reassignment ───────────── */}
+      {/* ─── MODAL: Manual Shift Conduction ─────────────────────────────────── */}
       <TrainerAttendanceModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -467,6 +671,29 @@ export default function TrainersAttendancePage() {
         isSubmitting={isSubmitting}
         trainers={trainers}
         batches={batches}
+      />
+
+      {/* ─── MODAL: View Historical Faculty Attendance Record ────────────────── */}
+      <TrainerAttendanceDetailModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        trainer={viewModalTrainer}
+        record={viewModalRecord}
+        selectedDate={selectedDate}
+        scheduleDetails={viewModalSchedule}
+      />
+
+      {/* ─── MODAL: Designate Substitute Coach (Shared Standard Form) ────────── */}
+      <SubstituteCoachModal
+        isOpen={isSubstituteModalOpen}
+        onClose={() => setIsSubstituteModalOpen(false)}
+        batches={batches}
+        trainers={trainers}
+        allTrainers={trainers}
+        substituteForm={substituteForm}
+        setSubstituteForm={setSubstituteForm}
+        onAssignSubstitute={handleAssignSubstitute}
+        isSubmitting={isSubstituteSubmitting}
       />
     </div>
   );

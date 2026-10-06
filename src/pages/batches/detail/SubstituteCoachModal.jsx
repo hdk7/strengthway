@@ -17,6 +17,9 @@ export default function SubstituteCoachModal({
     return null;
   }
 
+  const selectedBatchObj = batch || batches?.find((b) => b.id === substituteForm?.batchId);
+  const currentBatchName = selectedBatchObj?.name;
+
   const primaryCoachesList = trainers && trainers.length > 0 ? trainers : allTrainers;
   const availableSubstitutes = allTrainers.filter(
     (t) => t.id !== substituteForm.primaryTrainerId
@@ -42,8 +45,8 @@ export default function SubstituteCoachModal({
                 Designate Substitute Coach
               </h3>
               <p className="text-xs text-muted-foreground">
-                {batch?.name
-                  ? `Assign a substitute trainer for ${batch.name}`
+                {currentBatchName
+                  ? `Assign a substitute trainer for ${currentBatchName}`
                   : "Assign a substitute faculty trainer for the scheduled batch session"}
               </p>
             </div>
