@@ -120,7 +120,7 @@ function ContactForm() {
 
   return (
     <form
-      className="relative overflow-hidden rounded-[2rem] border border-border/80 bg-gradient-to-b from-card via-card/95 to-background p-6 sm:p-8 md:p-10 shadow-xl backdrop-blur-xl min-w-0"
+      className="relative overflow-hidden rounded-4xl border border-border/80 bg-linear-to-b from-card via-card/95 to-background p-6 sm:p-8 md:p-10 shadow-xl backdrop-blur-xl min-w-0"
       onSubmit={handleSubmit}
       noValidate
     >

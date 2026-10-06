@@ -94,7 +94,7 @@ export default function FileUploadField({
           <div className="min-w-0">
             {hasFile ? (
               <div>
-                <p className="text-xs sm:text-sm font-semibold text-foreground truncate max-w-[200px] sm:max-w-xs">
+                <p className="text-xs sm:text-sm font-semibold text-foreground truncate max-w-50 sm:max-w-xs">
                   {fileName || "File selected"}
                 </p>
                 {fileSize && (
@@ -107,7 +107,7 @@ export default function FileUploadField({
                   {buttonText}
                 </p>
                 {helperText && (
-                  <p className="text-[11px] text-muted-foreground truncate max-w-[200px] sm:max-w-xs">
+                  <p className="text-[11px] text-muted-foreground truncate max-w-50 sm:max-w-xs">
                     {helperText}
                   </p>
                 )}

@@ -120,7 +120,7 @@ export default function DataTableContent({
               <tr
                 key={rowKey}
                 onClick={() => onRowClick && onRowClick(row, rowIdx)}
-                className={`group transition-all duration-150 hover:translate-y-[-1px] ${
+                className={`group transition-all duration-150 hover:-translate-y-px ${
                   onRowClick ? "cursor-pointer" : ""
                 }`}
               >

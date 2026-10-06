@@ -17,7 +17,7 @@ export function PortfolioPage() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background w-full max-w-full overflow-x-clip">
+    <div className="min-h-screen flex flex-col bg-background w-full max-w-full overflow-x-clip">
       <Navbar />
       <main className="pt-16 w-full max-w-full overflow-x-clip flex-1">
         <PortfolioHeroSection />

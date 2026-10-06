@@ -13,7 +13,7 @@ export function ComingSoon({ title }) {
         </p>
       </div>
 
-      <div className="flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+      <div className="flex min-h-100 flex-col items-center justify-center rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 text-accent">
           <Clock size={22} />
         </div>

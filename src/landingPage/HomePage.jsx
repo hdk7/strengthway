@@ -69,7 +69,7 @@ export function HomePage() {
   }, [location.hash, location.pathname]);
 
   return (
-    <div className="custom-cursor-scope min-h-screen min-h-[100dvh] flex flex-col bg-background w-full max-w-full overflow-x-clip no-scrollbar">
+    <div className="custom-cursor-scope min-h-screen flex flex-col bg-background w-full max-w-full overflow-x-clip no-scrollbar">
       <Navbar />
       <main className="pt-16 w-full max-w-full overflow-x-clip flex-1 no-scrollbar">
         <HeroSection />

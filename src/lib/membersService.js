@@ -118,6 +118,26 @@ export async function convertLeadToMember(id, additionalDetails = {}) {
 }
 
 /**
+ * Record interaction/contact details for a lead/inquiry member, advancing status to Contacted.
+ * @param {string} id - Member ID
+ * @param {object} contactData - Contact payload
+ * @returns {Promise<object>}
+ */
+export async function recordMemberContact(id, contactData) {
+  return api.post(`/v1/members/${id}/contact`, contactData);
+}
+
+/**
+ * Move an unconfirmed member inquiry to Archived status.
+ * @param {string} id - Member ID
+ * @param {string} [reason] - Reason for archiving
+ * @returns {Promise<object>}
+ */
+export async function archiveMemberInquiry(id, reason = "") {
+  return api.patch(`/v1/members/${id}/archive`, { reason });
+}
+
+/**
  * Retrieves month-wise tracking for an individual member:
  * - Primary batch details
  * - Active flexible assignments

@@ -47,7 +47,7 @@ const TableSort = ({
   if (variant === "select") {
     return (
       <div
-        className={`flex items-center gap-1.5 text-xs text-foreground font-medium shrink-0 min-w-[150px] ${className}`}
+        className={`flex items-center gap-1.5 text-xs text-foreground font-medium shrink-0 min-w-37.5 ${className}`}
       >
         <SlidersHorizontal size={13} className="text-primary shrink-0" />
         <ThemeSelect

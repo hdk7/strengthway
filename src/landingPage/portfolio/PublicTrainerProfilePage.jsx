@@ -114,7 +114,7 @@ export default function PublicTrainerProfilePage() {
   }
 
   return (
-    <div className="custom-cursor-scope min-h-screen min-h-[100dvh] flex flex-col bg-background text-foreground">
+    <div className="custom-cursor-scope min-h-screen flex flex-col bg-background text-foreground">
       <Navbar />
 
       <main className="pt-24 pb-20 flex-1">
@@ -148,7 +148,7 @@ export default function PublicTrainerProfilePage() {
           </div>
 
           {/* Hero Trainer Profile Card */}
-          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-b from-card via-card/90 to-background p-6 sm:p-10 lg:p-12 shadow-sm backdrop-blur-xl">
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-linear-to-b from-card via-card/90 to-background p-6 sm:p-10 lg:p-12 shadow-sm backdrop-blur-xl">
             {/* Glowing Background Orbs */}
             <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
             <div className="pointer-events-none absolute left-1/3 -bottom-20 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
@@ -162,9 +162,9 @@ export default function PublicTrainerProfilePage() {
                     alt={trainer.name}
                     width={800}
                     height={1000}
-                    className="h-[420px] w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    className="h-105 w-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                 </div>
               </div>
 

@@ -1,63 +1,31 @@
 /* eslint-disable max-lines */
 import { useState, useRef, useEffect } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import {
-  X,
-  Upload,
-  User,
-  MapPin,
-  PhoneCall,
-  Activity,
-  FileCheck,
-  Calendar,
-  Trash2,
-  CheckCircle2,
-  FileText,
-  CreditCard,
-  ArrowRight,
-  ArrowLeft,
-} from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   adminMemberRegistrationSchema,
   validateFieldWithYup,
 } from "@/lib/validation";
-import { InputField, SelectField, TextareaField } from "@/components/form";
 import { createMember, updateMember, convertLeadToMember } from "@/lib/membersService";
 import { getBatches, enrollMemberInBatch } from "@/lib/batchesService";
 import {
   getMembershipPlans,
-  PAYMENT_METHODS,
   calculateMembershipDates,
   generateTransactionId,
   generateReceiptNumber,
 } from "@/lib/membershipPlans";
+import {
+  INITIAL_FORM,
+  validateRegistrationStep1,
+  validateRegistrationStep2,
+  buildRegistrationPayloads,
+} from "./registrationUtils";
+import { RegistrationHeader } from "./RegistrationHeader";
+import { RegistrationStep1 } from "./RegistrationStep1";
+import { RegistrationStep2 } from "./RegistrationStep2";
+import { RegistrationFooter } from "./RegistrationFooter";
 
-const INITIAL_FORM = {
-  firstName: "",
-  lastName: "",
-  dob: "",
-  gender: "",
-  mobile: "",
-  email: "",
-  photo: null,
-  photoName: "",
-  address: "",
-  city: "",
-  state: "",
-  country: "India",
-  pincode: "",
-  emergencyName: "",
-  emergencyRelationship: "",
-  emergencyNumber: "",
-  height: "",
-  weight: "",
-  medicalDoc: null,
-  medicalDocName: "",
-  medicalDocSize: "",
-  bio: "",
-  batchId: "",
-};
 
 export function AdminMemberRegistrationModal({
   isOpen,
@@ -68,14 +36,17 @@ export function AdminMemberRegistrationModal({
 }) {
   const activeLead =
     leadToConfirm ||
-    (memberToEdit?.status === "Lead" || memberToEdit?.status === "Inquiry"
+    (memberToEdit?.status === "Lead" ||
+    memberToEdit?.status === "Inquiry" ||
+    memberToEdit?.status === "Contacted"
       ? memberToEdit
       : null);
   const isConfirmingLead = Boolean(activeLead);
   const isEditingActiveMember = Boolean(
     memberToEdit &&
       memberToEdit.status !== "Lead" &&
-      memberToEdit.status !== "Inquiry",
+      memberToEdit.status !== "Inquiry" &&
+      memberToEdit.status !== "Contacted",
   );
 
   const [availablePlans, setAvailablePlans] = useState([]);
@@ -249,49 +220,13 @@ export function AdminMemberRegistrationModal({
   };
 
   const validateStep1 = () => {
-    const step1Keys = ["firstName", "lastName", "dob", "gender", "mobile", "email"];
-    const errs = {};
-    step1Keys.forEach((key) => {
-      const msg = validateFieldWithYup(adminMemberRegistrationSchema, key, form);
-      if (msg) errs[key] = msg;
-    });
-
-    if (!paymentForm.selectedPlanId) {
-      errs.selectedPlanId = "Please select a membership plan.";
-    }
-    if (!paymentForm.amountPaid || Number(paymentForm.amountPaid) <= 0) {
-      errs.amountPaid = "Please specify a valid payment amount.";
-    }
-
+    const errs = validateRegistrationStep1(form, paymentForm);
     setErrors((prev) => ({ ...prev, ...errs }));
     return Object.keys(errs).length === 0;
   };
 
   const validateStep2 = () => {
-    const step2Keys = [
-      "address",
-      "city",
-      "state",
-      "country",
-      "pincode",
-      "emergencyName",
-      "emergencyRelationship",
-      "emergencyNumber",
-      "height",
-      "weight",
-      "bio",
-    ];
-    const errs = {};
-    step2Keys.forEach((key) => {
-      const msg = validateFieldWithYup(adminMemberRegistrationSchema, key, form);
-      if (msg) errs[key] = msg;
-    });
-
-    if (isConfirmingLead && !form.medicalDoc && !form.medicalDocName) {
-      errs.medicalDoc =
-        "Medical fitness document is required before confirming member registration.";
-    }
-
+    const errs = validateRegistrationStep2(form, isConfirmingLead);
     setErrors((prev) => ({ ...prev, ...errs }));
     return Object.keys(errs).length === 0;
   };
@@ -325,61 +260,44 @@ export function AdminMemberRegistrationModal({
 
     setIsSubmitting(true);
     try {
-      const plan =
-        availablePlans.find((p) => p.id === paymentForm.selectedPlanId) || availablePlans[0];
-      const dates = calculateMembershipDates(
-        plan.durationMonths,
-        new Date(paymentForm.paymentDate),
-      );
-
-      const membershipPlan = {
-        id: plan.id,
-        name: plan.name,
-        durationMonths: plan.durationMonths,
-        price: Number(paymentForm.amountPaid),
-        formattedPrice: `₹${Number(paymentForm.amountPaid).toLocaleString("en-IN")}`,
-        startDate: dates.startDate,
-        endDate: dates.endDate,
-        formattedStart: dates.formattedStart,
-        formattedEnd: dates.formattedEnd,
-      };
-
-      const paymentDetails = {
-        method: paymentForm.paymentMethod,
-        amount: Number(paymentForm.amountPaid),
-        formattedAmount: `₹${Number(paymentForm.amountPaid).toLocaleString("en-IN")}`,
-        transactionId:
-          paymentForm.transactionId?.trim() ||
-          generateTransactionId(paymentForm.paymentMethod) ||
-          `TXN-${Date.now().toString().slice(-8)}`,
-        receiptNo: generateReceiptNumber(),
-        status: "Completed",
-        paidAt: new Date(paymentForm.paymentDate).toISOString(),
-        notes: paymentForm.paymentNotes,
-      };
-
-      const selectedBatchInfo = batches.find((b) => b.id === form.batchId);
-      const scheduleDetails = selectedBatchInfo
-        ? {
-            batchId: selectedBatchInfo.id,
-            batchName: selectedBatchInfo.name,
-            batchTiming: selectedBatchInfo.timingLabel || selectedBatchInfo.startTime,
-            daysLabel: selectedBatchInfo.daysLabel || selectedBatchInfo.daysPattern,
-            daysPattern: selectedBatchInfo.daysPattern,
-          }
-        : null;
+      const { plan, membershipPlan, paymentDetails, createPayload } =
+        buildRegistrationPayloads({
+          form,
+          batches,
+          availablePlans,
+          paymentForm,
+          calculateMembershipDates,
+          generateTransactionId,
+          generateReceiptNumber,
+        });
 
       let resultMember;
       if (isConfirmingLead) {
-        resultMember = await convertLeadToMember(activeLead.id, {
-          paymentPlanId: plan.id,
-          paymentMethod: paymentForm.paymentMethod,
-          paymentAmount: Number(paymentForm.amountPaid),
-          transactionId: paymentDetails.transactionId,
-          paymentDate: paymentForm.paymentDate,
-          paymentNotes: paymentForm.paymentNotes,
-          batchId: form.batchId || undefined,
-        });
+        try {
+          resultMember = await convertLeadToMember(activeLead.id, {
+            paymentPlanId: plan.id,
+            paymentMethod: paymentForm.paymentMethod,
+            paymentAmount: Number(paymentForm.amountPaid),
+            transactionId: paymentDetails.transactionId,
+            paymentDate: paymentForm.paymentDate,
+            paymentNotes: paymentForm.paymentNotes,
+            batchId: form.batchId || undefined,
+          });
+        } catch (convertErr) {
+          if (
+            convertErr?.status === 404 ||
+            convertErr?.statusCode === 404 ||
+            convertErr?.message?.includes("not found")
+          ) {
+            resultMember = await createMember({
+              ...createPayload,
+              inquiryId: activeLead.id,
+              status: "Active",
+            });
+          } else {
+            throw convertErr;
+          }
+        }
 
         toast.success(
           `Inquiry ${form.firstName} ${form.lastName}`.trim() +
@@ -389,34 +307,7 @@ export function AdminMemberRegistrationModal({
           },
         );
       } else {
-        resultMember = await createMember({
-          ...form,
-          batchId: form.batchId || selectedBatchInfo?.id || "",
-          batchName: scheduleDetails?.batchName || "General Access",
-          batchTiming: scheduleDetails?.batchTiming || "",
-          shift: scheduleDetails?.batchTiming || "",
-          assignedBatch: scheduleDetails?.batchName || "General Access",
-          schedule: scheduleDetails,
-          status: "Active",
-          paymentPlanId: plan.id,
-          planId: plan.id,
-          paymentMethod: paymentForm.paymentMethod,
-          paymentAmount: Number(paymentForm.amountPaid),
-          transactionId: paymentDetails.transactionId,
-          paymentDate: paymentForm.paymentDate,
-          paymentNotes: paymentForm.paymentNotes,
-          membershipPlan,
-          paymentDetails,
-          medicalDoc: form.medicalDoc
-            ? {
-                submitted: true,
-                clearanceDate: new Date().toISOString().split("T")[0],
-                notes: form.medicalDocName || form.medicalDoc || "Medical Fitness Certificate",
-              }
-            : undefined,
-          medicalDocName: form.medicalDocName || "",
-          medicalDocSize: form.medicalDocSize || "",
-        });
+        resultMember = await createMember(createPayload);
 
         toast.success(
           `Member ${form.firstName} ${form.lastName}`.trim() +
@@ -426,6 +317,7 @@ export function AdminMemberRegistrationModal({
           },
         );
       }
+
 
       // Automatically assign member to the corresponding chosen batch timing
       if (form.batchId && resultMember?.id) {
@@ -517,686 +409,61 @@ export function AdminMemberRegistrationModal({
           className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-3xl max-h-[92vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
         >
           {/* Header */}
-          <div className="relative border-b border-border/60 px-6 py-5 sm:px-8 shrink-0 text-center">
-            {!isEditingActiveMember && (
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
-                    step === 1
-                      ? "bg-primary text-background shadow-xs"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  1. Registration & Payment
-                </span>
-                <span className="text-muted-foreground">•</span>
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase ${
-                    step === 2
-                      ? "bg-emerald-500 text-white shadow-sm"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  2. Member Details
-                </span>
-              </div>
-            )}
+          <RegistrationHeader
+            isEditingActiveMember={isEditingActiveMember}
+            isConfirmingLead={isConfirmingLead}
+            activeLead={activeLead}
+            step={step}
+            handleClose={handleClose}
+          />
 
-            <DialogPrimitive.Title className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-              {isConfirmingLead
-                ? `Member Registration ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
-                : isEditingActiveMember
-                  ? "Edit Member Profile"
-                  : step === 1
-                    ? "Member Registration & Plan Payment"
-                    : "Member Details"}
-            </DialogPrimitive.Title>
-            <DialogPrimitive.Description
-              id="admin-member-registration-desc"
-              className="mt-1 text-xs sm:text-sm text-muted-foreground"
-            >
-              {isConfirmingLead
-                ? step === 1
-                  ? "Step 1 of 2: Review personal details, select training schedule, choose plan & record payment."
-                  : "Step 2 of 2: Complete residence address, emergency contact, physical fitness details & medical document."
-                : isEditingActiveMember
-                  ? "Update gym member profile details, physical stats, and contact info"
-                  : step === 1
-                    ? "Step 1 of 2: Enter personal details, select training batch, choose plan & record payment."
-                    : "Step 2 of 2: Complete residence address, emergency contact, physical vitals & medical document."}
-            </DialogPrimitive.Description>
-
-            <DialogPrimitive.Close
-              onClick={handleClose}
-              className="absolute right-4 top-4 sm:right-6 sm:top-5 rounded-full p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </DialogPrimitive.Close>
-          </div>
 
           {/* Form scrollable body */}
           {step === 1 ? (
-            <form
-              id="admin-member-registration-form"
-              onSubmit={handleSubmit}
-              noValidate
-              className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-8"
-            >
-              {/* Pre-populated Inquiry Banner */}
-              {isConfirmingLead && (
-                <div className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-500">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-amber-500/20 text-amber-500 font-bold">
-                    <CheckCircle2 size={18} />
-                  </div>
-                  <div className="text-xs">
-                    <p className="font-bold text-foreground text-sm">
-                      Inquiry Information Pre-Populated
-                    </p>
-                    <p className="text-muted-foreground mt-0.5 leading-relaxed">
-                      Personal and Contact Information have been automatically loaded from this
-                      athlete&apos;s prospective inquiry submission. Please complete the remaining
-                      required sections: <strong>Emergency Contact</strong>,{" "}
-                      <strong>Fitness Information</strong>, and{" "}
-                      <strong>Medical Fitness Document</strong> below before proceeding to plan
-                      &amp; payment.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* 1. PERSONAL INFORMATION */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <User className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Personal Information
-                  </h3>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-first-name"
-                    name="firstName"
-                    label="First Name"
-                    required
-                    placeholder="Enter first name"
-                    value={form.firstName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.firstName}
-                  />
-
-                  <InputField
-                    id="admin-member-last-name"
-                    name="lastName"
-                    label="Last Name"
-                    required
-                    placeholder="Enter last name"
-                    value={form.lastName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.lastName}
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-dob"
-                    name="dob"
-                    type="date"
-                    label="Date of Birth"
-                    required
-                    max={new Date().toISOString().split("T")[0]}
-                    value={form.dob}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.dob}
-                    startIcon={<Calendar className="h-4 w-4 text-muted-foreground" />}
-                    inputClassName="[color-scheme:light] dark:[color-scheme:dark] cursor-pointer"
-                  />
-
-                  <SelectField
-                    id="admin-member-gender"
-                    name="gender"
-                    label="Gender"
-                    required
-                    value={form.gender}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.gender}
-                    placeholder="Select Gender"
-                    options={[
-                      { value: "Male", label: "Male" },
-                      { value: "Female", label: "Female" },
-                      { value: "Other", label: "Other" },
-                      { value: "Prefer not to say", label: "Prefer not to say" },
-                    ]}
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-mobile"
-                    name="mobile"
-                    type="tel"
-                    label="Mobile Number"
-                    required
-                    placeholder="e.g. +91 98765 43210"
-                    value={form.mobile}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.mobile}
-                  />
-
-                  <InputField
-                    id="admin-member-email"
-                    name="email"
-                    type="email"
-                    label="Email"
-                    required
-                    placeholder="e.g. alex@example.com"
-                    value={form.email}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.email}
-                  />
-                </div>
-              </section>
-
-              {/* 2. BATCH SLOT & MEMBERSHIP PLAN */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <Calendar className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Batch Slot &amp; Membership Plan
-                  </h3>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <SelectField
-                    id="admin-member-batch"
-                    name="batchId"
-                    label="Batch Slot"
-                    hint={selectedBatch?.daysPattern}
-                    value={form.batchId}
-                    onChange={(e) => setForm({ ...form, batchId: e.target.value })}
-                    placeholder="Select Training Batch Slot"
-                    options={batches.map((b) => ({
-                      value: b.id,
-                      label: `${b.name} • ${b.timingLabel || b.startTime} (${b.currentPax || 0}/${b.maxPax || 28} Pax)`,
-                    }))}
-                  />
-
-                  <SelectField
-                    id="admin-member-plan"
-                    name="selectedPlanId"
-                    label="Membership Plan"
-                    required
-                    hint={chosenPlan ? `${chosenPlan.durationMonths} Mo` : undefined}
-                    value={paymentForm.selectedPlanId}
-                    onChange={(e) => {
-                      const planId = e.target.value;
-                      const found = availablePlans.find((p) => p.id === planId);
-                      setPaymentForm((prev) => ({
-                        ...prev,
-                        selectedPlanId: planId,
-                        amountPaid: found ? found.price : prev.amountPaid,
-                      }));
-                    }}
-                    error={errors.selectedPlanId}
-                    placeholder="Select Membership Plan Tier"
-                    options={availablePlans.map((plan) => ({
-                      value: plan.id,
-                      label: `${plan.name} — ${plan.formattedPrice} (${plan.durationMonths} Mo)${plan.badge ? ` • [${plan.badge}]` : ""}`,
-                    }))}
-                  />
-                </div>
-              </section>
-
-              {/* 3. PAYMENT FORM DETAILS */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <CreditCard className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Payment Form Details
-                  </h3>
-                </div>
-
-                {/* Payment Option & Amount Received Side by Side */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <SelectField
-                    id="admin-member-payment-method"
-                    name="paymentMethod"
-                    label="Payment Option / Method"
-                    required
-                    value={paymentForm.paymentMethod}
-                    onChange={(e) => {
-                      const methodId = e.target.value;
-                      setPaymentForm((prev) => ({
-                        ...prev,
-                        paymentMethod: methodId,
-                        transactionId: generateTransactionId(methodId),
-                      }));
-                    }}
-                    placeholder="Select Payment Option / Method"
-                    options={PAYMENT_METHODS.map((method) => ({
-                      value: method.id,
-                      label: `${method.name} — ${method.id === "Cash" ? "Gym Reception" : "Digital Transaction"}`,
-                    }))}
-                  />
-
-                  <InputField
-                    label="Amount Received (₹)"
-                    required
-                    type="number"
-                    value={paymentForm.amountPaid}
-                    onChange={(e) =>
-                      setPaymentForm((prev) => ({ ...prev, amountPaid: e.target.value }))
-                    }
-                    inputClassName="font-semibold"
-                    error={errors.amountPaid}
-                  />
-                </div>
-
-                <InputField
-                  label="Billing Notes / Reference (Optional)"
-                  type="text"
-                  value={paymentForm.paymentNotes}
-                  onChange={(e) =>
-                    setPaymentForm((prev) => ({ ...prev, paymentNotes: e.target.value }))
-                  }
-                  placeholder="e.g. Paid at reception counter / GPay reference"
-                />
-              </section>
-            </form>
+            <RegistrationStep1
+              isConfirmingLead={isConfirmingLead}
+              activeLead={activeLead}
+              form={form}
+              setForm={setForm}
+              handleChange={handleChange}
+              handleBlur={handleBlur}
+              errors={errors}
+              batches={batches}
+              selectedBatch={selectedBatch}
+              availablePlans={availablePlans}
+              chosenPlan={chosenPlan}
+              paymentForm={paymentForm}
+              setPaymentForm={setPaymentForm}
+              handleSubmit={handleSubmit}
+            />
           ) : (
-            <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
-              {/* Member & Plan Summary Header */}
-              <div className="rounded-2xl border border-border bg-card/40 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm uppercase border border-border shrink-0">
-                    {form.firstName?.[0]}
-                    {form.lastName?.[0]}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-foreground font-display">
-                      {form.firstName} {form.lastName}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {form.email} • {form.mobile}
-                    </p>
-                    {selectedBatch && (
-                      <p className="text-[11px] text-accent mt-0.5">
-                        Batch: {selectedBatch.name} (
-                        {selectedBatch.timingLabel || selectedBatch.startTime})
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="sm:text-right">
-                  <span className="text-xs font-semibold text-muted-foreground block">
-                    Plan &amp; Paid
-                  </span>
-                  <div className="flex items-center sm:justify-end gap-2 mt-0.5">
-                    <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-xs font-bold text-accent">
-                      {chosenPlan?.name || "Quarterly Pro"}
-                    </span>
-                    <span className="text-lg font-black text-emerald-400 font-display">
-                      ₹{Number(paymentForm.amountPaid).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 1. CONTACT & RESIDENCE INFORMATION */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <MapPin className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Contact &amp; Residence Information
-                  </h3>
-                </div>
-
-                <TextareaField
-                  id="admin-member-address"
-                  name="address"
-                  rows={2}
-                  label="Address"
-                  required
-                  placeholder="Street address, building, apartment, or flat number"
-                  value={form.address}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={errors.address}
-                  textareaClassName="no-scrollbar resize-none"
-                />
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-city"
-                    name="city"
-                    label="City"
-                    required
-                    placeholder="Enter city"
-                    value={form.city}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.city}
-                  />
-
-                  <InputField
-                    id="admin-member-state"
-                    name="state"
-                    label="State"
-                    required
-                    placeholder="Enter state"
-                    value={form.state}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.state}
-                  />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-country"
-                    name="country"
-                    label="Country"
-                    required
-                    placeholder="Enter country"
-                    value={form.country}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.country}
-                  />
-
-                  <InputField
-                    id="admin-member-pincode"
-                    name="pincode"
-                    label="Pincode"
-                    required
-                    placeholder="e.g. 400001"
-                    value={form.pincode}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.pincode}
-                  />
-                </div>
-              </section>
-
-              {/* 2. EMERGENCY CONTACT */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <PhoneCall className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Emergency Contact
-                  </h3>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-emergency-name"
-                    name="emergencyName"
-                    label="Contact Name"
-                    required
-                    placeholder="Emergency contact person"
-                    value={form.emergencyName}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.emergencyName}
-                  />
-
-                  <SelectField
-                    id="admin-member-emergency-relationship"
-                    name="emergencyRelationship"
-                    label="Relationship"
-                    required
-                    value={form.emergencyRelationship}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.emergencyRelationship}
-                    placeholder="Select Relationship"
-                    options={[
-                      { value: "Parent", label: "Parent" },
-                      { value: "Spouse", label: "Spouse" },
-                      { value: "Sibling", label: "Sibling" },
-                      { value: "Relative", label: "Relative" },
-                      { value: "Friend", label: "Friend" },
-                      { value: "Guardian", label: "Guardian" },
-                      { value: "Other", label: "Other" },
-                    ]}
-                  />
-                </div>
-
-                <InputField
-                  id="admin-member-emergency-number"
-                  name="emergencyNumber"
-                  type="tel"
-                  label="Contact Number"
-                  required
-                  placeholder="Emergency contact mobile number"
-                  value={form.emergencyNumber}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={errors.emergencyNumber}
-                />
-              </section>
-
-              {/* 3. FITNESS INFORMATION */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <Activity className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Fitness Information
-                  </h3>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    id="admin-member-height"
-                    name="height"
-                    type="number"
-                    step="0.1"
-                    label="Height"
-                    required
-                    placeholder="e.g. 175"
-                    value={form.height}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.height}
-                    endAdornment={
-                      <span className="text-xs font-semibold text-muted-foreground pr-3.5">cm</span>
-                    }
-                  />
-
-                  <InputField
-                    id="admin-member-weight"
-                    name="weight"
-                    type="number"
-                    step="0.1"
-                    label="Weight"
-                    required
-                    placeholder="e.g. 72"
-                    value={form.weight}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={errors.weight}
-                    endAdornment={
-                      <span className="text-xs font-semibold text-muted-foreground pr-3.5">kg</span>
-                    }
-                  />
-                </div>
-              </section>
-
-              {/* 4. MEDICAL FITNESS DOCUMENT & BIO */}
-              <section className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                  <FileCheck className="h-4 w-4 text-accent" />
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                    Medical Fitness Document &amp; Bio
-                  </h3>
-                </div>
-
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-foreground">
-                    Medical Fitness Document{" "}
-                    {isConfirmingLead && <span className="text-destructive">*</span>}
-                  </label>
-                  <div
-                    className={`rounded-xl border border-dashed p-4 bg-background/50 ${
-                      errors.medicalDoc
-                        ? "border-destructive ring-1 ring-destructive/30"
-                        : "border-border"
-                    }`}
-                  >
-                    {form.medicalDocName ? (
-                      <div className="flex items-center justify-between gap-3 p-2 bg-card rounded-lg border border-border">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
-                            <FileText className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-foreground truncate">
-                              {form.medicalDocName}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {form.medicalDocSize}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleRemoveDoc}
-                          className="inline-flex items-center gap-1 rounded-lg border border-destructive/30 px-2.5 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span>Remove</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-center py-4">
-                        <div className="grid h-12 w-12 place-items-center rounded-2xl bg-accent/10 text-accent mb-2">
-                          <FileCheck className="h-6 w-6" />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => docInputRef.current?.click()}
-                          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:border-border transition-colors cursor-pointer"
-                        >
-                          <Upload className="h-3.5 w-3.5" />
-                          <span>Upload Medical Clearance Document</span>
-                        </button>
-                        <p className="mt-2 text-[11px] text-muted-foreground">
-                          Supported formats: PDF, JPG, PNG (Max 10MB)
-                        </p>
-                      </div>
-                    )}
-
-                    <input
-                      ref={docInputRef}
-                      id="admin-member-doc-upload"
-                      type="file"
-                      accept=".pdf,image/jpeg,image/png,image/jpg"
-                      onChange={handleDocUpload}
-                      className="hidden"
-                    />
-                  </div>
-                  {errors.medicalDoc && (
-                    <p className="mt-1.5 text-xs text-destructive font-medium">
-                      {errors.medicalDoc}
-                    </p>
-                  )}
-                </div>
-
-                {/* Bio */}
-                <TextareaField
-                  id="admin-member-bio"
-                  name="bio"
-                  rows={3}
-                  label="Athlete Bio &amp; Coaching Notes"
-                  required
-                  placeholder="Tell us about the athlete's background, training history or fitness goals..."
-                  value={form.bio}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  error={errors.bio}
-                  textareaClassName="no-scrollbar resize-none"
-                />
-              </section>
-            </div>
+            <RegistrationStep2
+              form={form}
+              handleChange={handleChange}
+              handleBlur={handleBlur}
+              errors={errors}
+              selectedBatch={selectedBatch}
+              chosenPlan={chosenPlan}
+              paymentForm={paymentForm}
+              isConfirmingLead={isConfirmingLead}
+              handleRemoveDoc={handleRemoveDoc}
+              handleDocUpload={handleDocUpload}
+              docInputRef={docInputRef}
+            />
           )}
 
           {/* Footer Actions */}
-          <div className="relative z-10 border-t border-border/60 bg-card px-6 py-4 sm:px-8 shrink-0 flex items-center justify-between gap-3 rounded-b-2xl sm:rounded-b-3xl">
-            {step === 2 && !memberToEdit ? (
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-              >
-                <ArrowLeft size={14} />
-                <span>Back to Registration &amp; Payment</span>
-              </button>
-            ) : (
-              <div />
-            )}
-
-            <div className="flex items-center gap-3">
-              <DialogPrimitive.Close asChild>
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="rounded-xl border border-border bg-card px-5 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </DialogPrimitive.Close>
-
-              {isEditingActiveMember ? (
-                <button
-                  type="submit"
-                  form="admin-member-registration-form"
-                  disabled={isSubmitting}
-                  className="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-background shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 cursor-pointer"
-                >
-                  {isSubmitting ? "Saving…" : "Save Changes"}
-                </button>
-              ) : step === 1 ? (
-                <button
-                  type="button"
-                  onClick={handleProceedToBalanceDetails}
-                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-2 text-xs font-semibold text-background shadow-md transition-all hover:bg-primary/90 hover:scale-[1.01] active:scale-[0.98] cursor-pointer"
-                >
-                  <span>Next: Member Details</span>
-                  <ArrowRight size={14} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleCompleteRegistration}
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-6 py-2 text-xs font-bold text-white shadow-md transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-60 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-r-transparent" />
-                      <span>Processing…</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 size={14} />
-                      <span>
-                        {isConfirmingLead
-                          ? "Complete Registration & Confirm Member"
-                          : "Complete Registration & Activate Member"}
-                      </span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+          <RegistrationFooter
+            step={step}
+            setStep={setStep}
+            memberToEdit={memberToEdit}
+            handleClose={handleClose}
+            isEditingActiveMember={isEditingActiveMember}
+            isSubmitting={isSubmitting}
+            handleProceedToBalanceDetails={handleProceedToBalanceDetails}
+            handleCompleteRegistration={handleCompleteRegistration}
+            isConfirmingLead={isConfirmingLead}
+          />
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

@@ -86,7 +86,7 @@ export function PhotosSection({ onSelectPhoto }) {
                       src={p.src}
                       alt={p.alt}
                       loading="lazy"
-                      className="aspect-[4/5] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      className="aspect-4/5 w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                   </SpotlightCard>
                 </CarouselItem>

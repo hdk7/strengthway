@@ -359,14 +359,14 @@ export default function Sidebar({
       <aside
         className={[
           "flex flex-col bg-card border border-border rounded-xl overflow-hidden",
-          "fixed top-[74px] bottom-3 left-3",
-          "w-[var(--sidebar-width,256px)] z-50 shadow-xl transition-transform duration-250 ease-in-out",
+          "fixed top-18.5 bottom-3 left-3",
+          "w-(--sidebar-width,256px) z-50 shadow-xl transition-transform duration-250 ease-in-out",
           mobileOpen ? "translate-x-0" : "-translate-x-[calc(100%+24px)]",
           "md:z-20 md:shadow-sm md:translate-x-0",
           "md:transition-[width] md:duration-200 md:ease-in-out",
           isCollapsed
-            ? "md:w-[var(--sidebar-width-collapsed,72px)]"
-            : "md:w-[var(--sidebar-width,256px)]",
+            ? "md:w-(--sidebar-width-collapsed,72px)"
+            : "md:w-(--sidebar-width,256px)",
         ].join(" ")}
       >
         <nav

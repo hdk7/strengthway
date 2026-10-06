@@ -80,8 +80,11 @@ export async function createInquiry(data) {
  * @param {string} status - New status ("Inquiry" | "Contacted" | "Converted" | "Archived")
  * @returns {Promise<object>} Updated inquiry record
  */
-export async function updateInquiryStatus(id, status) {
-  const updated = await api.patch(`/v1/inquiries/${encodeURIComponent(id)}/status`, { status });
+export async function updateInquiryStatus(id, status, options = {}) {
+  const updated = await api.patch(`/v1/inquiries/${encodeURIComponent(id)}/status`, {
+    status,
+    ...options,
+  });
   return updated;
 }
 
@@ -114,6 +117,26 @@ export async function deleteInquiry(id) {
 export async function softDeleteInquiry(id) {
   const deleted = await api.patch(`/v1/inquiries/${encodeURIComponent(id)}/soft-delete`);
   return deleted;
+}
+
+/**
+ * Record interaction/contact details for an inquiry, advancing status to Contacted.
+ * @param {string} id - Inquiry ID
+ * @param {object} contactData - { contactMethod, contactNotes, contactedBy, contactedAt, outcome, followUpDate }
+ * @returns {Promise<object>} Updated inquiry record
+ */
+export async function recordInquiryContact(id, contactData) {
+  return api.post(`/v1/inquiries/${encodeURIComponent(id)}/contact`, contactData);
+}
+
+/**
+ * Move an unconfirmed inquiry to Archived.
+ * @param {string} id - Inquiry ID
+ * @param {string} [reason] - Optional reason for archiving
+ * @returns {Promise<object>} Updated inquiry record
+ */
+export async function archiveInquiry(id, reason = "") {
+  return api.patch(`/v1/inquiries/${encodeURIComponent(id)}/archive`, { reason });
 }
 
 /**

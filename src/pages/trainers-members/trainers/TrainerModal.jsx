@@ -7,16 +7,14 @@ import {
   User,
   Phone,
   Quote,
-  Upload,
-  Trash2,
-  Image as ImageIcon,
-  Clock,
-  Check,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trainerSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 import { InputField, SelectField, TextareaField } from "@/components/form";
 import { getBatches, getTrainerBatchIds, syncTrainerBatches } from "@/lib/batchesService";
+import { createTrainer, updateTrainer } from "@/lib/trainersService";
+import TrainerPhotoUpload from "./TrainerPhotoUpload";
+import TrainerBatchPicker from "./TrainerBatchPicker";
 
 const INITIAL_FORM = {
   name: "",
@@ -64,44 +62,69 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
               quote: trainerToEdit.quote || "",
               photo: trainerToEdit.photo || "",
               bio: trainerToEdit.bio || "",
-              shift: trainerToEdit.shift || "",
               batchIds: initialBatchIds,
             });
           } else {
             setForm(INITIAL_FORM);
           }
+          setErrors({});
         })
         .catch(() => {
           setBatchesList([]);
-          if (trainerToEdit) {
-            setForm({
-              name: trainerToEdit.name || "",
-              gender: trainerToEdit.gender || "Male",
-              experience: trainerToEdit.experience || "",
-              phone: trainerToEdit.phone || "",
-              email: trainerToEdit.email || "",
-              status: trainerToEdit.status || "Active",
-              quote: trainerToEdit.quote || "",
-              photo: trainerToEdit.photo || "",
-              bio: trainerToEdit.bio || "",
-              shift: trainerToEdit.shift || "",
-              batchIds: trainerToEdit.batchIds || [],
-            });
-          } else {
-            setForm(INITIAL_FORM);
-          }
         });
-      setErrors({});
     }
   }, [isOpen, trainerToEdit]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleBlur = async (e) => {
+    const { name, value } = e.target;
+    const fieldError = await validateFieldWithYup(trainerSchema, name, value);
+    setErrors((prev) => ({ ...prev, [name]: fieldError }));
+  };
+
+  const handlePhotoFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (PNG, JPG, WebP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Photo size should not exceed 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      setForm((prev) => ({ ...prev, photo: dataUrl }));
+      toast.success("Trainer portrait image loaded.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setForm((prev) => ({ ...prev, photo: "" }));
+    if (photoInputRef.current) photoInputRef.current.value = "";
+    toast.info("Photo removed.");
+  };
 
   const handleToggleBatch = (batchId) => {
     setForm((prev) => {
       const current = Array.isArray(prev.batchIds) ? prev.batchIds : [];
-      const next = current.includes(batchId)
+      const updated = current.includes(batchId)
         ? current.filter((id) => id !== batchId)
         : [...current, batchId];
-      return { ...prev, batchIds: next };
+      return { ...prev, batchIds: updated };
     });
   };
 
@@ -113,90 +136,40 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
   };
 
   const handleClearAllBatches = () => {
-    setForm((prev) => ({
-      ...prev,
-      batchIds: [],
-    }));
+    setForm((prev) => ({ ...prev, batchIds: [] }));
   };
 
-  const handleClose = (e) => {
-    if (e && typeof e.preventDefault === "function") {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleClose = () => {
+    setForm(INITIAL_FORM);
     setErrors({});
-    if (!trainerToEdit) {
-      setForm(INITIAL_FORM);
-    }
-    if (typeof onClose === "function") {
-      onClose();
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const nextForm = { ...form, [name]: value };
-    setForm(nextForm);
-    const fieldError = validateFieldWithYup(trainerSchema, name, nextForm);
-    setErrors((prev) => ({ ...prev, [name]: fieldError }));
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    if (!name) return;
-    const currentForm = { ...form, [name]: value !== undefined ? value : form[name] };
-    const fieldError = validateFieldWithYup(trainerSchema, name, currentForm);
-    setErrors((prev) => ({ ...prev, [name]: fieldError }));
-  };
-
-  const handlePhotoFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please select a valid image file (JPEG, PNG, WebP).");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image file size should not exceed 5MB.");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (uploadEvent) => {
-      const result = uploadEvent.target?.result;
-      if (result) {
-        setForm((prev) => ({ ...prev, photo: result }));
-        toast.success("Profile photo uploaded!");
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemovePhoto = (e) => {
-    if (e) e.stopPropagation();
-    if (photoInputRef.current) {
-      photoInputRef.current.value = "";
-    }
-    setForm((prev) => ({ ...prev, photo: "" }));
+    onClose();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errs = validateWithYup(trainerSchema, form);
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) {
-      toast.error("Please fill in all required fields correctly.");
+    const validationErrors = await validateWithYup(trainerSchema, form);
+    if (validationErrors) {
+      setErrors(validationErrors);
+      toast.error("Please check the form for validation errors.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      if (trainerToEdit?.id) {
-        await syncTrainerBatches(trainerToEdit.id, form.batchIds || []).catch(() => null);
+      let savedTrainer;
+      if (trainerToEdit) {
+        savedTrainer = await updateTrainer(trainerToEdit.id, form);
+        await syncTrainerBatches(trainerToEdit.id, form.batchIds);
+        toast.success(`Trainer "${form.name}" updated successfully.`);
+      } else {
+        savedTrainer = await createTrainer(form);
+        if (savedTrainer?.id && form.batchIds.length > 0) {
+          await syncTrainerBatches(savedTrainer.id, form.batchIds);
+        }
+        toast.success(`Trainer "${form.name}" created successfully.`);
       }
-      await onSuccess(form, Boolean(trainerToEdit));
+
+      if (onSuccess) onSuccess(savedTrainer);
       handleClose();
     } catch (e) {
       toast.error(e?.message || "Failed to save trainer details.");
@@ -259,63 +232,13 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 </h3>
               </div>
 
-              {/* Photo Upload Area (File Upload, not URL text) */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border border-border/60 bg-muted/20 p-3.5 sm:p-4">
-                <input
-                  ref={photoInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/jpg"
-                  onChange={handlePhotoFileChange}
-                  className="hidden"
-                />
-
-                <div className="relative shrink-0 mx-auto sm:mx-0">
-                  <div className="h-20 w-20 rounded-2xl border-2 border-border/80 bg-background overflow-hidden flex items-center justify-center shadow-md">
-                    {form.photo ? (
-                      <img
-                        src={form.photo}
-                        alt="Trainer Preview"
-                        className="h-full w-full object-cover object-top"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-muted-foreground/60 text-[10px]">
-                        <ImageIcon size={22} className="mb-1 text-muted-foreground/50" />
-                        <span>No Photo</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex-1 space-y-2 text-center sm:text-left">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => photoInputRef.current?.click()}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <Upload size={14} />
-                      <span>{form.photo ? "Change Photo" : "Upload Photo"}</span>
-                    </button>
-
-                    {form.photo && (
-                      <button
-                        type="button"
-                        onClick={handleRemovePhoto}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer"
-                      >
-                        <Trash2 size={13} />
-                        <span>Remove</span>
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Upload PNG, JPG, or WebP portrait (max 5MB). Leave empty to use roster initials.
-                  </p>
-                </div>
-              </div>
+              {/* Photo Upload Area */}
+              <TrainerPhotoUpload
+                photo={form.photo}
+                onPhotoFileChange={handlePhotoFileChange}
+                onRemovePhoto={handleRemovePhoto}
+                photoInputRef={photoInputRef}
+              />
 
               {/* Full Name, Gender & Status */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -419,174 +342,70 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
             </div>
 
             {/* 3. Batch Slots & Shift Timings (Multi-Select) */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-border/40 pb-2">
-                <div className="flex items-center gap-2">
-                  <Clock size={15} className="text-accent" />
-                  <h3 className="font-semibold text-foreground text-xs uppercase tracking-wider">
-                    Batch Slots & Shift Timings
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-medium text-muted-foreground mr-1">
-                    {form.batchIds?.length || 0} selected
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleSelectAllBatches}
-                    className="text-[11px] text-accent hover:underline cursor-pointer font-medium"
-                  >
-                    Select All
-                  </button>
-                  <span className="text-border text-xs">•</span>
-                  <button
-                    type="button"
-                    onClick={handleClearAllBatches}
-                    className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer font-medium"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
+            <TrainerBatchPicker
+              batchesList={batchesList}
+              selectedBatchIds={form.batchIds}
+              onToggleBatch={handleToggleBatch}
+              onSelectAll={handleSelectAllBatches}
+              onClearAll={handleClearAllBatches}
+            />
 
-              <p className="text-[11px] text-muted-foreground">
-                Select the batch slot(s) this trainer is assigned to. Changes will automatically reflect in batch schedules and trainer rosters.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                {batchesList.map((batch) => {
-                  const isSelected = Array.isArray(form.batchIds) && form.batchIds.includes(batch.id);
-                  return (
-                    <div
-                      key={batch.id}
-                      onClick={() => handleToggleBatch(batch.id)}
-                      role="checkbox"
-                      aria-checked={isSelected}
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === " " || e.key === "Enter") {
-                          e.preventDefault();
-                          handleToggleBatch(batch.id);
-                        }
-                      }}
-                      className={`flex items-start gap-3 p-3 rounded-xl border text-left cursor-pointer transition-all select-none ${
-                        isSelected
-                          ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/30"
-                          : "border-border/70 bg-card hover:bg-muted/50 hover:border-border"
-                      }`}
-                    >
-                      <div
-                        className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-md border transition-colors ${
-                          isSelected
-                            ? "border-primary bg-primary text-background"
-                            : "border-muted-foreground/40 bg-background"
-                        }`}
-                      >
-                        {isSelected && <Check size={11} strokeWidth={3} />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="font-bold text-xs text-foreground tracking-tight">
-                            {batch.name}
-                          </span>
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                              isSelected
-                                ? "bg-primary/20 text-primary"
-                                : "bg-muted text-muted-foreground"
-                            }`}
-                          >
-                            {batch.daysPattern || "MWF"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
-                          <Clock size={11} className="shrink-0" />
-                          <span className="truncate">
-                            {batch.timingLabel || `${batch.startTime} - ${batch.endTime}`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* 4. Hero Motto / Quote */}
+            {/* 4. Coaching Philosophy & Biography */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b border-border/40 pb-2">
                 <Quote size={15} className="text-accent" />
                 <h3 className="font-semibold text-foreground text-xs uppercase tracking-wider">
-                  Personal Motto & Coaching Philosophy
+                  Philosophy & Bio
                 </h3>
               </div>
 
               <InputField
                 id="trainer-quote"
                 name="quote"
-                label="Personal Motto / Quote (Featured in Hero Profile Card)"
+                label="Motto / Coaching Philosophy"
                 value={form.quote}
                 onChange={handleChange}
-                placeholder='e.g. "Consistency beats intensity every single day."'
+                placeholder="e.g. Movement is medicine. Strength is freedom."
                 size="sm"
-                helperText="A high-impact 1-line quote displayed prominently in the hero quote banner."
               />
-            </div>
-
-            {/* 4. Biography & Coaching Philosophy */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-border/40 pb-2">
-                <User size={15} className="text-accent" />
-                <h3 className="font-semibold text-foreground text-xs uppercase tracking-wider">
-                  Biography & Athletic Background
-                </h3>
-              </div>
 
               <TextareaField
                 id="trainer-bio"
                 name="bio"
-                label="Coaching Philosophy & Background"
-                required
-                rows={4}
+                label="Full Professional Biography"
                 value={form.bio}
                 onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Certifications, athletic background, or training philosophy…"
-                error={errors.bio}
-                size="sm"
+                rows={3}
+                placeholder="Describe coaching background, athletic specialization, and milestones..."
               />
             </div>
-          </form>
 
-          {/* Footer */}
-          <div className="relative z-10 border-t border-border/60 bg-card px-6 py-4 sm:px-8 shrink-0 flex items-center justify-end gap-3 rounded-b-2xl sm:rounded-b-3xl">
-            <DialogPrimitive.Close asChild>
+            {/* Footer Buttons */}
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-border/60">
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto rounded-xl border border-border px-5 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
               >
                 Cancel
               </button>
-            </DialogPrimitive.Close>
-            <button
-              type="submit"
-              form="trainer-form"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-5 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer disabled:opacity-60"
-            >
-              <CheckCircle2 size={14} />
-              <span>
-                {isSubmitting
-                  ? trainerToEdit
-                    ? "Saving…"
-                    : "Adding…"
-                  : trainerToEdit
-                    ? "Save Changes"
-                    : "Add Trainer"}
-              </span>
-            </button>
-          </div>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-background shadow-md hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle2 size={15} />
+                <span>
+                  {isSubmitting
+                    ? "Saving..."
+                    : trainerToEdit
+                      ? "Update Trainer Profile"
+                      : "Create Trainer"}
+                </span>
+              </button>
+            </div>
+          </form>
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>

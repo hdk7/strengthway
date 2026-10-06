@@ -13,7 +13,7 @@ export function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex flex-col justify-center overflow-hidden"
+      className="relative min-h-[calc(100vh-4rem)] flex flex-col justify-center overflow-hidden"
     >
       <img
         src={heroImage}
@@ -29,7 +29,7 @@ export function HeroSection() {
             <h1 className="mt-1 sm:mt-2 font-display text-3xl font-bold leading-[1.08] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
               Train harder.
               <br />
-              <span className="bg-gradient-to-br from-white to-zinc-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-br from-white to-zinc-400 bg-clip-text text-transparent">
                 Track smarter.
               </span>
             </h1>

@@ -8,115 +8,14 @@ import {
   Eye,
   Download,
   Trash2,
-  X,
   FileCheck,
-  ShieldCheck,
   Calendar,
   Building2,
-  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
-import { InputField } from "@/components/form";
-
-// Pre-seeded rich accreditation documents based on trainer certification names
-const PRESET_ACCREDITATION_METADATA = {
-  "CrossFit Level 2 Coach": {
-    issuer: "CrossFit LLC Training Board",
-    issueDate: "2022-04-18",
-    expiryDate: "2027-04-18",
-    fileName: "CrossFit_L2_Certificate.pdf",
-    fileSize: "2.4 MB",
-    credentialId: "CF-884920-L2",
-  },
-  "CSCS Specialist": {
-    issuer: "National Strength & Conditioning Association (NSCA)",
-    issueDate: "2021-08-12",
-    expiryDate: "Lifetime / Validated",
-    fileName: "CSCS_Accreditation_Doc.pdf",
-    fileSize: "1.9 MB",
-    credentialId: "NSCA-77491-CSCS",
-  },
-  "ACE Certified Personal Trainer": {
-    issuer: "American Council on Exercise (ACE)",
-    issueDate: "2020-11-05",
-    expiryDate: "2026-11-05",
-    fileName: "ACE_Certified_PT.pdf",
-    fileSize: "3.1 MB",
-    credentialId: "ACE-99410-CPT",
-  },
-  "Functional Movement Screen (FMS)": {
-    issuer: "FMS Functional Movement Systems",
-    issueDate: "2023-02-20",
-    expiryDate: "2027-02-20",
-    fileName: "FMS_Level1_Verification.pdf",
-    fileSize: "1.4 MB",
-    credentialId: "FMS-55210-PRO",
-  },
-  "CSCS (Certified Strength & Conditioning Specialist)": {
-    issuer: "National Strength & Conditioning Association (NSCA)",
-    issueDate: "2020-06-14",
-    expiryDate: "Lifetime / Validated",
-    fileName: "CSCS_Master_Accreditation.pdf",
-    fileSize: "2.8 MB",
-    credentialId: "NSCA-90234-CSCS",
-  },
-  "USA Weightlifting (USAW-1)": {
-    issuer: "USA Weightlifting Coaching Board",
-    issueDate: "2021-09-30",
-    expiryDate: "2026-09-30",
-    fileName: "USAW_Olympic_Lifting_Cert.pdf",
-    fileSize: "1.7 MB",
-    credentialId: "USAW-44321-L1",
-  },
-  "ISSA Elite Master Trainer": {
-    issuer: "International Sports Sciences Association",
-    issueDate: "2019-12-10",
-    expiryDate: "Lifetime / Validated",
-    fileName: "ISSA_Master_Trainer.pdf",
-    fileSize: "3.2 MB",
-    credentialId: "ISSA-88390-EMT",
-  },
-  "Precision Nutrition Level 1": {
-    issuer: "Precision Nutrition Academy",
-    issueDate: "2022-07-22",
-    expiryDate: "Lifetime / Validated",
-    fileName: "Precision_Nutrition_L1.pdf",
-    fileSize: "2.1 MB",
-    credentialId: "PN1-66420-EXP",
-  },
-  "NASM Corrective Exercise Specialist (CES)": {
-    issuer: "National Academy of Sports Medicine (NASM)",
-    issueDate: "2021-03-15",
-    expiryDate: "2027-03-15",
-    fileName: "NASM_CES_Accreditation.pdf",
-    fileSize: "2.6 MB",
-    credentialId: "NASM-77120-CES",
-  },
-  "EXOS Performance Specialist": {
-    issuer: "EXOS Athletic Performance Academy",
-    issueDate: "2022-10-08",
-    expiryDate: "2026-10-08",
-    fileName: "EXOS_Performance_Cert.pdf",
-    fileSize: "1.8 MB",
-    credentialId: "EXOS-33190-XPS",
-  },
-  "Sports Physical Therapy Associate": {
-    issuer: "APTA Sports Physical Therapy Section",
-    issueDate: "2020-05-19",
-    expiryDate: "Lifetime / Validated",
-    fileName: "Sports_PT_Associate_Doc.pdf",
-    fileSize: "3.4 MB",
-    credentialId: "APTA-55910-SPT",
-  },
-  "TRX Suspension Master Coach": {
-    issuer: "TRX Training International",
-    issueDate: "2023-01-14",
-    expiryDate: "2027-01-14",
-    fileName: "TRX_Suspension_Mastery.pdf",
-    fileSize: "1.2 MB",
-    credentialId: "TRX-11940-MST",
-  },
-};
+import { PRESET_ACCREDITATION_METADATA } from "./accreditationPresets";
+import AccreditationUploadModal from "./AccreditationUploadModal";
+import AccreditationViewerModal from "./AccreditationViewerModal";
 
 function normalizeAccreditations(trainer) {
   const certs = trainer?.certifications || [
@@ -431,166 +330,30 @@ export function CertifiedAccreditations({
       </div>
 
       {/* Upload Confirmation Modal */}
-      {showUploadModal && pendingFile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-md rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl space-y-5">
-            <div className="flex items-center justify-between border-b border-border/60 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500">
-                  <FileCheck size={18} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-foreground">Upload Accreditation Document</h3>
-                  <p className="text-xs text-muted-foreground">Configure accreditation credentials</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUploadModal(false);
-                  setPendingFile(null);
-                }}
-                className="rounded-lg p-1 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="rounded-2xl border border-border/60 bg-muted/30 p-3 flex items-center gap-3">
-                <FileText size={24} className="text-red-400 shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-semibold text-foreground truncate">{pendingFile.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {(pendingFile.size / (1024 * 1024)).toFixed(2)} MB • Ready for audit
-                  </p>
-                </div>
-              </div>
-
-              <InputField
-                label="Accreditation / Certificate Name"
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="e.g. CSCS Strength Specialist"
-              />
-
-              <InputField
-                label="Issuing Authority / Academy"
-                value={customIssuer}
-                onChange={(e) => setCustomIssuer(e.target.value)}
-                placeholder="e.g. NSCA, CrossFit LLC, ACE"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowUploadModal(false);
-                  setPendingFile(null);
-                }}
-                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmUpload}
-                disabled={isUploading}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-background px-5 py-2 text-xs font-bold transition-all shadow-md cursor-pointer"
-              >
-                <ShieldCheck size={14} />
-                <span>{isUploading ? "Verifying..." : "Verify & Save Document"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AccreditationUploadModal
+        isOpen={showUploadModal}
+        onClose={() => {
+          setShowUploadModal(false);
+          setPendingFile(null);
+        }}
+        pendingFile={pendingFile}
+        customTitle={customTitle}
+        setCustomTitle={setCustomTitle}
+        customIssuer={customIssuer}
+        setCustomIssuer={setCustomIssuer}
+        onConfirmUpload={handleConfirmUpload}
+        isUploading={isUploading}
+      />
 
       {/* Official Certificate Preview Modal */}
-      {activePreviewDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-2xl rounded-3xl border-2 border-amber-400/40 bg-zinc-950 p-6 sm:p-10 shadow-2xl space-y-6">
-            <button
-              type="button"
-              onClick={() => setActivePreviewDoc(null)}
-              className="absolute right-5 top-5 rounded-full bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Certificate Layout */}
-            <div className="relative rounded-2xl border-4 border-double border-amber-400/50 bg-gradient-to-b from-zinc-900 via-black to-zinc-900 p-6 sm:p-10 text-center space-y-5 shadow-inner">
-              <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-300">
-                <Sparkles size={13} />
-                <span>The Strength Way Verified Faculty</span>
-              </div>
-
-              <div>
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-white uppercase">
-                  Certificate of Accreditation
-                </h2>
-                <p className="text-xs text-white/60 mt-1 uppercase tracking-wider">
-                  Official Verification Credential
-                </p>
-              </div>
-
-              <div className="py-2">
-                <p className="text-xs text-white/70 italic">This is to certify that faculty trainer</p>
-                <h3 className="font-display text-2xl sm:text-3xl font-black text-amber-400 tracking-tight mt-1">
-                  {trainer?.name || "Faculty Coach"}
-                </h3>
-                <p className="text-xs text-white/70 mt-2">
-                  has demonstrated exemplary mastery and fulfilled all requirements for
-                </p>
-                <div className="mt-3 inline-block rounded-xl border border-white/20 bg-white/5 px-4 py-2 font-bold text-sm sm:text-base text-white">
-                  {activePreviewDoc.title}
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-amber-400/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/70">
-                <div className="text-left">
-                  <span className="block text-[10px] text-white/40 uppercase">Issuing Academy</span>
-                  <span className="font-semibold text-white">{activePreviewDoc.issuer}</span>
-                </div>
-                <div className="text-center sm:text-right">
-                  <span className="block text-[10px] text-white/40 uppercase">Credential ID</span>
-                  <span className="font-mono font-bold text-emerald-400">
-                    {activePreviewDoc.credentialId}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs text-white/60 flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-emerald-400" />
-                <span>Validated against athletic registry database</span>
-              </span>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleDownload(activePreviewDoc)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white hover:bg-white/90 text-black px-4 py-2 text-xs font-bold transition-all shadow-md cursor-pointer"
-                >
-                  <Download size={14} />
-                  <span>Download Document</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActivePreviewDoc(null)}
-                  className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AccreditationViewerModal
+        activePreviewDoc={activePreviewDoc}
+        onClose={() => setActivePreviewDoc(null)}
+        trainer={trainer}
+        onDownload={handleDownload}
+      />
     </div>
   );
 }
+
 export default CertifiedAccreditations;

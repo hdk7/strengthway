@@ -43,7 +43,7 @@ function Range({ label, value, min, max, unit, onChange }) {
           >
             <Minus className="h-3.5 w-3.5" />
           </button>
-          <span className="min-w-[4rem] text-right font-display text-lg font-bold text-foreground">
+          <span className="min-w-16 text-right font-display text-lg font-bold text-foreground">
             {value} <span className="text-xs text-muted-foreground">{unit}</span>
           </span>
           <button
@@ -101,7 +101,7 @@ function BmiCalculator() {
       </div>
 
       {/* Dynamic BMI Gauge Card with Category Background Images */}
-      <div className="relative overflow-hidden grid place-items-center rounded-2xl border border-white/15 bg-zinc-950 p-6 sm:p-10 shadow-2xl min-w-0 min-h-[380px]">
+      <div className="relative overflow-hidden grid place-items-center rounded-2xl border border-white/15 bg-zinc-950 p-6 sm:p-10 shadow-2xl min-w-0 min-h-95">
         {/* State Background Images with smooth crossfade */}
         {Object.entries(BMI_CATEGORIES).map(([categoryName, info]) => {
           const isActive = cat === categoryName;
@@ -118,7 +118,7 @@ function BmiCalculator() {
                 className="w-full h-full object-cover object-center"
               />
               {/* Semi-transparent dark overlay for text contrast while keeping photo vividly visible */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/55" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-black/55" />
             </div>
           );
         })}

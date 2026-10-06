@@ -269,7 +269,7 @@ export default function MembersPaymentsPage() {
                 </tr>
               ) : (
                 paginatedPayments.map((p) => (
-                  <tr key={p.id} className="group transition-all duration-150 hover:translate-y-[-1px]">
+                  <tr key={p.id} className="group transition-all duration-150 hover:-translate-y-px">
                     <td className="bg-card py-3 px-4 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
                       <div className="font-bold text-foreground text-xs">{p.name}</div>
                       <div className="text-[10px] font-mono text-muted-foreground mt-0.5">

@@ -159,7 +159,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
             className="no-scrollbar overflow-y-auto p-6 sm:p-8 space-y-6 flex-1"
           >
             {/* Live Hero Profile Pass Banner */}
-            <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-accent/20 via-card to-background p-6 sm:p-7 shadow-sm">
+            <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-linear-to-r from-accent/20 via-card to-background p-6 sm:p-7 shadow-sm">
               <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
               <div className="pointer-events-none absolute left-1/3 -bottom-10 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
 
@@ -167,7 +167,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
                 <div className="flex items-center gap-5 min-w-0">
                   {/* Monogram Avatar with Live Ring */}
                   <div className="relative shrink-0">
-                    <div className="h-20 w-20 sm:h-22 sm:w-22 rounded-2xl border-2 border-border/80 bg-gradient-to-br from-card to-background p-1 shadow-xl">
+                    <div className="h-20 w-20 sm:h-22 sm:w-22 rounded-2xl border-2 border-border/80 bg-linear-to-br from-card to-background p-1 shadow-xl">
                       <div className="grid h-full w-full place-items-center rounded-xl bg-accent/15 text-accent font-display text-2xl sm:text-3xl font-black tracking-wider uppercase">
                         {initials}
                       </div>

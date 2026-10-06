@@ -93,7 +93,7 @@ export function ProgramsSection() {
               <SpotlightCard className="overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-6 transition-all hover:border-foreground/30 hover:card-glow min-w-0 h-full flex flex-col justify-between group">
                 <div>
                   <it.icon className="h-8 w-8 text-foreground shrink-0 transition-colors group-hover:text-primary" />
-                  <h3 className="mt-6 font-display text-xl sm:text-2xl font-bold text-foreground break-words">
+                  <h3 className="mt-6 font-display text-xl sm:text-2xl font-bold text-foreground wrap-break-word">
                     {it.title}
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{it.desc}</p>

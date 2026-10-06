@@ -87,7 +87,7 @@ export function SessionsSection() {
                       controls
                       preload="metadata"
                       onPlay={(e) => handleVideoPlay(e.currentTarget)}
-                      className="mx-auto aspect-[9/16] max-h-[65vh] w-auto max-w-full bg-black object-cover"
+                      className="mx-auto aspect-9/16 max-h-[65vh] w-auto max-w-full bg-black object-cover"
                     />
                   </div>
                 </CarouselItem>

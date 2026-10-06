@@ -16,9 +16,23 @@ import {
   Calendar,
   User,
   Tag,
+  PhoneCall,
+  UserCheck,
+  Archive,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getInquiryById, deleteInquiry } from "@/lib/inquiriesService";
+import {
+  getInquiryById,
+  deleteInquiry,
+  recordInquiryContact,
+  archiveInquiry,
+  updateInquiryStatus,
+} from "@/lib/inquiriesService";
+import { AdminMemberRegistrationModal } from "@/pages/trainers-members/members/MembersRegistration";
+import ContactLeadModal from "./ContactLeadModal";
+import InquiryContactRecordCard from "./InquiryContactRecordCard";
+import InquiryPersonalDetailsCard from "./InquiryPersonalDetailsCard";
 
 export default function InquiryProfilePage() {
   const { id } = useParams();
@@ -26,6 +40,8 @@ export default function InquiryProfilePage() {
   const [inquiry, setInquiry] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedField, setCopiedField] = useState(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -46,6 +62,64 @@ export default function InquiryProfilePage() {
       isMounted = false;
     };
   }, [id]);
+
+  const displayStatus =
+    inquiry?.status === "Lead" || inquiry?.status === "New" || !inquiry?.status
+      ? "Inquiry"
+      : inquiry.status;
+
+  const handleContactSubmit = async (contactData) => {
+    try {
+      const updated = await recordInquiryContact(inquiry.id, contactData);
+      setInquiry((prev) => ({
+        ...prev,
+        status: "Contacted",
+        contactDetails: updated?.contactDetails || contactData,
+      }));
+      toast.success("Contact details recorded. Status updated to Contacted.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to record contact interaction.");
+      throw err;
+    }
+  };
+
+  const handleArchive = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to move inquiry for ${inquiry.name || "this prospect"} to Archived?`,
+      )
+    ) {
+      return;
+    }
+    try {
+      await archiveInquiry(inquiry.id, "Archived by staff from profile page");
+      setInquiry((prev) => ({ ...prev, status: "Archived" }));
+      toast.success("Inquiry moved to Archived.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to archive inquiry.");
+    }
+  };
+
+  const handleRegistrationSuccess = async (registeredMember) => {
+    try {
+      await updateInquiryStatus(inquiry.id, "Converted", {
+        convertedMemberId: registeredMember?.id,
+      });
+      setInquiry((prev) => ({
+        ...prev,
+        status: "Converted",
+        convertedMemberId: registeredMember?.id,
+        convertedAt: new Date().toISOString(),
+      }));
+      setIsRegisterModalOpen(false);
+      toast.success(
+        `${registeredMember?.firstName || inquiry?.name || "Prospect"} successfully converted to Member!`,
+        { icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" /> },
+      );
+    } catch (err) {
+      console.error("Failed to update status on conversion:", err);
+    }
+  };
 
 
   const formattedDateTime = useMemo(() => {
@@ -142,19 +216,59 @@ export default function InquiryProfilePage() {
             <span>Back to Inquiries</span>
           </button>
 
+          {/* Workflow Action Options placed directly after Back to Inquiries */}
+          {displayStatus === "Inquiry" && (
+            <button
+              type="button"
+              onClick={() => setIsContactModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+            >
+              <PhoneCall size={13} />
+              <span>Contact Lead</span>
+            </button>
+          )}
+
+          {displayStatus === "Contacted" && (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsRegisterModalOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <UserCheck size={13} />
+                <span>Convert to Member</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleArchive}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer"
+              >
+                <Archive size={13} />
+                <span>Archive</span>
+              </button>
+            </>
+          )}
+
+          {displayStatus === "Converted" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
+              <CheckCircle2 size={13} />
+              <span>Converted to Member</span>
+            </span>
+          )}
+
           <button
             type="button"
             onClick={handleDelete}
             className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3.5 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all shadow-sm cursor-pointer"
           >
-            <Trash2 size={14} />
+            <Trash2 size={13} />
             <span>Delete</span>
           </button>
         </div>
       </div>
 
       {/* Hero Athletic Pass Profile Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-accent/20 via-card to-background p-6 sm:p-10 shadow-sm backdrop-blur-xl">
+      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-linear-to-r from-accent/20 via-card to-background p-6 sm:p-10 shadow-sm backdrop-blur-xl">
         {/* Ambient Glowing Orbs */}
         <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-accent/20 blur-3xl" />
         <div className="pointer-events-none absolute left-1/3 -bottom-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
@@ -166,8 +280,34 @@ export default function InquiryProfilePage() {
             </h1>
 
             <div className="flex items-center gap-2 flex-wrap">
+              {/* Status Badge */}
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold border ${
+                  displayStatus === "Converted"
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                    : displayStatus === "Contacted"
+                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                    : displayStatus === "Inquiry"
+                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                    : "bg-muted/60 text-muted-foreground border-border"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    displayStatus === "Converted"
+                      ? "bg-emerald-500"
+                      : displayStatus === "Contacted"
+                      ? "bg-blue-500"
+                      : displayStatus === "Inquiry"
+                      ? "bg-amber-500 animate-pulse"
+                      : "bg-muted-foreground"
+                  }`}
+                />
+                {displayStatus === "Converted" ? "Converted to Member" : displayStatus}
+              </span>
+
               {/* Inquiry ID */}
-              <span className="font-mono text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full">
+              <span className="font-mono text-xs font-bold text-muted-foreground bg-muted/60 border border-border px-3 py-1 rounded-full">
                 {inquiry.id}
               </span>
 
@@ -206,129 +346,12 @@ export default function InquiryProfilePage() {
         <div className="grid gap-6 lg:grid-cols-12">
           {/* Left Column: Personal Information & Contact Dossier Table */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs">
-              <h3 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2 border-b border-border pb-4">
-                <ShieldCheck size={18} className="text-emerald-500" />
-                <span>Personal Details & Contact</span>
-              </h3>
-
-              <dl className="mt-4 divide-y divide-border text-sm">
-                {/* 1. Name */}
-                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                  <dt className="font-medium text-muted-foreground">Full Name</dt>
-                  <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
-                    {inquiry.name || "—"}
-                  </dd>
-                </div>
-
-                {/* 2. ID */}
-                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                  <dt className="font-medium text-muted-foreground">Inquiry ID</dt>
-                  <dd className="mt-1 font-mono font-semibold text-emerald-500 sm:col-span-2 sm:mt-0 flex items-center justify-between gap-2">
-                    <span>{inquiry.id || "—"}</span>
-                    {inquiry.id && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(inquiry.id, "id", "Inquiry ID")}
-                        className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        title="Copy ID"
-                      >
-                        {copiedField === "id" ? (
-                          <Check size={14} className="text-emerald-500" />
-                        ) : (
-                          <Copy size={14} />
-                        )}
-                      </button>
-                    )}
-                  </dd>
-                </div>
-
-                {/* 3. Gender */}
-                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                  <dt className="font-medium text-muted-foreground">Gender</dt>
-                  <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
-                    {inquiry.gender || "—"}
-                  </dd>
-                </div>
-
-                {/* 4. Mobile Number */}
-                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                  <dt className="font-medium text-muted-foreground">Mobile</dt>
-                  <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Phone size={14} className="text-muted-foreground shrink-0" />
-                      {inquiry.mobile ? (
-                        <a
-                          href={`tel:${inquiry.mobile}`}
-                          className="hover:text-primary hover:underline font-semibold truncate"
-                        >
-                          {inquiry.mobile}
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </div>
-                    {inquiry.mobile && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(inquiry.mobile, "mobile", "Mobile number")}
-                        className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        title="Copy mobile number"
-                      >
-                        {copiedField === "mobile" ? (
-                          <Check size={14} className="text-emerald-500" />
-                        ) : (
-                          <Copy size={14} />
-                        )}
-                      </button>
-                    )}
-                  </dd>
-                </div>
-
-                {/* 5. Email */}
-                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                  <dt className="font-medium text-muted-foreground">Email</dt>
-                  <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Mail size={14} className="text-muted-foreground shrink-0" />
-                      {inquiry.email ? (
-                        <a
-                          href={`mailto:${inquiry.email}`}
-                          className="hover:text-primary hover:underline font-semibold truncate"
-                        >
-                          {inquiry.email}
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </div>
-                    {inquiry.email && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(inquiry.email, "email", "Email address")}
-                        className="p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                        title="Copy email address"
-                      >
-                        {copiedField === "email" ? (
-                          <Check size={14} className="text-emerald-500" />
-                        ) : (
-                          <Copy size={14} />
-                        )}
-                      </button>
-                    )}
-                  </dd>
-                </div>
-
-                {/* 6. Date and Time */}
-                <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-                  <dt className="font-medium text-muted-foreground">Date & Time</dt>
-                  <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0 flex items-center gap-2">
-                    <Calendar size={14} className="text-muted-foreground shrink-0" />
-                    <span>{formattedDateTime}</span>
-                  </dd>
-                </div>
-              </dl>
-            </div>
+            <InquiryPersonalDetailsCard
+              inquiry={inquiry}
+              formattedDateTime={formattedDateTime}
+              handleCopy={handleCopy}
+              copiedField={copiedField}
+            />
           </div>
 
           {/* Right Column: Inquiry Statement & Message */}
@@ -361,8 +384,46 @@ export default function InquiryProfilePage() {
               </div>
             </div>
           </div>
+
+          {/* Contact Interaction History & Details (Shown if contacted) */}
+          {inquiry.contactDetails && (
+            <div className="lg:col-span-12">
+              <InquiryContactRecordCard contactDetails={inquiry.contactDetails} />
+            </div>
+          )}
         </div>
       </div>
+
+      {/* --- CONTACT LEAD MODAL --- */}
+      <ContactLeadModal
+        isOpen={isContactModalOpen}
+        onClose={() => setIsContactModalOpen(false)}
+        onSubmit={handleContactSubmit}
+        leadName={inquiry?.name}
+        leadPhone={inquiry?.mobile}
+        leadEmail={inquiry?.email}
+      />
+
+      {/* --- MEMBER REGISTRATION MODAL --- */}
+      {isRegisterModalOpen && (
+        <AdminMemberRegistrationModal
+          isOpen={isRegisterModalOpen}
+          onClose={() => setIsRegisterModalOpen(false)}
+          onSuccess={handleRegistrationSuccess}
+          leadToConfirm={{
+            id: inquiry.id,
+            name: inquiry.name,
+            gender: inquiry.gender,
+            mobile: inquiry.mobile,
+            email: inquiry.email,
+            address: inquiry.address,
+            bio: inquiry.message
+              ? `Inquiry (${inquiry.subject || "General"}): ${inquiry.message}`
+              : "Prospective athlete via website inquiry.",
+            status: inquiry.status || "Contacted",
+          }}
+        />
+      )}
     </div>
   );
 }

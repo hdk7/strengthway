@@ -72,11 +72,11 @@ export function CustomCursor() {
     <>
       <div
         ref={dotRef}
-        className="pointer-events-none fixed left-0 top-0 z-[9999] h-1.5 w-1.5 rounded-full bg-white mix-blend-difference"
+        className="pointer-events-none fixed left-0 top-0 z-9999 h-1.5 w-1.5 rounded-full bg-white mix-blend-difference"
       />
       <div
         ref={ringRef}
-        className={`pointer-events-none fixed left-0 top-0 z-[9999] rounded-full border border-white mix-blend-difference transition-[width,height] duration-200 ease-out ${
+        className={`pointer-events-none fixed left-0 top-0 z-9999 rounded-full border border-white mix-blend-difference transition-[width,height] duration-200 ease-out ${
           hovering ? "h-12 w-12" : "h-7 w-7"
         }`}
       />

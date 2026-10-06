@@ -165,12 +165,12 @@ export default function LoginPage() {
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
         {/* Multilayer gradient overlays for contrast & brand vibe */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/35" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/40 lg:to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/35" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-black/40 lg:to-transparent" />
         <div className="absolute inset-0 radial-brand opacity-60 pointer-events-none" />
 
         {/* Content Container */}
-        <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 lg:p-10 xl:p-12 min-h-[260px] lg:min-h-0">
+        <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 lg:p-10 xl:p-12 min-h-65 lg:min-h-0">
           {/* Top Branding */}
           <div className="flex items-center justify-between">
             <Link
@@ -216,7 +216,7 @@ export default function LoginPage() {
             <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.1] max-w-xl">
               Train harder.
               <br />
-              <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
                 Achieve smarter.
               </span>
             </h1>

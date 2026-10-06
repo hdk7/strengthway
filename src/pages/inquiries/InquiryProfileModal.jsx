@@ -12,13 +12,21 @@ import {
   Tag,
   Copy,
   Check,
+  PhoneCall,
+  UserCheck,
+  Archive,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
+import InquiryContactRecordCard from "./InquiryContactRecordCard";
 
 export function InquiryProfileModal({
   isOpen,
   onClose,
   inquiry,
+  onContact,
+  onConvert,
+  onArchive,
 }) {
   const [copiedField, setCopiedField] = useState(null);
 
@@ -32,6 +40,10 @@ export function InquiryProfileModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
+  const displayStatus =
+    inquiry?.status === "Lead" || inquiry?.status === "New" || !inquiry?.status
+      ? "Inquiry"
+      : inquiry.status;
 
   const formattedDateTime = useMemo(() => {
     if (!inquiry?.createdAt) return "—";
@@ -80,20 +92,61 @@ export function InquiryProfileModal({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            {displayStatus === "Inquiry" && (
+              <button
+                type="button"
+                onClick={() => onContact?.(inquiry)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <PhoneCall size={13} />
+                <span>Contact Lead</span>
+              </button>
+            )}
+
+            {displayStatus === "Contacted" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onConvert?.(inquiry)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-105 active:scale-95"
+                >
+                  <UserCheck size={13} />
+                  <span>Convert to Member</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onArchive?.(inquiry)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <Archive size={13} />
+                  <span>Archive</span>
+                </button>
+              </>
+            )}
+
+            {displayStatus === "Converted" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
+                <CheckCircle2 size={13} />
+                <span>Converted to Member</span>
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Profile Body */}
         <div className="no-scrollbar overflow-y-auto p-6 sm:p-8 space-y-6 flex-1">
-          {/* Hero Profile Banner (Adopted from MemberProfilePage / TrainerProfilePage) */}
-          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-r from-accent/20 via-card to-background p-6 sm:p-8 shadow-sm">
+          {/* Hero Profile Banner */}
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-linear-to-r from-accent/20 via-card to-background p-6 sm:p-8 shadow-sm">
             {/* Ambient Background Glowing Orbs */}
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
             <div className="pointer-events-none absolute left-1/3 -bottom-10 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
@@ -105,8 +158,34 @@ export function InquiryProfileModal({
                 </h2>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                  {/* Status Badge */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+                      displayStatus === "Converted"
+                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                        : displayStatus === "Contacted"
+                        ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                        : displayStatus === "Inquiry"
+                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                        : "bg-muted/60 text-muted-foreground border-border"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        displayStatus === "Converted"
+                          ? "bg-emerald-500"
+                          : displayStatus === "Contacted"
+                          ? "bg-blue-500"
+                          : displayStatus === "Inquiry"
+                          ? "bg-amber-500 animate-pulse"
+                          : "bg-muted-foreground"
+                      }`}
+                    />
+                    {displayStatus === "Converted" ? "Converted to Member" : displayStatus}
+                  </span>
+
                   {/* Inquiry ID */}
-                  <span className="font-mono text-xs font-bold text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                  <span className="font-mono text-xs font-bold text-muted-foreground bg-muted/60 border border-border px-2.5 py-0.5 rounded-full">
                     {inquiry.id}
                   </span>
 
@@ -287,6 +366,13 @@ export function InquiryProfileModal({
                 </div>
               </div>
             </div>
+
+            {/* Contact Interaction History & Details (Shown if contacted) */}
+            {inquiry.contactDetails && (
+              <div className="lg:col-span-12">
+                <InquiryContactRecordCard contactDetails={inquiry.contactDetails} />
+              </div>
+            )}
           </div>
         </div>
 

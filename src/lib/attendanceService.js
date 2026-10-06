@@ -39,11 +39,12 @@ export async function getBatchAttendanceGrid(batchId, yearMonth) {
  * @param {string} payload.memberId
  * @param {string} [payload.memberName]
  * @param {string} [payload.sessionId]
- * @param {"PRESENT" | "ABSENT" | "LATE" | "EXCUSED"} payload.status
+ * @param {"PRESENT" | "CHECKED_IN" | "CHECKED_OUT" | "ABSENT" | "LATE" | "EXCUSED"} payload.status
  * @param {boolean} [payload.isFlexAttendance]
  * @param {string} [payload.originalPrimaryBatchId]
  * @param {string} [payload.assignmentId]
  * @param {string} [payload.checkInTime]
+ * @param {string} [payload.checkOutTime]
  * @param {string} [payload.trainerId]
  * @param {string} [payload.markedBy]
  * @param {string} [payload.notes]
@@ -65,11 +66,12 @@ export async function markAttendance(payload) {
  * @param {Array<{
  *   memberId: string,
  *   memberName?: string,
- *   status: "PRESENT" | "ABSENT" | "LATE" | "EXCUSED",
+ *   status: "PRESENT" | "CHECKED_IN" | "CHECKED_OUT" | "ABSENT" | "LATE" | "EXCUSED",
  *   isFlexAttendance?: boolean,
  *   originalPrimaryBatchId?: string,
  *   assignmentId?: string,
  *   checkInTime?: string,
+ *   checkOutTime?: string,
  *   notes?: string
  * }>} payload.attendees
  * @returns {Promise<{ count: number, records: object[] }>}

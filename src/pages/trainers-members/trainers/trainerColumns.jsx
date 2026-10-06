@@ -77,7 +77,7 @@ export function getTrainerColumns({ onNavigate }) {
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Mail size={13} className="text-muted-foreground shrink-0" />
-            <span className="truncate max-w-[180px]">{trainer.email}</span>
+            <span className="truncate max-w-45">{trainer.email}</span>
           </div>
         </div>
       ),

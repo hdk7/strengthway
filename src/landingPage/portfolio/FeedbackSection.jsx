@@ -80,7 +80,7 @@ export function FeedbackSection() {
                     controls
                     preload="metadata"
                     onPlay={(e) => handleVideoPlay(e.currentTarget)}
-                    className="mx-auto aspect-[9/16] max-h-[65vh] w-auto max-w-full bg-black object-cover"
+                    className="mx-auto aspect-9/16 max-h-[65vh] w-auto max-w-full bg-black object-cover"
                   />
                   <div className="p-4">
                     <div className="font-semibold">{v.title}</div>

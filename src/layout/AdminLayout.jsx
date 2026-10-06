@@ -80,7 +80,7 @@ export default function AdminLayout() {
 
       {/* Scrollable main content */}
       <main
-        className={`fixed top-[74px] bottom-3 right-3 ${contentLeftClass} transition-[left] duration-200 ease-in-out overflow-y-auto rounded-xl bg-background flex flex-col`}
+        className={`fixed top-18.5 bottom-3 right-3 ${contentLeftClass} transition-[left] duration-200 ease-in-out overflow-y-auto rounded-xl bg-background flex flex-col`}
       >
         <div className="p-2 sm:px-3.5 sm:py-2 flex flex-col flex-1 h-full min-h-0">
           <Outlet />

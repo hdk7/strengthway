@@ -55,7 +55,7 @@ export function PortfolioPreviewSection() {
                     src={src}
                     alt=""
                     loading="lazy"
-                    className="aspect-[3/4] w-full rounded-2xl border border-border object-cover"
+                    className="aspect-3/4 w-full rounded-2xl border border-border object-cover"
                   />
                 </CarouselItem>
               ))}

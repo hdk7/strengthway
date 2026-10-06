@@ -71,7 +71,7 @@ export function TrainersSection() {
                       loading="lazy"
                       className={`h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-108 ${t.imgPosition ?? "object-center"}`}
                     />
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent transition-opacity duration-300 group-hover:from-black/90" />
+                    <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent transition-opacity duration-300 group-hover:from-black/90" />
                   </div>
 
                   {/* Bottom Information Card */}

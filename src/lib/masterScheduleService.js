@@ -344,10 +344,10 @@ export async function getMasterSchedulesByBatchId(batchId) {
   return api.get(`/v1/schedules?batchId=${encodeURIComponent(batchId)}`);
 }
 
-export async function createMasterSchedule(data, itemsData = []) {
+export async function createMasterSchedule(data, itemsData) {
   return api.post("/v1/schedules", {
     ...data,
-    ...(itemsData && itemsData.length > 0 ? { items: itemsData } : {}),
+    ...(itemsData !== undefined ? { items: itemsData } : {}),
   });
 }
 
