@@ -192,14 +192,14 @@ export default function BatchPermanentTransferTab({
           value={transferEffectiveDate}
           onChange={(e) => setTransferEffectiveDate(e.target.value)}
           required
-          className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground focus:border-primary focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 px-3.5 py-2.5 text-xs text-slate-900 dark:text-foreground focus:border-blue-600 focus:bg-white dark:focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
       </div>
 
       {/* Reason Field */}
       <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground">
-          Transfer Reason & Notes <span className="text-destructive">*</span>
+        <label className="text-xs font-semibold text-slate-800 dark:text-foreground">
+          Transfer Reason & Notes <span className="text-rose-500">*</span>
         </label>
         <textarea
           value={transferReason}
@@ -207,24 +207,24 @@ export default function BatchPermanentTransferTab({
           placeholder="e.g., Requested evening slot due to office hours change..."
           rows={3}
           required
-          className="w-full rounded-xl border border-border bg-card p-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none resize-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 p-3 text-xs text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:border-blue-600 focus:bg-white dark:focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-100 resize-none"
         />
       </div>
 
       {/* Footer Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+      <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-border/60">
         <button
           type="button"
           onClick={onClose}
           disabled={isSubmitting}
-          className="rounded-xl border border-border px-4 py-2 text-xs font-bold text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
+          className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted shadow-xs transition-colors cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting || !transferTargetBatchId || isTransferBatchFull || selectedTransferBatch?.status === "Inactive"}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting && <Loader2 size={14} className="animate-spin" />}
           <span>Confirm Permanent Transfer</span>

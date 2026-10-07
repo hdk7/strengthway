@@ -23,6 +23,19 @@ import { MembershipPlanTableRow } from "./components/MembershipPlanTableRow";
 import { MembershipPlanStats } from "./components/MembershipPlanStats";
 import { MembershipPlanToolbar } from "./components/MembershipPlanToolbar";
 
+const EMPTY_PLAN_FORM = {
+  name: "",
+  durationMonths: "",
+  price: "",
+  period: "",
+  billing: "",
+  badge: "",
+  popular: false,
+  status: "Active",
+  description: "",
+  features: [],
+};
+
 export default function MembershipPlanMasterPage() {
   const [plans, setPlans] = useState([]);
   const [members, setMembers] = useState([]);
@@ -38,18 +51,7 @@ export default function MembershipPlanMasterPage() {
   const [editingPlan, setEditingPlan] = useState(null);
   const [featureInput, setFeatureInput] = useState("");
 
-  const [form, setForm] = useState({
-    name: "",
-    durationMonths: 1,
-    price: 7000,
-    period: "/mo",
-    billing: "",
-    badge: "",
-    popular: false,
-    status: "Active",
-    description: "",
-    features: [],
-  });
+  const [form, setForm] = useState(EMPTY_PLAN_FORM);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -140,23 +142,7 @@ export default function MembershipPlanMasterPage() {
   // Modal Handlers
   const handleOpenAdd = () => {
     setEditingPlan(null);
-    setForm({
-      name: "",
-      durationMonths: 1,
-      price: 7000,
-      period: "/mo",
-      billing: "Billed ₹7,000 every month",
-      badge: "",
-      popular: false,
-      status: "Active",
-      description: "",
-      features: [
-        "Full gym and training floor access",
-        "Unlimited group training classes",
-        "Certified floor coach supervision",
-        "Locker & shower facilities access",
-      ],
-    });
+    setForm(EMPTY_PLAN_FORM);
     setFeatureInput("");
     setIsModalOpen(true);
   };
@@ -273,21 +259,33 @@ export default function MembershipPlanMasterPage() {
       toast.error("Plan name is required.");
       return;
     }
-    if (Number(form.price) < 0) {
-      toast.error("Price must be a valid positive amount.");
+    if (form.price === "" || Number(form.price) < 0) {
+      toast.error("Please specify a valid price amount.");
       return;
     }
+
+    const priceNum = Number(form.price) || 0;
+    const durationNum = form.durationMonths === "" ? 1 : Math.max(1, Number(form.durationMonths));
+    const defaultBilling = `Billed ₹${priceNum.toLocaleString("en-IN")}${form.period ? ` ${form.period}` : ""}`;
+
+    const payload = {
+      ...form,
+      name: form.name.trim(),
+      price: priceNum,
+      durationMonths: durationNum,
+      billing: form.billing.trim() || defaultBilling,
+    };
 
     setIsSubmitting(true);
     try {
       if (editingPlan) {
-        const updated = await updateMembershipPlan(editingPlan.id, form);
+        const updated = await updateMembershipPlan(editingPlan.id, payload);
         if (updated) {
           setPlans((prev) => prev.map((p) => (p.id === editingPlan.id ? updated : p)));
           toast.success(`${updated.name} updated successfully!`);
         }
       } else {
-        const created = await createMembershipPlan(form);
+        const created = await createMembershipPlan(payload);
         setPlans((prev) => [...prev, created]);
         toast.success(`${created.name} plan created!`);
       }
@@ -316,7 +314,7 @@ export default function MembershipPlanMasterPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 rounded-xl bg-foreground px-3.5 py-1.5 text-xs font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-3.5 py-1.5 text-xs font-semibold text-background hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
           >
             <Plus size={15} />
             <span>Create New Plan</span>

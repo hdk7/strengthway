@@ -1,4 +1,11 @@
-import { X, Loader2 } from "lucide-react";
+import { Layers } from "lucide-react";
+import {
+  FormModal,
+  FormModalHeader,
+  FormModalBody,
+  FormModalFooter,
+  FormSectionHeader,
+} from "@/components/ui/FormModal";
 import { InputField, SelectField, TextareaField, TimePickerField } from "@/components/form";
 
 const ALL_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -21,32 +28,32 @@ export function BatchFormModal({
   handleSaveBatch,
   isSubmitting,
 }) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-foreground">
-            {editingBatch ? `Edit ${editingBatch.name}` : "Create New Batch"}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
+    <FormModal isOpen={isOpen} onClose={onClose} size="md">
+      <FormModalHeader
+        title={editingBatch ? `Edit ${editingBatch.name}` : "Create New Batch"}
+        description="Configure training session timings, schedule patterns, and capacity limits"
+        icon={Layers}
+        onClose={onClose}
+      />
 
-        <form onSubmit={handleSaveBatch} className="space-y-4 text-sm">
+      <form
+        onSubmit={handleSaveBatch}
+        noValidate
+        className="flex flex-col flex-1 min-h-0 overflow-hidden"
+      >
+        <FormModalBody className="flex-1 min-h-0 overflow-y-auto space-y-4 text-xs p-6 sm:p-7">
+          <FormSectionHeader
+            title="Batch Schedule & Identity"
+            subtitle="Define session name and daily workout timings"
+          />
+
           <InputField
             label="Batch Name"
             placeholder="e.g. BATCH 7"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             size="sm"
-            labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
             required
           />
 
@@ -56,7 +63,6 @@ export function BatchFormModal({
               value={form.startTime}
               onChange={(e) => setForm({ ...form, startTime: e.target.value })}
               size="sm"
-              labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
               required
             />
             <TimePickerField
@@ -64,7 +70,6 @@ export function BatchFormModal({
               value={form.endTime}
               onChange={(e) => setForm({ ...form, endTime: e.target.value })}
               size="sm"
-              labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
               required
             />
           </div>
@@ -102,65 +107,56 @@ export function BatchFormModal({
                 }
               }}
               size="sm"
-              labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
               options={[
-                { value: "MWF", label: "MWF (Mon • Wed • Fri)" },
-                { value: "TTS", label: "TTS (Tue • Thu • Sat)" },
-                { value: "CUSTOM", label: "Custom Days" },
+                { value: "MWF", label: "MWF (Mon, Wed, Fri)" },
+                { value: "TTS", label: "TTS (Tue, Thu, Sat)" },
+                { value: "CUSTOM", label: "Custom Days..." },
               ]}
             />
 
             <InputField
               type="number"
-              min="1"
-              max="100"
-              label="Max Pax"
-              value={form.maxPax}
-              onChange={(e) => setForm({ ...form, maxPax: e.target.value })}
+              label="Capacity Limit (Pax)"
+              value={form.capacity}
+              onChange={(e) => setForm({ ...form, capacity: e.target.value })}
               size="sm"
-              labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
+              min={1}
               required
             />
           </div>
 
           {form.daysPattern === "CUSTOM" && (
-            <div className="space-y-2 rounded-xl border border-border bg-muted/20 p-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Select Training Days
-                </span>
-                <span className="text-xs font-medium text-foreground">
-                  {(form.customDays || []).length} selected
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5 pt-0.5">
-                {ALL_DAYS.map((day) => {
-                  const active = (form.customDays || []).includes(day);
+            <div className="space-y-1.5 p-3 rounded-lg border border-slate-200 dark:border-border bg-slate-50/70 dark:bg-muted/20">
+              <label className="text-xs font-semibold text-slate-800 dark:text-foreground block">
+                Select Active Training Days <span className="text-rose-500">*</span>
+              </label>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {ALL_DAYS.map((d) => {
+                  const isChecked = form.customDays?.includes(d);
                   return (
                     <button
-                      key={day}
+                      key={d}
                       type="button"
                       onClick={() => {
                         const cur = form.customDays || [];
-                        const next = cur.includes(day)
-                          ? cur.filter((d) => d !== day)
-                          : [...cur, day];
-                        const ordered = ALL_DAYS.filter((d) => next.includes(d));
-                        const fullList = ordered.map((d) => FULL_DAYS_MAP[d]);
+                        const next = cur.includes(d)
+                          ? cur.filter((x) => x !== d)
+                          : [...cur, d];
+                        const fullNames = next.map((dayKey) => FULL_DAYS_MAP[dayKey]);
                         setForm({
                           ...form,
-                          customDays: ordered,
-                          daysList: fullList,
-                          daysLabel: fullList.join(" • "),
+                          customDays: next,
+                          daysList: fullNames,
+                          daysLabel: next.join(" • "),
                         });
                       }}
-                      className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all cursor-pointer border ${
-                        active
-                          ? "bg-foreground text-background border-foreground shadow-sm"
-                          : "bg-background text-muted-foreground border-border hover:border-foreground/50 hover:text-foreground"
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md border transition-all cursor-pointer ${
+                        isChecked
+                          ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                          : "bg-white dark:bg-card border-slate-200 dark:border-border text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted"
                       }`}
                     >
-                      {day}
+                      {d}
                     </button>
                   );
                 })}
@@ -169,50 +165,43 @@ export function BatchFormModal({
           )}
 
           <SelectField
-            label="Status"
+            label="Floor Operational Status"
             value={form.status}
             onChange={(e) => setForm({ ...form, status: e.target.value })}
             size="sm"
-            labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
             options={[
               { value: "Active", label: "Active" },
+              { value: "Full", label: "Full" },
               { value: "Inactive", label: "Inactive" },
             ]}
           />
 
           <TextareaField
             rows={2}
-            label="Description"
-            placeholder="Workout style or target group..."
+            label="Description & Notes"
+            placeholder="Workout style, target fitness level, or coach instructions..."
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             size="sm"
-            labelClassName="uppercase tracking-wider text-muted-foreground font-semibold"
           />
+        </FormModalBody>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 disabled:opacity-50 cursor-pointer"
-            >
-              {isSubmitting && <Loader2 size={15} className="animate-spin" />}
-              {isSubmitting
-                ? "Saving..."
-                : editingBatch
-                  ? "Save Changes"
-                  : "Create Batch"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          onSubmit={handleSaveBatch}
+          submitText={
+            isSubmitting
+              ? "Saving..."
+              : editingBatch
+                ? "Save Changes"
+                : "Create Batch"
+          }
+          isSubmitting={isSubmitting}
+        />
+      </form>
+    </FormModal>
   );
 }
+
+export default BatchFormModal;

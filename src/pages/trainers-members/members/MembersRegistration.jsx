@@ -55,11 +55,11 @@ export function AdminMemberRegistrationModal({
   const [form, setForm] = useState(INITIAL_FORM);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
-    selectedPlanId: "plan-quarterly",
+    selectedPlanId: "",
     paymentMethod: "UPI",
     transactionId: "",
-    amountPaid: 18000,
-    paymentDate: new Date().toISOString().split("T")[0],
+    amountPaid: "",
+    paymentDate: "",
     paymentNotes: "",
   });
   const [errors, setErrors] = useState({});
@@ -81,17 +81,35 @@ export function AdminMemberRegistrationModal({
         setBatches(resolvedBatches);
         setAvailablePlans(resolvedPlans);
 
-        const defaultPlan = resolvedPlans.find((p) => p.popular) || resolvedPlans[0];
-        setPaymentForm({
-          selectedPlanId: defaultPlan?.id || "",
-          paymentMethod: "UPI",
-          transactionId: generateTransactionId("UPI"),
-          amountPaid: defaultPlan?.price || 0,
-          paymentDate: new Date().toISOString().split("T")[0],
-          paymentNotes: isConfirmingLead
-            ? `Enrollment payment for inquiry ${activeLead?.firstName || "Athlete"}`
-            : "",
-        });
+        if (isConfirmingLead) {
+          const defaultPlan = resolvedPlans.find((p) => p.popular) || resolvedPlans[0];
+          setPaymentForm({
+            selectedPlanId: defaultPlan?.id || "",
+            paymentMethod: "UPI",
+            transactionId: generateTransactionId("UPI"),
+            amountPaid: defaultPlan?.price || "",
+            paymentDate: new Date().toISOString().split("T")[0],
+            paymentNotes: `Enrollment payment for inquiry ${activeLead?.firstName || "Athlete"}`,
+          });
+        } else if (isEditingActiveMember) {
+          setPaymentForm({
+            selectedPlanId: memberToEdit?.membershipPlan?.id || memberToEdit?.planId || "",
+            paymentMethod: memberToEdit?.paymentMethod || "UPI",
+            transactionId: memberToEdit?.transactionId || "",
+            amountPaid: memberToEdit?.amountPaid || "",
+            paymentDate: memberToEdit?.paymentDate || "",
+            paymentNotes: memberToEdit?.paymentNotes || "",
+          });
+        } else {
+          setPaymentForm({
+            selectedPlanId: "",
+            paymentMethod: "UPI",
+            transactionId: "",
+            amountPaid: "",
+            paymentDate: "",
+            paymentNotes: "",
+          });
+        }
 
         const sourceData = activeLead || memberToEdit;
         if (sourceData) {
@@ -141,7 +159,7 @@ export function AdminMemberRegistrationModal({
         toast.error("Failed to load plans or batches. Please close and retry.");
       })
       .finally(() => setIsLoadingData(false));
-  }, [isOpen, memberToEdit, leadToConfirm, activeLead, isConfirmingLead]);
+  }, [isOpen, memberToEdit, leadToConfirm, activeLead, isConfirmingLead, isEditingActiveMember]);
 
   const selectedBatch = batches.find((b) => b.id === form.batchId);
   const chosenPlan =
@@ -401,12 +419,12 @@ export function AdminMemberRegistrationModal({
     >
       <DialogPrimitive.Portal>
         {/* Overlay backdrop */}
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200" />
 
         {/* Modal Window */}
         <DialogPrimitive.Content
           aria-describedby="admin-member-registration-desc"
-          className="no-scrollbar fixed left-[50%] top-[50%] z-50 w-[95vw] max-w-3xl max-h-[92vh] translate-x-[-50%] translate-y-[-50%] flex flex-col rounded-2xl sm:rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
+          className="no-scrollbar fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-3xl max-h-[92vh] -translate-x-1/2 -translate-y-1/2 flex flex-col rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card text-foreground shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
         >
           {/* Header */}
           <RegistrationHeader

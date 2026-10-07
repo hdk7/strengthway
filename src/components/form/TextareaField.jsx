@@ -32,11 +32,11 @@ const TextareaField = forwardRef(function TextareaField(
   const id = providedId || (name ? `textarea-${name}` : generatedId);
   const errorId = error ? `${id}-error` : undefined;
 
-  const sizeStyles = size === "sm" ? "p-3 text-xs rounded-lg" : "p-3.5 text-sm rounded-xl";
+  const sizeStyles = size === "sm" ? "p-3 text-xs rounded-lg" : "p-3.5 text-sm rounded-lg";
 
   const stateStyles = error
-    ? "border-destructive focus:border-destructive focus:ring-1 focus:ring-destructive"
-    : "border-border focus:border-primary focus:ring-1 focus:ring-primary/20";
+    ? "border-destructive bg-destructive/5 text-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
+    : "border-slate-200/90 dark:border-border hover:border-slate-300 dark:hover:border-border/80 focus:border-[#1e40af] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-card focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30";
 
   const currentLength = typeof value === "string" ? value.length : 0;
 
@@ -70,7 +70,7 @@ const TextareaField = forwardRef(function TextareaField(
           style={{ resize }}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className={`w-full border bg-background text-foreground placeholder:text-muted-foreground/60 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed ${sizeStyles} ${stateStyles} ${textareaClassName}`}
+          className={`w-full border bg-slate-50/90 dark:bg-muted/40 text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground/50 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-muted/20 disabled:hover:border-slate-200/90 ${sizeStyles} ${stateStyles} ${textareaClassName}`}
           {...props}
         />
       </div>

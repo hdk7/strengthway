@@ -7,8 +7,6 @@ import {
   Check,
   Calendar,
   Clock,
-  Users,
-  CheckCircle2,
   Repeat,
   Layers,
   TrendingUp,
@@ -94,81 +92,6 @@ export function TrainerMonthlyCoachingPanel({
         </div>
       </div>
 
-      {/* 1. Coaching KPI Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Classes Scheduled vs Conducted */}
-        <div className="rounded-2xl border border-border/80 bg-background/50 p-4.5 space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Scheduled vs Conducted</span>
-            <CheckCircle2 size={16} className="text-emerald-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-foreground">
-              {coachingSummary.totalClassesConducted}
-            </span>
-            <span className="text-xs font-bold text-muted-foreground">
-              / {coachingSummary.totalClassesScheduled} classes
-            </span>
-          </div>
-          <div className="flex items-center justify-between pt-1 text-[11px]">
-            <span className="text-muted-foreground">Execution Rate</span>
-            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-bold text-emerald-400 border border-emerald-500/20">
-              {coachingSummary.conductionRate}% Delivered
-            </span>
-          </div>
-        </div>
-
-        {/* Coaching Hours Delivered */}
-        <div className="rounded-2xl border border-border/80 bg-background/50 p-4.5 space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Hours Delivered</span>
-            <Clock size={16} className="text-accent" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-accent">
-              {coachingSummary.totalCoachingHours}
-            </span>
-            <span className="text-xs font-bold text-muted-foreground">Hours on Floor</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground pt-1">
-            Cumulative session duration logged in {formattedSelectedMonth}
-          </p>
-        </div>
-
-        {/* Average Attendance Per Class */}
-        <div className="rounded-2xl border border-border/80 bg-background/50 p-4.5 space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Avg Attendance / Class</span>
-            <Users size={16} className="text-amber-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-amber-400">
-              {coachingSummary.averageClassAttendance}
-            </span>
-            <span className="text-xs font-bold text-muted-foreground">Athletes / Session</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground pt-1">
-            {coachingSummary.totalAttendeesCoached} total athletes coached this month
-          </p>
-        </div>
-
-        {/* Actively Coached Batches Count */}
-        <div className="rounded-2xl border border-border/80 bg-background/50 p-4.5 space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Batches Coached</span>
-            <Layers size={16} className="text-primary" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-foreground">
-              {coachingSummary.totalBatchesAssigned}
-            </span>
-            <span className="text-xs font-bold text-muted-foreground">Active Containers</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground pt-1">
-            Containers under faculty management
-          </p>
-        </div>
-      </div>
 
       {/* 2. Batches Actively Coached This Month */}
       <div className="space-y-4">

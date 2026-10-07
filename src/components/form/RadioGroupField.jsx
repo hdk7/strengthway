@@ -48,7 +48,7 @@ export default function RadioGroupField({
                 checked={isSelected}
                 onChange={() => onChange?.(optValue)}
                 disabled={optDisabled}
-                className="h-4 w-4 border-border bg-background text-primary focus:ring-1 focus:ring-accent accent-accent cursor-pointer"
+                className="h-4 w-4 border-slate-300 dark:border-border bg-white dark:bg-card text-[#1e3a8a] focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 accent-[#1e3a8a] cursor-pointer"
               />
               <span className="text-xs sm:text-sm font-medium text-foreground">
                 {optLabel}

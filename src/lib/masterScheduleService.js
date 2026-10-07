@@ -438,3 +438,18 @@ export async function updateHoliday(id, holidayData) {
 export async function deleteHoliday(id) {
   return api.delete(`/v1/holidays/${encodeURIComponent(id)}`);
 }
+
+// ─── TRAINER LEAVE POLICY API ──────────────────────────────────────────────────
+
+export async function getTrainerLeavePolicy() {
+  return api.get("/v1/attendance/leave-policy");
+}
+
+export async function saveTrainerLeavePolicy(policyData) {
+  return api.put("/v1/attendance/leave-policy", policyData);
+}
+
+export async function validateTrainerLeaveNotice(payload) {
+  return api.post("/v1/attendance/leave-policy/validate", payload);
+}
+

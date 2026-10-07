@@ -275,22 +275,22 @@ function SignOutModal({ open, onClose, onConfirm }) {
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-sm p-6 bg-card border border-border rounded-2xl shadow-2xl text-center relative z-10 animate-in zoom-in-95 duration-150"
+        className="w-full max-w-sm p-6 bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-2xl shadow-2xl text-center relative z-10 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
           <AlertTriangle size={24} />
         </div>
-        <h3 className="text-base sm:text-lg font-bold text-foreground mb-2">
+        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-foreground mb-2">
           Sign out confirmation
         </h3>
-        <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+        <p className="text-sm text-slate-500 dark:text-muted-foreground mb-6 leading-relaxed">
           Are you sure you want to sign out? You will need to enter your credentials again to access
           the admin panel.
         </p>
@@ -298,14 +298,14 @@ function SignOutModal({ open, onClose, onConfirm }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-semibold hover:bg-muted transition-colors cursor-pointer"
+            className="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card text-slate-700 dark:text-foreground text-sm font-semibold hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 px-4 py-2.5 rounded-xl bg-destructive hover:bg-destructive/90 text-white text-sm font-semibold transition-colors cursor-pointer shadow-md"
+            className="flex-1 px-4 py-2.5 rounded-lg bg-destructive hover:bg-destructive/90 text-white text-sm font-semibold transition-colors cursor-pointer shadow-md"
           >
             Sign out
           </button>

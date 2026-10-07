@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { ChevronRight, ChevronLeft, Clock, Calendar } from "lucide-react";
 
 export default function BatchDetailHeader({
@@ -10,16 +9,7 @@ export default function BatchDetailHeader({
 }) {
   return (
     <>
-      {/* 1. Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link to="/admin/batches" className="hover:text-foreground transition-colors">
-          Batches
-        </Link>
-        <ChevronRight size={14} className="text-muted-foreground/50" />
-        <span className="font-semibold text-foreground">{batch?.shortName || batch?.name}</span>
-      </nav>
-
-      {/* 2. Hero Card matching requirement wireframe */}
+      {/* Hero Card matching requirement wireframe */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-8 shadow-sm transition-all">
         {/* Glow Accent Effect */}
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />

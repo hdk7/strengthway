@@ -53,6 +53,20 @@ export async function getInquiryById(id) {
 }
 
 /**
+ * Fetch next auto-sequenced inquiry ID from backend.
+ * @returns {Promise<string>} Next ID, e.g. "INQ-2026-001"
+ */
+export async function getNextInquiryId() {
+  try {
+    const res = await api.get("/v1/inquiries/next-id");
+    return res?.nextId || `INQ-${new Date().getFullYear()}-001`;
+  } catch (err) {
+    console.warn("Failed to fetch next inquiry ID from server:", err);
+    return `INQ-${new Date().getFullYear()}-001`;
+  }
+}
+
+/**
  * Create a new customer inquiry via backend API.
  * @param {object} data - Form data
  * @returns {Promise<object>} Created inquiry record

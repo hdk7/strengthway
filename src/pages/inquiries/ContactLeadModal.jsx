@@ -1,7 +1,6 @@
 /* eslint-disable max-lines */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
-  X,
   PhoneCall,
   MessageSquare,
   Users,
@@ -9,10 +8,19 @@ import {
   Smartphone,
   Calendar,
   User,
-  FileText,
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  FormModal,
+  FormModalHeader,
+  FormModalBody,
+  FormModalFooter,
+  FormSectionHeader,
+  FormCalloutBox,
+} from "@/components/ui/FormModal";
+import { InputField, TextareaField, SelectField } from "@/components/form";
 
 const CONTACT_METHODS = [
   { id: "Phone Call", label: "Phone Call", icon: PhoneCall },
@@ -23,10 +31,10 @@ const CONTACT_METHODS = [
 ];
 
 const OUTCOMES = [
-  "Interested - Converting Soon",
-  "Needs Follow-Up",
-  "Considering",
-  "Not Interested",
+  { value: "Interested - Converting Soon", label: "Interested - Converting Soon" },
+  { value: "Needs Follow-Up", label: "Needs Follow-Up" },
+  { value: "Considering", label: "Considering" },
+  { value: "Not Interested", label: "Not Interested" },
 ];
 
 export default function ContactLeadModal({
@@ -40,123 +48,141 @@ export default function ContactLeadModal({
   const [contactMethod, setContactMethod] = useState("Phone Call");
   const [contactNotes, setContactNotes] = useState("");
   const [contactedBy, setContactedBy] = useState("Admin");
-  const [outcome, setOutcome] = useState("Interested - Converting Soon");
+  const [outcome, setOutcome] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [notesError, setNotesError] = useState("");
+  const [outcomeError, setOutcomeError] = useState("");
+
+  const isFollowUpRequired = useMemo(() => {
+    return outcome === "Needs Follow-Up" || outcome === "Considering";
+  }, [outcome]);
 
   useEffect(() => {
     if (isOpen) {
       setContactMethod("Phone Call");
       setContactNotes("");
       setContactedBy("Admin");
-      setOutcome("Interested - Converting Soon");
+      setOutcome("");
       setFollowUpDate("");
       setError("");
+      setNotesError("");
+      setOutcomeError("");
       setIsSubmitting(false);
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") onClose?.();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
+  const handleOutcomeChange = (e) => {
+    const val = e.target.value;
+    setOutcome(val);
+    if (outcomeError) {
+      setOutcomeError("");
+    }
+    if (val !== "Needs Follow-Up" && val !== "Considering") {
+      setFollowUpDate("");
+    }
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+
+    let hasError = false;
     const trimmedNotes = contactNotes.trim();
     if (!trimmedNotes || trimmedNotes.length < 5) {
-      setError("Please enter detailed contact notes (minimum 5 characters).");
-      return;
+      const msg = "Please enter detailed contact notes (minimum 5 characters).";
+      setNotesError(msg);
+      toast.error(msg);
+      hasError = true;
+    } else {
+      setNotesError("");
     }
+
+    if (!outcome) {
+      const msg = "Please select an interaction outcome.";
+      setOutcomeError(msg);
+      if (!hasError) toast.error(msg);
+      hasError = true;
+    } else {
+      setOutcomeError("");
+    }
+
+    if (hasError) return;
 
     setError("");
     setIsSubmitting(true);
+
+    const payload = {
+      contactMethod,
+      method: contactMethod,
+      contactNotes: trimmedNotes,
+      notes: trimmedNotes,
+      contactedBy: contactedBy.trim() || "Admin",
+      outcome,
+      followUpDate: isFollowUpRequired ? followUpDate || null : null,
+      contactedAt: new Date().toISOString(),
+    };
+
     try {
-      await onSubmit({
-        contactMethod,
-        contactNotes: trimmedNotes,
-        contactedBy: contactedBy.trim() || "Admin",
-        contactedAt: new Date().toISOString(),
-        outcome,
-        followUpDate: followUpDate || "",
-      });
+      if (onSubmit) {
+        await onSubmit(payload);
+      }
       onClose();
     } catch (err) {
-      setError(err?.message || "Failed to record contact details.");
+      console.error("Failed to record contact interaction:", err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to record contact interaction.";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-5 backdrop-blur-md animate-in fade-in duration-200"
-      onClick={onClose}
-    >
-      <div
-        className="no-scrollbar relative w-full max-w-lg rounded-3xl border border-border/80 bg-card text-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
-        onClick={(e) => e.stopPropagation()}
+    <FormModal isOpen={isOpen} onClose={onClose} size="xl">
+      <FormModalHeader
+        title="Record Contact Interaction"
+        description="Update status from Inquiry to Contacted and log conversation summary"
+        icon={PhoneCall}
+        onClose={onClose}
+      />
+
+      <form
+        id="contact-lead-form"
+        onSubmit={handleSubmit}
+        noValidate
+        className="flex flex-col flex-1 min-h-0"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/70 bg-card px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/15 text-blue-500 font-bold border border-blue-500/20">
-              <PhoneCall size={18} />
+        <FormModalBody className="p-5 sm:p-6 space-y-3.5 overflow-hidden">
+          {/* Prospect Info Callout */}
+          {leadName && (
+            <div className="flex items-center justify-between rounded-lg border border-slate-200/90 dark:border-border/80 bg-slate-50/80 dark:bg-muted/30 px-3.5 py-1.5 text-xs">
+              <span className="font-semibold text-slate-900 dark:text-foreground">
+                Prospect: <span className="text-[#1e3a8a] dark:text-blue-400 font-bold">{leadName}</span>
+              </span>
+              <div className="flex items-center gap-3 text-slate-500 dark:text-muted-foreground text-[11px]">
+                {leadPhone && <span>{leadPhone}</span>}
+                {leadEmail && <span className="hidden sm:inline">{leadEmail}</span>}
+              </div>
             </div>
-            <div>
-              <h2 className="text-base font-bold text-foreground font-display">
-                Record Contact Interaction
-              </h2>
-              <p className="text-[11px] text-muted-foreground">
-                Update status from Inquiry to <span className="font-semibold text-blue-400">Contacted</span>
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full border border-border/80 bg-background/80 p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-            aria-label="Close"
-          >
-            <X size={15} />
-          </button>
-        </div>
+          )}
 
-        {/* Prospect Info Pill */}
-        {leadName && (
-          <div className="bg-muted/30 border-b border-border/60 px-6 py-2.5 flex items-center justify-between text-xs">
-            <span className="font-medium text-foreground truncate max-w-50">
-              Prospect: <strong className="text-primary">{leadName}</strong>
-            </span>
-            <div className="flex items-center gap-3 text-muted-foreground text-[11px]">
-              {leadPhone && <span>{leadPhone}</span>}
-              {leadEmail && <span className="hidden sm:inline">{leadEmail}</span>}
-            </div>
-          </div>
-        )}
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {error && (
-            <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-2.5 text-xs text-destructive">
               <AlertCircle size={15} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Contact Method Selector */}
+          {/* Section 1: Communication Method */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Communication Method *
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <FormSectionHeader
+              title="Communication Channel"
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
               {CONTACT_METHODS.map((m) => {
                 const Icon = m.icon;
                 const isSelected = contactMethod === m.id;
@@ -165,13 +191,18 @@ export default function ContactLeadModal({
                     key={m.id}
                     type="button"
                     onClick={() => setContactMethod(m.id)}
-                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-all text-left cursor-pointer ${
+                    className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1.5 text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? "border-blue-500 bg-blue-500/15 text-blue-400 font-semibold shadow-xs"
-                        : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                        ? "border-[#1e3a8a] bg-blue-50/90 text-[#1e3a8a] dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300 font-semibold shadow-xs"
+                        : "border-slate-200/90 dark:border-border bg-slate-50/80 dark:bg-muted/20 text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted/40 hover:text-slate-900 dark:hover:text-foreground"
                     }`}
                   >
-                    <Icon size={14} className={isSelected ? "text-blue-400" : "text-muted-foreground"} />
+                    <Icon
+                      size={13}
+                      className={
+                        isSelected ? "text-[#1e3a8a] dark:text-blue-400 shrink-0" : "text-slate-400 shrink-0"
+                      }
+                    />
                     <span className="truncate">{m.label}</span>
                   </button>
                 );
@@ -179,100 +210,84 @@ export default function ContactLeadModal({
             </div>
           </div>
 
-          {/* Dedicated Text Field for Interaction Details / Notes */}
+          {/* Section 2: Interaction Notes */}
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label
-                htmlFor="contactNotesField"
-                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"
-              >
-                <FileText size={13} className="text-blue-400" />
-                <span>Contact Details & Interaction Notes *</span>
-              </label>
-              <span className="text-[11px] text-muted-foreground">
-                {contactNotes.trim().length} chars (min 5)
-              </span>
-            </div>
-            <textarea
+            <FormSectionHeader
+              title="Interaction Notes"
+              hasDivider
+            />
+            <TextareaField
               id="contactNotesField"
-              rows={4}
+              rows={2}
               required
               value={contactNotes}
-              onChange={(e) => setContactNotes(e.target.value)}
-              placeholder="Enter comprehensive details of the discussion (e.g., Prospect interested in annual strength training pass, discussed morning batch availability, budget, gym tour scheduled)..."
-              className="w-full rounded-2xl border border-border/80 bg-background/50 px-3.5 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all resize-none font-sans"
+              error={notesError || undefined}
+              onChange={(e) => {
+                setContactNotes(e.target.value);
+                if (notesError && e.target.value.trim().length >= 5) {
+                  setNotesError("");
+                }
+              }}
+              placeholder="Enter discussion details (prospect goals, preferred batch, budget, tour scheduled)..."
+              helperText={`${contactNotes.trim().length} characters (minimum 5 required)`}
             />
           </div>
 
-          {/* Outcome & Staff Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Interaction Outcome *
-              </label>
-              <select
-                value={outcome}
-                onChange={(e) => setOutcome(e.target.value)}
-                className="w-full rounded-xl border border-border/80 bg-card px-3 py-2 text-xs text-foreground focus:border-blue-500 focus:outline-none"
-              >
-                {OUTCOMES.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Section 3: Outcome & Follow-up */}
+          <div className="space-y-1.5">
+            <FormSectionHeader
+              title="Outcome & Follow-up"
+              hasDivider
+            />
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                <User size={12} />
-                <span>Contacted By (Staff)</span>
-              </label>
-              <input
-                type="text"
+            <div
+              className={`grid gap-3 ${
+                isFollowUpRequired ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"
+              }`}
+            >
+              <SelectField
+                id="contact-interaction-outcome"
+                label="Interaction Outcome"
+                required
+                value={outcome}
+                onChange={handleOutcomeChange}
+                placeholder="Select Interaction Outcome"
+                error={outcomeError || undefined}
+                options={OUTCOMES}
+              />
+
+              {isFollowUpRequired && (
+                <div className="animate-in fade-in duration-150">
+                  <InputField
+                    label="Next Follow-up Date"
+                    type="date"
+                    value={followUpDate}
+                    onChange={(e) => setFollowUpDate(e.target.value)}
+                    startIcon={<Calendar size={14} />}
+                  />
+                </div>
+              )}
+
+              <InputField
+                label="Contacted By (Staff)"
                 value={contactedBy}
                 onChange={(e) => setContactedBy(e.target.value)}
                 placeholder="Admin"
-                className="w-full rounded-xl border border-border/80 bg-background/50 px-3 py-2 text-xs text-foreground focus:border-blue-500 focus:outline-none"
+                startIcon={<User size={14} />}
               />
             </div>
           </div>
+        </FormModalBody>
 
-          {/* Follow-up Date */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-              <Calendar size={12} />
-              <span>Next Follow-up Date (Optional)</span>
-            </label>
-            <input
-              type="date"
-              value={followUpDate}
-              onChange={(e) => setFollowUpDate(e.target.value)}
-              className="w-full rounded-xl border border-border/80 bg-background/50 px-3 py-2 text-xs text-foreground focus:border-blue-500 focus:outline-none"
-            />
-          </div>
-
-          {/* Submit Actions */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border/70">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-            >
-              <CheckCircle size={14} />
-              <span>{isSubmitting ? "Saving..." : "Save & Update to Contacted"}</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          onSubmit={handleSubmit}
+          submitText={isSubmitting ? "Saving..." : "Save & Update to Contacted"}
+          submitIcon={CheckCircle}
+          isSubmitting={isSubmitting}
+        />
+      </form>
+    </FormModal>
   );
 }

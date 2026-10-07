@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   User,
   ArrowRight,
-  ChevronRight,
 } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/theme";
 import { Navbar } from "@/landingPage/Navbar";
@@ -119,28 +118,12 @@ export default function PublicTrainerProfilePage() {
 
       <main className="pt-24 pb-20 flex-1">
         <div className="mx-auto max-w-[100rem] px-6 lg:px-12 space-y-10">
-          {/* Top Breadcrumb & Back Navigation */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-6">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-              <Link to="/" className="hover:text-foreground transition-colors">
-                Home
-              </Link>
-              <ChevronRight size={13} />
-              <button
-                type="button"
-                onClick={handleRedirectToTrainers}
-                className="hover:text-foreground transition-colors cursor-pointer"
-              >
-                Trainers
-              </button>
-              <ChevronRight size={13} />
-              <span className="text-foreground font-medium">{trainer.name}</span>
-            </div>
-
+          {/* Top Back Navigation */}
+          <div className="flex items-center justify-between gap-4 border-b border-border/60 pb-6">
             <button
               type="button"
               onClick={handleRedirectToTrainers}
-              className="inline-flex items-center gap-2 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-border rounded-full px-4 py-2 transition-all cursor-pointer self-start sm:self-auto shadow-2xs"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-border rounded-full px-4 py-2 transition-all cursor-pointer shadow-2xs"
             >
               <ArrowLeft size={14} />
               <span>Back to All Trainers</span>

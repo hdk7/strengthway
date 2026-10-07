@@ -6,7 +6,6 @@ import {
   Edit3,
   Trash2,
   ExternalLink,
-  ChevronRight,
   AlertCircle,
   Quote,
 } from "lucide-react";
@@ -241,40 +240,25 @@ export default function TrainerProfilePage() {
 
   return (
     <div className="space-y-8 pb-16 no-scrollbar">
-      {/* Top Header & Breadcrumb Nav + Admin Actions */}
+      {/* Top Header & Admin Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-          <Link to="/admin/dashboard" className="hover:text-foreground transition-colors">
-            Dashboard
-          </Link>
-          <ChevronRight size={13} />
-          <Link
-            to="/admin/trainers-members/trainers"
-            className="hover:text-foreground transition-colors"
-          >
-            Trainers
-          </Link>
-          <ChevronRight size={13} />
-          <span className="text-foreground font-semibold">{trainer.name}</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/admin/trainers-members/trainers")}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+        >
+          <ArrowLeft size={16} />
+          <span>Back to Trainers</span>
+        </button>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5 flex-wrap">
           <button
             type="button"
-            onClick={() => navigate("/admin/trainers-members/trainers")}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-sm cursor-pointer"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to Trainers</span>
-          </button>
-
-          <button
-            type="button"
             onClick={handleDelete}
-            className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3.5 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 text-destructive px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
           >
-            <Trash2 size={14} />
+            <Trash2 size={16} />
             <span>Delete</span>
           </button>
 
@@ -282,18 +266,18 @@ export default function TrainerProfilePage() {
             to={`/trainers/${trainer.id}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
           >
-            <ExternalLink size={14} />
+            <ExternalLink size={16} />
             <span>View Public Profile</span>
           </Link>
 
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
           >
-            <Edit3 size={14} />
+            <Edit3 size={16} />
             <span>Edit Profile</span>
           </button>
         </div>

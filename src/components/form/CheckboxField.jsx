@@ -38,7 +38,7 @@ const CheckboxField = forwardRef(function CheckboxField(
           disabled={disabled}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className="mt-0.5 h-4 w-4 rounded border-border bg-background text-primary focus:ring-1 focus:ring-accent accent-accent transition-colors cursor-pointer"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-border bg-white dark:bg-card text-[#1e3a8a] focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 accent-[#1e3a8a] transition-colors cursor-pointer"
           {...props}
         />
         <div className="flex flex-col">

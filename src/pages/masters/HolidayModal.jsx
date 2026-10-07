@@ -1,6 +1,21 @@
-import { createPortal } from "react-dom";
-import { X } from "lucide-react";
-import { InputField, TextareaField } from "@/components/form";
+import {
+  FormModal,
+  FormModalHeader,
+  FormModalBody,
+  FormModalFooter,
+  FormSectionHeader,
+} from "@/components/ui/FormModal";
+import { InputField, TextareaField, SelectField } from "@/components/form";
+import { Calendar, Check } from "lucide-react";
+
+const HOLIDAY_CATEGORIES = [
+  { value: "National Holiday", label: "National Holiday" },
+  { value: "Festival Holiday", label: "Festival Holiday" },
+  { value: "Public Holiday", label: "Public Holiday" },
+  { value: "Facility Maintenance", label: "Facility Maintenance" },
+  { value: "Special Event", label: "Special Event" },
+  { value: "Others", label: "Others" },
+];
 
 export function HolidayModal({
   isOpen,
@@ -10,34 +25,36 @@ export function HolidayModal({
   setForm,
   handleSave,
   isSubmitting,
-  batches,
+  batches = [],
 }) {
-  if (!isOpen || typeof document === "undefined") return null;
+  const batchOptions = [
+    { value: "ALL", label: "All Batches & Shifts" },
+    ...batches.map((b) => ({
+      value: b.name || b.shortName,
+      label: b.name || b.shortName,
+    })),
+  ];
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl p-6 relative animate-in zoom-in-95 duration-150"
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <FormModal isOpen={isOpen} onClose={onClose} size="md">
+      <FormModalHeader
+        title={editingHolidayId ? "Edit Holiday" : "Add New Holiday"}
+        description="Schedule facility holiday or maintenance shutdown for training batches"
+        icon={Calendar}
+        onClose={onClose}
+      />
+
+      <form
+        onSubmit={handleSave}
+        noValidate
+        className="flex flex-col flex-1 min-h-0 overflow-hidden"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-border">
-          <h3 className="font-bold text-foreground text-base">
-            {editingHolidayId ? "Edit Holiday" : "Add New Holiday"}
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
+        <FormModalBody className="flex-1 min-h-0 overflow-y-auto space-y-4 p-6 sm:p-7">
+          <FormSectionHeader
+            title="Holiday Schedule & Scope"
+            subtitle="Specify date, affected batches, and closure notes"
+          />
 
-        <form onSubmit={handleSave} className="mt-4 space-y-4">
           <InputField
             label="Holiday Name / Occasion"
             required
@@ -47,28 +64,19 @@ export function HolidayModal({
           />
 
           <InputField
-            label="Date"
+            label="Holiday Date"
             type="date"
             required
             value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
           />
 
-          <div className="flex flex-col text-left">
-            <label className="mb-1 text-xs font-medium text-foreground">Holiday Category</label>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="National Holiday">National Holiday</option>
-              <option value="Festival Holiday">Festival Holiday</option>
-              <option value="Public Holiday">Public Holiday</option>
-              <option value="Facility Maintenance">Facility Maintenance</option>
-              <option value="Special Event">Special Event</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
+          <SelectField
+            label="Holiday Category"
+            value={form.type}
+            onChange={(e) => setForm({ ...form, type: e.target.value })}
+            options={HOLIDAY_CATEGORIES}
+          />
 
           {form.type === "Others" && (
             <InputField
@@ -79,21 +87,12 @@ export function HolidayModal({
             />
           )}
 
-          <div className="flex flex-col text-left">
-            <label className="mb-1 text-xs font-medium text-foreground">Affected Batches</label>
-            <select
-              value={form.affectedBatches}
-              onChange={(e) => setForm({ ...form, affectedBatches: e.target.value })}
-              className="rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm font-medium text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="ALL">All Batches & Shifts</option>
-              {batches.map((b) => (
-                <option key={b.id} value={b.name || b.shortName}>
-                  {b.name || b.shortName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectField
+            label="Affected Batches"
+            value={form.affectedBatches}
+            onChange={(e) => setForm({ ...form, affectedBatches: e.target.value })}
+            options={batchOptions}
+          />
 
           <TextareaField
             label="Closure Details / Description"
@@ -102,30 +101,25 @@ export function HolidayModal({
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
+        </FormModalBody>
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-xl bg-primary px-4.5 py-2 text-xs font-bold text-background hover:bg-primary/90 shadow-md cursor-pointer disabled:opacity-50"
-            >
-              {isSubmitting
-                ? "Saving..."
-                : editingHolidayId
-                  ? "Update Holiday"
-                  : "Save Holiday"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          onSubmit={handleSave}
+          submitText={
+            isSubmitting
+              ? "Saving..."
+              : editingHolidayId
+                ? "Update Holiday"
+                : "Save Holiday"
+          }
+          submitIcon={Check}
+          isSubmitting={isSubmitting}
+        />
+      </form>
+    </FormModal>
   );
 }
+
+export default HolidayModal;

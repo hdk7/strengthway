@@ -56,8 +56,8 @@ export default function TimePickerField({
 
   const sizeStyles = size === "sm" ? "px-2.5 py-1.5 min-h-[36px]" : "px-3 py-2 min-h-[42px]";
   const stateStyles = error
-    ? "border-destructive focus-within:border-destructive focus-within:ring-1 focus-within:ring-destructive"
-    : "border-border focus-within:border-accent focus-within:ring-1 focus-within:ring-accent";
+    ? "border-destructive bg-destructive/5 text-destructive focus-within:border-destructive focus-within:ring-2 focus-within:ring-destructive/20"
+    : "border-slate-200 dark:border-border hover:border-slate-300 dark:hover:border-border/80 focus-within:border-blue-600 dark:focus-within:border-blue-500 focus-within:bg-white dark:focus-within:bg-card focus-within:ring-2 focus-within:ring-blue-100 dark:focus-within:ring-blue-900/30";
 
   return (
     <div ref={containerRef} className={`relative flex flex-col text-left ${className}`}>
@@ -75,7 +75,7 @@ export default function TimePickerField({
 
       {/* Segmented Time Control Box */}
       <div
-        className={`flex items-center justify-between gap-1.5 rounded-xl border bg-background text-foreground transition-all ${sizeStyles} ${stateStyles} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`flex items-center justify-between gap-1.5 rounded-lg border bg-slate-50/90 dark:bg-muted/40 text-slate-900 dark:text-foreground transition-all ${sizeStyles} ${stateStyles} ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         {/* Hour : Minute inputs */}
         <div className="flex items-center gap-1">

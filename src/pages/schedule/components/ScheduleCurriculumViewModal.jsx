@@ -29,31 +29,31 @@ export function ScheduleCurriculumViewModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-6 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150 overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-4xl max-h-[90vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl relative my-auto animate-in zoom-in-95 duration-150 overflow-hidden"
+        className="w-full max-w-4xl max-h-[90vh] flex flex-col bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-2xl shadow-2xl relative my-auto animate-in zoom-in-95 duration-150 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="border-b border-border px-6 py-4 bg-card shrink-0">
+        <div className="border-b border-slate-100 dark:border-border px-6 py-4 bg-white dark:bg-card shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary">
                 <CalendarDays size={20} />
               </span>
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-foreground">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-foreground">
                     {viewingSchedule.name}
                   </h2>
-                  <span className="rounded-md bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
+                  <span className="rounded bg-blue-100 dark:bg-primary/15 px-2 py-0.5 text-xs font-bold text-blue-900 dark:text-primary">
                     {viewingItems.length} Classes
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground line-clamp-1">
+                <p className="text-xs text-slate-500 dark:text-muted-foreground line-clamp-1">
                   {viewingSchedule.description || "Reusable class program curriculum"}
                 </p>
               </div>
@@ -62,7 +62,7 @@ export function ScheduleCurriculumViewModal({
             <div className="flex items-center gap-2">
               <button
                 onClick={onClose}
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground cursor-pointer transition-colors"
               >
                 <X size={18} />
               </button>
@@ -126,13 +126,13 @@ export function ScheduleCurriculumViewModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-border p-4 bg-card shrink-0 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
+        <div className="border-t border-slate-100 dark:border-border p-4 bg-white dark:bg-card shrink-0 flex items-center justify-between">
+          <span className="text-xs text-slate-500 dark:text-muted-foreground">
             Reusable program assigned to {viewingBatchTracking.length} batch(es)
           </span>
           <button
             onClick={onClose}
-            className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
+            className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
           >
             Close
           </button>

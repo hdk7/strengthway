@@ -15,7 +15,7 @@ export const INITIAL_FORM = {
   address: "",
   city: "",
   state: "",
-  country: "India",
+  country: "",
   pincode: "",
   emergencyName: "",
   emergencyRelationship: "",

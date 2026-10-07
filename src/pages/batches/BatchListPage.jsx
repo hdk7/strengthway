@@ -149,14 +149,14 @@ export function BatchListPage() {
   const handleOpenCreate = () => {
     setEditingBatch(null);
     setForm({
-      name: `BATCH ${batches.length + 1}`,
-      startTime: "06:00 AM",
-      endTime: "07:00 AM",
+      name: "",
+      startTime: "",
+      endTime: "",
       daysPattern: "MWF",
       daysLabel: "Monday • Wednesday • Friday",
       daysList: ["Monday", "Wednesday", "Friday"],
       customDays: [],
-      maxPax: 28,
+      maxPax: "",
       status: "Active",
       description: "",
     });
@@ -170,14 +170,14 @@ export function BatchListPage() {
         ? (batch.daysList || []).map((d) => SHORT_DAYS_MAP[d] || d.slice(0, 3))
         : [];
     setForm({
-      name: batch.name,
-      startTime: batch.startTime || "06:00 AM",
-      endTime: batch.endTime || "07:00 AM",
+      name: batch.name || "",
+      startTime: batch.startTime || "",
+      endTime: batch.endTime || "",
       daysPattern: batch.daysPattern || "MWF",
       daysLabel: batch.daysLabel || "Monday • Wednesday • Friday",
       daysList: batch.daysList || ["Monday", "Wednesday", "Friday"],
       customDays,
-      maxPax: batch.maxPax || 28,
+      maxPax: batch.maxPax ?? "",
       status: batch.status || "Active",
       description: batch.description || "",
     });
@@ -190,17 +190,30 @@ export function BatchListPage() {
 
   const handleSaveBatch = async (e) => {
     e.preventDefault();
+    if (!form.name.trim()) {
+      toast.error("Please enter a batch name.");
+      return;
+    }
+    if (!form.startTime || !form.endTime) {
+      toast.error("Please provide both start time and end time.");
+      return;
+    }
     if (form.daysPattern === "CUSTOM" && (!form.customDays || form.customDays.length === 0)) {
       toast.error("Please select at least one day for the custom schedule.");
       return;
     }
     setIsSubmitting(true);
     try {
+      const payload = {
+        ...form,
+        name: form.name.trim(),
+        maxPax: form.maxPax === "" ? 28 : Number(form.maxPax) || 28,
+      };
       if (editingBatch) {
-        const updated = await updateBatch(editingBatch.id, form);
+        const updated = await updateBatch(editingBatch.id, payload);
         toast.success(`${updated?.name || form.name} updated successfully!`);
       } else {
-        const created = await createBatch(form);
+        const created = await createBatch(payload);
         toast.success(`${created?.name || form.name} created successfully!`);
       }
       setIsModalOpen(false);
@@ -227,10 +240,10 @@ export function BatchListPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-background hover:opacity-90 transition-all cursor-pointer shadow-xs self-start sm:self-auto"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99] self-start sm:self-auto"
         >
-          <Plus size={15} />
-          Create Batch
+          <Plus size={16} />
+          <span>Create Batch</span>
         </button>
       </div>
 

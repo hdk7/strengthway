@@ -310,6 +310,7 @@ export function calculateTrainerDailyKpis(trainers = [], dailyRecordsMap = {}, s
   let presentCount = 0;
   let absentCount = 0;
   let substituteCount = 0;
+  let leaveCount = 0;
   let pendingCount = 0;
   let totalMinutes = 0;
 
@@ -325,6 +326,8 @@ export function calculateTrainerDailyKpis(trainers = [], dailyRecordsMap = {}, s
     } else if (status === "SUBSTITUTE") {
       substituteCount++;
       totalMinutes += record?.durationMinutes || 60;
+    } else if (status === "LEAVE") {
+      leaveCount++;
     } else if (status === "ABSENT") {
       absentCount++;
     } else {
@@ -340,8 +343,10 @@ export function calculateTrainerDailyKpis(trainers = [], dailyRecordsMap = {}, s
     presentCount,
     absentCount,
     substituteCount,
+    leaveCount,
     pendingCount,
     turnoutRate,
     totalHours,
   };
+
 }

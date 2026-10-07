@@ -1,21 +1,18 @@
 /* eslint-disable max-lines */
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   Trash2,
   Phone,
   Mail,
   ShieldCheck,
-  ChevronRight,
   Copy,
   Check,
   AlertCircle,
-  Quote,
   Clock,
   Calendar,
   User,
-  Tag,
   PhoneCall,
   UserCheck,
   Archive,
@@ -121,7 +118,6 @@ export default function InquiryProfilePage() {
     }
   };
 
-
   const formattedDateTime = useMemo(() => {
     if (!inquiry?.createdAt) return "—";
     try {
@@ -148,7 +144,11 @@ export default function InquiryProfilePage() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to remove inquiry from ${inquiry.name || "this user"}?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to remove inquiry from ${inquiry.name || "this user"}?`,
+      )
+    ) {
       return;
     }
     try {
@@ -173,9 +173,12 @@ export default function InquiryProfilePage() {
     return (
       <div className="py-16 text-center space-y-4 no-scrollbar">
         <AlertCircle size={48} className="mx-auto text-muted-foreground/50" />
-        <h2 className="text-xl font-bold text-foreground font-display">Inquiry Not Found</h2>
+        <h2 className="text-xl font-bold text-foreground font-display">
+          Inquiry Not Found
+        </h2>
         <p className="text-sm text-muted-foreground">
-          No gym inquiry record exists with ID <strong className="text-foreground">{id}</strong>.
+          No gym inquiry record exists with ID{" "}
+          <strong className="text-foreground">{id}</strong>.
         </p>
         <button
           type="button"
@@ -191,31 +194,19 @@ export default function InquiryProfilePage() {
 
   return (
     <div className="space-y-8 pb-16 no-scrollbar">
-      {/* Top Header & Breadcrumb Nav + Actions */}
+      {/* Top Header Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
-          <Link to="/admin/dashboard" className="hover:text-foreground transition-colors">
-            Dashboard
-          </Link>
-          <ChevronRight size={13} />
-          <Link to="/admin/inquiries" className="hover:text-foreground transition-colors">
-            Inquiries
-          </Link>
-          <ChevronRight size={13} />
-          <span className="text-foreground font-semibold">{inquiry.name || inquiry.id}</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/admin/inquiries")}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-sm cursor-pointer"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Inquiries</span>
+        </button>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/inquiries")}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-sm cursor-pointer"
-          >
-            <ArrowLeft size={14} />
-            <span>Back to Inquiries</span>
-          </button>
-
           {/* Workflow Action Options placed directly after Back to Inquiries */}
           {displayStatus === "Inquiry" && (
             <button
@@ -286,10 +277,10 @@ export default function InquiryProfilePage() {
                   displayStatus === "Converted"
                     ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                     : displayStatus === "Contacted"
-                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
-                    : displayStatus === "Inquiry"
-                    ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                    : "bg-muted/60 text-muted-foreground border-border"
+                      ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                      : displayStatus === "Inquiry"
+                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                        : "bg-muted/60 text-muted-foreground border-border"
                 }`}
               >
                 <span
@@ -297,13 +288,15 @@ export default function InquiryProfilePage() {
                     displayStatus === "Converted"
                       ? "bg-emerald-500"
                       : displayStatus === "Contacted"
-                      ? "bg-blue-500"
-                      : displayStatus === "Inquiry"
-                      ? "bg-amber-500 animate-pulse"
-                      : "bg-muted-foreground"
+                        ? "bg-blue-500"
+                        : displayStatus === "Inquiry"
+                          ? "bg-amber-500 animate-pulse"
+                          : "bg-muted-foreground"
                   }`}
                 />
-                {displayStatus === "Converted" ? "Converted to Member" : displayStatus}
+                {displayStatus === "Converted"
+                  ? "Converted to Member"
+                  : displayStatus}
               </span>
 
               {/* Inquiry ID */}
@@ -339,57 +332,23 @@ export default function InquiryProfilePage() {
             Inquiry Profile
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Verified contact dossier and communication statement registered in The Strength Way inquiries module.
+            Verified contact dossier and communication statement registered in
+            The Strength Way inquiries module.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* Left Column: Personal Information & Contact Dossier Table */}
-          <div className="lg:col-span-6 space-y-6">
-            <InquiryPersonalDetailsCard
-              inquiry={inquiry}
-              formattedDateTime={formattedDateTime}
-              handleCopy={handleCopy}
-              copiedField={copiedField}
-            />
-          </div>
-
-          {/* Right Column: Inquiry Statement & Message */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xs space-y-5">
-              <h3 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2 border-b border-border pb-4">
-                <Quote size={18} className="text-primary" />
-                <span>Inquiry Statement</span>
-              </h3>
-
-              {/* 7. Subject Box */}
-              <div className="rounded-2xl border border-border bg-muted/30 p-4 sm:p-5">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                  <Tag size={13} className="text-primary" />
-                  <span>Subject</span>
-                </div>
-                <div className="text-base sm:text-lg font-bold text-foreground font-display">
-                  {inquiry.subject || "General Inquiry"}
-                </div>
-              </div>
-
-              {/* 8. Message Body */}
-              <div className="space-y-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
-                  Message
-                </span>
-                <div className="rounded-2xl border border-border bg-muted/20 p-5 sm:p-6 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans">
-                  {inquiry.message || "No message provided."}
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="space-y-6">
+          {/* Single Unified Inquiry Profile Card */}
+          <InquiryPersonalDetailsCard
+            inquiry={inquiry}
+            formattedDateTime={formattedDateTime}
+            handleCopy={handleCopy}
+            copiedField={copiedField}
+          />
 
           {/* Contact Interaction History & Details (Shown if contacted) */}
           {inquiry.contactDetails && (
-            <div className="lg:col-span-12">
-              <InquiryContactRecordCard contactDetails={inquiry.contactDetails} />
-            </div>
+            <InquiryContactRecordCard contactDetails={inquiry.contactDetails} />
           )}
         </div>
       </div>

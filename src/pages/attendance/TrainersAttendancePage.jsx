@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   Grid3X3,
   UserCheck,
+  CalendarOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/lib/trainersService";
@@ -19,7 +20,14 @@ import { TrainerDailyCheckInTable } from "./TrainerDailyCheckInTable";
 import { TrainerMonthlyLedger } from "./TrainerMonthlyLedger";
 import { TrainerAttendanceToolbar } from "./TrainerAttendanceToolbar";
 import { TrainerAttendanceDetailModal } from "./TrainerAttendanceDetailModal";
+import { TrainerLeaveRequestDrawer } from "./TrainerLeaveRequestDrawer";
+import { TrainerLeaveTrackerView } from "./TrainerLeaveTrackerView";
+import {
+  getTrainerLeaves,
+  getTrainerLeaveMonthlySummary,
+} from "@/lib/trainerLeaveService";
 import SubstituteCoachModal from "@/pages/batches/detail/SubstituteCoachModal";
+
 import {
   isDateToday,
   isDatePast,
@@ -36,7 +44,7 @@ const SHIFT_OPTIONS = ["All", "Morning", "Evening", "General"];
 
 export default function TrainersAttendancePage() {
   // Navigation & View Mode
-  const [viewMode, setViewMode] = useState("daily"); // "daily" | "monthly"
+  const [viewMode, setViewMode] = useState("daily"); // "daily" | "monthly" | "leaveTracker"
   const [selectedDate, setSelectedDate] = useState(() =>
     new Date().toISOString().slice(0, 10)
   );
@@ -52,6 +60,8 @@ export default function TrainersAttendancePage() {
   const [batches, setBatches] = useState([]);
   const [trainerLogs, setTrainerLogs] = useState([]);
   const [monthlyLogs, setMonthlyLogs] = useState([]);
+  const [monthlyLeaveSummary, setMonthlyLeaveSummary] = useState(null);
+  const [monthlyLeaves, setMonthlyLeaves] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
 
@@ -86,6 +96,11 @@ export default function TrainersAttendancePage() {
     date: new Date().toISOString().slice(0, 10),
     reason: "",
   });
+
+  // Leave Request Drawer State
+  const [isLeaveDrawerOpen, setIsLeaveDrawerOpen] = useState(false);
+  const [leaveDrawerTrainer, setLeaveDrawerTrainer] = useState(null);
+
 
   // ─── 1. Load Trainers & Batches on Mount ───────────────────────────────────────
   useEffect(() => {
@@ -129,10 +144,16 @@ export default function TrainersAttendancePage() {
   // ─── 3. Load Monthly Logs ────────────────────────────────────────────────────
   const loadMonthlyLogs = useCallback(async () => {
     try {
-      const logs = await getAllTrainerLogs({ month: selectedMonth });
+      const [logs, leaveSum, leaves] = await Promise.all([
+        getAllTrainerLogs({ month: selectedMonth }),
+        getTrainerLeaveMonthlySummary(selectedMonth).catch(() => null),
+        getTrainerLeaves({ month: selectedMonth }).catch(() => []),
+      ]);
       setMonthlyLogs(Array.isArray(logs) ? logs : []);
+      setMonthlyLeaveSummary(leaveSum);
+      setMonthlyLeaves(Array.isArray(leaves) ? leaves : []);
     } catch (err) {
-      console.error("Failed to load monthly trainer logs:", err);
+      console.error("Failed to load monthly trainer logs and leaves:", err);
     }
   }, [selectedMonth]);
 
@@ -438,6 +459,8 @@ export default function TrainersAttendancePage() {
   // Monthly Faculty Summary Matrix
   const monthlySummary = useMemo(() => {
     const summaryMap = {};
+    const allowance = monthlyLeaveSummary?.monthlyAllowance ?? 2;
+    const deductionRate = monthlyLeaveSummary?.deductionPerDay ?? 1000;
 
     trainers.forEach((t) => {
       summaryMap[t.id] = {
@@ -447,6 +470,7 @@ export default function TrainersAttendancePage() {
         substituteCoveredCount: 0,
         totalMinutes: 0,
         totalAttendees: 0,
+        leaveDates: new Set(),
       };
     });
 
@@ -459,6 +483,8 @@ export default function TrainersAttendancePage() {
           summaryMap[log.trainerId].totalAttendees += log.attendeesCount || 0;
         } else if (log.status === "SUBSTITUTE") {
           summaryMap[log.trainerId].substituteCoveredCount++;
+        } else if (log.status === "LEAVE") {
+          summaryMap[log.trainerId].leaveDates.add(log.date);
         }
       }
 
@@ -470,8 +496,29 @@ export default function TrainersAttendancePage() {
       }
     });
 
-    return Object.values(summaryMap);
-  }, [trainers, monthlyLogs]);
+    return Object.values(summaryMap).map((item) => {
+      // Cross reference with backend summary aggregation if present
+      const beItem = monthlyLeaveSummary?.trainersSummary?.find(
+        (ts) => ts.trainerId === item.trainer.id
+      );
+
+      const leaveDaysCount = Math.max(item.leaveDates.size, beItem?.approvedDays ?? 0);
+      const paidLeaveDays = Math.min(leaveDaysCount, allowance);
+      const unpaidLeaveDays = Math.max(0, leaveDaysCount - allowance);
+      const deductionAmount = unpaidLeaveDays * deductionRate;
+      const remainingBalance = Math.max(0, allowance - leaveDaysCount);
+
+      return {
+        ...item,
+        leaveDaysCount,
+        monthlyAllowance: allowance,
+        paidLeaveDays,
+        unpaidLeaveDays,
+        remainingBalance,
+        deductionAmount,
+      };
+    });
+  }, [trainers, monthlyLogs, monthlyLeaveSummary]);
 
   // Monthly Substitute Sessions List
   const monthlySubstituteLogs = useMemo(() => {
@@ -518,6 +565,15 @@ export default function TrainersAttendancePage() {
     const d = new Date(selectedDate);
     d.setDate(d.getDate() + 1);
     setSelectedDate(d.toISOString().slice(0, 10));
+  };
+
+  const handleOpenLeaveDrawer = (trainer = null) => {
+    setLeaveDrawerTrainer(trainer);
+    setIsLeaveDrawerOpen(true);
+  };
+
+  const handleLeaveSubmitted = async () => {
+    await Promise.all([loadDailyLogs(), loadMonthlyLogs()]);
   };
 
   const formattedSelectedMonth = useMemo(() => {
@@ -572,9 +628,19 @@ export default function TrainersAttendancePage() {
               <Grid3X3 size={15} />
               <span>Monthly Summary</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("leaveTracker")}
+              className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all cursor-pointer ${
+                viewMode === "leaveTracker"
+                  ? "bg-accent text-accent-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <CalendarOff size={15} />
+              <span>Leave Tracker</span>
+            </button>
           </div>
-
-
 
           <button
             type="button"
@@ -587,23 +653,28 @@ export default function TrainersAttendancePage() {
         </div>
       </div>
 
-      {/* ─── Control Bar: Shift & Date / Month Navigator ─────────────────────── */}
-      <TrainerAttendanceToolbar
-        shiftOptions={SHIFT_OPTIONS}
-        selectedShift={selectedShift}
-        setSelectedShift={setSelectedShift}
-        viewMode={viewMode}
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        handlePrevDay={handlePrevDay}
-        handleNextDay={handleNextDay}
-        selectedMonth={selectedMonth}
-        setSelectedMonth={setSelectedMonth}
-        formattedSelectedMonth={formattedSelectedMonth}
-      />
 
-      {/* ─── Top KPI Cards ──────────────────────────────────────────────────── */}
-      <TrainerAttendanceStats dailyKpis={dailyKpis} selectedDate={selectedDate} />
+      {/* ─── Control Bar: Shift & Date / Month Navigator (Daily / Monthly) ─── */}
+      {viewMode !== "leaveTracker" && (
+        <>
+          <TrainerAttendanceToolbar
+            shiftOptions={SHIFT_OPTIONS}
+            selectedShift={selectedShift}
+            setSelectedShift={setSelectedShift}
+            viewMode={viewMode}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            handlePrevDay={handlePrevDay}
+            handleNextDay={handleNextDay}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            formattedSelectedMonth={formattedSelectedMonth}
+          />
+
+          {/* ─── Top KPI Cards ──────────────────────────────────────────────── */}
+          <TrainerAttendanceStats dailyKpis={dailyKpis} selectedDate={selectedDate} />
+        </>
+      )}
 
       {/* ─── VIEW 1: DAILY FACULTY CHECK-IN TABLE ────────────────────────────── */}
       {viewMode === "daily" && (
@@ -622,6 +693,7 @@ export default function TrainersAttendancePage() {
           handleQuickCheckOut={handleQuickCheckOut}
           handleOpenSubstituteModal={handleOpenSubstituteModal}
           onOpenViewModal={onOpenViewModal}
+          onOpenLeaveDrawer={handleOpenLeaveDrawer}
           batches={batches}
           selectedDate={selectedDate}
         />
@@ -633,33 +705,48 @@ export default function TrainersAttendancePage() {
           formattedSelectedMonth={formattedSelectedMonth}
           paginatedMonthlySummary={paginatedMonthlySummary}
           monthlySubstituteLogs={monthlySubstituteLogs}
+          monthlyLeaveSummary={monthlyLeaveSummary}
+          monthlyLeaves={monthlyLeaves}
+          onOpenLeaveDrawer={handleOpenLeaveDrawer}
         />
       )}
 
-      {/* Fixed / Sticky Viewport Bottom Pagination */}
-      <div className="shrink-0 mt-auto">
-        {viewMode === "daily" ? (
-          <Pagination
-            currentPage={safeDailyPage}
-            totalPages={totalDailyPages}
-            onPageChange={setDailyPage}
-            totalItems={filteredTrainers.length}
-            pageSize={dailyPageSize}
-            itemName="coaches"
-            compact
-          />
-        ) : (
-          <Pagination
-            currentPage={safeMonthlyPage}
-            totalPages={totalMonthlyPages}
-            onPageChange={setMonthlyPage}
-            totalItems={monthlySummary.length}
-            pageSize={monthlyPageSize}
-            itemName="faculty"
-            compact
-          />
-        )}
-      </div>
+      {/* ─── VIEW 3: CENTRALIZED LEAVE TRACKER & APPROVAL WORKFLOW ─────────── */}
+      {viewMode === "leaveTracker" && (
+        <TrainerLeaveTrackerView
+          trainers={trainers}
+          batches={batches}
+          onOpenLeaveDrawer={handleOpenLeaveDrawer}
+          onLeavesUpdated={handleLeaveSubmitted}
+        />
+      )}
+
+      {/* Fixed / Sticky Viewport Bottom Pagination (Daily & Monthly) */}
+      {viewMode !== "leaveTracker" && (
+        <div className="shrink-0 mt-auto">
+          {viewMode === "daily" ? (
+            <Pagination
+              currentPage={safeDailyPage}
+              totalPages={totalDailyPages}
+              onPageChange={setDailyPage}
+              totalItems={filteredTrainers.length}
+              pageSize={dailyPageSize}
+              itemName="coaches"
+              compact
+            />
+          ) : (
+            <Pagination
+              currentPage={safeMonthlyPage}
+              totalPages={totalMonthlyPages}
+              onPageChange={setMonthlyPage}
+              totalItems={monthlySummary.length}
+              pageSize={monthlyPageSize}
+              itemName="faculty"
+              compact
+            />
+          )}
+        </div>
+      )}
 
       {/* ─── MODAL: Manual Shift Conduction ─────────────────────────────────── */}
       <TrainerAttendanceModal
@@ -695,6 +782,17 @@ export default function TrainersAttendancePage() {
         onAssignSubstitute={handleAssignSubstitute}
         isSubmitting={isSubstituteSubmitting}
       />
+
+      {/* ─── DRAWER: Faculty Leave Request Panel ──────────────────────────────── */}
+      <TrainerLeaveRequestDrawer
+        isOpen={isLeaveDrawerOpen}
+        onClose={() => setIsLeaveDrawerOpen(false)}
+        trainer={leaveDrawerTrainer}
+        trainers={trainers}
+        batches={batches}
+        onLeaveSubmitted={handleLeaveSubmitted}
+      />
     </div>
   );
 }
+

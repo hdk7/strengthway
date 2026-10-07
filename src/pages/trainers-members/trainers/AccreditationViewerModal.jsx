@@ -9,18 +9,18 @@ export default function AccreditationViewerModal({
   if (!activePreviewDoc) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-2xl rounded-3xl border-2 border-amber-400/40 bg-zinc-950 p-6 sm:p-10 shadow-2xl space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl rounded-2xl border-2 border-amber-400/40 bg-zinc-950 p-6 sm:p-10 shadow-2xl space-y-6 animate-in zoom-in-95 duration-150">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-5 top-5 rounded-full bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
+          className="absolute right-5 top-5 rounded-lg bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
         >
           <X size={18} />
         </button>
 
         {/* Certificate Layout */}
-        <div className="relative rounded-2xl border-4 border-double border-amber-400/50 bg-linear-to-b from-zinc-900 via-black to-zinc-900 p-6 sm:p-10 text-center space-y-5 shadow-inner">
+        <div className="relative rounded-xl border-4 border-double border-amber-400/50 bg-linear-to-b from-zinc-900 via-black to-zinc-900 p-6 sm:p-10 text-center space-y-5 shadow-inner">
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-[11px] font-bold uppercase tracking-widest text-amber-300">
             <Sparkles size={13} />
             <span>The Strength Way Verified Faculty</span>
@@ -43,7 +43,7 @@ export default function AccreditationViewerModal({
             <p className="text-xs text-white/70 mt-2">
               has demonstrated exemplary mastery and fulfilled all requirements for
             </p>
-            <div className="mt-3 inline-block rounded-xl border border-white/20 bg-white/5 px-4 py-2 font-bold text-sm sm:text-base text-white">
+            <div className="mt-3 inline-block rounded-lg border border-white/20 bg-white/5 px-4 py-2 font-bold text-sm sm:text-base text-white">
               {activePreviewDoc.title}
             </div>
           </div>
@@ -73,7 +73,7 @@ export default function AccreditationViewerModal({
             <button
               type="button"
               onClick={() => onDownload(activePreviewDoc)}
-              className="inline-flex items-center gap-2 rounded-xl bg-white hover:bg-white/90 text-black px-4 py-2 text-xs font-bold transition-all shadow-md cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-lg bg-white hover:bg-white/90 text-black px-4 py-2 text-xs font-bold transition-all shadow-md cursor-pointer"
             >
               <Download size={14} />
               <span>Download Document</span>
@@ -81,7 +81,7 @@ export default function AccreditationViewerModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               Close
             </button>

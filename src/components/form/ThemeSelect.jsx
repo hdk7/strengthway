@@ -49,12 +49,12 @@ export default function ThemeSelect({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between gap-1.5 px-3 rounded-xl border border-border bg-card text-foreground transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${triggerClassName}`}
+        className={`w-full flex items-center justify-between gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 text-slate-900 dark:text-foreground text-xs sm:text-sm transition-all cursor-pointer hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed ${triggerClassName}`}
       >
         <span className="truncate">{displayLabel}</span>
         <ChevronDown
           size={14}
-          className={`text-muted-foreground shrink-0 transition-transform duration-150 ${
+          className={`text-slate-400 dark:text-muted-foreground shrink-0 transition-transform duration-150 ${
             isOpen ? "rotate-180" : ""
           }`}
         />
@@ -62,7 +62,7 @@ export default function ThemeSelect({
 
       {isOpen && (
         <div
-          className={`absolute left-0 right-0 mt-1 z-50 p-1 rounded-xl bg-card border border-border shadow-xl overflow-y-auto ${maxMenuHeight} animate-in fade-in duration-100`}
+          className={`absolute left-0 right-0 mt-1 z-50 p-1 rounded-xl bg-white dark:bg-card border border-slate-200/90 dark:border-border shadow-xl overflow-y-auto ${maxMenuHeight} animate-in fade-in duration-100`}
         >
           {options.map((opt, idx) => {
             const optVal = typeof opt === "object" ? opt.value : opt;

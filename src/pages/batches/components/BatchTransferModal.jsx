@@ -40,26 +40,26 @@ export default function BatchTransferModal({
       : effectiveMember?.name || "Member";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-2xl border border-border bg-card shadow-2xl overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card text-foreground shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border p-5 sm:p-6 bg-muted/20">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-border/60 p-5 sm:p-6 bg-white dark:bg-card">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-100 dark:border-blue-900/30">
               <ArrowRightLeft size={20} />
             </span>
             <div>
-              <h2 className="text-lg font-bold text-foreground">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-foreground font-display">
                 Batch Transfer & Flexible Assignment
               </h2>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-muted-foreground mt-0.5">
                 Manage batch relocation or temporary flex day passes
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-muted transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>

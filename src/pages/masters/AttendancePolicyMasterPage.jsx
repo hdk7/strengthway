@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Search,
   Pencil,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,6 +21,8 @@ import {
 import { getBatches } from "@/lib/batchesService";
 import { Pagination } from "@/components/table";
 import { HolidayModal } from "./HolidayModal";
+import { TrainerLeavePolicyTab } from "./TrainerLeavePolicyTab";
+
 
 const STANDARD_CATEGORIES = [
   "National Holiday",
@@ -30,6 +33,7 @@ const STANDARD_CATEGORIES = [
 ];
 
 export default function AttendancePolicyMasterPage() {
+  const [activeTab, setActiveTab] = useState("holidays"); // "holidays" | "trainer-leave"
   const [holidays, setHolidays] = useState([]);
   const [batches, setBatches] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +42,7 @@ export default function AttendancePolicyMasterPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   const [form, setForm] = useState({
     name: "",
@@ -104,7 +109,7 @@ export default function AttendancePolicyMasterPage() {
     setEditingHolidayId(null);
     setForm({
       name: "",
-      date: new Date().toISOString().slice(0, 10),
+      date: "",
       type: "National Holiday",
       customType: "",
       affectedBatches: "ALL",
@@ -194,200 +199,243 @@ export default function AttendancePolicyMasterPage() {
             </h1>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Manage scheduled gym closures, festival blackout dates, and batch attendance exemptions.
+            {activeTab === "holidays"
+              ? "Manage scheduled gym closures, festival blackout dates, and batch attendance exemptions."
+              : "Configure trainer leave notice duration tiers and advance-application compliance rules."}
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-background shadow-xs transition-all hover:bg-primary/90 cursor-pointer active:scale-95"
-          >
-            <Plus size={16} />
-            <span>Add Holiday</span>
-          </button>
+          {/* Tab Navigation Pill */}
+          <div className="flex items-center rounded-xl bg-muted/60 p-1 border border-border">
+            <button
+              type="button"
+              onClick={() => setActiveTab("holidays")}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "holidays"
+                  ? "bg-card text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <CalendarDays size={14} />
+              <span>Holiday Calendar</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("trainer-leave")}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === "trainer-leave"
+                  ? "bg-card text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <ShieldCheck size={14} />
+              <span>Trainer Leave Policy</span>
+            </button>
+          </div>
+
+          {activeTab === "holidays" && (
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-background shadow-xs transition-all hover:bg-primary/90 cursor-pointer active:scale-95"
+            >
+              <Plus size={16} />
+              <span>Add Holiday</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="shrink-0 flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-          <div className="flex items-center gap-2">
-            <AlertCircle size={16} className="shrink-0" />
-            <span>{error}</span>
-          </div>
-          <button
-            onClick={loadHolidays}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-1 text-xs font-semibold hover:bg-destructive/20 transition-colors cursor-pointer"
-          >
-            Retry
-          </button>
-        </div>
-      )}
+      {activeTab === "trainer-leave" ? (
+        <TrainerLeavePolicyTab />
+      ) : (
+        <>
+          {/* Error Alert */}
+          {error && (
+            <div className="shrink-0 flex items-center justify-between gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+              <div className="flex items-center gap-2">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+              <button
+                type="button"
+                onClick={loadHolidays}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 px-3 py-1 text-xs font-semibold hover:bg-destructive/20 transition-colors cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          )}
 
-      {/* KPI Cards */}
-      <div className="shrink-0 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Total Holidays</span>
-            <CalendarDays size={16} className="text-primary" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
-            {stats.total}
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Configured in system</p>
-        </div>
+          {/* KPI Cards */}
+          <div className="shrink-0 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">Total Holidays</span>
+                <CalendarDays size={16} className="text-primary" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
+                {stats.total}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Configured in system</p>
+            </div>
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Upcoming Dates</span>
-            <AlertCircle size={16} className="text-amber-500" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-amber-500">
-            {stats.upcoming}
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Future closures in 2026</p>
-        </div>
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">Upcoming Dates</span>
+                <AlertCircle size={16} className="text-amber-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-extrabold text-amber-500">
+                {stats.upcoming}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Future closures in 2026</p>
+            </div>
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Passed Closures</span>
-            <CheckCircle2 size={16} className="text-emerald-500" />
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">Passed Closures</span>
+                <CheckCircle2 size={16} className="text-emerald-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
+                {stats.past}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">Archived this calendar year</p>
+            </div>
           </div>
-          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
-            {stats.past}
+
+          {/* Search Bar */}
+          <div className="shrink-0 rounded-2xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
+            <div className="relative">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <input
+                type="text"
+                placeholder="Search holiday by name, type, or reason..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+              />
+            </div>
           </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Archived this calendar year</p>
-        </div>
-      </div>
 
-      {/* Search Bar */}
-      <div className="shrink-0 rounded-2xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
-        <div className="relative">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="text"
-            placeholder="Search holiday by name, type, or reason..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Holidays List Table Container */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-          <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-            <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-              <tr>
-                <th className="py-2.5 px-4 sm:px-5">Holiday Date</th>
-                <th className="py-2.5 px-4 sm:px-5">Name / Occasion</th>
-                <th className="py-2.5 px-4 sm:px-5">Type</th>
-                <th className="py-2.5 px-4 sm:px-5">Affected Batches</th>
-                <th className="py-2.5 px-4 sm:px-5">Description</th>
-                <th className="py-2.5 px-4 sm:px-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs sm:text-sm font-medium">
-              {loading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td colSpan={6} className="bg-card py-4 px-4 sm:px-5 border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                    </td>
+          {/* Holidays List Table Container */}
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
+            <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
+              <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
+                <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
+                  <tr>
+                    <th className="py-2.5 px-4 sm:px-5">Holiday Date</th>
+                    <th className="py-2.5 px-4 sm:px-5">Name / Occasion</th>
+                    <th className="py-2.5 px-4 sm:px-5">Type</th>
+                    <th className="py-2.5 px-4 sm:px-5">Affected Batches</th>
+                    <th className="py-2.5 px-4 sm:px-5">Description</th>
+                    <th className="py-2.5 px-4 sm:px-5 text-right">Actions</th>
                   </tr>
-                ))
-              ) : filteredHolidays.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="bg-card py-8 px-4 text-center text-muted-foreground border-y border-border/50 rounded-2xl border-x">
-                    No holidays found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedHolidays.map((holiday) => {
-                  const isPast = holiday.date < new Date().toISOString().slice(0, 10);
-                  return (
-                    <tr key={holiday.id} className="group transition-all duration-150 hover:-translate-y-px">
-                      {/* Holiday Date */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 font-bold text-foreground">
-                          <Calendar size={13} className="text-primary shrink-0" />
-                          <span>{holiday.date}</span>
-                          {isPast && (
-                            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                              Past
-                            </span>
-                          )}
-                        </span>
-                      </td>
-
-                      {/* Name / Occasion */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors font-extrabold text-foreground">
-                        {holiday.name}
-                      </td>
-
-                      {/* Type */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        <span className="rounded-full bg-muted/60 border border-border/60 px-2.5 py-0.5 text-xs font-semibold text-foreground">
-                          {holiday.type}
-                        </span>
-                      </td>
-
-                      {/* Affected Batches */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground font-medium">
-                        {holiday.affectedBatches === "ALL"
-                          ? "All Batches & Shifts"
-                          : holiday.affectedBatches}
-                      </td>
-
-                      {/* Description */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground max-w-65 truncate">
-                        {holiday.description || "—"}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => handleOpenEdit(holiday)}
-                            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
-                            title="Edit holiday"
-                          >
-                            <Pencil size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(holiday.id, holiday.name)}
-                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
-                            title="Delete holiday"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
+                </thead>
+                <tbody className="text-xs sm:text-sm font-medium">
+                  {loading ? (
+                    [1, 2, 3, 4, 5].map((i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td colSpan={6} className="bg-card py-4 px-4 sm:px-5 border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r">
+                          <div className="h-4 bg-muted rounded w-3/4" />
+                        </td>
+                      </tr>
+                    ))
+                  ) : filteredHolidays.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="bg-card py-8 px-4 text-center text-muted-foreground border-y border-border/50 rounded-2xl border-x">
+                        No holidays found.
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  ) : (
+                    paginatedHolidays.map((holiday) => {
+                      const isPast = holiday.date < new Date().toISOString().slice(0, 10);
+                      return (
+                        <tr key={holiday.id} className="group transition-all duration-150 hover:-translate-y-px">
+                          {/* Holiday Date */}
+                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 font-bold text-foreground">
+                              <Calendar size={13} className="text-primary shrink-0" />
+                              <span>{holiday.date}</span>
+                              {isPast && (
+                                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                                  Past
+                                </span>
+                              )}
+                            </span>
+                          </td>
 
-      {/* Pinned Bottom Pagination */}
-      <Pagination
-        currentPage={safePage}
-        totalPages={totalPages}
-        onPageChange={setPage}
-        totalItems={filteredHolidays.length}
-        pageSize={pageSize}
-        itemName="holidays"
-        compact
-        className="shrink-0 mt-auto"
-      />
+                          {/* Name / Occasion */}
+                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors font-extrabold text-foreground">
+                            {holiday.name}
+                          </td>
+
+                          {/* Type */}
+                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                            <span className="rounded-full bg-muted/60 border border-border/60 px-2.5 py-0.5 text-xs font-semibold text-foreground">
+                              {holiday.type}
+                            </span>
+                          </td>
+
+                          {/* Affected Batches */}
+                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground font-medium">
+                            {holiday.affectedBatches === "ALL"
+                              ? "All Batches & Shifts"
+                              : holiday.affectedBatches}
+                          </td>
+
+                          {/* Description */}
+                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground max-w-65 truncate">
+                            {holiday.description || "—"}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenEdit(holiday)}
+                                className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
+                                title="Edit holiday"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(holiday.id, holiday.name)}
+                                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
+                                title="Delete holiday"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pinned Bottom Pagination */}
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalItems={filteredHolidays.length}
+            pageSize={pageSize}
+            itemName="holidays"
+            compact
+            className="shrink-0 mt-auto"
+          />
+        </>
+      )}
+
 
       {/* Add / Edit Holiday Modal */}
       <HolidayModal

@@ -6,12 +6,12 @@ import {
   Users,
   LogIn,
   LogOut,
-  Eye,
   Lock,
   ShieldCheck,
   XCircle,
   Repeat,
   Layers,
+  CalendarOff,
 } from "lucide-react";
 import {
   isDateToday,
@@ -37,9 +37,11 @@ export function TrainerDailyCheckInTable({
   handleQuickCheckOut,
   handleOpenSubstituteModal,
   onOpenViewModal,
+  onOpenLeaveDrawer,
   batches = [],
   selectedDate,
 }) {
+
   const isToday = isDateToday(selectedDate);
   const isPast = isDatePast(selectedDate);
   const isFuture = isDateFuture(selectedDate);
@@ -77,6 +79,14 @@ export function TrainerDailyCheckInTable({
         </span>
       );
     }
+    if (effectiveStatus === "LEAVE") {
+      return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 text-[10px] font-bold text-blue-400">
+          <CalendarOff size={11} />
+          <span>On Leave</span>
+        </span>
+      );
+    }
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-muted/50 border border-border/60 px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
         <span>Pending Check-in</span>
@@ -104,10 +114,10 @@ export function TrainerDailyCheckInTable({
           </div>
         </div>
 
-        {/* Filters: Retaining All, Present, Absent, Substitute */}
+        {/* Filters: Retaining All, Present, Absent, Substitute, On Leave */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-background p-0.5 text-xs">
-            {["ALL", "PRESENT", "ABSENT", "SUBSTITUTE"].map((f) => (
+            {["ALL", "PRESENT", "ABSENT", "SUBSTITUTE", "LEAVE"].map((f) => (
               <button
                 key={f}
                 type="button"
@@ -124,7 +134,9 @@ export function TrainerDailyCheckInTable({
                   ? "Present"
                   : f === "ABSENT"
                   ? "Absent"
-                  : "Substitute"}
+                  : f === "SUBSTITUTE"
+                  ? "Substitute"
+                  : "On Leave"}
               </button>
             ))}
           </div>
@@ -183,6 +195,7 @@ export function TrainerDailyCheckInTable({
         </div>
       </div>
 
+
       {/* Faculty Attendance Table */}
       {isLoadingDaily ? (
         <div className="flex-1 min-h-0 flex items-center justify-center p-8 text-center text-muted-foreground">
@@ -198,7 +211,6 @@ export function TrainerDailyCheckInTable({
                 <th className="px-4 py-2.5 font-bold">Assigned Schedule / Timings</th>
                 <th className="px-4 py-2.5 font-bold">Check-In / Out Time</th>
                 <th className="px-4 py-2.5 font-bold">Status</th>
-                <th className="px-4 py-2.5 font-bold text-center min-w-44">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40 font-medium">
@@ -296,113 +308,6 @@ export function TrainerDailyCheckInTable({
                     {/* Status Badge */}
                     <td className="px-4 py-2.5 whitespace-nowrap">
                       {renderStatusBadge(effectiveStatus)}
-                    </td>
-
-                    {/* Action Column: Check In, Check Out, or Governed Schedule Actions */}
-                    <td className="px-4 py-2.5 text-center">
-                      {isPast ? (
-                        /* Past Records: Retain only View action */
-                        <div className="inline-flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onOpenViewModal(trainer, {
-                                ...record,
-                                status: effectiveStatus,
-                                trainerId: trainer.id,
-                                trainerName: trainer.name,
-                              })
-                            }
-                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-muted hover:border-accent/40 transition-all cursor-pointer shadow-xs"
-                            title="View past faculty attendance record"
-                          >
-                            <Eye size={12} className="text-accent" />
-                            <span>View</span>
-                          </button>
-                        </div>
-                      ) : isFuture ? (
-                        /* Future Records: Disabled until scheduled date */
-                        <div className="inline-flex items-center justify-center gap-1 text-muted-foreground/60 select-none">
-                          <Lock size={12} className="text-muted-foreground/50" />
-                          <span className="text-[11px] italic">Disabled until {selectedDate}</span>
-                        </div>
-                      ) : !scheduleAccess.isScheduledDay ? (
-                        /* Restricted: Non-Working Day for Faculty */
-                        <div
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 text-[11px] font-semibold text-amber-400 select-none"
-                          title={scheduleAccess.reason}
-                        >
-                          <Lock size={11} className="shrink-0" />
-                          <span>Restricted • Non-Working Day</span>
-                        </div>
-                      ) : scheduleAccess.isBeforeStart ? (
-                        /* Restricted: Before Scheduled Start Time */
-                        <div
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/10 border border-amber-500/25 px-2.5 py-1 text-[11px] font-semibold text-amber-400 select-none"
-                          title={scheduleAccess.reason}
-                        >
-                          <Lock size={11} className="shrink-0" />
-                          <span>Restricted • Opens at {scheduleAccess.startTime}</span>
-                        </div>
-                      ) : (
-                        /* Active Schedule Slot OR After Shift End */
-                        <div className="inline-flex items-center justify-center gap-1.5">
-                          {/* 1. If NOT checked in yet */}
-                          {!hasCheckedIn && (
-                            scheduleAccess.isAfterEnd ? (
-                              <div
-                                className="inline-flex items-center gap-1 rounded-lg bg-muted/40 border border-border/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground select-none"
-                                title={scheduleAccess.reason}
-                              >
-                                <Lock size={11} className="shrink-0 text-muted-foreground/60" />
-                                <span>Restricted • Shift Ended</span>
-                              </div>
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => handleQuickCheckIn(trainer)}
-                                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer"
-                                  title="Check In Faculty (Automatically marks status as Present)"
-                                >
-                                  <LogIn size={12} />
-                                  <span>Check In</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenSubstituteModal(trainer)}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 px-2 py-1 text-xs font-semibold shadow-xs transition-all cursor-pointer"
-                                  title="Designate a substitute coach for today's session"
-                                >
-                                  <Repeat size={11} />
-                                  <span>Sub</span>
-                                </button>
-                              </>
-                            )
-                          )}
-
-                          {/* 2. If checked in but NOT checked out: ONLY Check Out action */}
-                          {hasCheckedIn && !hasCheckedOut && (
-                            <button
-                              type="button"
-                              onClick={() => handleQuickCheckOut(trainer, record)}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer"
-                              title="Check Out Faculty (Records check-out time)"
-                            >
-                              <LogOut size={12} />
-                              <span>Check Out</span>
-                            </button>
-                          )}
-
-                          {/* 3. If checked out: Session completed */}
-                          {hasCheckedIn && hasCheckedOut && (
-                            <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-1 rounded-lg">
-                              <CheckCircle2 size={12} />
-                              <span>Checked Out</span>
-                            </span>
-                          )}
-                        </div>
-                      )}
                     </td>
                   </tr>
                 );

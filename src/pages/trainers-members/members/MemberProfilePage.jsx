@@ -291,7 +291,7 @@ export default function MemberProfilePage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Top Header & Breadcrumb Nav */}
+      {/* Top Header */}
       <MemberProfileHeader
         member={member}
         fullName={fullName}

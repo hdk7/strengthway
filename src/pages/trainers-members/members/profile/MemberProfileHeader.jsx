@@ -1,6 +1,4 @@
-import { Link } from "react-router-dom";
 import {
-  ChevronRight,
   ArrowLeft,
   UserCheck,
   RotateCcw,
@@ -31,23 +29,9 @@ export function MemberProfileHeader({
 
   return (
     <>
-      {/* Top Header & Breadcrumb Nav */}
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <Link to="/admin/dashboard" className="hover:text-foreground transition-colors">
-              Dashboard
-            </Link>
-            <ChevronRight size={12} />
-            <Link
-              to="/admin/trainers-members/members"
-              className="hover:text-foreground transition-colors"
-            >
-              Members
-            </Link>
-            <ChevronRight size={12} />
-            <span className="text-foreground font-semibold">{fullName}</span>
-          </div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground font-display">
               {fullName}
@@ -84,9 +68,9 @@ export function MemberProfileHeader({
           <button
             type="button"
             onClick={() => navigate("/admin/trainers-members/members")}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={16} />
             <span>Back to Members List</span>
           </button>
 
@@ -95,9 +79,9 @@ export function MemberProfileHeader({
             <button
               type="button"
               onClick={handleOpenContact}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
             >
-              <PhoneCall size={14} />
+              <PhoneCall size={16} />
               <span>Contact Prospect</span>
             </button>
           )}
@@ -108,17 +92,17 @@ export function MemberProfileHeader({
               <button
                 type="button"
                 onClick={handleConvertLead}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-sm transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
               >
-                <UserCheck size={14} />
+                <UserCheck size={16} />
                 <span>Confirm & Convert to Member</span>
               </button>
               <button
                 type="button"
                 onClick={handleArchiveInquiry}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground px-3.5 py-2 text-xs font-semibold transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
               >
-                <Archive size={14} />
+                <Archive size={16} />
                 <span>Archive Inquiry</span>
               </button>
             </>
@@ -128,18 +112,18 @@ export function MemberProfileHeader({
             <button
               type="button"
               onClick={handleRestore}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-xs font-semibold text-emerald-500 hover:bg-emerald-500/20 transition-all shadow-sm cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
             >
-              <RotateCcw size={14} />
+              <RotateCcw size={16} />
               <span>Restore Member</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={handleSoftDelete}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/30 bg-destructive/10 px-3.5 py-2 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all shadow-sm cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 text-destructive px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
             >
-              <Trash2 size={14} />
+              <Trash2 size={16} />
               <span>Archive (Soft Delete)</span>
             </button>
           )}
@@ -147,9 +131,9 @@ export function MemberProfileHeader({
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background shadow-sm hover:bg-primary/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
           >
-            <Edit3 size={14} />
+            <Edit3 size={16} />
             <span>Edit Profile</span>
           </button>
         </div>

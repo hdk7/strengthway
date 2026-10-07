@@ -13,12 +13,12 @@ export function FormLabel({
     <div className="flex items-center justify-between">
       <label
         htmlFor={htmlFor}
-        className={`block font-medium text-foreground ${sizeClasses} ${className}`}
+        className={`block font-semibold text-slate-800 dark:text-foreground ${sizeClasses} ${className}`}
       >
         {children}
-        {required && <span className="text-destructive ml-0.5">*</span>}
+        {required && <span className="text-rose-500 ml-0.5 font-bold">*</span>}
       </label>
-      {hint && <span className="text-[11px] text-muted-foreground">{hint}</span>}
+      {hint && <span className="text-[11px] text-slate-400 dark:text-muted-foreground">{hint}</span>}
     </div>
   );
 }
@@ -30,7 +30,7 @@ export function FormError({ error, id, className = "" }) {
     <p
       id={id}
       role="alert"
-      className={`mt-1 text-[11px] sm:text-xs text-destructive animate-in fade-in-0 duration-150 ${className}`}
+      className={`mt-1 text-[11px] sm:text-xs font-medium text-destructive animate-in fade-in-0 duration-150 ${className}`}
     >
       {error}
     </p>

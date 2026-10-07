@@ -163,9 +163,9 @@ export default function MembersPage() {
           <button
             type="button"
             onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-background shadow-xs transition-all hover:bg-primary/90 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
           >
-            <UserPlus size={15} />
+            <UserPlus size={16} />
             <span>Add Member</span>
           </button>
         </div>

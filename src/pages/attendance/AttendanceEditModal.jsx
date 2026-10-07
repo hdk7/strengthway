@@ -107,19 +107,19 @@ export function AttendanceEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
-      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xl space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
+      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-5 sm:p-6 shadow-2xl space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border pb-3.5">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-border pb-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent/10 text-accent">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary">
               <ShieldCheck size={18} />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-foreground">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-foreground">
                 Manage Check-In & Check-Out
               </h3>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-slate-500 dark:text-muted-foreground">
                 Current day attendance management. Check-in marks status as Present.
               </p>
             </div>
@@ -127,28 +127,28 @@ export function AttendanceEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Member and Session Banner */}
-        <div className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border/70 bg-muted/20">
+        <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200 dark:border-border/70 bg-slate-50/60 dark:bg-muted/20">
           <div>
-            <h4 className="font-bold text-foreground text-sm">
+            <h4 className="font-bold text-slate-900 dark:text-foreground text-sm">
               {attendee?.name || record?.memberName}
             </h4>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+            <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-muted-foreground font-mono">
               <span>{attendee?.memberId || record?.memberId}</span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Layers size={11} className="text-accent" />
+                <Layers size={11} className="text-blue-700 dark:text-accent" />
                 {batchName || "Batch Session"}
               </span>
             </div>
           </div>
-          <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
+          <span className="rounded bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
             Today's Session
           </span>
         </div>
@@ -156,17 +156,17 @@ export function AttendanceEditModal({
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Action Selector: Retaining only Check In and Check Out */}
           <div>
-            <label className="font-bold text-foreground block mb-1.5">
+            <label className="font-semibold text-slate-800 dark:text-foreground block mb-1.5">
               Attendance Action
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => handleActionSelect("CHECK_IN")}
-                className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 font-bold text-xs transition-all cursor-pointer border ${
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 font-bold text-xs transition-all cursor-pointer border ${
                   actionType === "CHECK_IN"
                     ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "border-slate-200 dark:border-border bg-white dark:bg-card text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted hover:text-slate-900 dark:hover:text-foreground"
                 }`}
               >
                 <LogIn size={14} />
@@ -176,10 +176,10 @@ export function AttendanceEditModal({
               <button
                 type="button"
                 onClick={() => handleActionSelect("CHECK_OUT")}
-                className={`flex items-center justify-center gap-2 rounded-xl py-2.5 px-3 font-bold text-xs transition-all cursor-pointer border ${
+                className={`flex items-center justify-center gap-2 rounded-lg py-2 px-3 font-bold text-xs transition-all cursor-pointer border ${
                   actionType === "CHECK_OUT"
                     ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                    : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "border-slate-200 dark:border-border bg-white dark:bg-card text-slate-600 dark:text-muted-foreground hover:bg-slate-50 dark:hover:bg-muted hover:text-slate-900 dark:hover:text-foreground"
                 }`}
               >
                 <LogOut size={14} />
@@ -193,7 +193,7 @@ export function AttendanceEditModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               {/* Check-In Time */}
               <div>
-                <label className="font-bold text-foreground flex items-center gap-1.5 mb-1">
+                <label className="font-semibold text-slate-800 dark:text-foreground flex items-center gap-1.5 mb-1">
                   <LogIn size={13} className="text-emerald-500" />
                   <span>Check-In Time</span>
                 </label>
@@ -203,12 +203,12 @@ export function AttendanceEditModal({
                     placeholder="e.g. 09:30 AM"
                     value={checkInTime}
                     onChange={(e) => setCheckInTime(e.target.value)}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 px-3 py-2 text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                   <button
                     type="button"
                     onClick={() => setCheckInTime(getCurrentTimeString())}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-accent hover:underline cursor-pointer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-700 dark:text-accent hover:underline cursor-pointer"
                   >
                     Now
                   </button>
@@ -217,8 +217,8 @@ export function AttendanceEditModal({
 
               {/* Check-Out Time */}
               <div>
-                <label className="font-bold text-foreground flex items-center gap-1.5 mb-1">
-                  <LogOut size={13} className="text-blue-400" />
+                <label className="font-semibold text-slate-800 dark:text-foreground flex items-center gap-1.5 mb-1">
+                  <LogOut size={13} className="text-blue-500 dark:text-blue-400" />
                   <span>Check-Out Time</span>
                 </label>
                 <div className="relative">
@@ -228,13 +228,13 @@ export function AttendanceEditModal({
                     value={checkOutTime}
                     onChange={(e) => setCheckOutTime(e.target.value)}
                     disabled={actionType === "CHECK_IN" && !checkOutTime}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+                    className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 px-3 py-2 text-foreground font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:opacity-50"
                   />
                   {actionType === "CHECK_OUT" && (
                     <button
                       type="button"
                       onClick={() => setCheckOutTime(getCurrentTimeString())}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-400 hover:underline cursor-pointer"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-700 dark:text-blue-400 hover:underline cursor-pointer"
                     >
                       Now
                     </button>
@@ -246,8 +246,8 @@ export function AttendanceEditModal({
 
           {/* Notes */}
           <div>
-            <label className="font-bold text-foreground flex items-center gap-1.5 mb-1">
-              <FileText size={13} className="text-accent" />
+            <label className="font-semibold text-slate-800 dark:text-foreground flex items-center gap-1.5 mb-1">
+              <FileText size={13} className="text-blue-700 dark:text-accent" />
               <span>Session Notes (Optional)</span>
             </label>
             <input
@@ -255,16 +255,16 @@ export function AttendanceEditModal({
               placeholder="e.g. Completed scheduled workout..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center justify-between pt-3 border-t border-border">
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-border">
             <button
               type="button"
               onClick={() => handleActionSelect("ABSENT")}
-              className="inline-flex items-center gap-1 text-[11px] text-rose-400 hover:text-rose-300 font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1 text-[11px] text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-semibold cursor-pointer"
             >
               <XCircle size={13} />
               <span>Mark as Absent</span>
@@ -275,14 +275,14 @@ export function AttendanceEditModal({
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
+                className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted hover:text-slate-900 dark:hover:text-foreground transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-5 py-2 text-xs font-bold text-accent-foreground hover:bg-accent/90 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-900 hover:bg-blue-800 dark:bg-primary dark:hover:bg-primary/90 px-5 py-2 text-xs font-bold text-white transition-all cursor-pointer shadow-xs disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

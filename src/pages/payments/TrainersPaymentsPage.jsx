@@ -75,6 +75,17 @@ export default function TrainersPaymentsPage() {
       );
       const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
 
+      // Leave logs and deduction calculation (status === "LEAVE")
+      const leaveLogs = trainerLogs.filter(
+        (l) => l.trainerId === t.id && l.status === "LEAVE",
+      );
+      const uniqueLeaveDates = [...new Set(leaveLogs.map((l) => l.date))];
+      const leaveDaysCount = uniqueLeaveDates.length;
+      const monthlyAllowance = 2; // Standard 2 paid leave days/month
+      const paidLeaveDays = Math.min(leaveDaysCount, monthlyAllowance);
+      const unpaidLeaveDays = Math.max(0, leaveDaysCount - monthlyAllowance);
+      const leaveDeduction = unpaidLeaveDays * 1000;
+
       // Base stipend based on shift/level
       const baseStipend =
         t.shift === "Full Day"
@@ -87,7 +98,7 @@ export default function TrainersPaymentsPage() {
 
       // Substitute bonus: ₹500 per substitute class
       const substituteBonus = totalSubstitute * 500;
-      const totalPayout = baseStipend + substituteBonus;
+      const totalPayout = Math.max(0, baseStipend + substituteBonus - leaveDeduction);
       const status = t.status === "Inactive" ? "Pending" : "Disbursed";
 
       return {
@@ -99,6 +110,10 @@ export default function TrainersPaymentsPage() {
         shift: t.shift || "General",
         totalConducted,
         totalSubstitute,
+        leaveDaysCount,
+        paidLeaveDays,
+        unpaidLeaveDays,
+        leaveDeduction,
         totalHours,
         baseStipend,
         substituteBonus,
@@ -146,8 +161,12 @@ export default function TrainersPaymentsPage() {
       filteredPayouts.length > 0
         ? Math.round(totalLiability / filteredPayouts.length)
         : 0;
+    const totalLeaveDeductions = filteredPayouts.reduce(
+      (acc, p) => acc + (p.leaveDeduction || 0),
+      0,
+    );
 
-    return { totalLiability, disbursedCount, pendingCount, avgPayout };
+    return { totalLiability, disbursedCount, pendingCount, avgPayout, totalLeaveDeductions };
   }, [filteredPayouts]);
 
   // Viewport Pagination State
@@ -318,6 +337,7 @@ export default function TrainersPaymentsPage() {
                 <th className="py-2.5 px-4 text-center">Floor Hours</th>
                 <th className="py-2.5 px-4 text-center">Base Stipend</th>
                 <th className="py-2.5 px-4 text-center">Substitute Bonus</th>
+                <th className="py-2.5 px-4 text-center">Leave &amp; Deductions</th>
                 <th className="py-2.5 px-4 text-center">Total Remuneration</th>
                 <th className="py-2.5 px-4 text-center">Status</th>
               </tr>
@@ -326,7 +346,7 @@ export default function TrainersPaymentsPage() {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
                   >
                     <div className="flex items-center justify-center gap-2">
@@ -340,7 +360,7 @@ export default function TrainersPaymentsPage() {
               ) : paginatedPayouts.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
                   >
                     <div className="max-w-sm mx-auto space-y-1">
@@ -400,8 +420,37 @@ export default function TrainersPaymentsPage() {
                         ? `+₹${p.substituteBonus.toLocaleString("en-IN")}`
                         : "—"}
                     </td>
+
+                    {/* Leave Days & Deductions */}
+                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
+                      {p.leaveDaysCount === 0 ? (
+                        <span className="font-mono text-[11px] text-muted-foreground font-semibold">
+                          0d Leave
+                        </span>
+                      ) : p.unpaidLeaveDays === 0 ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                          {p.leaveDaysCount}d Paid
+                        </span>
+                      ) : (
+                        <div className="inline-flex flex-col items-center">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
+                            {p.leaveDaysCount}d ({p.unpaidLeaveDays}d Unpaid)
+                          </span>
+                          <span className="text-[9px] font-bold text-rose-500 mt-0.5">
+                            -₹{p.leaveDeduction.toLocaleString("en-IN")}
+                          </span>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Total Remuneration */}
                     <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      ₹{p.totalPayout.toLocaleString("en-IN")}
+                      <div>₹{p.totalPayout.toLocaleString("en-IN")}</div>
+                      {p.leaveDeduction > 0 && (
+                        <div className="text-[9px] text-rose-500 font-normal">
+                          (Net of -₹{p.leaveDeduction.toLocaleString("en-IN")} leave)
+                        </div>
+                      )}
                     </td>
                     <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
                       <span
