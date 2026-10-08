@@ -4,10 +4,8 @@ import {
   ExternalLink,
   ChevronRight,
   ChevronLeft,
-  Check,
   Calendar,
   Clock,
-  Repeat,
   Layers,
   TrendingUp,
 } from "lucide-react";
@@ -22,7 +20,6 @@ export function TrainerMonthlyCoachingPanel({
   handleCurrentMonth,
   coachingSummary,
   activelyCoachedBatches,
-  substituteSessions,
 }) {
   return (
     <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm space-y-8">
@@ -40,7 +37,7 @@ export function TrainerMonthlyCoachingPanel({
              
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Class delivery execution, total coaching hours on gym floor, athlete turnouts, and substitute session logs.
+              Class delivery execution, total coaching hours on gym floor, and athlete turnouts.
             </p>
           </div>
         </div>
@@ -166,132 +163,6 @@ export function TrainerMonthlyCoachingPanel({
         ) : (
           <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
             No batch containers currently assigned to this coach.
-          </div>
-        )}
-      </div>
-
-      {/* 3. Substitute Coaching Log */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-border/60 pb-3">
-          <div className="flex items-center gap-2">
-            <Repeat size={16} className="text-amber-500" />
-            <h4 className="text-sm font-bold uppercase tracking-wider text-foreground">
-              Substitute Coaching Log ({formattedSelectedMonth})
-            </h4>
-          </div>
-          <span className="text-xs font-mono text-muted-foreground">
-            {substituteSessions.length} {substituteSessions.length === 1 ? "Session" : "Sessions"}
-          </span>
-        </div>
-
-        {substituteSessions.length > 0 ? (
-          <div className="overflow-x-auto overflow-y-auto max-h-95 no-scrollbar pr-1">
-            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-                <tr>
-                  <th className="py-2.5 px-4 sm:px-5">Session Date & Time</th>
-                  <th className="py-2.5 px-4 sm:px-5">Batch Container</th>
-                  <th className="py-2.5 px-4 sm:px-5">Coverage Nature</th>
-                  <th className="py-2.5 px-4 sm:px-5">Assigned / Substitute Coach</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Attendees</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-right">Status / Notes</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs sm:text-sm font-medium">
-                {substituteSessions.map((log, idx) => {
-                  const isSteppedIn = log.substituteTrainerId === id || log.trainerId !== id;
-
-                  return (
-                    <tr key={log.id || idx} className="group transition-all duration-150 hover:-translate-y-px">
-                      {/* Date & Time */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        <div className="font-mono font-medium text-foreground">
-                          {log.date}
-                        </div>
-                        <span className="text-[10px] text-muted-foreground block">
-                          {log.checkInTime || "Scheduled Session"}
-                        </span>
-                      </td>
-
-                      {/* Batch Container */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
-                        <Link
-                          to={`/admin/batches/${log.batchId}`}
-                          className="font-bold text-foreground hover:text-accent transition-colors flex items-center gap-1"
-                        >
-                          <span>{log.batchName || log.batchId}</span>
-                          <ExternalLink size={11} className="text-muted-foreground shrink-0" />
-                        </Link>
-                        <span className="text-[10px] font-mono text-muted-foreground">
-                          {log.batchId}
-                        </span>
-                      </td>
-
-                      {/* Coverage Nature */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
-                            isSteppedIn
-                              ? "bg-accent/10 text-accent border-accent/30"
-                              : "bg-amber-500/10 text-amber-500 border-amber-500/30"
-                          }`}
-                        >
-                          {isSteppedIn ? (
-                            <>
-                              <Check size={11} />
-                              <span>Stepped In as Substitute</span>
-                            </>
-                          ) : (
-                            <>
-                              <Repeat size={11} />
-                              <span>Covered by Substitute</span>
-                            </>
-                          )}
-                        </span>
-                      </td>
-
-                      {/* Coach names */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
-                        <div className="text-xs">
-                          <span className="font-semibold text-foreground">
-                            {isSteppedIn
-                              ? `Covering for: ${log.trainerName || log.trainerId}`
-                              : `Substituted by: ${log.substituteTrainerName || log.substituteTrainerId || "Substitute Coach"}`}
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Attendees */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
-                        <span className="font-bold text-foreground font-mono">
-                          {log.attendeesCount || 0}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground block">
-                          {log.durationMinutes || 60}m
-                        </span>
-                      </td>
-
-                      {/* Status / Notes */}
-                      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40 px-2.5 py-0.5 text-[10px] font-semibold">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                          {log.status || "CONDUCTED"}
-                        </span>
-                        {log.notes && (
-                          <p className="text-[10px] text-muted-foreground italic mt-0.5 truncate max-w-xs ml-auto" title={log.notes}>
-                            {log.notes}
-                          </p>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-            No substitute coaching sessions recorded for {formattedSelectedMonth}. All scheduled classes were conducted as planned.
           </div>
         )}
       </div>

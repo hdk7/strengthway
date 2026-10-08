@@ -18,7 +18,6 @@ import {
 export function TrainerMonthlyLedger({
   formattedSelectedMonth,
   paginatedMonthlySummary = [],
-  monthlySubstituteLogs = [],
   monthlyLeaveSummary = null,
   monthlyLeaves = [],
   onOpenLeaveDrawer,
@@ -31,10 +30,6 @@ export function TrainerMonthlyLedger({
     );
     const totalAthletes = paginatedMonthlySummary.reduce(
       (acc, curr) => acc + (curr.totalAttendees || 0),
-      0
-    );
-    const totalCoverages = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.substituteDeliveredCount || 0),
       0
     );
     const totalLeaveDays = paginatedMonthlySummary.reduce(
@@ -57,7 +52,6 @@ export function TrainerMonthlyLedger({
     return {
       totalConducted,
       totalAthletes,
-      totalCoverages,
       totalLeaveDays,
       totalPaidLeaveDays,
       totalUnpaidLeaveDays,
@@ -78,7 +72,7 @@ export function TrainerMonthlyLedger({
   return (
     <div className="flex-1 min-h-0 overflow-y-auto space-y-4 no-scrollbar pr-1 pb-4">
       {/* ─── 1. Monthly Executive KPI Cards ──────────────────────────────────── */}
-      <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <div className="shrink-0 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
         {/* Sessions Delivered */}
         <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
@@ -95,25 +89,6 @@ export function TrainerMonthlyLedger({
           </div>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
             Across all scheduled shifts
-          </p>
-        </div>
-
-        {/* Substitute Sessions */}
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
-              Substitute Coverage
-            </span>
-            <Repeat size={15} className="text-amber-500" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-foreground">
-              {stats.totalCoverages}
-            </span>
-            <span className="text-[10px] text-muted-foreground">sessions</span>
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Handled by backup coaches
           </p>
         </div>
 
@@ -189,7 +164,6 @@ export function TrainerMonthlyLedger({
                 <th className="py-3 px-3 sm:px-4">Shift</th>
                 <th className="py-3 px-3 sm:px-4 text-center">Conducted</th>
                 <th className="py-3 px-3 sm:px-4 text-center">Athletes</th>
-                <th className="py-3 px-3 sm:px-4 text-center">Coverages</th>
                 <th className="py-3 px-3 sm:px-4 text-center">Leaves Consumed</th>
                 <th className="py-3 px-3 sm:px-4 text-center">Leave Balance</th>
                 <th className="py-3 px-3 sm:px-4 text-center">Payroll Impact</th>
@@ -199,7 +173,7 @@ export function TrainerMonthlyLedger({
               {paginatedMonthlySummary.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={7}
                     className="py-12 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
                   >
                     <div className="max-w-xs mx-auto space-y-2">
@@ -216,7 +190,6 @@ export function TrainerMonthlyLedger({
                   const {
                     trainer,
                     conductedCount,
-                    substituteDeliveredCount,
                     totalAttendees,
                     leaveDaysCount = 0,
                     paidLeaveDays = 0,
@@ -274,16 +247,6 @@ export function TrainerMonthlyLedger({
                             {totalAttendees}
                           </span>
                           <span className="text-[10px] text-muted-foreground block">athletes</span>
-                        </div>
-                      </td>
-
-                      {/* Substitute Delivered */}
-                      <td className="bg-card py-3.5 px-3 sm:px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
-                        <div className="inline-flex flex-col items-center">
-                          <span className="font-mono font-bold text-base text-primary">
-                            {substituteDeliveredCount}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground block">coverages</span>
                         </div>
                       </td>
 
@@ -368,7 +331,7 @@ export function TrainerMonthlyLedger({
         </div>
       </div>
 
-      {/* ─── 3. Faculty Leave Breakdown & Substitute Coverage Audit ──────────── */}
+      {/* ─── 3. Faculty Leave Breakdown & Policy Audit ─────────────────────────── */}
       <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-7 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
           <div className="flex items-center gap-2">
@@ -378,7 +341,7 @@ export function TrainerMonthlyLedger({
                 Faculty Leave Breakdown &amp; Policy Audit — {formattedSelectedMonth}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Detailed view of approved coach leaves, advance notice compliance, and assigned substitutes.
+                Detailed view of approved coach leaves and advance notice compliance.
               </p>
             </div>
           </div>
@@ -511,69 +474,6 @@ export function TrainerMonthlyLedger({
         ) : (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
             No faculty leaves recorded in {formattedSelectedMonth}. All classes were delivered with full staff presence.
-          </div>
-        )}
-      </div>
-
-      {/* ─── 4. Substitute Coaching Ledger Table ──────────────────────────────── */}
-      <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-7 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-border/60 pb-4">
-          <div className="flex items-center gap-2">
-            <Repeat size={18} className="text-amber-500" />
-            <h3 className="text-base sm:text-lg font-bold text-foreground">
-              Substitute Coaching Ledger — {formattedSelectedMonth}
-            </h3>
-          </div>
-          <span className="text-xs font-mono text-muted-foreground">
-            {monthlySubstituteLogs.length} Sessions Reassigned
-          </span>
-        </div>
-
-        {monthlySubstituteLogs.length > 0 ? (
-          <div className="overflow-x-auto overflow-y-auto max-h-85 no-scrollbar pr-1">
-            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-                <tr>
-                  <th className="py-2.5 px-4 sm:px-5">Date &amp; Time</th>
-                  <th className="py-2.5 px-4 sm:px-5">Batch Container</th>
-                  <th className="py-2.5 px-4 sm:px-5">Scheduled Coach</th>
-                  <th className="py-2.5 px-4 sm:px-5">Substitute Coach</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Attendees</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-right">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs sm:text-sm font-medium">
-                {monthlySubstituteLogs.map((log, idx) => (
-                  <tr key={log.id || idx} className="group transition-all duration-150 hover:-translate-y-px">
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                      <span className="font-semibold text-foreground block">{log.date}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono">
-                        {log.checkInTime || "Scheduled"}
-                      </span>
-                    </td>
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors font-bold text-foreground">
-                      {log.batchName || log.batchId}
-                    </td>
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-muted-foreground font-semibold">
-                      {log.trainerName || log.trainerId}
-                    </td>
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-amber-600 dark:text-amber-400 font-bold">
-                      {log.substituteTrainerName || log.substituteTrainerId || "Substitute Coach"}
-                    </td>
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono font-bold">
-                      {log.attendeesCount || 0}
-                    </td>
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right text-muted-foreground italic text-xs">
-                      {log.notes || "Substitute coverage"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
-            No substitute coaching sessions recorded in {formattedSelectedMonth}. All classes were delivered by their assigned primary coaches.
           </div>
         )}
       </div>

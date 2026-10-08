@@ -26,7 +26,6 @@ import {
   getTrainerLeaves,
   getTrainerLeaveMonthlySummary,
 } from "@/lib/trainerLeaveService";
-import SubstituteCoachModal from "@/pages/batches/detail/SubstituteCoachModal";
 
 import {
   isDateToday,
@@ -52,7 +51,7 @@ export default function TrainersAttendancePage() {
     new Date().toISOString().slice(0, 7)
   );
   const [selectedShift, setSelectedShift] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("ALL"); // "ALL" | "PRESENT" | "ABSENT" | "SUBSTITUTE"
+  const [statusFilter, setStatusFilter] = useState("ALL"); // "ALL" | "PRESENT" | "ABSENT" | "LEAVE"
   const [searchQuery, setSearchQuery] = useState("");
 
   // Data State
@@ -84,17 +83,6 @@ export default function TrainersAttendancePage() {
     durationMinutes: 60,
     attendeesCount: 15,
     notes: "",
-  });
-
-  // Substitute Modal State (shared standard form)
-  const [isSubstituteModalOpen, setIsSubstituteModalOpen] = useState(false);
-  const [isSubstituteSubmitting, setIsSubstituteSubmitting] = useState(false);
-  const [substituteForm, setSubstituteForm] = useState({
-    batchId: "",
-    primaryTrainerId: "",
-    substituteTrainerId: "",
-    date: new Date().toISOString().slice(0, 10),
-    reason: "",
   });
 
   // Leave Request Drawer State
@@ -303,90 +291,7 @@ export default function TrainersAttendancePage() {
     setIsViewModalOpen(true);
   };
 
-  // ─── 8. Substitute Modal Handlers ─────────────────────────────────────────────
-  const handleOpenSubstituteModal = (trainer = null, batchId = null, log = null) => {
-    const defaultTrainer = trainer || trainers[0];
-    const defaultBatchId =
-      log?.batchId ||
-      batchId ||
-      defaultTrainer?.batchIds?.[0] ||
-      batches[0]?.id ||
-      "";
-
-    const priId =
-      log?.status === "SUBSTITUTE"
-        ? log.substituteTrainerId || defaultTrainer?.id || ""
-        : defaultTrainer?.id || "";
-
-    const subId =
-      log?.status === "SUBSTITUTE" ? log.trainerId || "" : "";
-
-    setSubstituteForm({
-      batchId: defaultBatchId,
-      primaryTrainerId: priId,
-      substituteTrainerId: subId,
-      date: log?.date || selectedDate || new Date().toISOString().slice(0, 10),
-      reason: log?.notes || "",
-    });
-    setIsSubstituteModalOpen(true);
-  };
-
-  const handleAssignSubstitute = async (e) => {
-    e.preventDefault();
-    if (!substituteForm.batchId) {
-      toast.error("Please select a batch container.");
-      return;
-    }
-    if (!substituteForm.substituteTrainerId) {
-      toast.error("Please select a substitute coach.");
-      return;
-    }
-    if (substituteForm.substituteTrainerId === substituteForm.primaryTrainerId) {
-      toast.error("Substitute coach cannot be the same as the primary coach.");
-      return;
-    }
-
-    setIsSubstituteSubmitting(true);
-    const subTrainer = trainers.find((t) => t.id === substituteForm.substituteTrainerId);
-    const priTrainer = trainers.find((t) => t.id === substituteForm.primaryTrainerId);
-    const chosenBatch = batches.find((b) => b.id === substituteForm.batchId);
-
-    try {
-      await recordTrainerLog({
-        date: substituteForm.date || selectedDate || new Date().toISOString().slice(0, 10),
-        trainerId: substituteForm.substituteTrainerId,
-        trainerName: subTrainer?.name || "Substitute Coach",
-        batchId: substituteForm.batchId,
-        batchName: chosenBatch?.name || substituteForm.batchId,
-        status: "SUBSTITUTE",
-        substituteTrainerId: substituteForm.primaryTrainerId || null,
-        durationMinutes: 60,
-        attendeesCount: 15,
-        notes: substituteForm.reason || `Substitute coach for ${priTrainer?.name || "Primary Coach"}`,
-      });
-
-      toast.success(
-        `${subTrainer?.name || "Coach"} assigned as substitute coach${chosenBatch ? ` for ${chosenBatch.name}` : ""}!`
-      );
-      setIsSubstituteModalOpen(false);
-      setSubstituteForm({
-        batchId: "",
-        primaryTrainerId: "",
-        substituteTrainerId: "",
-        date: selectedDate || new Date().toISOString().slice(0, 10),
-        reason: "",
-      });
-      loadDailyLogs();
-      if (viewMode === "monthly") loadMonthlyLogs();
-    } catch (err) {
-      console.error("Failed to assign substitute coach:", err);
-      toast.error("Failed to assign substitute coach.");
-    } finally {
-      setIsSubstituteSubmitting(false);
-    }
-  };
-
-  // ─── 9. Manual Class Conduction Log Modal ─────────────────────────────────────
+  // ─── 8. Manual Class Conduction Log Modal ─────────────────────────────────────
   const handleSaveModal = async (e) => {
     e.preventDefault();
     if (!modalFormData.trainerId || !modalFormData.batchId) {
@@ -466,8 +371,6 @@ export default function TrainersAttendancePage() {
       summaryMap[t.id] = {
         trainer: t,
         conductedCount: 0,
-        substituteDeliveredCount: 0,
-        substituteCoveredCount: 0,
         totalMinutes: 0,
         totalAttendees: 0,
         leaveDates: new Set(),
@@ -481,18 +384,9 @@ export default function TrainersAttendancePage() {
           summaryMap[log.trainerId].conductedCount++;
           summaryMap[log.trainerId].totalMinutes += log.durationMinutes || 60;
           summaryMap[log.trainerId].totalAttendees += log.attendeesCount || 0;
-        } else if (log.status === "SUBSTITUTE") {
-          summaryMap[log.trainerId].substituteCoveredCount++;
         } else if (log.status === "LEAVE") {
           summaryMap[log.trainerId].leaveDates.add(log.date);
         }
-      }
-
-      // Substitute coach stepped in
-      if (log.substituteTrainerId && summaryMap[log.substituteTrainerId]) {
-        summaryMap[log.substituteTrainerId].substituteDeliveredCount++;
-        summaryMap[log.substituteTrainerId].totalMinutes += log.durationMinutes || 60;
-        summaryMap[log.substituteTrainerId].totalAttendees += log.attendeesCount || 0;
       }
     });
 
@@ -519,13 +413,6 @@ export default function TrainersAttendancePage() {
       };
     });
   }, [trainers, monthlyLogs, monthlyLeaveSummary]);
-
-  // Monthly Substitute Sessions List
-  const monthlySubstituteLogs = useMemo(() => {
-    return monthlyLogs.filter(
-      (l) => l.status === "SUBSTITUTE" || Boolean(l.substituteTrainerId)
-    );
-  }, [monthlyLogs]);
 
   // Pagination State for Daily Faculty Roster
   const [dailyPage, setDailyPage] = useState(1);
@@ -597,7 +484,7 @@ export default function TrainersAttendancePage() {
             Trainer Attendance
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
-            Faculty shift, daily check-in / check-out operations and substitute Trainer reassignments.
+            Faculty shift, daily check-in / check-out operations, and attendance tracking.
           </p>
         </div>
 
@@ -641,15 +528,6 @@ export default function TrainersAttendancePage() {
               <span>Leave Tracker</span>
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => handleOpenSubstituteModal()}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-bold text-accent-foreground shadow-xs hover:bg-accent/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <UserCheck size={15} />
-            <span>Assign Substitute</span>
-          </button>
         </div>
       </div>
 
@@ -691,7 +569,6 @@ export default function TrainersAttendancePage() {
           dailyRecordsMap={dailyRecordsMap}
           handleQuickCheckIn={handleQuickCheckIn}
           handleQuickCheckOut={handleQuickCheckOut}
-          handleOpenSubstituteModal={handleOpenSubstituteModal}
           onOpenViewModal={onOpenViewModal}
           onOpenLeaveDrawer={handleOpenLeaveDrawer}
           batches={batches}
@@ -704,7 +581,6 @@ export default function TrainersAttendancePage() {
         <TrainerMonthlyLedger
           formattedSelectedMonth={formattedSelectedMonth}
           paginatedMonthlySummary={paginatedMonthlySummary}
-          monthlySubstituteLogs={monthlySubstituteLogs}
           monthlyLeaveSummary={monthlyLeaveSummary}
           monthlyLeaves={monthlyLeaves}
           onOpenLeaveDrawer={handleOpenLeaveDrawer}
@@ -768,19 +644,6 @@ export default function TrainersAttendancePage() {
         record={viewModalRecord}
         selectedDate={selectedDate}
         scheduleDetails={viewModalSchedule}
-      />
-
-      {/* ─── MODAL: Designate Substitute Coach (Shared Standard Form) ────────── */}
-      <SubstituteCoachModal
-        isOpen={isSubstituteModalOpen}
-        onClose={() => setIsSubstituteModalOpen(false)}
-        batches={batches}
-        trainers={trainers}
-        allTrainers={trainers}
-        substituteForm={substituteForm}
-        setSubstituteForm={setSubstituteForm}
-        onAssignSubstitute={handleAssignSubstitute}
-        isSubmitting={isSubstituteSubmitting}
       />
 
       {/* ─── DRAWER: Faculty Leave Request Panel ──────────────────────────────── */}

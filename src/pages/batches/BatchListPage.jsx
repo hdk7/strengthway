@@ -248,7 +248,7 @@ export function BatchListPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 shrink-0">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 shrink-0">
         <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-[11px] font-semibold uppercase tracking-wider">Total Batches</span>
@@ -259,15 +259,6 @@ export function BatchListPage() {
             <span className="text-xs text-emerald-400 font-semibold">{stats.active} Active</span>
           </div>
           <p className="text-[11px] text-muted-foreground">Operating time slots</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Enrolled Members</span>
-            <Users size={16} />
-          </div>
-          <div className="mt-1 text-2xl font-extrabold text-foreground">{stats.totalEnrolled}</div>
-          <p className="text-[11px] text-muted-foreground">Across all batches</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-3 shadow-xs">

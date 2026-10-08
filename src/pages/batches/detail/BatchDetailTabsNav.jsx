@@ -18,7 +18,6 @@ export default function BatchDetailTabsNav({
   currentBatchSessions = [],
   trainerSearch,
   setTrainerSearch,
-  onOpenSubstituteModal,
   onOpenAddTrainer,
   memberSearch,
   setMemberSearch,
@@ -104,15 +103,6 @@ export default function BatchDetailTabsNav({
               className="w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
             />
           </div>
-
-          <button
-            onClick={onOpenSubstituteModal}
-            className="inline-flex items-center gap-1.5 shrink-0 rounded-xl border border-border bg-card hover:bg-muted/80 px-3 py-2 text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
-            title="Designate a substitute coach for this batch"
-          >
-            <UserCheck size={14} className="text-amber-400" />
-            <span>Substitute Coach</span>
-          </button>
 
           <button
             onClick={onOpenAddTrainer}

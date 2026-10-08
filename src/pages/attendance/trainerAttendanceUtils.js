@@ -271,15 +271,11 @@ export function isTrainerAttendancePeriodExpired(selectedDate, trainer, batches 
 
 /**
  * Computes the effective attendance status for a trainer on the selected date.
- * Returns: "PRESENT" | "ABSENT" | "SUBSTITUTE" | "LEAVE" | "PENDING"
+ * Returns: "PRESENT" | "ABSENT" | "LEAVE" | "PENDING"
  */
 export function getEffectiveTrainerStatus(trainer, record, scheduleAccess, isPast, periodExpired) {
   if (record?.checkInTime || record?.status === "PRESENT" || record?.status === "CONDUCTED") {
     return "PRESENT";
-  }
-
-  if (record?.status === "SUBSTITUTE" || Boolean(record?.substituteTrainerId)) {
-    return "SUBSTITUTE";
   }
 
   if (record?.status === "LEAVE") {
@@ -309,7 +305,6 @@ export function calculateTrainerDailyKpis(trainers = [], dailyRecordsMap = {}, s
 
   let presentCount = 0;
   let absentCount = 0;
-  let substituteCount = 0;
   let leaveCount = 0;
   let pendingCount = 0;
   let totalMinutes = 0;
@@ -322,9 +317,6 @@ export function calculateTrainerDailyKpis(trainers = [], dailyRecordsMap = {}, s
 
     if (status === "PRESENT") {
       presentCount++;
-      totalMinutes += record?.durationMinutes || 60;
-    } else if (status === "SUBSTITUTE") {
-      substituteCount++;
       totalMinutes += record?.durationMinutes || 60;
     } else if (status === "LEAVE") {
       leaveCount++;
@@ -342,7 +334,6 @@ export function calculateTrainerDailyKpis(trainers = [], dailyRecordsMap = {}, s
     totalFaculty,
     presentCount,
     absentCount,
-    substituteCount,
     leaveCount,
     pendingCount,
     turnoutRate,

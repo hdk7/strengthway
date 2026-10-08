@@ -50,9 +50,6 @@ export function getTrainerColumns({ onNavigate }) {
               >
                 {trainer.name}
               </button>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                {trainer.specialization || "Faculty Coach"}
-              </p>
             </div>
           </div>
         );

@@ -27,7 +27,6 @@ export function TrainerAttendanceDetailModal({
   const checkInTime = record?.checkInTime || "—";
   const checkOutTime = record?.checkOutTime || "—";
   const notes = record?.notes || "No session remarks logged for this shift.";
-  const isSub = status === "SUBSTITUTE" || Boolean(record?.substituteTrainerId);
   const photo = getTrainerPhoto(trainer);
 
   const getStatusBadge = () => {
@@ -36,14 +35,6 @@ export function TrainerAttendanceDetailModal({
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
           <ShieldCheck size={13} />
           <span>Present</span>
-        </span>
-      );
-    }
-    if (isSub) {
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-400">
-          <UserCheck size={13} />
-          <span>Substitute</span>
         </span>
       );
     }

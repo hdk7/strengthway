@@ -3,7 +3,6 @@ import SessionNotesModal from "./SessionNotesModal";
 import AssignProgramModal from "./AssignProgramModal";
 import AddTrainerModal from "./AddTrainerModal";
 import AddMemberModal from "./AddMemberModal";
-import SubstituteCoachModal from "./SubstituteCoachModal";
 import BatchTransferModal from "../components/BatchTransferModal";
 
 export default function BatchDetailModals({
@@ -47,12 +46,6 @@ export default function BatchDetailModals({
   memberModalSearch,
   setMemberModalSearch,
   onEnrollMember,
-  // Substitute Coach Modal
-  isSubstituteModalOpen,
-  setIsSubstituteModalOpen,
-  substituteForm,
-  setSubstituteForm,
-  onAssignSubstitute,
   // Transfer Modal
   isTransferModalOpen,
   setIsTransferModalOpen,
@@ -112,17 +105,6 @@ export default function BatchDetailModals({
         memberModalSearch={memberModalSearch}
         setMemberModalSearch={setMemberModalSearch}
         onEnrollMember={onEnrollMember}
-      />
-
-      <SubstituteCoachModal
-        isOpen={isSubstituteModalOpen}
-        onClose={() => setIsSubstituteModalOpen(false)}
-        batch={batch}
-        trainers={trainers}
-        allTrainers={allTrainers}
-        substituteForm={substituteForm}
-        setSubstituteForm={setSubstituteForm}
-        onAssignSubstitute={onAssignSubstitute}
       />
 
       <BatchTransferModal

@@ -59,17 +59,13 @@ export default function TrainersPaymentsPage() {
   // Compute monthly compensation records
   const payoutRecords = useMemo(() => {
     return trainers.map((t) => {
-      // Find conducted sessions and substitute coverages
+      // Find conducted sessions
       const conductedLogs = trainerLogs.filter(
         (l) => l.trainerId === t.id && (l.status === "CONDUCTED" || l.status === "PRESENT"),
       );
-      const substituteLogs = trainerLogs.filter(
-        (l) => l.substituteTrainerId === t.id,
-      );
 
       const totalConducted = conductedLogs.length;
-      const totalSubstitute = substituteLogs.length;
-      const totalMinutes = [...conductedLogs, ...substituteLogs].reduce(
+      const totalMinutes = conductedLogs.reduce(
         (acc, l) => acc + (l.durationMinutes || 60),
         0,
       );
@@ -96,9 +92,7 @@ export default function TrainersPaymentsPage() {
               ? 30000
               : 28000;
 
-      // Substitute bonus: ₹500 per substitute class
-      const substituteBonus = totalSubstitute * 500;
-      const totalPayout = Math.max(0, baseStipend + substituteBonus - leaveDeduction);
+      const totalPayout = Math.max(0, baseStipend - leaveDeduction);
       const status = t.status === "Inactive" ? "Pending" : "Disbursed";
 
       return {
@@ -109,14 +103,12 @@ export default function TrainersPaymentsPage() {
         specialization: t.specialization || "Strength & Conditioning",
         shift: t.shift || "General",
         totalConducted,
-        totalSubstitute,
         leaveDaysCount,
         paidLeaveDays,
         unpaidLeaveDays,
         leaveDeduction,
         totalHours,
         baseStipend,
-        substituteBonus,
         totalPayout,
         status,
         batchCount: Array.isArray(t.batchIds) ? t.batchIds.length : 1,
@@ -195,8 +187,7 @@ export default function TrainersPaymentsPage() {
             Trainer Payouts & Faculty Stipends
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Monthly compensation ledger, floor hours remuneration, substitute
-            coverage bonuses, and disbursement status.
+            Monthly compensation ledger, floor hours remuneration, and disbursement status.
           </p>
         </div>
       </div>
@@ -336,7 +327,6 @@ export default function TrainersPaymentsPage() {
                 <th className="py-2.5 px-4 text-center">Conducted Classes</th>
                 <th className="py-2.5 px-4 text-center">Floor Hours</th>
                 <th className="py-2.5 px-4 text-center">Base Stipend</th>
-                <th className="py-2.5 px-4 text-center">Substitute Bonus</th>
                 <th className="py-2.5 px-4 text-center">Leave &amp; Deductions</th>
                 <th className="py-2.5 px-4 text-center">Total Remuneration</th>
                 <th className="py-2.5 px-4 text-center">Status</th>
@@ -346,7 +336,7 @@ export default function TrainersPaymentsPage() {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={8}
                     className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
                   >
                     <div className="flex items-center justify-center gap-2">
@@ -360,7 +350,7 @@ export default function TrainersPaymentsPage() {
               ) : paginatedPayouts.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={8}
                     className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
                   >
                     <div className="max-w-sm mx-auto space-y-1">
@@ -403,22 +393,12 @@ export default function TrainersPaymentsPage() {
                       <span className="font-mono font-bold text-foreground block">
                         {p.totalConducted} sessions
                       </span>
-                      {p.totalSubstitute > 0 && (
-                        <span className="text-[10px] text-amber-500 font-semibold inline-flex items-center gap-0.5">
-                          <Repeat size={9} />+{p.totalSubstitute} subs
-                        </span>
-                      )}
                     </td>
                     <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono font-bold text-foreground">
                       {p.totalHours} hrs
                     </td>
                     <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono text-muted-foreground font-semibold">
                       ₹{p.baseStipend.toLocaleString("en-IN")}
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono text-amber-500 font-semibold">
-                      {p.substituteBonus > 0
-                        ? `+₹${p.substituteBonus.toLocaleString("en-IN")}`
-                        : "—"}
                     </td>
 
                     {/* Leave Days & Deductions */}

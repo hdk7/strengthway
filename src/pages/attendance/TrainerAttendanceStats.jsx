@@ -1,4 +1,4 @@
-import { Users, ShieldCheck, XCircle, Repeat, CalendarOff } from "lucide-react";
+import { Users, ShieldCheck, XCircle, CalendarOff } from "lucide-react";
 
 export function TrainerAttendanceStats({ dailyKpis = {} }) {
   const totalFaculty = dailyKpis.totalFaculty ?? dailyKpis.totalOnDuty ?? 0;
@@ -7,10 +7,8 @@ export function TrainerAttendanceStats({ dailyKpis = {} }) {
   const leaveCount = dailyKpis.leaveCount ?? 0;
   const turnoutRate = dailyKpis.turnoutRate ?? (totalFaculty > 0 ? Math.round((presentCount / totalFaculty) * 100) : 0);
 
-  const substituteCount = dailyKpis.substituteCount ?? 0;
-
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 shrink-0">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0">
       {/* 1. Faculty on Roster */}
       <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs">
         <div className="flex items-center justify-between text-muted-foreground">
@@ -58,18 +56,6 @@ export function TrainerAttendanceStats({ dailyKpis = {} }) {
         <div className="mt-1 flex items-baseline gap-1.5">
           <span className="text-xl sm:text-2xl font-black text-blue-400">{leaveCount}</span>
           <span className="text-[10px] text-muted-foreground">scheduled</span>
-        </div>
-      </div>
-
-      {/* 5. Substitute Logs */}
-      <div className="rounded-xl border border-border/80 bg-card p-2.5 sm:p-3 shadow-xs">
-        <div className="flex items-center justify-between text-muted-foreground">
-          <span className="text-[10px] font-bold uppercase tracking-wider">Substitutes</span>
-          <Repeat size={14} className="text-amber-500" />
-        </div>
-        <div className="mt-1 flex items-baseline gap-1.5">
-          <span className="text-xl sm:text-2xl font-black text-amber-500">{substituteCount}</span>
-          <span className="text-[10px] text-muted-foreground">reassigned</span>
         </div>
       </div>
     </div>

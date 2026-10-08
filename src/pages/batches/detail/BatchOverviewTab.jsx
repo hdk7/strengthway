@@ -23,25 +23,9 @@ export default function BatchOverviewTab({
 }) {
   return (
     <div className="space-y-8 animate-in fade-in duration-150">
-      {/* 4 KPI Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Card 1: Enrolled Members */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm hover:border-foreground/20 transition-all">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Enrolled Members</span>
-            <Users size={18} className="text-blue-400" />
-          </div>
-          <div className="mt-3 text-3xl font-extrabold text-foreground">
-            {monthTracking?.summary?.totalPrimaryMembers ?? currentPax}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground truncate">
-            {filteredFlexInMembers.length > 0
-              ? `+${filteredFlexInMembers.length} Flexible attendees in ${formattedMonthLabel}`
-              : "Permanently enrolled in batch"}
-          </p>
-        </div>
-
-        {/* Card 2: Faculty Trainers */}
+      {/* 3 KPI Metric Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Card 1: Faculty Trainers */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm hover:border-foreground/20 transition-all">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-xs font-semibold uppercase tracking-wider">Faculty Trainers</span>
@@ -105,7 +89,7 @@ export default function BatchOverviewTab({
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
                   <UserCheck size={16} />
                 </span>
-                <h3 className="font-bold text-foreground text-sm">Category A: Trainers</h3>
+                <h3 className="font-bold text-foreground text-sm">Trainers</h3>
               </div>
               <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400">
                 {trainers.length} Faculty
@@ -159,7 +143,7 @@ export default function BatchOverviewTab({
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
                   <Users size={16} />
                 </span>
-                <h3 className="font-bold text-foreground text-sm">Category B: Members</h3>
+                <h3 className="font-bold text-foreground text-sm">Members</h3>
               </div>
               <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-bold text-blue-400">
                 {members.length} Enrolled
@@ -216,7 +200,7 @@ export default function BatchOverviewTab({
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
                   <Calendar size={16} />
                 </span>
-                <h3 className="font-bold text-foreground text-sm">Category C: Scheduled Classes</h3>
+                <h3 className="font-bold text-foreground text-sm">Scheduled Classes</h3>
               </div>
               <span className="rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-bold text-purple-400">
                 {currentBatchSessions.length} Sessions

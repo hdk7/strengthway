@@ -9,7 +9,6 @@ import {
   Lock,
   ShieldCheck,
   XCircle,
-  Repeat,
   Layers,
   CalendarOff,
 } from "lucide-react";
@@ -35,7 +34,6 @@ export function TrainerDailyCheckInTable({
   dailyRecordsMap = {},
   handleQuickCheckIn,
   handleQuickCheckOut,
-  handleOpenSubstituteModal,
   onOpenViewModal,
   onOpenLeaveDrawer,
   batches = [],
@@ -68,14 +66,6 @@ export function TrainerDailyCheckInTable({
         <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/15 border border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold text-rose-400">
           <XCircle size={11} />
           <span>Absent</span>
-        </span>
-      );
-    }
-    if (effectiveStatus === "SUBSTITUTE") {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[10px] font-bold text-amber-400">
-          <Repeat size={11} />
-          <span>Substitute</span>
         </span>
       );
     }
@@ -114,10 +104,10 @@ export function TrainerDailyCheckInTable({
           </div>
         </div>
 
-        {/* Filters: Retaining All, Present, Absent, Substitute, On Leave */}
+        {/* Filters: All, Present, Absent, On Leave */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-background p-0.5 text-xs">
-            {["ALL", "PRESENT", "ABSENT", "SUBSTITUTE", "LEAVE"].map((f) => (
+            {["ALL", "PRESENT", "ABSENT", "LEAVE"].map((f) => (
               <button
                 key={f}
                 type="button"
@@ -134,8 +124,6 @@ export function TrainerDailyCheckInTable({
                   ? "Present"
                   : f === "ABSENT"
                   ? "Absent"
-                  : f === "SUBSTITUTE"
-                  ? "Substitute"
                   : "On Leave"}
               </button>
             ))}
@@ -294,11 +282,6 @@ export function TrainerDailyCheckInTable({
                       ) : effectiveStatus === "ABSENT" ? (
                         <span className="text-rose-400/80 font-mono text-[11px]">
                           Absent (No Check-In)
-                        </span>
-                      ) : effectiveStatus === "SUBSTITUTE" ? (
-                        <span className="text-amber-400/90 font-mono text-[11px] flex items-center gap-1">
-                          <Repeat size={10} />
-                          <span>Substitute Stepped-In</span>
                         </span>
                       ) : (
                         <span className="text-muted-foreground font-mono text-[11px]">—</span>

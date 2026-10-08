@@ -33,9 +33,6 @@ export function useBatchDetailActions({
   selectedSessionForNotes,
   setSelectedSessionForNotes,
   sessionNoteText,
-  substituteForm,
-  setSubstituteForm,
-  setIsSubstituteModalOpen,
   currentBatchSessions = [],
 }) {
   const handleRevokeFlexPass = async (assignmentId, memberName) => {
@@ -91,57 +88,6 @@ export function useBatchDetailActions({
       await loadBatchData();
     } catch {
       toast.error("Failed to unassign trainer.");
-    }
-  };
-
-  const handleAssignSubstitute = async (e) => {
-    e.preventDefault();
-    if (!substituteForm.substituteTrainerId) {
-      toast.error("Please select a substitute trainer.");
-      return;
-    }
-    if (substituteForm.substituteTrainerId === substituteForm.primaryTrainerId) {
-      toast.error("Substitute coach cannot be the same as the primary coach.");
-      return;
-    }
-    try {
-      const subTrainer = allTrainers.find((t) => t.id === substituteForm.substituteTrainerId);
-      const priTrainer = allTrainers.find((t) => t.id === substituteForm.primaryTrainerId);
-
-      await recordTrainerLog({
-        date: substituteForm.date || new Date().toISOString().slice(0, 10),
-        trainerId: substituteForm.substituteTrainerId,
-        trainerName: subTrainer?.name || "Substitute Coach",
-        batchId: batch.id,
-        status: "SUBSTITUTE",
-        substituteTrainerId: substituteForm.primaryTrainerId || null,
-        durationMinutes: 60,
-        notes: substituteForm.reason || `Substitute coach for ${priTrainer?.name || "Primary Coach"}`,
-      });
-
-      if (batch && !batch.trainerIds?.includes(substituteForm.substituteTrainerId)) {
-        await updateBatch(batch.id, {
-          trainerIds: [...(batch.trainerIds || []), substituteForm.substituteTrainerId],
-        });
-      }
-
-      toast.success(
-        `${subTrainer?.name || "Coach"} assigned as substitute coach for ${batch.name}!`
-      );
-      setIsSubstituteModalOpen(false);
-      setSubstituteForm({
-        primaryTrainerId: "",
-        substituteTrainerId: "",
-        date: new Date().toISOString().slice(0, 10),
-        reason: "",
-      });
-      await loadBatchData();
-      if (batch?.id) {
-        await loadMonthTracking(batch.id, selectedMonth);
-      }
-    } catch (err) {
-      console.error("Failed to assign substitute coach:", err);
-      toast.error(err.message || "Failed to assign substitute coach.");
     }
   };
 
@@ -328,7 +274,6 @@ export function useBatchDetailActions({
     handleRevokeFlexPass,
     handleAssignTrainer,
     handleUnassignTrainer,
-    handleAssignSubstitute,
     handleEnrollExistingMember,
     handleRemoveMemberFromBatch,
     handleMarkCompleted,

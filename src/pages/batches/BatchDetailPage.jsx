@@ -34,13 +34,6 @@ export default function BatchDetailPage() {
   const [transferModalTab, setTransferModalTab] = useState("transfer");
   const [isAddTrainerOpen, setIsAddTrainerOpen] = useState(false);
   const [trainerSearchQuery, setTrainerSearchQuery] = useState("");
-  const [isSubstituteModalOpen, setIsSubstituteModalOpen] = useState(false);
-  const [substituteForm, setSubstituteForm] = useState({
-    primaryTrainerId: "",
-    substituteTrainerId: "",
-    date: new Date().toISOString().slice(0, 10),
-    reason: "",
-  });
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [memberModalSearch, setMemberModalSearch] = useState("");
 
@@ -80,7 +73,6 @@ export default function BatchDetailPage() {
     handleRevokeFlexPass,
     handleAssignTrainer,
     handleUnassignTrainer,
-    handleAssignSubstitute,
     handleEnrollExistingMember,
     handleRemoveMemberFromBatch,
     handleMarkCompleted,
@@ -105,9 +97,6 @@ export default function BatchDetailPage() {
     selectedSessionForNotes,
     setSelectedSessionForNotes,
     sessionNoteText,
-    substituteForm,
-    setSubstituteForm,
-    setIsSubstituteModalOpen,
     currentBatchSessions,
   });
 
@@ -168,15 +157,6 @@ export default function BatchDetailPage() {
         currentBatchSessions={currentBatchSessions}
         trainerSearch={trainerSearch}
         setTrainerSearch={setTrainerSearch}
-        onOpenSubstituteModal={() => {
-          setSubstituteForm({
-            primaryTrainerId: trainers[0]?.id || "",
-            substituteTrainerId: "",
-            date: new Date().toISOString().slice(0, 10),
-            reason: "",
-          });
-          setIsSubstituteModalOpen(true);
-        }}
         onOpenAddTrainer={() => setIsAddTrainerOpen(true)}
         memberSearch={memberSearch}
         setMemberSearch={setMemberSearch}
@@ -216,15 +196,6 @@ export default function BatchDetailPage() {
           currentBatchSessions={currentBatchSessions}
           onOpenAddTrainer={() => setIsAddTrainerOpen(true)}
           onUnassignTrainer={handleUnassignTrainer}
-          onOpenSubstituteForTrainer={(trn) => {
-            setSubstituteForm({
-              primaryTrainerId: trn.id,
-              substituteTrainerId: "",
-              date: new Date().toISOString().slice(0, 10),
-              reason: "",
-            });
-            setIsSubstituteModalOpen(true);
-          }}
         />
       )}
 
@@ -309,11 +280,6 @@ export default function BatchDetailPage() {
         memberModalSearch={memberModalSearch}
         setMemberModalSearch={setMemberModalSearch}
         onEnrollMember={handleEnrollExistingMember}
-        isSubstituteModalOpen={isSubstituteModalOpen}
-        setIsSubstituteModalOpen={setIsSubstituteModalOpen}
-        substituteForm={substituteForm}
-        setSubstituteForm={setSubstituteForm}
-        onAssignSubstitute={handleAssignSubstitute}
         isTransferModalOpen={isTransferModalOpen}
         setIsTransferModalOpen={setIsTransferModalOpen}
         transferTargetMember={transferTargetMember}

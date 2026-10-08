@@ -2,8 +2,6 @@ import {
   UserCheck,
   Plus,
   Trash2,
-  Phone,
-  ShieldCheck,
 } from "lucide-react";
 import { getTrainerPhoto } from "@/lib/trainersService";
 
@@ -15,7 +13,6 @@ export default function BatchTrainersTab({
   currentBatchSessions = [],
   onOpenAddTrainer,
   onUnassignTrainer,
-  onOpenSubstituteForTrainer,
 }) {
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
@@ -86,19 +83,6 @@ export default function BatchTrainersTab({
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs font-medium text-muted-foreground truncate">
-                    Faculty Coach • {batch?.timingLabel}
-                  </p>
-
-                  <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Phone size={12} /> {trn.phone || "+91 98000 00000"}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <ShieldCheck size={12} className="text-emerald-400" />{" "}
-                      {trn.experience || "5+ Yrs"}
-                    </span>
-                  </div>
                 </div>
               </div>
 
@@ -138,14 +122,6 @@ export default function BatchTrainersTab({
                 <span className="text-[11px] text-muted-foreground">
                   Coaching Slot: <strong className="text-foreground">{batch?.daysLabel}</strong>
                 </span>
-                <button
-                  type="button"
-                  onClick={() => onOpenSubstituteForTrainer(trn)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 px-2.5 py-1 text-[11px] font-bold transition-colors cursor-pointer"
-                >
-                  <UserCheck size={12} />
-                  <span>Substitute Coach</span>
-                </button>
               </div>
             </div>
           ))}

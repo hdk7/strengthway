@@ -1,12 +1,6 @@
-import { ChevronRight, ChevronLeft, Clock, Calendar } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
 
-export default function BatchDetailHeader({
-  batch,
-  formattedMonthLabel,
-  onPrevMonth,
-  onNextMonth,
-  onCurrentMonth,
-}) {
+export default function BatchDetailHeader({ batch }) {
   return (
     <>
       {/* Hero Card matching requirement wireframe */}
@@ -37,32 +31,6 @@ export default function BatchDetailHeader({
                 <Calendar size={16} className="text-muted-foreground shrink-0" />
                 <span>{batch?.daysLabel}</span>
               </div>
-            </div>
-          </div>
-
-          {/* Month Selector Component in Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 z-10">
-            <div className="flex items-center gap-1.5 rounded-2xl border border-border bg-card/95 backdrop-blur-md p-1.5 shadow-sm">
-              <button
-                type="button"
-                onClick={onPrevMonth}
-                className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
-                title="Previous Month"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <div className="flex items-center gap-2 px-3 py-1 text-xs sm:text-sm font-bold text-foreground min-w-35 justify-center">
-                <Calendar size={15} className="text-primary shrink-0" />
-                <span>{formattedMonthLabel}</span>
-              </div>
-              <button
-                type="button"
-                onClick={onNextMonth}
-                className="rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer"
-                title="Next Month"
-              >
-                <ChevronRight size={16} />
-              </button>
             </div>
           </div>
         </div>
