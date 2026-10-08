@@ -221,9 +221,10 @@ export function RegistrationStep1({
               setPaymentForm((prev) => ({
                 ...prev,
                 paymentMethod: methodId,
-                transactionId: generateTransactionId(methodId),
+                transactionId: methodId ? generateTransactionId(methodId) : "",
               }));
             }}
+            error={errors.paymentMethod}
             placeholder="Select Payment Option / Method"
             options={PAYMENT_METHODS.map((method) => ({
               value: method.id,
@@ -243,16 +244,6 @@ export function RegistrationStep1({
             error={errors.amountPaid}
           />
         </div>
-
-        <InputField
-          label="Billing Notes / Reference (Optional)"
-          type="text"
-          value={paymentForm.paymentNotes}
-          onChange={(e) =>
-            setPaymentForm((prev) => ({ ...prev, paymentNotes: e.target.value }))
-          }
-          placeholder="e.g. Paid at reception counter / GPay reference"
-        />
       </section>
     </form>
   );

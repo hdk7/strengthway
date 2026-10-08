@@ -1,8 +1,10 @@
-import { Phone, Mail } from "lucide-react";
+import { Phone, Mail, Clock, UserCheck, RotateCcw } from "lucide-react";
 
 export default function InquiryTableRow({
   inq,
   onNavigate,
+  onOpenRegistration,
+  onMoveToInquiry,
 }) {
   const dateLabel = inq.createdAt
     ? new Date(inq.createdAt).toLocaleDateString("en-US", {
@@ -17,6 +19,9 @@ export default function InquiryTableRow({
     inq.status === "Lead" || inq.status === "New" || !inq.status
       ? "Inquiry"
       : inq.status;
+
+  const followUpDate = inq.contactDetails?.followUpDate;
+  const isNeedsFollowUp = inq.contactDetails?.outcome === "Needs Follow-Up" && !!followUpDate;
 
   const rawId = inq.id ? String(inq.id) : "";
   const displayId = rawId.length > 7 ? rawId.slice(-6).toUpperCase() : rawId;
@@ -82,11 +87,18 @@ export default function InquiryTableRow({
       {/* Subject & Message */}
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors max-w-xs">
         <div className="space-y-0.5">
-          <div className="font-semibold text-xs text-foreground truncate">
-            {inq.subject || "General Inquiry"}
+          <div className="font-semibold text-xs text-foreground truncate flex items-center gap-1.5">
+            <span>{inq.subject || "General Inquiry"}</span>
+            {inq.contactDetails?.outcome && (
+              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                {inq.contactDetails.outcome}
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground line-clamp-1">
-            {inq.message || inq.address || "No message body."}
+            {inq.contactDetails?.contactNotes
+              ? `Note: ${inq.contactDetails.contactNotes}`
+              : inq.message || inq.address || "No message body."}
           </p>
         </div>
       </td>
@@ -98,30 +110,53 @@ export default function InquiryTableRow({
 
       {/* Workflow Status Badge (Last column) */}
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${
-            displayStatus === "Converted"
-              ? "bg-emerald-50 text-emerald-600 border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40"
-              : displayStatus === "Contacted"
-              ? "bg-blue-50 text-blue-600 border-blue-200/70 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/40"
-              : displayStatus === "Inquiry"
-              ? "bg-amber-50 text-amber-600 border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40"
-              : "bg-muted/60 text-muted-foreground border-border/60"
-          }`}
-        >
+        <div className="flex items-center justify-end gap-1.5 flex-wrap">
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${
               displayStatus === "Converted"
-                ? "bg-emerald-500"
+                ? "bg-emerald-50 text-emerald-600 border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40"
                 : displayStatus === "Contacted"
-                ? "bg-blue-500"
+                ? "bg-blue-50 text-blue-600 border-blue-200/70 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800/40"
                 : displayStatus === "Inquiry"
-                ? "bg-amber-500 animate-pulse"
-                : "bg-muted-foreground"
+                ? "bg-amber-50 text-amber-600 border-amber-200/70 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40"
+                : "bg-muted/60 text-muted-foreground border-border/60"
             }`}
-          />
-          {displayStatus === "Converted" ? "Converted to Member" : displayStatus}
-        </span>
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                displayStatus === "Converted"
+                  ? "bg-emerald-500"
+                  : displayStatus === "Contacted"
+                  ? "bg-blue-500"
+                  : displayStatus === "Inquiry"
+                  ? "bg-amber-500 animate-pulse"
+                  : "bg-muted-foreground"
+              }`}
+            />
+            {displayStatus === "Converted" ? "Converted to Member" : displayStatus}
+          </span>
+
+          {displayStatus === "Archived" && onMoveToInquiry && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMoveToInquiry(inq);
+              }}
+              title="Move to active inquiries to restart workflow"
+              className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 px-2 py-1 text-[10px] font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            >
+              <RotateCcw size={11} />
+              <span>To Inquiry</span>
+            </button>
+          )}
+        </div>
+        {isNeedsFollowUp && (
+          <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-amber-500 font-medium">
+            <Clock size={10} className="shrink-0" />
+            <span>Follow-up: {followUpDate}</span>
+          </div>
+        )}
       </td>
     </tr>
   );

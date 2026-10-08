@@ -33,7 +33,6 @@ const CONTACT_METHODS = [
 const OUTCOMES = [
   { value: "Interested - Converting Soon", label: "Interested - Converting Soon" },
   { value: "Needs Follow-Up", label: "Needs Follow-Up" },
-  { value: "Considering", label: "Considering" },
   { value: "Not Interested", label: "Not Interested" },
 ];
 
@@ -54,9 +53,10 @@ export default function ContactLeadModal({
   const [error, setError] = useState("");
   const [notesError, setNotesError] = useState("");
   const [outcomeError, setOutcomeError] = useState("");
+  const [followUpDateError, setFollowUpDateError] = useState("");
 
   const isFollowUpRequired = useMemo(() => {
-    return outcome === "Needs Follow-Up" || outcome === "Considering";
+    return outcome === "Needs Follow-Up";
   }, [outcome]);
 
   useEffect(() => {
@@ -69,6 +69,7 @@ export default function ContactLeadModal({
       setError("");
       setNotesError("");
       setOutcomeError("");
+      setFollowUpDateError("");
       setIsSubmitting(false);
     }
   }, [isOpen]);
@@ -79,8 +80,9 @@ export default function ContactLeadModal({
     if (outcomeError) {
       setOutcomeError("");
     }
-    if (val !== "Needs Follow-Up" && val !== "Considering") {
+    if (val !== "Needs Follow-Up") {
       setFollowUpDate("");
+      setFollowUpDateError("");
     }
   };
 
@@ -105,6 +107,15 @@ export default function ContactLeadModal({
       hasError = true;
     } else {
       setOutcomeError("");
+    }
+
+    if (outcome === "Needs Follow-Up" && !followUpDate) {
+      const msg = "Please select the next follow-up date to receive a recontact reminder.";
+      setFollowUpDateError(msg);
+      if (!hasError) toast.error(msg);
+      hasError = true;
+    } else {
+      setFollowUpDateError("");
     }
 
     if (hasError) return;
@@ -261,9 +272,16 @@ export default function ContactLeadModal({
                   <InputField
                     label="Next Follow-up Date"
                     type="date"
+                    required
+                    min={new Date().toISOString().split("T")[0]}
                     value={followUpDate}
-                    onChange={(e) => setFollowUpDate(e.target.value)}
+                    error={followUpDateError || undefined}
+                    onChange={(e) => {
+                      setFollowUpDate(e.target.value);
+                      if (followUpDateError) setFollowUpDateError("");
+                    }}
                     startIcon={<Calendar size={14} />}
+                    helperText="A system notification will alert staff on this date to recontact"
                   />
                 </div>
               )}
@@ -283,7 +301,7 @@ export default function ContactLeadModal({
           onCancel={onClose}
           cancelText="Cancel"
           onSubmit={handleSubmit}
-          submitText={isSubmitting ? "Saving..." : "Save & Update to Contacted"}
+          submitText={isSubmitting ? "Saving..." : "Save"}
           submitIcon={CheckCircle}
           isSubmitting={isSubmitting}
         />

@@ -10,7 +10,7 @@ export const INITIAL_FORM = {
   gender: "",
   mobile: "",
   email: "",
-  photo: null,
+  photo: "",
   photoName: "",
   address: "",
   city: "",
@@ -22,6 +22,7 @@ export const INITIAL_FORM = {
   emergencyNumber: "",
   height: "",
   weight: "",
+  bloodGroup: "",
   medicalDoc: null,
   medicalDocName: "",
   medicalDocSize: "",
@@ -29,7 +30,7 @@ export const INITIAL_FORM = {
   batchId: "",
 };
 
-export function validateRegistrationStep1(form, paymentForm) {
+export function validateRegistrationStep1(form, paymentForm, isEditingActiveMember = false) {
   const step1Keys = ["firstName", "lastName", "dob", "gender", "mobile", "email"];
   const errs = {};
   step1Keys.forEach((key) => {
@@ -39,6 +40,9 @@ export function validateRegistrationStep1(form, paymentForm) {
 
   if (!paymentForm.selectedPlanId) {
     errs.selectedPlanId = "Please select a membership plan.";
+  }
+  if (!isEditingActiveMember && !paymentForm.paymentMethod) {
+    errs.paymentMethod = "Please select a payment option / method.";
   }
   if (!paymentForm.amountPaid || Number(paymentForm.amountPaid) <= 0) {
     errs.amountPaid = "Please specify a valid payment amount.";
@@ -59,6 +63,7 @@ export function validateRegistrationStep2(form, isConfirmingLead) {
     "emergencyNumber",
     "height",
     "weight",
+    "bloodGroup",
     "bio",
   ];
   const errs = {};
@@ -80,7 +85,7 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
     availablePlans.find((p) => p.id === paymentForm.selectedPlanId) || availablePlans[0];
   const dates = calculateMembershipDates(
     plan.durationMonths,
-    new Date(paymentForm.paymentDate),
+    new Date(paymentForm.paymentDate || Date.now()),
   );
 
   const membershipPlan = {
@@ -96,16 +101,16 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
   };
 
   const paymentDetails = {
-    method: paymentForm.paymentMethod,
+    method: paymentForm.paymentMethod || "",
     amount: Number(paymentForm.amountPaid),
     formattedAmount: `₹${Number(paymentForm.amountPaid).toLocaleString("en-IN")}`,
     transactionId:
       paymentForm.transactionId?.trim() ||
-      generateTransactionId(paymentForm.paymentMethod) ||
+      (paymentForm.paymentMethod ? generateTransactionId(paymentForm.paymentMethod) : "") ||
       `TXN-${Date.now().toString().slice(-8)}`,
     receiptNo: generateReceiptNumber(),
     status: "Completed",
-    paidAt: new Date(paymentForm.paymentDate).toISOString(),
+    paidAt: paymentForm.paymentDate ? new Date(paymentForm.paymentDate).toISOString() : new Date().toISOString(),
     notes: paymentForm.paymentNotes,
   };
 
@@ -122,11 +127,11 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
 
   const createPayload = {
     ...form,
-    batchId: form.batchId || selectedBatchInfo?.id || "",
-    batchName: scheduleDetails?.batchName || "General Access",
+    batchId: form.batchId || "",
+    batchName: scheduleDetails?.batchName || "",
     batchTiming: scheduleDetails?.batchTiming || "",
     shift: scheduleDetails?.batchTiming || "",
-    assignedBatch: scheduleDetails?.batchName || "General Access",
+    assignedBatch: scheduleDetails?.batchName || "",
     schedule: scheduleDetails,
     status: "Active",
     paymentPlanId: plan.id,

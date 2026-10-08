@@ -7,12 +7,16 @@ import { cn } from "@/lib/utils";
 
 function getInitials(name) {
   if (!name) return "";
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join("");
+  const trimmed = name.trim();
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  const uppers = trimmed.replace(/[^A-Z]/g, "");
+  if (uppers.length >= 2) {
+    return uppers.slice(0, 2);
+  }
+  return trimmed.slice(0, 2).toUpperCase();
 }
 
 const Avatar = React.forwardRef(({ className, name, src, alt, children, ...props }, ref) => {

@@ -22,10 +22,8 @@ import {
   buildRegistrationPayloads,
 } from "./registrationUtils";
 import { RegistrationHeader } from "./RegistrationHeader";
-import { RegistrationStep1 } from "./RegistrationStep1";
-import { RegistrationStep2 } from "./RegistrationStep2";
+import { MemberRegistrationUnifiedForm } from "./MemberRegistrationUnifiedForm";
 import { RegistrationFooter } from "./RegistrationFooter";
-
 
 export function AdminMemberRegistrationModal({
   isOpen,
@@ -51,12 +49,11 @@ export function AdminMemberRegistrationModal({
 
   const [availablePlans, setAvailablePlans] = useState([]);
   const [batches, setBatches] = useState([]);
-  const [step, setStep] = useState(1);
   const [form, setForm] = useState(INITIAL_FORM);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     selectedPlanId: "",
-    paymentMethod: "UPI",
+    paymentMethod: "",
     transactionId: "",
     amountPaid: "",
     paymentDate: "",
@@ -65,11 +62,11 @@ export function AdminMemberRegistrationModal({
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const docInputRef = useRef(null);
+  const photoInputRef = useRef(null);
 
   // Sync form with leadToConfirm / memberToEdit or reset on open
   useEffect(() => {
     if (!isOpen) return;
-    setStep(1);
     setErrors({});
     setIsLoadingData(true);
 
@@ -85,8 +82,8 @@ export function AdminMemberRegistrationModal({
           const defaultPlan = resolvedPlans.find((p) => p.popular) || resolvedPlans[0];
           setPaymentForm({
             selectedPlanId: defaultPlan?.id || "",
-            paymentMethod: "UPI",
-            transactionId: generateTransactionId("UPI"),
+            paymentMethod: "",
+            transactionId: "",
             amountPaid: defaultPlan?.price || "",
             paymentDate: new Date().toISOString().split("T")[0],
             paymentNotes: `Enrollment payment for inquiry ${activeLead?.firstName || "Athlete"}`,
@@ -94,7 +91,7 @@ export function AdminMemberRegistrationModal({
         } else if (isEditingActiveMember) {
           setPaymentForm({
             selectedPlanId: memberToEdit?.membershipPlan?.id || memberToEdit?.planId || "",
-            paymentMethod: memberToEdit?.paymentMethod || "UPI",
+            paymentMethod: memberToEdit?.paymentMethod || "",
             transactionId: memberToEdit?.transactionId || "",
             amountPaid: memberToEdit?.amountPaid || "",
             paymentDate: memberToEdit?.paymentDate || "",
@@ -103,7 +100,7 @@ export function AdminMemberRegistrationModal({
         } else {
           setPaymentForm({
             selectedPlanId: "",
-            paymentMethod: "UPI",
+            paymentMethod: "",
             transactionId: "",
             amountPaid: "",
             paymentDate: "",
@@ -126,7 +123,7 @@ export function AdminMemberRegistrationModal({
             gender: sourceData.gender || "",
             mobile: sourceData.mobile || "",
             email: sourceData.email || "",
-            photo: sourceData.photo || null,
+            photo: sourceData.photo || "",
             photoName: sourceData.photoName || "",
             address: sourceData.address || "",
             city: sourceData.city || "",
@@ -138,20 +135,17 @@ export function AdminMemberRegistrationModal({
             emergencyNumber: sourceData.emergencyNumber || "",
             height: sourceData.height ? String(sourceData.height) : "",
             weight: sourceData.weight ? String(sourceData.weight) : "",
+            bloodGroup: sourceData.bloodGroup || sourceData.physicalStats?.bloodGroup || "",
             medicalDoc: sourceData.medicalDoc || null,
             medicalDocName: sourceData.medicalDocName || "",
             medicalDocSize: sourceData.medicalDocSize || "",
-            bio:
-              sourceData.bio ||
-              (isConfirmingLead
-                ? "Active club member pursuing functional training and athletic progression."
-                : ""),
-            batchId: sourceData.batchId || resolvedBatches[0]?.id || "",
+            bio: sourceData.bio || "",
+            batchId: sourceData.batchId || "",
           });
         } else {
           setForm({
             ...INITIAL_FORM,
-            batchId: resolvedBatches[0]?.id || "",
+            batchId: "",
           });
         }
       })
@@ -175,6 +169,7 @@ export function AdminMemberRegistrationModal({
       setForm(INITIAL_FORM);
     }
     if (docInputRef.current) docInputRef.current.value = "";
+    if (photoInputRef.current) photoInputRef.current.value = "";
     if (typeof onClose === "function") {
       onClose();
     }
@@ -237,8 +232,37 @@ export function AdminMemberRegistrationModal({
     }
   };
 
+  const handlePhotoFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file (PNG, JPG, WebP).");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Photo size should not exceed 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result;
+      setForm((prev) => ({ ...prev, photo: dataUrl, photoName: file.name }));
+      toast.success("Member portrait image loaded.");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setForm((prev) => ({ ...prev, photo: "", photoName: "" }));
+    if (photoInputRef.current) photoInputRef.current.value = "";
+    toast.info("Photo removed.");
+  };
+
   const validateStep1 = () => {
-    const errs = validateRegistrationStep1(form, paymentForm);
+    const errs = validateRegistrationStep1(form, paymentForm, isEditingActiveMember);
     setErrors((prev) => ({ ...prev, ...errs }));
     return Object.keys(errs).length === 0;
   };
@@ -249,17 +273,6 @@ export function AdminMemberRegistrationModal({
     return Object.keys(errs).length === 0;
   };
 
-  const handleProceedToBalanceDetails = (e) => {
-    if (e && typeof e.preventDefault === "function") e.preventDefault();
-    if (!validateStep1()) {
-      toast.error(
-        "Please fill all required personal, plan, and payment details before proceeding.",
-      );
-      return;
-    }
-    setStep(2);
-  };
-
   const handleCompleteRegistration = async (e) => {
     if (e && typeof e.preventDefault === "function") e.preventDefault();
 
@@ -267,12 +280,7 @@ export function AdminMemberRegistrationModal({
     const isStep2Valid = validateStep2();
 
     if (!isStep1Valid || !isStep2Valid) {
-      if (!isStep1Valid) {
-        setStep(1);
-        toast.error("Please complete all personal and payment fields in Step 1.");
-      } else {
-        toast.error("Please complete all balance registration fields.");
-      }
+      toast.error("Please fill in all required fields correctly before submitting.");
       return;
     }
 
@@ -300,6 +308,8 @@ export function AdminMemberRegistrationModal({
             paymentDate: paymentForm.paymentDate,
             paymentNotes: paymentForm.paymentNotes,
             batchId: form.batchId || undefined,
+            photo: form.photo || undefined,
+            photoName: form.photoName || undefined,
           });
         } catch (convertErr) {
           if (
@@ -336,7 +346,6 @@ export function AdminMemberRegistrationModal({
         );
       }
 
-
       // Automatically assign member to the corresponding chosen batch timing
       if (form.batchId && resultMember?.id) {
         try {
@@ -347,8 +356,8 @@ export function AdminMemberRegistrationModal({
       }
 
       setForm(INITIAL_FORM);
-      setStep(1);
       if (docInputRef.current) docInputRef.current.value = "";
+      if (photoInputRef.current) photoInputRef.current.value = "";
       if (onSuccess) {
         onSuccess(resultMember, isConfirmingLead);
       }
@@ -361,7 +370,7 @@ export function AdminMemberRegistrationModal({
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
     if (isEditingActiveMember) {
       const isStep1Valid = validateStep1();
       const isStep2Valid = validateStep2();
@@ -400,11 +409,7 @@ export function AdminMemberRegistrationModal({
         setIsSubmitting(false);
       }
     } else {
-      if (step === 1) {
-        handleProceedToBalanceDetails(e);
-      } else {
-        await handleCompleteRegistration(e);
-      }
+      await handleCompleteRegistration(e);
     }
   };
 
@@ -431,55 +436,41 @@ export function AdminMemberRegistrationModal({
             isEditingActiveMember={isEditingActiveMember}
             isConfirmingLead={isConfirmingLead}
             activeLead={activeLead}
-            step={step}
             handleClose={handleClose}
           />
 
-
           {/* Form scrollable body */}
-          {step === 1 ? (
-            <RegistrationStep1
-              isConfirmingLead={isConfirmingLead}
-              activeLead={activeLead}
-              form={form}
-              setForm={setForm}
-              handleChange={handleChange}
-              handleBlur={handleBlur}
-              errors={errors}
-              batches={batches}
-              selectedBatch={selectedBatch}
-              availablePlans={availablePlans}
-              chosenPlan={chosenPlan}
-              paymentForm={paymentForm}
-              setPaymentForm={setPaymentForm}
-              handleSubmit={handleSubmit}
-            />
-          ) : (
-            <RegistrationStep2
-              form={form}
-              handleChange={handleChange}
-              handleBlur={handleBlur}
-              errors={errors}
-              selectedBatch={selectedBatch}
-              chosenPlan={chosenPlan}
-              paymentForm={paymentForm}
-              isConfirmingLead={isConfirmingLead}
-              handleRemoveDoc={handleRemoveDoc}
-              handleDocUpload={handleDocUpload}
-              docInputRef={docInputRef}
-            />
-          )}
+          <MemberRegistrationUnifiedForm
+            isConfirmingLead={isConfirmingLead}
+            isEditingActiveMember={isEditingActiveMember}
+            activeLead={activeLead}
+            form={form}
+            setForm={setForm}
+            handleChange={handleChange}
+            handleBlur={handleBlur}
+            errors={errors}
+            batches={batches}
+            selectedBatch={selectedBatch}
+            availablePlans={availablePlans}
+            chosenPlan={chosenPlan}
+            paymentForm={paymentForm}
+            setPaymentForm={setPaymentForm}
+            handleSubmit={handleSubmit}
+            handleRemoveDoc={handleRemoveDoc}
+            handleDocUpload={handleDocUpload}
+            docInputRef={docInputRef}
+            photoInputRef={photoInputRef}
+            handlePhotoFileChange={handlePhotoFileChange}
+            handleRemovePhoto={handleRemovePhoto}
+          />
 
           {/* Footer Actions */}
           <RegistrationFooter
-            step={step}
-            setStep={setStep}
             memberToEdit={memberToEdit}
             handleClose={handleClose}
             isEditingActiveMember={isEditingActiveMember}
             isSubmitting={isSubmitting}
-            handleProceedToBalanceDetails={handleProceedToBalanceDetails}
-            handleCompleteRegistration={handleCompleteRegistration}
+            handleCompleteRegistration={handleSubmit}
             isConfirmingLead={isConfirmingLead}
           />
         </DialogPrimitive.Content>

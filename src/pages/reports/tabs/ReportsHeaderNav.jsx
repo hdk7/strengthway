@@ -73,15 +73,6 @@ export function ReportsHeaderNav({
             </button>
           </div>
 
-          {/* Current Month shortcut */}
-          <button
-            type="button"
-            onClick={handleCurrentMonth}
-            className="rounded-2xl border border-border bg-card px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs"
-          >
-            Current
-          </button>
-
           {/* Export CSV Button */}
           <button
             type="button"

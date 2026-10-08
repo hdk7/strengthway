@@ -66,6 +66,11 @@ export function MemberVitalsCard({
           </span>
           <p className="text-xs text-muted-foreground mt-0.5">
             {member.gender || "Not specified"}
+            {(member.bloodGroup || member.physicalStats?.bloodGroup) && (
+              <span className="ml-1 font-semibold text-rose-500 dark:text-rose-400">
+                • {member.bloodGroup || member.physicalStats?.bloodGroup}
+              </span>
+            )}
           </p>
         </div>
       </div>

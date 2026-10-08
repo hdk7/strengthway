@@ -218,7 +218,10 @@ export const adminMemberRegistrationSchema = yup.object().shape({
   emergencyNumber: phoneValidator("Emergency contact number", true, 7),
   height: numberRangeValidator("Height", 60, 260, "cm", true),
   weight: numberRangeValidator("Weight", 25, 300, "kg", true),
+  bloodGroup: selectValidator("Blood group", true),
   bio: textValidator("Bio", 10, 500, true),
+  photo: yup.string().trim().nullable(),
+  photoName: yup.string().trim().nullable(),
 });
 
 // 3. Public Contact Form Schema (All fields required)

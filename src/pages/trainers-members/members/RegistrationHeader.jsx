@@ -5,57 +5,26 @@ export function RegistrationHeader({
   isEditingActiveMember,
   isConfirmingLead,
   activeLead,
-  step,
   handleClose,
 }) {
   return (
     <div className="relative border-b border-slate-100 dark:border-border/60 px-6 py-5 sm:px-8 shrink-0 text-center bg-white dark:bg-card">
-      {!isEditingActiveMember && (
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <span
-            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[11px] font-bold uppercase ${
-              step === 1
-                ? "bg-primary text-background shadow-xs"
-                : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-muted-foreground"
-            }`}
-          >
-            1. Registration & Payment
-          </span>
-          <span className="text-slate-400 dark:text-muted-foreground">•</span>
-          <span
-            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-[11px] font-bold uppercase ${
-              step === 2
-                ? "bg-emerald-600 text-white shadow-xs"
-                : "bg-slate-100 dark:bg-muted text-slate-600 dark:text-muted-foreground"
-            }`}
-          >
-            2. Member Details
-          </span>
-        </div>
-      )}
-
       <DialogPrimitive.Title className="font-display text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-foreground">
         {isConfirmingLead
-          ? `Member Registration ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
+          ? `Member Registration & Activation — ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
           : isEditingActiveMember
             ? "Edit Member Profile"
-            : step === 1
-              ? "Member Registration & Plan Payment"
-              : "Member Details"}
+            : "Member Registration & Plan Enrollment"}
       </DialogPrimitive.Title>
       <DialogPrimitive.Description
         id="admin-member-registration-desc"
         className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-muted-foreground font-normal"
       >
         {isConfirmingLead
-          ? step === 1
-            ? "Step 1 of 2: Review personal details, select training schedule, choose plan & record payment."
-            : "Step 2 of 2: Complete residence address, emergency contact, physical fitness details & medical document."
+          ? "Review athlete details, select training schedule, choose plan, record payment, and complete fitness records."
           : isEditingActiveMember
             ? "Update gym member profile details, physical stats, and contact info"
-            : step === 1
-              ? "Step 1 of 2: Enter personal details, select training batch, choose plan & record payment."
-              : "Step 2 of 2: Complete residence address, emergency contact, physical vitals & medical document."}
+            : "Complete athlete registration, training batch, plan payment, residence, and fitness details."}
       </DialogPrimitive.Description>
 
       <DialogPrimitive.Close

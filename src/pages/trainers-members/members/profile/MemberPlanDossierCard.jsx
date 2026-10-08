@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
-import { Award, FileCheck, Copy, Check } from "lucide-react";
+import { Award, FileCheck } from "lucide-react";
 
 export function MemberPlanDossierCard({
   member,
   planDetails,
   isDeleted,
-  copiedField,
-  handleCopy,
 }) {
   return (
     <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
@@ -20,7 +18,7 @@ export function MemberPlanDossierCard({
               Membership Plan & Dossier
             </h3>
             <p className="text-[11px] text-muted-foreground">
-              Subscription agreement, batch allocation, and facility access
+              Subscription agreement and batch allocation
             </p>
           </div>
         </div>
@@ -119,21 +117,7 @@ export function MemberPlanDossierCard({
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-2 text-xs divide-y divide-border/40">
           <div className="flex items-center justify-between pb-2">
             <span className="text-muted-foreground">System Record ID:</span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-mono font-bold text-foreground">{member.id}</span>
-              <button
-                type="button"
-                onClick={() => handleCopy(member.id, "memberId", "Member ID")}
-                className="rounded p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-                title="Copy ID"
-              >
-                {copiedField === "memberId" ? (
-                  <Check size={11} className="text-emerald-500" />
-                ) : (
-                  <Copy size={11} />
-                )}
-              </button>
-            </div>
+            <span className="font-mono font-bold text-foreground">{member.id}</span>
           </div>
 
           {member.batchId && (
@@ -161,13 +145,6 @@ export function MemberPlanDossierCard({
                     day: "numeric",
                   })
                 : "—"}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between py-2">
-            <span className="text-muted-foreground">Facility Access:</span>
-            <span className="font-semibold text-emerald-400">
-              Full Gym Floor & Equipment
             </span>
           </div>
 

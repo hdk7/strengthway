@@ -37,9 +37,7 @@ export function TrainerMonthlyCoachingPanel({
               <h3 className="text-base sm:text-lg font-bold text-foreground">
                 Monthly Coaching & Class Conduction
               </h3>
-              <span className="rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold text-accent border border-accent/20">
-                Performance Ledger
-              </span>
+             
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Class delivery execution, total coaching hours on gym floor, athlete turnouts, and substitute session logs.
@@ -81,14 +79,6 @@ export function TrainerMonthlyCoachingPanel({
               <ChevronRight size={14} />
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={handleCurrentMonth}
-            className="rounded-xl border border-border bg-background px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          >
-            Current
-          </button>
         </div>
       </div>
 

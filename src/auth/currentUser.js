@@ -1,7 +1,7 @@
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
 const CURRENT_USER = {
-  name: "Admin User",
+  name: "StrengthWay",
   role: "Administrator",
   email: "admin@thestrengthway.com",
 };
@@ -19,6 +19,20 @@ export function getCurrentUser() {
           .split("@")[0]
           .replace(/[._]/g, " ")
           .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+      if (
+        !name ||
+        name === "Gym Admin" ||
+        name === "Admin User" ||
+        name.toLowerCase().includes("gym admin")
+      ) {
+        name = "StrengthWay";
+        try {
+          user.name = "StrengthWay";
+          localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(user));
+        } catch {
+          // ignore
+        }
       }
       return {
         name: name || CURRENT_USER.name,

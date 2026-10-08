@@ -6,7 +6,6 @@ import {
   Edit3,
   PhoneCall,
   Archive,
-  CheckCircle2,
 } from "lucide-react";
 
 export function MemberProfileHeader({
@@ -20,10 +19,20 @@ export function MemberProfileHeader({
   handleRestore,
   handleSoftDelete,
   setIsEditModalOpen,
+  handleMoveToInquiry,
 }) {
   const isLeadOrInquiry =
     !isDeleted && (member.status === "Lead" || member.status === "Inquiry");
   const isContacted = !isDeleted && member.status === "Contacted";
+  const isInterestedConverting =
+    isContacted &&
+    member?.contactDetails?.outcome === "Interested - Converting Soon";
+  const isNotInterested =
+    isContacted &&
+    member?.contactDetails?.outcome === "Not Interested";
+  const isNeedsFollowUp =
+    isContacted &&
+    member?.contactDetails?.outcome === "Needs Follow-Up";
   const isConverted =
     !isDeleted && (member.status === "Converted" || member.status === "Active");
 
@@ -32,34 +41,39 @@ export function MemberProfileHeader({
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground font-display">
-              {fullName}
-            </h1>
-            {isDeleted || member.status === "Archived" ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-destructive">
-                Archived
-              </span>
-            ) : isLeadOrInquiry ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-amber-500">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-                Inquiry
-              </span>
-            ) : isContacted ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-blue-400">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
-                Contacted
-              </span>
-            ) : member.status === "Converted" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-emerald-400">
-                <CheckCircle2 size={13} />
-                Converted Member
-              </span>
-            ) : (
-              <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
-                {member.status || "Active"} Member
-              </span>
+          <div className="flex items-center gap-3.5">
+            {member?.photo && (
+              <img
+                src={member.photo}
+                alt={fullName}
+                className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover border-2 border-border/80 shadow-md shrink-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                }}
+              />
             )}
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground font-display">
+                  {fullName}
+                </h1>
+                {isDeleted || member.status === "Archived" ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 border border-destructive/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-destructive">
+                    Archived
+                  </span>
+                ) : isLeadOrInquiry ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-amber-500">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                    Inquiry
+                  </span>
+                ) : isContacted ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 px-3 py-0.5 text-xs font-bold uppercase tracking-wider text-blue-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                    Contacted
+                  </span>
+                ) : null}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -89,34 +103,60 @@ export function MemberProfileHeader({
           {/* Inquiry Workflow: Step 2 Convert & Archive buttons */}
           {isContacted && (
             <>
-              <button
-                type="button"
-                onClick={handleConvertLead}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-              >
-                <UserCheck size={16} />
-                <span>Confirm & Convert to Member</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleArchiveInquiry}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
-              >
-                <Archive size={16} />
-                <span>Archive Inquiry</span>
-              </button>
+              {isNeedsFollowUp && (
+                <button
+                  type="button"
+                  onClick={handleOpenContact}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+                >
+                  <PhoneCall size={16} />
+                  <span>Recontact Prospect</span>
+                </button>
+              )}
+              {!isNotInterested && (
+                <button
+                  type="button"
+                  onClick={handleConvertLead}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+                >
+                  <UserCheck size={16} />
+                  <span>Confirm & Convert to Member</span>
+                </button>
+              )}
+              {!isInterestedConverting && (
+                <button
+                  type="button"
+                  onClick={handleArchiveInquiry}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+                >
+                  <Archive size={16} />
+                  <span>Archive Inquiry</span>
+                </button>
+              )}
             </>
           )}
 
-          {isDeleted ? (
-            <button
-              type="button"
-              onClick={handleRestore}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
-            >
-              <RotateCcw size={16} />
-              <span>Restore Member</span>
-            </button>
+          {isDeleted || member.status === "Archived" ? (
+            <>
+              {handleMoveToInquiry && (
+                <button
+                  type="button"
+                  onClick={handleMoveToInquiry}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+                >
+                  <RotateCcw size={16} />
+                  <span>Move to Inquiry</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleRestore}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+              >
+                <RotateCcw size={16} />
+                <span>Restore Member</span>
+              </button>
+            </>
           ) : (
             <button
               type="button"

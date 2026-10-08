@@ -4,16 +4,12 @@ import {
   Calendar,
   MapPin,
   Shield,
-  Copy,
-  Check,
   ExternalLink,
 } from "lucide-react";
 
 export function MemberContactCard({
   member,
   age,
-  copiedField,
-  handleCopy,
   emergencyName,
   emergencyRel,
   emergencyPhone,
@@ -61,27 +57,13 @@ export function MemberContactCard({
 
             <div className="flex items-center gap-1.5 shrink-0">
               {member.mobile && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(member.mobile, "mobile", "Mobile number")}
-                    className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                    title="Copy phone"
-                  >
-                    {copiedField === "mobile" ? (
-                      <Check size={13} className="text-emerald-500" />
-                    ) : (
-                      <Copy size={13} />
-                    )}
-                  </button>
-                  <a
-                    href={`tel:${member.mobile}`}
-                    className="inline-flex items-center gap-1 rounded-lg bg-primary/10 border border-primary/25 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors"
-                  >
-                    <span>Call</span>
-                    <ExternalLink size={10} />
-                  </a>
-                </>
+                <a
+                  href={`tel:${member.mobile}`}
+                  className="inline-flex items-center gap-1 rounded-lg bg-primary/10 border border-primary/25 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <span>Call</span>
+                  <ExternalLink size={10} />
+                </a>
               )}
             </div>
           </div>
@@ -104,27 +86,13 @@ export function MemberContactCard({
 
             <div className="flex items-center gap-1.5 shrink-0">
               {member.email && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(member.email, "email", "Email address")}
-                    className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                    title="Copy email"
-                  >
-                    {copiedField === "email" ? (
-                      <Check size={13} className="text-emerald-500" />
-                    ) : (
-                      <Copy size={13} />
-                    )}
-                  </button>
-                  <a
-                    href={`mailto:${member.email}`}
-                    className="inline-flex items-center gap-1 rounded-lg bg-primary/10 border border-primary/25 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors"
-                  >
-                    <span>Mail</span>
-                    <ExternalLink size={10} />
-                  </a>
-                </>
+                <a
+                  href={`mailto:${member.email}`}
+                  className="inline-flex items-center gap-1 rounded-lg bg-primary/10 border border-primary/25 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20 transition-colors"
+                >
+                  <span>Mail</span>
+                  <ExternalLink size={10} />
+                </a>
               )}
             </div>
           </div>

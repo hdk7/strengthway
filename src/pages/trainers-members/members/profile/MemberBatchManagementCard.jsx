@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import {
   Layers,
   ArrowRightLeft,
-  ExternalLink,
   Clock,
   Calendar,
   Sparkles,
@@ -38,28 +37,11 @@ export function MemberBatchManagementCard({
               <h3 className="text-base sm:text-lg font-bold text-foreground">
                 Batch Assignments & History
               </h3>
-              <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-bold text-accent border border-accent/20">
-                Container Management
-              </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
               Current batch container allocation, active flexible passes, month-wise attendance tracking, and transition audit trail.
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => {
-              setTransferModalTab("transfer");
-              setIsTransferModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-3.5 py-2 text-xs font-semibold text-accent-foreground shadow-sm hover:bg-accent/90 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <ArrowRightLeft size={14} />
-            <span>Transfer Batch / Flex Pass</span>
-          </button>
         </div>
       </div>
 
@@ -85,10 +67,9 @@ export function MemberBatchManagementCard({
                 <div>
                   <Link
                     to={`/admin/batches/${primaryBatchDetails.id}`}
-                    className="text-base font-bold text-foreground hover:text-accent transition-colors flex items-center gap-1.5"
+                    className="text-base font-bold text-foreground hover:text-accent transition-colors block"
                   >
-                    <span>{primaryBatchDetails.name}</span>
-                    <ExternalLink size={13} className="text-muted-foreground" />
+                    {primaryBatchDetails.name}
                   </Link>
                   <p className="text-xs text-muted-foreground font-mono mt-0.5">
                     Batch ID: {primaryBatchDetails.id}
@@ -164,10 +145,9 @@ export function MemberBatchManagementCard({
                   <div className="flex items-center justify-between gap-2">
                     <Link
                       to={`/admin/batches/${pass.targetBatchId}`}
-                      className="text-xs font-bold text-foreground hover:text-amber-500 transition-colors flex items-center gap-1"
+                      className="text-xs font-bold text-foreground hover:text-amber-500 transition-colors block"
                     >
-                      <span>{pass.targetBatchName || pass.targetBatchId}</span>
-                      <ExternalLink size={11} className="text-muted-foreground" />
+                      {pass.targetBatchName || pass.targetBatchId}
                     </Link>
                     <span className="text-[10px] font-mono text-muted-foreground">
                       {pass.startDate} → {pass.endDate || "Ongoing"}

@@ -119,14 +119,6 @@ export function TrainerAttendanceToolbar({
               <ChevronRight size={15} />
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setSelectedMonth(new Date().toISOString().slice(0, 7))}
-            className="rounded-2xl border border-border bg-background px-3 py-2 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs"
-          >
-            Current Month
-          </button>
         </div>
       )}
     </div>

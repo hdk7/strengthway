@@ -12,6 +12,7 @@ import {
   archiveMemberInquiry,
 } from "@/lib/membersService";
 import { getBatches } from "@/lib/batchesService";
+import { createInquiry } from "@/lib/inquiriesService";
 import BatchTransferModal from "@/pages/batches/components/BatchTransferModal";
 import ContactLeadModal from "@/pages/inquiries/ContactLeadModal";
 import InquiryContactRecordCard from "@/pages/inquiries/InquiryContactRecordCard";
@@ -36,7 +37,6 @@ export default function MemberProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [copiedField, setCopiedField] = useState(null);
   const [, setSaving] = useState(false);
   const [allBatches, setAllBatches] = useState([]);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
@@ -172,13 +172,6 @@ export default function MemberProfilePage() {
     };
   }, [member]);
 
-  const handleCopy = (text, fieldKey, label) => {
-    if (!text) return;
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldKey);
-    toast.success(`${label} copied to clipboard!`);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
 
   const handleSaveEdit = async (updatedData) => {
     setSaving(true);
@@ -260,6 +253,28 @@ export default function MemberProfilePage() {
     }
   };
 
+  const handleMoveToInquiry = async () => {
+    try {
+      const created = await createInquiry({
+        name: fullName || "Archived Member",
+        gender: member.gender || "Male",
+        mobile: member.mobile || member.phone || "",
+        email: member.email || "",
+        address: member.address || "",
+        subject: "Restored from Archived Member",
+        message: member.bio || "Restored from archive to restart workflow from the beginning.",
+        status: "Inquiry",
+      });
+      window.dispatchEvent(new CustomEvent("inquiry-updated", { detail: created }));
+      toast.success(
+        `${fullName} moved to Customer Inquiries to start workflow from the beginning.`,
+      );
+      navigate("/admin/inquiries");
+    } catch (err) {
+      toast.error(err?.message || "Failed to move member to inquiries.");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="py-20 text-center text-muted-foreground">
@@ -289,6 +304,18 @@ export default function MemberProfilePage() {
     );
   }
 
+  const contactDetailsToDisplay =
+    member?.contactDetails ||
+    ((isDeleted || member?.status === "Archived") && member?.statusHistory?.length > 0
+      ? {
+          contactedAt: member.statusHistory[member.statusHistory.length - 1].changedAt,
+          contactMethod: "Archived Record",
+          contactedBy: member.statusHistory[member.statusHistory.length - 1].changedBy || "Admin",
+          outcome: "Archived",
+          contactNotes: member.statusHistory[member.statusHistory.length - 1].notes || "Archived record",
+        }
+      : null);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header */}
@@ -303,11 +330,12 @@ export default function MemberProfilePage() {
         handleRestore={handleRestore}
         handleSoftDelete={handleSoftDelete}
         setIsEditModalOpen={setIsEditModalOpen}
+        handleMoveToInquiry={handleMoveToInquiry}
       />
 
       {/* Inbound Inquiry Contact Interaction Record */}
-      {member?.contactDetails && (
-        <InquiryContactRecordCard contactDetails={member.contactDetails} />
+      {contactDetailsToDisplay && (
+        <InquiryContactRecordCard contactDetails={contactDetailsToDisplay} />
       )}
 
       {/* Physical Stats & Biometrics KPI Metric Strip (Full Width) */}
@@ -327,8 +355,6 @@ export default function MemberProfilePage() {
             member={member}
             planDetails={planDetails}
             isDeleted={isDeleted}
-            copiedField={copiedField}
-            handleCopy={handleCopy}
           />
 
           <MemberMedicalClearanceCard
@@ -344,8 +370,6 @@ export default function MemberProfilePage() {
           <MemberContactCard
             member={member}
             age={age}
-            copiedField={copiedField}
-            handleCopy={handleCopy}
             emergencyName={emergencyName}
             emergencyRel={emergencyRel}
             emergencyPhone={emergencyPhone}

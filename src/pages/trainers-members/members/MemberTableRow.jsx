@@ -1,4 +1,4 @@
-import { Phone, Mail, FileCheck, UserCheck, Loader2 } from "lucide-react";
+import { Phone, Mail, FileCheck, UserCheck, Loader2, RotateCcw } from "lucide-react";
 
 export default function MemberTableRow({
   member,
@@ -6,6 +6,7 @@ export default function MemberTableRow({
   onOpenConfirmModal,
   onToggleStatus,
   togglingId,
+  onMoveToInquiry,
 }) {
   const fullName = `${member.firstName || ""} ${member.lastName || ""}`.trim();
   const initials = `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase();
@@ -59,7 +60,9 @@ export default function MemberTableRow({
               {fullName}
             </button>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              {member.planName || "Member"}
+              {isDeleted && member.contactDetails?.outcome
+                ? `Interaction: ${member.contactDetails.outcome}`
+                : member.planName || "Member"}
             </p>
           </div>
         </div>
@@ -130,10 +133,26 @@ export default function MemberTableRow({
       {/* Status */}
       <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center">
         {isDeleted ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-semibold text-destructive border border-destructive/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
-            <span>Archived</span>
-          </span>
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-semibold text-destructive border border-destructive/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+              <span>Archived</span>
+            </span>
+            {onMoveToInquiry && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMoveToInquiry(member);
+                }}
+                title="Move to customer inquiries to start workflow from the beginning"
+                className="inline-flex items-center gap-1 rounded-md border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+              >
+                <RotateCcw size={11} />
+                <span>To Inquiry</span>
+              </button>
+            )}
+          </div>
         ) : member.status === "Lead" || member.status === "Inquiry" ? (
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-bold text-amber-500">

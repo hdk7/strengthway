@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { AdminMemberRegistrationModal } from "./MembersRegistration";
 import { getMembers, toggleMemberStatus } from "@/lib/membersService";
+import { createInquiry } from "@/lib/inquiriesService";
 import { Pagination } from "@/components/table";
 import MemberMetricsRow from "./MemberMetricsRow";
 import MemberTableRow from "./MemberTableRow";
@@ -78,6 +79,32 @@ export default function MembersPage() {
       prev.map((m) => (m.id === convertedMember.id ? convertedMember : m))
     );
     toast.success(`Inquiry for ${convertedMember.firstName} converted to active Member.`);
+  };
+
+  const handleMoveToInquiry = async (member) => {
+    try {
+      const name =
+        `${member.firstName || ""} ${member.lastName || ""}`.trim() ||
+        member.name ||
+        "Archived Member";
+      const created = await createInquiry({
+        name,
+        gender: member.gender || "Male",
+        mobile: member.mobile || member.phone || "",
+        email: member.email || "",
+        address: member.address || "",
+        subject: "Restored from Archived Member",
+        message: member.bio || "Restored from archive to restart workflow from the beginning.",
+        status: "Inquiry",
+      });
+      window.dispatchEvent(new CustomEvent("inquiry-updated", { detail: created }));
+      toast.success(
+        `${name} moved to Customer Inquiries to start workflow from the beginning.`,
+      );
+      navigate("/admin/inquiries");
+    } catch (err) {
+      toast.error(err?.message || "Failed to move member to inquiries.");
+    }
   };
 
   const filteredMembers = useMemo(() => {
@@ -290,6 +317,7 @@ export default function MembersPage() {
                     onOpenConfirmModal={handleOpenConfirmModal}
                     onToggleStatus={handleToggleStatus}
                     togglingId={togglingId}
+                    onMoveToInquiry={handleMoveToInquiry}
                   />
                 ))
               ) : (

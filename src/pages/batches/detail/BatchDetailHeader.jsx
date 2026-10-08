@@ -63,13 +63,6 @@ export default function BatchDetailHeader({
               >
                 <ChevronRight size={16} />
               </button>
-              <button
-                type="button"
-                onClick={onCurrentMonth}
-                className="ml-1 rounded-xl bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 transition-all cursor-pointer"
-              >
-                This Month
-              </button>
             </div>
           </div>
         </div>

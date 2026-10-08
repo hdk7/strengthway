@@ -158,14 +158,6 @@ export function MemberAttendanceToolbar({
 
           <button
             type="button"
-            onClick={() => setSelectedMonth(new Date().toISOString().slice(0, 7))}
-            className="rounded-xl border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs"
-          >
-            Current Month
-          </button>
-
-          <button
-            type="button"
             onClick={loadMatrixData}
             disabled={isLoadingMatrix}
             className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs disabled:opacity-50"

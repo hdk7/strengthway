@@ -59,6 +59,7 @@ export default function InquiriesPage() {
 
   const handleContactSubmit = async (contactData) => {
     if (!inquiryToContact) return;
+    const targetInqId = inquiryToContact.id;
     try {
       const updated = await recordInquiryContact(inquiryToContact.id, contactData);
       setInquiries((prev) =>
@@ -72,10 +73,25 @@ export default function InquiriesPage() {
             : i,
         ),
       );
-      toast.success(
-        `Contact recorded for ${inquiryToContact.name || "prospect"}. Status changed to Contacted.`,
-      );
+      // Dispatch event so Header notification center updates immediately
+      window.dispatchEvent(new CustomEvent("inquiry-updated", { detail: updated }));
+
+      if (contactData.outcome === "Needs Follow-Up" && contactData.followUpDate) {
+        toast.success(
+          `Follow-up scheduled for ${contactData.followUpDate}. You will be notified on that date to recontact ${inquiryToContact.name || "prospect"}.`,
+        );
+      } else {
+        toast.success(
+          `Contact recorded for ${inquiryToContact.name || "prospect"}. Status changed to Contacted.`,
+        );
+      }
       setInquiryToContact(null);
+      if (
+        contactData.outcome === "Interested - Converting Soon" ||
+        contactData.outcome === "Not Interested"
+      ) {
+        navigate(`/admin/inquiries/${targetInqId}`);
+      }
     } catch (err) {
       toast.error(err?.message || "Failed to record contact interaction.");
       throw err;
@@ -117,6 +133,27 @@ export default function InquiriesPage() {
 
   const handleOpenRegistration = (inq) => {
     setInquiryToConvert(inq);
+  };
+
+  const handleMoveToInquiry = async (inq) => {
+    try {
+      const updated = await updateInquiryStatus(inq.id, "Inquiry", {
+        notes: "Moved from Archived back to active inquiries to restart workflow from start",
+      });
+      setInquiries((prev) =>
+        prev.map((i) =>
+          i.id === inq.id
+            ? { ...i, status: "Inquiry", contactDetails: null }
+            : i,
+        ),
+      );
+      window.dispatchEvent(new CustomEvent("inquiry-updated", { detail: updated }));
+      toast.success(
+        `${inq.name || "Inquiry"} moved to Inquiry to restart workflow from the beginning.`,
+      );
+    } catch (err) {
+      toast.error(err?.message || "Failed to move inquiry to workflow.");
+    }
   };
 
   const handleRegistrationSuccess = async (registeredMember) => {
@@ -332,6 +369,8 @@ export default function InquiriesPage() {
                     key={inq.id}
                     inq={inq}
                     onNavigate={navigate}
+                    onOpenRegistration={handleOpenRegistration}
+                    onMoveToInquiry={handleMoveToInquiry}
                   />
                 ))}
               </tbody>
