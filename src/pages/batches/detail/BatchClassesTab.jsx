@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import { useState, useEffect } from "react";
 import {
   Clock,
   AlertCircle,
@@ -15,6 +16,7 @@ import {
   RotateCcw,
   Plus,
 } from "lucide-react";
+import Pagination from "@/components/table/Pagination";
 import { hasClassStarted } from "@/lib/batchUtils";
 
 export default function BatchClassesTab({
@@ -36,6 +38,28 @@ export default function BatchClassesTab({
   onOpenAssignProgram,
   onCreateMasterSchedule,
 }) {
+  // Pagination for Scheduled Classes (fixed 6 classes per page)
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sessionsTab, selectedWeekFilter]);
+
+  const totalPages = Math.ceil(displayedSessions.length / PAGE_SIZE) || 1;
+  const safePage = Math.max(1, Math.min(currentPage, totalPages));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedSessions = displayedSessions.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
       <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
@@ -146,7 +170,13 @@ export default function BatchClassesTab({
             </div>
 
             <span className="text-xs text-muted-foreground">
-              Showing {displayedSessions.length}{" "}
+              Showing{" "}
+              {displayedSessions.length > 0
+                ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(
+                    safePage * PAGE_SIZE,
+                    displayedSessions.length
+                  )} of ${displayedSessions.length}`
+                : 0}{" "}
               {sessionsTab === "All" ? "" : sessionsTab.toLowerCase()} classes for{" "}
               {batch?.name || batch?.shortName}
             </span>
@@ -175,7 +205,7 @@ export default function BatchClassesTab({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              {displayedSessions.map((session) => {
+              {paginatedSessions.map((session) => {
                 const isCompleted = session.status === "COMPLETED";
                 const isCancelled = session.status === "CANCELLED";
                 const isToday =
@@ -248,70 +278,82 @@ export default function BatchClassesTab({
 
                       {/* Session Floor Meta: Time, Coach, Room, Attendee Count */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
-                        <div className="flex items-center gap-1.5 rounded-lg bg-background/50 border border-border/50 px-2.5 py-1.5">
-                          <Clock size={12} className="text-amber-400 shrink-0" />
-                          <span className="truncate text-[11px] font-medium text-foreground">
-                            {session.timing || batch?.timingLabel}
+                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
+                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                            Slot
+                          </span>
+                          <span className="font-bold text-foreground text-xs truncate block">
+                            {session.timing || batch?.timingLabel || "—"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-lg bg-background/50 border border-border/50 px-2.5 py-1.5">
-                          <UserCheck size={12} className="text-emerald-400 shrink-0" />
-                          <span className="truncate text-[11px] font-medium text-foreground">
-                            {session.coachName || masterSchedule?.coachName || "Coach"}
+
+                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
+                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                            Coach
+                          </span>
+                          <span className="font-bold text-foreground text-xs truncate block">
+                            {session.coachName || "Faculty Coach"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-lg bg-background/50 border border-border/50 px-2.5 py-1.5">
-                          <Layers size={12} className="text-blue-400 shrink-0" />
-                          <span className="truncate text-[11px] font-medium text-foreground">
-                            {session.room || batch?.room || "Studio 1"}
+
+                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
+                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                            Room
+                          </span>
+                          <span className="font-bold text-foreground text-xs truncate block">
+                            {session.roomName || batch?.room || "Main Studio"}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-lg bg-background/50 border border-border/50 px-2.5 py-1.5">
-                          <Users size={12} className="text-purple-400 shrink-0" />
-                          <span className="truncate text-[11px] font-medium text-foreground">
-                            {session.attendeesCount ?? (session.attendees?.length || batch?.currentPax || 0)} Pax
+
+                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
+                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
+                            Attendees
+                          </span>
+                          <span className="font-bold text-primary text-xs flex items-center gap-1">
+                            <Users size={11} />
+                            {session.attendeesCount ?? batch?.currentPax ?? 0}
                           </span>
                         </div>
                       </div>
 
+                      {/* Notes Preview Pill */}
                       {session.notes && (
-                        <div className="rounded-xl bg-muted/60 p-2 text-xs text-foreground border border-border/70">
-                          <strong className="text-primary font-bold">Coach Note:</strong>{" "}
-                          {session.notes}
+                        <div className="rounded-xl bg-primary/5 border border-primary/20 p-2 text-xs text-foreground flex items-start gap-1.5">
+                          <FileText size={13} className="text-primary shrink-0 mt-0.5" />
+                          <span className="line-clamp-2 italic text-[11px]">
+                            {session.notes}
+                          </span>
                         </div>
                       )}
                     </div>
 
-                    {/* Action Footer: Complete, Cancel, Restore, Coach Note, Edit Syllabus */}
-                    <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between gap-1.5 text-xs">
-                      <div className="flex items-center gap-1">
+                    {/* Footer Actions */}
+                    <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => onOpenNotes(session)}
-                          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground hover:underline cursor-pointer"
-                          title="Add or edit coach note"
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                          title="View / Edit Coach Notes"
                         >
-                          <FileText size={12} />
-                          <span>{session.notes ? "Note" : "+ Note"}</span>
+                          <FileText size={11} />
+                          <span>{session.notes ? "Notes" : "Add Note"}</span>
                         </button>
 
                         {matchingItem && (
                           <button
                             type="button"
                             onClick={() => onEditMasterItem(matchingItem)}
-                            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                            title="Edit curriculum syllabus"
+                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                            title="Edit Curriculum Item"
                           >
-                            <Edit3 size={13} />
+                            <Edit3 size={11} />
+                            <span>Edit Item</span>
                           </button>
                         )}
                       </div>
 
                       <div className="flex items-center gap-1">
-                        <span className="text-primary font-semibold text-[11px] mr-1">
-                          {session.displayDate || `Class ${session.classNumber}`}
-                        </span>
-
                         {!isCompleted && !isCancelled && (
                           <>
                             {canComplete ? (
@@ -362,6 +404,21 @@ export default function BatchClassesTab({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Pinned Pagination for Classes (no per-page selector) */}
+          {displayedSessions.length > 0 && (
+            <div className="pt-2">
+              <Pagination
+                currentPage={safePage}
+                totalPages={totalPages}
+                totalItems={displayedSessions.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={(p) => setCurrentPage(p)}
+                itemLabel="classes"
+                compact
+              />
             </div>
           )}
         </div>
