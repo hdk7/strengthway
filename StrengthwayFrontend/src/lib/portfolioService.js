@@ -177,3 +177,19 @@ export async function permanentDeletePortfolioItem(id) {
     throw err;
   }
 }
+
+/**
+ * Upload portfolio media file (image or video).
+ */
+export async function uploadPortfolioMedia(file) {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    return await api.post("/v1/uploads/media", formData);
+  } catch (err) {
+    console.error("Failed to upload portfolio media:", err);
+    throw err;
+  }
+}
+
+

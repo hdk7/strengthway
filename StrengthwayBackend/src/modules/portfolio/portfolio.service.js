@@ -25,16 +25,19 @@ class PortfolioService {
   } = {}) {
     const filter = {};
 
-    if (!includeDeleted) {
-      filter.isDeleted = false;
+    if (status === "Archived") {
+      filter.isDeleted = true;
+    } else {
+      if (!includeDeleted) {
+        filter.isDeleted = false;
+      }
+      if (status && status !== "ALL") {
+        filter.status = status;
+      }
     }
 
     if (category && category !== "ALL") {
       filter.category = category;
-    }
-
-    if (status && status !== "ALL") {
-      filter.status = status;
     }
 
     if (search && search.trim()) {
@@ -56,7 +59,7 @@ class PortfolioService {
     );
     const skipNum = (pageNum - 1) * limitNum;
 
-    const [items, totalCount, allItems] = await Promise.all([
+    const [items, totalCount, allItems, archivedCount] = await Promise.all([
       portfolioRepo.findAll({
         filter,
         sort: { displayOrder: 1, createdAt: -1 },
@@ -64,8 +67,9 @@ class PortfolioService {
         limit: limitNum,
       }),
       portfolioRepo.count(filter),
-      // Query stats across active/draft/archived
+      // Query stats across active/draft non-deleted items
       portfolioRepo.findAll({ filter: { isDeleted: false } }),
+      portfolioRepo.count({ isDeleted: true }),
     ]);
 
     // Compute high-level stats for admin toolbar/KPIs
@@ -73,11 +77,15 @@ class PortfolioService {
       total: allItems.length,
       active: allItems.filter((i) => i.status === PORTFOLIO_STATUS.ACTIVE).length,
       draft: allItems.filter((i) => i.status === PORTFOLIO_STATUS.DRAFT).length,
+      archived: archivedCount,
       photos: allItems.filter((i) => i.category === PORTFOLIO_CATEGORY.PHOTO).length,
       movementVideos: allItems.filter((i) => i.category === PORTFOLIO_CATEGORY.MOVEMENT_VIDEO).length,
       sessionClips: allItems.filter((i) => i.category === PORTFOLIO_CATEGORY.SESSION_CLIP).length,
       feedbackStories: allItems.filter((i) => i.category === PORTFOLIO_CATEGORY.FEEDBACK_STORY).length,
       sessionDisciplines: allItems.filter((i) => i.category === PORTFOLIO_CATEGORY.SESSION_DISCIPLINE).length,
+      videosAndReels: allItems.filter((i) =>
+        [PORTFOLIO_CATEGORY.MOVEMENT_VIDEO, PORTFOLIO_CATEGORY.SESSION_CLIP].includes(i.category)
+      ).length,
     };
 
     return {

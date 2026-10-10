@@ -18,7 +18,9 @@ import photo6 from "@/assets/portfolio-photo-6.jpg";
 import photo7 from "@/assets/portfolio-photo-7.jpg";
 import photo8 from "@/assets/portfolio-photo-8.jpg";
 
-const PHOTOS = [
+import { getPublicPortfolio } from "@/lib/portfolioService";
+
+const DEFAULT_PHOTOS = [
   { src: photo1, alt: "Weighted pull-ups on the rig" },
   { src: photo2, alt: "Training partners working the bar together" },
   { src: photo3, alt: "Inverted ring hold" },
@@ -29,9 +31,38 @@ const PHOTOS = [
   { src: photo8, alt: "Member after a fight-camp session" },
 ];
 
-export function PhotosSection({ onSelectPhoto }) {
+export function PhotosSection({ photos: initialPhotos, onSelectPhoto }) {
+  const [photosData, setPhotosData] = useState(initialPhotos || null);
   const [api, setApi] = useState();
   const [playing, setPlaying] = useState(true);
+
+  // Sync when initialPhotos prop updates
+  useEffect(() => {
+    if (initialPhotos) {
+      setPhotosData(initialPhotos);
+    }
+  }, [initialPhotos]);
+
+  // Standalone fallback fetch if not provided via props
+  useEffect(() => {
+    if (!initialPhotos) {
+      getPublicPortfolio()
+        .then((res) => {
+          if (res?.photos && res.photos.length > 0) {
+            setPhotosData(res.photos);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialPhotos]);
+
+  const displayPhotos =
+    photosData && photosData.length > 0
+      ? photosData.map((p) => ({
+          src: p.mediaUrl || p.src,
+          alt: p.altText || p.title || p.alt || "Gym floor photo",
+        }))
+      : DEFAULT_PHOTOS;
 
   useEffect(() => {
     if (!api) return;
@@ -74,8 +105,8 @@ export function PhotosSection({ onSelectPhoto }) {
         >
           <Carousel setApi={setApi} opts={{ align: "start", loop: true }}>
             <CarouselContent>
-              {PHOTOS.map((p) => (
-                <CarouselItem key={p.alt} className="basis-1/2 sm:basis-1/3 lg:basis-1/4">
+              {displayPhotos.map((p, idx) => (
+                <CarouselItem key={`${p.alt}-${idx}`} className="basis-1/2 sm:basis-1/3 lg:basis-1/4">
                   <SpotlightCard
                     as="button"
                     type="button"
