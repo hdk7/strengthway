@@ -145,9 +145,9 @@ export default function MembersPaymentsPage() {
         <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-[11px] font-semibold uppercase tracking-wider">Settled Payments</span>
-            <CheckCircle2 size={16} className="text-emerald-400" />
+            <CheckCircle2 size={16} className="text-emerald-500" />
           </div>
-          <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-400">
+          <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
             {kpis.paidCount}
           </div>
           <p className="mt-0.5 text-[10px] text-muted-foreground">Active paid subscriptions</p>

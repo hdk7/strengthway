@@ -97,11 +97,14 @@ const ID_PREFIXES = Object.freeze({
   PLAN:        "PLAN",
   INQUIRY:     "INQ",
   TXN:         "TXN",
-  RECEIPT:     "TSW-REC",
-  ASSIGNMENT:  "ASG",
-  ATTENDANCE:    "ATT",
-  TRAINER_LOG:   "TLOG",
-  TRAINER_LEAVE: "TLREQ",
+  RECEIPT:          "TSW-REC",
+  ASSIGNMENT:       "ASG",
+  ATTENDANCE:       "ATT",
+  TRAINER_LOG:      "TLOG",
+  TRAINER_LEAVE:    "TLREQ",
+  CLASS:            "CLS",
+  SCHEDULE_HISTORY: "SCH-HIST",
+  PORTFOLIO:        "PORT",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -133,6 +136,24 @@ const SCHEDULE_STATUS = Object.freeze({
   ACTIVE:   "Active",
   INACTIVE: "Inactive",
   ARCHIVED: "Archived",
+});
+
+// ─── Class Program Statuses ───────────────────────────────────────────────────
+const CLASS_STATUS = Object.freeze({
+  ACTIVE:   "ACTIVE",
+  INACTIVE: "INACTIVE",
+  ARCHIVED: "ARCHIVED",
+});
+
+// ─── Schedule History Actions ────────────────────────────────────────────────
+const SCHEDULE_CHANGE_ACTION = Object.freeze({
+  ASSIGN_CLASSES: "ASSIGN_CLASSES",
+  SWAP_DATES:     "SWAP_DATES",
+  REORDER:        "REORDER",
+  EDIT_WORKOUT:   "EDIT_WORKOUT",
+  REMOVE_CLASS:   "REMOVE_CLASS",
+  UPDATE_CLASS:   "UPDATE_CLASS",
+  RESTORE_CLASS:  "RESTORE_CLASS",
 });
 
 // ─── Session Statuses ─────────────────────────────────────────────────────────
@@ -194,6 +215,34 @@ const TRAINER_LEAVE_STATUS = Object.freeze({
   CANCELLED: "CANCELLED",
 });
 
+// ─── Portfolio Constants ───────────────────────────────────────────────────────
+const PORTFOLIO_CATEGORY = Object.freeze({
+  PHOTO:              "PHOTO",
+  MOVEMENT_VIDEO:     "MOVEMENT_VIDEO",
+  SESSION_CLIP:       "SESSION_CLIP",
+  FEEDBACK_STORY:     "FEEDBACK_STORY",
+  SESSION_DISCIPLINE: "SESSION_DISCIPLINE",
+});
+
+const PORTFOLIO_STATUS = Object.freeze({
+  ACTIVE:   "Active",
+  DRAFT:    "Draft",
+  ARCHIVED: "Archived",
+});
+
+const PORTFOLIO_ASPECT_RATIO = Object.freeze({
+  FOUR_BY_FIVE:     "4:5",
+  SIXTEEN_BY_NINE:  "16:9",
+  NINE_BY_SIXTEEN:  "9:16",
+  ONE_BY_ONE:       "1:1",
+  THREE_BY_FOUR:    "3:4",
+});
+
+const PORTFOLIO_MEDIA_TYPE = Object.freeze({
+  IMAGE: "IMAGE",
+  VIDEO: "VIDEO",
+});
+
 module.exports = {
   MEMBER_STATUS,
   TRAINER_STATUS,
@@ -201,6 +250,8 @@ module.exports = {
   BATCH_STATUS,
   INQUIRY_STATUS,
   SCHEDULE_STATUS,
+  CLASS_STATUS,
+  SCHEDULE_CHANGE_ACTION,
   SESSION_STATUS,
   HOLIDAY_TYPE,
   ASSIGNMENT_TYPE,
@@ -208,6 +259,10 @@ module.exports = {
   ATTENDANCE_STATUS,
   TRAINER_LOG_STATUS,
   TRAINER_LEAVE_STATUS,
+  PORTFOLIO_CATEGORY,
+  PORTFOLIO_STATUS,
+  PORTFOLIO_ASPECT_RATIO,
+  PORTFOLIO_MEDIA_TYPE,
   GENDER,
   CONTACT_METHODS,
   BLOOD_GROUPS,

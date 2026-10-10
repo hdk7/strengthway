@@ -25,7 +25,14 @@ class ScheduleService {
       filter.status = status;
     }
     if (batchId) {
-      filter.$or = [{ batchIds: batchId }, { batchId }];
+      const candidates = [batchId, batchId.toUpperCase(), batchId.toLowerCase()];
+      const numMatch = batchId.match(/\d+/);
+      if (numMatch) {
+        const n = parseInt(numMatch[0], 10);
+        candidates.push(`BATCH-${String(n).padStart(2, "0")}`);
+        candidates.push(`BATCH-${n}`);
+      }
+      filter.$or = [{ batchIds: { $in: candidates } }, { batchId: { $in: candidates } }];
     }
     if (search && search.trim()) {
       const q = search.trim();
@@ -408,13 +415,25 @@ class ScheduleService {
     const updated = await scheduleRepository.updateItemById(itemId, updates);
 
     // Also update any matching sessions that link to this item
-    if (updates.subject || updates.message !== undefined) {
+    if (
+      updates.subject ||
+      updates.message !== undefined ||
+      updates.beginnerWorkouts !== undefined ||
+      updates.intermediateWorkouts !== undefined ||
+      updates.className
+    ) {
+      const sessionUpdates = {};
+      if (updates.subject) {
+        sessionUpdates.subject = updates.subject;
+        sessionUpdates.className = updates.className || updates.subject;
+      }
+      if (updates.message !== undefined) sessionUpdates.message = updates.message;
+      if (updates.beginnerWorkouts !== undefined) sessionUpdates.beginnerWorkouts = updates.beginnerWorkouts;
+      if (updates.intermediateWorkouts !== undefined) sessionUpdates.intermediateWorkouts = updates.intermediateWorkouts;
+
       await scheduleRepository.updateSessionsByFilter(
         { masterScheduleId: scheduleId, classNumber: existing.classNumber },
-        {
-          ...(updates.subject ? { subject: updates.subject } : {}),
-          ...(updates.message !== undefined ? { message: updates.message } : {}),
-        }
+        sessionUpdates
       );
     }
 

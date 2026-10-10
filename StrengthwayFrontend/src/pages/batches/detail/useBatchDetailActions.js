@@ -251,22 +251,82 @@ export function useBatchDetailActions({
   };
 
   const handleSaveMasterClassItem = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     if (!editingMasterItem) return;
+
+    const programName = (editingMasterItem.name || editingMasterItem.subject || "").trim();
+    if (!programName) {
+      toast.error("Class program name is required.");
+      return;
+    }
+
+    const beginnerWorkouts = (editingMasterItem.beginnerWorkouts || "").trim() || "Not specified";
+    const intermediateWorkouts = (editingMasterItem.intermediateWorkouts || "").trim() || "Not specified";
+    const message = `Beginner: ${beginnerWorkouts}\nIntermediate: ${intermediateWorkouts}`;
+
     try {
-      const updated = await updateMasterClassItem(editingMasterItem.id, {
-        subject: editingMasterItem.subject,
-        message: editingMasterItem.message,
-      });
-      if (updated) {
-        setMasterClassItems((prev) =>
-          prev.map((item) => (item.id === updated.id ? updated : item)),
+      // 1. Update or match ClassProgram in Reusable Classes library
+      let classId = editingMasterItem.classId;
+      if (!classId) {
+        const { getClasses } = await import("@/lib/classProgramService");
+        const allCls = await getClasses({ limit: 100 });
+        const list = Array.isArray(allCls) ? allCls : allCls?.classes || [];
+        const match = list.find(
+          (c) =>
+            c.name.toLowerCase() === (editingMasterItem.originalName || programName).toLowerCase() ||
+            c.id === editingMasterItem.classId
         );
-        setIsEditMasterItemOpen(false);
-        toast.success(`Class ${updated.classNumber} curriculum updated!`);
+        if (match) classId = match.id;
       }
-    } catch {
-      toast.error("Failed to update class details.");
+
+      if (classId) {
+        const { updateClass } = await import("@/lib/classProgramService");
+        await updateClass(classId, {
+          name: programName,
+          beginnerWorkouts,
+          intermediateWorkouts,
+        });
+      }
+
+      // 2. Direct session update if sessionId is known
+      const sessionId =
+        editingMasterItem.sessionId ||
+        (editingMasterItem.id?.startsWith("SES-") ? editingMasterItem.id : null);
+      if (sessionId) {
+        await updateSession(sessionId, {
+          subject: programName,
+          className: programName,
+          beginnerWorkouts,
+          intermediateWorkouts,
+          message,
+        }).catch(() => null);
+      }
+
+      // 3. Update master class item if present
+      const itemId =
+        editingMasterItem.masterClassItemId ||
+        (editingMasterItem.id?.startsWith("item_") ? editingMasterItem.id : null);
+      if (itemId) {
+        await updateMasterClassItem(itemId, {
+          subject: programName,
+          className: programName,
+          beginnerWorkouts,
+          intermediateWorkouts,
+          message,
+        }).catch(() => null);
+      }
+
+      setIsEditMasterItemOpen(false);
+      toast.success(`Class program "${programName}" updated successfully!`);
+
+      // Refresh batch and tracking data so updates immediately reflect
+      await loadBatchData();
+      if (batch?.id) {
+        await loadMonthTracking(batch.id, selectedMonth);
+      }
+    } catch (err) {
+      console.error("Failed to save class item:", err);
+      toast.error(err?.response?.data?.message || err?.message || "Failed to update class details.");
     }
   };
 

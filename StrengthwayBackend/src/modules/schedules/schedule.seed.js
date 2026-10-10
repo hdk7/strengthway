@@ -13,7 +13,7 @@ const {
   SEED_SCHEDULES,
 } = require("./schedule.data");
 
-function calculateSequentialMapping(daysList, totalClasses = 12, startDateStr) {
+function calculateSequentialMapping(daysList, totalClasses = 12, startDateStr, holidays = SEED_HOLIDAYS) {
   const cleanDays =
     Array.isArray(daysList) && daysList.length > 0 ? daysList : ["Monday", "Wednesday", "Friday"];
 
@@ -25,23 +25,25 @@ function calculateSequentialMapping(daysList, totalClasses = 12, startDateStr) {
 
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const daysLower = cleanDays.map((d) => d.toLowerCase());
+  const holidayList = Array.isArray(holidays) ? holidays : (SEED_HOLIDAYS || []);
+  const holidayDates = new Set(holidayList.map((h) => (typeof h === "string" ? h : h.date)));
 
   const items = [];
   let currentDate = new Date(start);
   let count = 0;
   let safety = 0;
 
-  while (count < totalClasses && safety < 120) {
+  while (count < totalClasses && safety < 180) {
     const dayName = dayNames[currentDate.getDay()];
-    if (daysLower.includes(dayName.toLowerCase())) {
+    const yyyy = currentDate.getFullYear();
+    const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(currentDate.getDate()).padStart(2, "0");
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+    if (daysLower.includes(dayName.toLowerCase()) && !holidayDates.has(dateStr)) {
       const classNum = count + 1;
       const weekNum = Math.floor(count / cleanDays.length) + 1;
       const mappedDayName = dayName;
-
-      const yyyy = currentDate.getFullYear();
-      const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
-      const dd = String(currentDate.getDate()).padStart(2, "0");
-      const dateStr = `${yyyy}-${mm}-${dd}`;
 
       items.push({
         classNumber: classNum,
@@ -114,7 +116,7 @@ function createItemsForSchedule(schedule, curriculum = null) {
 
   return mapping.map((m, idx) => {
     const curr = activeCurriculum[idx] || {
-      subject: `Class ${m.classNumber}: Functional Strength Phase ${m.weekNumber}`,
+      subject: `Class ${m.classNumber}`,
       message: `Detailed workout instruction for session ${m.sessionNumber}.`,
     };
     return {
@@ -123,8 +125,12 @@ function createItemsForSchedule(schedule, curriculum = null) {
       classNumber: m.classNumber,
       weekNumber: m.weekNumber,
       dayOfWeek: m.dayOfWeek,
+      classId: curr.classId || "",
+      className: curr.className || curr.subject,
       subject: curr.subject,
       message: curr.message,
+      beginnerWorkouts: curr.beginnerWorkouts || "",
+      intermediateWorkouts: curr.intermediateWorkouts || "",
       sessionDate: m.date,
       displayDate: m.displayDate,
       status: "ACTIVE",
@@ -177,14 +183,20 @@ function generateSessionsForSchedule(schedule, items, targetBatchId = null) {
       if (dateStr) {
         if (dateStr === today || dateStr === todayLocal) {
           sessionStatus = "TODAY";
+        } else if (dateStr < todayLocal) {
+          sessionStatus = "COMPLETED";
         }
       }
+
+      const attendedCount = sessionStatus === "COMPLETED" ? Math.min(capacity, Math.round(capacity * 0.75 + (idx % 4))) : 0;
 
       allGeneratedSessions.push({
         id: `SES-${schedule.id}-${bId}-${String(item.classNumber).padStart(2, "0")}`,
         masterScheduleId: schedule.id,
         masterScheduleName: schedule.name,
         masterClassItemId: item.id,
+        classId: item.classId || "",
+        className: item.className || item.subject,
         classNumber: item.classNumber,
         weekNumber: item.weekNumber || map.weekNumber || 1,
         dayOfWeek: map.dayOfWeek || item.dayOfWeek || "Monday",
@@ -199,10 +211,12 @@ function generateSessionsForSchedule(schedule, items, targetBatchId = null) {
         timing,
         subject: item.subject,
         message: item.message,
+        beginnerWorkouts: item.beginnerWorkouts || "",
+        intermediateWorkouts: item.intermediateWorkouts || "",
         status: sessionStatus,
         notes: "",
         capacity,
-        attendedCount: 0,
+        attendedCount,
         feedback: "",
       });
     });

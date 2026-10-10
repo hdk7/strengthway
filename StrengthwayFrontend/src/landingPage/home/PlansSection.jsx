@@ -72,15 +72,8 @@ export function PlansSection() {
                 )}
                 <div>
                   <h3 className="font-display text-xl font-bold text-foreground">{plan.name}</h3>
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="font-display text-4xl font-bold tracking-tight text-foreground">
-                      {plan.formattedPrice || `₹${plan.price?.toLocaleString("en-IN")}`}
-                    </span>
-                    <span className="text-sm font-medium text-muted-foreground">{plan.period}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{plan.billing || plan.description}</p>
 
-                  <ul className="mt-6 space-y-3">
+                  <ul className="mt-5 sm:mt-6 space-y-3">
                     {plan.features?.map((feat, idx) => (
                       <li key={idx} className="flex items-start gap-2.5 text-xs text-foreground/90">
                         <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground" />

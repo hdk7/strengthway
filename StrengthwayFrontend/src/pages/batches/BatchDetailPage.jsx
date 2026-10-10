@@ -10,6 +10,7 @@ import BatchTrainersTab from "./detail/BatchTrainersTab";
 import BatchMembersTab from "./detail/BatchMembersTab";
 import BatchClassesTab from "./detail/BatchClassesTab";
 import BatchDetailModals from "./detail/BatchDetailModals";
+import { BatchClassAssignmentModal } from "../schedule/components/BatchClassAssignmentModal";
 import { useBatchDetailData } from "./detail/useBatchDetailData";
 import { useBatchDetailActions } from "./detail/useBatchDetailActions";
 
@@ -22,6 +23,7 @@ export default function BatchDetailPage() {
   const [trainerSearch, setTrainerSearch] = useState("");
   const [sessionsTab, setSessionsTab] = useState("Upcoming");
   const [selectedWeekFilter, setSelectedWeekFilter] = useState("all");
+  const [isAssignClassesOpen, setIsAssignClassesOpen] = useState(false);
 
   // Modal states
   const [isEditMasterItemOpen, setIsEditMasterItemOpen] = useState(false);
@@ -166,7 +168,7 @@ export default function BatchDetailPage() {
           setIsTransferModalOpen(true);
         }}
         onOpenAddMember={() => setIsAddMemberOpen(true)}
-        onOpenAssignProgram={() => setIsAssignProgramOpen(true)}
+        onOpenAddClasses={() => setIsAssignClassesOpen(true)}
       />
 
       {activeTab === "overview" && (
@@ -232,15 +234,55 @@ export default function BatchDetailPage() {
             setSelectedSessionForNotes(session);
             setSessionNoteText(session.notes || "");
           }}
-          onEditMasterItem={(matchingItem) => {
-            setEditingMasterItem(matchingItem);
+          onEditMasterItem={async (sessionOrItem, matchingItem) => {
+            const isSession =
+              sessionOrItem?.sessionDate !== undefined ||
+              sessionOrItem?.id?.startsWith?.("SES-");
+            const session = isSession ? sessionOrItem : null;
+            const item = matchingItem || (!isSession ? sessionOrItem : null);
+
+            let classId = session?.classId || item?.classId || "";
+            let name = session?.subject || session?.className || item?.subject || "";
+            let beg = session?.beginnerWorkouts || item?.beginnerWorkouts || "";
+            let inter = session?.intermediateWorkouts || item?.intermediateWorkouts || "";
+
+            // If workouts or classId aren't yet populated on this session, look up from class library
+            if ((!beg || !inter || !classId) && name) {
+              try {
+                const { getClasses } = await import("@/lib/classProgramService");
+                const res = await getClasses({ search: name, limit: 10 });
+                const list = Array.isArray(res) ? res : res?.classes || [];
+                const found = list.find((c) => c.name.toLowerCase() === name.toLowerCase()) || list[0];
+                if (found) {
+                  if (!classId) classId = found.id;
+                  if (!beg || beg === "Not specified") beg = found.beginnerWorkouts;
+                  if (!inter || inter === "Not specified") inter = found.intermediateWorkouts;
+                }
+              } catch (_) {}
+            }
+
+            setEditingMasterItem({
+              sessionId: session?.id || "",
+              masterClassItemId: item?.id || session?.masterClassItemId || "",
+              classId,
+              name,
+              originalName: name,
+              subject: name,
+              beginnerWorkouts: beg === "Not specified" ? "" : beg,
+              intermediateWorkouts: inter === "Not specified" ? "" : inter,
+              classNumber: session?.classNumber || item?.classNumber || 1,
+              weekNumber: session?.weekNumber || item?.weekNumber || 1,
+              dayOfWeek: session?.dayOfWeek || item?.dayOfWeek || "Monday",
+              displayDate: session?.displayDate || item?.displayDate || session?.sessionDate || "",
+            });
             setIsEditMasterItemOpen(true);
           }}
           onMarkCompleted={handleMarkCompleted}
           onCancelSession={handleCancelSession}
           onRestoreSession={handleRestoreSession}
-          onOpenAssignProgram={() => setIsAssignProgramOpen(true)}
           onCreateMasterSchedule={handleCreateMasterScheduleForBatch}
+          onOpenAddClasses={() => setIsAssignClassesOpen(true)}
+          onRefresh={loadBatchData}
         />
       )}
 
@@ -286,6 +328,20 @@ export default function BatchDetailPage() {
         setTransferTargetMember={setTransferTargetMember}
         transferModalTab={transferModalTab}
         onTransferSuccess={async () => {
+          await loadBatchData();
+          if (batch?.id) {
+            await loadMonthTracking(batch.id, selectedMonth);
+          }
+        }}
+      />
+
+      {/* Multi-Class Reusable Assignment Modal */}
+      <BatchClassAssignmentModal
+        isOpen={isAssignClassesOpen}
+        onClose={() => setIsAssignClassesOpen(false)}
+        batches={allBatches.length > 0 ? allBatches : (batch ? [batch] : [])}
+        preselectedBatchId={batch?.id}
+        onSuccess={async () => {
           await loadBatchData();
           if (batch?.id) {
             await loadMonthTracking(batch.id, selectedMonth);

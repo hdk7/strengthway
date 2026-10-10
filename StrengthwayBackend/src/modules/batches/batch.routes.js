@@ -58,5 +58,12 @@ router.post("/:id/classes", validate(createClassSchema), ctrl.createClass);
 router.put("/:id/classes/:classId", validate(updateClassSchema), ctrl.updateClass);
 router.delete("/:id/classes/:classId", ctrl.deleteClass);
 
+// ─── Batch Reusable Classes Scheduling, Shuffling & History Sub-routes ────────
+const batchScheduleCtrl = require("../classes/batchSchedule.controller");
+router.get("/:id/schedule", batchScheduleCtrl.getBatchSchedule);
+router.post("/:id/schedule/assign-classes", batchScheduleCtrl.assignClasses);
+router.post("/:id/schedule/shuffle", batchScheduleCtrl.shuffleClasses);
+router.get("/:id/schedule/history", batchScheduleCtrl.getScheduleHistory);
+
 module.exports = router;
 

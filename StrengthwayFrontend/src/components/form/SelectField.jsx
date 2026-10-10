@@ -75,8 +75,11 @@ const SelectField = forwardRef(function SelectField(
           )}
           {...props}
         >
-          {placeholder && (
-            <option value="" disabled className="bg-card text-muted-foreground">
+          {placeholder && !options?.some((opt) => (typeof opt === "object" && opt !== null ? opt.value === "" : opt === "")) && (
+            <option
+              value=""
+              className="bg-white dark:bg-[#18181b] text-slate-700 dark:text-zinc-200 font-medium py-2"
+            >
               {placeholder}
             </option>
           )}
@@ -84,19 +87,35 @@ const SelectField = forwardRef(function SelectField(
           {options &&
             options.map((opt) => {
               if (typeof opt === "object" && opt !== null) {
+                const isPlaceholder = opt.value === "";
                 return (
                   <option
                     key={opt.value}
                     value={opt.value}
                     disabled={opt.disabled}
-                    className="bg-card text-foreground py-2"
+                    className={cn(
+                      "bg-white dark:bg-[#18181b] py-2",
+                      isPlaceholder
+                        ? "text-slate-700 dark:text-zinc-200 font-medium"
+                        : "text-slate-900 dark:text-zinc-100"
+                    )}
                   >
                     {opt.label ?? opt.value}
                   </option>
                 );
               }
+              const isPlaceholder = opt === "";
               return (
-                <option key={opt} value={opt} className="bg-card text-foreground py-2">
+                <option
+                  key={opt}
+                  value={opt}
+                  className={cn(
+                    "bg-white dark:bg-[#18181b] py-2",
+                    isPlaceholder
+                      ? "text-slate-700 dark:text-zinc-200 font-medium"
+                      : "text-slate-900 dark:text-zinc-100"
+                  )}
+                >
                   {opt}
                 </option>
               );

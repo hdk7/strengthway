@@ -10,10 +10,11 @@
  *   4. Batches
  *   5. Members
  *   6. Master Schedules, Items, Sessions & Holidays
+ *   7. Reusable Classes (15 TSW Programs)
  *
  * Supports CLI flags:
  *   --drop    : Drops existing collections before seeding (clean reload)
- *   --only=X  : Seeds only a specific collection (admin, plans, trainers, batches, members, schedules)
+ *   --only=X  : Seeds only a specific collection (admin, plans, trainers, batches, members, schedules, classes)
  */
 
 require("../config/env");
@@ -24,6 +25,8 @@ const seedTrainers  = require("./trainers.seed");
 const seedBatches   = require("./batches.seed");
 const seedMembers   = require("./members.seed");
 const seedSchedules = require("./schedules.seed");
+const seedClasses   = require("./classes.seed");
+const seedPortfolio = require("./portfolio.seed");
 
 const DROP_FIRST = process.argv.includes("--drop");
 const ONLY_ARG = process.argv.find((arg) => arg.startsWith("--only="));
@@ -64,6 +67,14 @@ async function runSeed() {
 
   if (shouldRun("schedules")) {
     await seedSchedules({ drop: DROP_FIRST });
+  }
+
+  if (shouldRun("classes")) {
+    await seedClasses({ drop: DROP_FIRST });
+  }
+
+  if (shouldRun("portfolio")) {
+    await seedPortfolio({ drop: DROP_FIRST });
   }
 
   const durationSec = ((Date.now() - startTime) / 1000).toFixed(2);

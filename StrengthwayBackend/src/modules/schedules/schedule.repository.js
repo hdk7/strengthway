@@ -119,7 +119,15 @@ class ScheduleRepository {
 
   async createManySessions(sessions) {
     if (!sessions || sessions.length === 0) return [];
-    return Session.insertMany(sessions);
+    const bulkOps = sessions.map((s) => ({
+      updateOne: {
+        filter: { batchId: s.batchId, sessionDate: s.sessionDate },
+        update: { $set: s },
+        upsert: true,
+      },
+    }));
+    await Session.bulkWrite(bulkOps);
+    return sessions;
   }
 
   async updateSessionById(id, updates) {

@@ -7,10 +7,10 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 // Site Sections - Portfolio
 import { PortfolioHeroSection } from "@/landingPage/portfolio/PortfolioHeroSection";
-import { PhotosSection } from "@/landingPage/portfolio/PhotosSection";
-import { VideosSection } from "@/landingPage/portfolio/VideosSection";
 import { SessionsSection } from "@/landingPage/portfolio/SessionsSection";
 import { FeedbackSection } from "@/landingPage/portfolio/FeedbackSection";
+import { PhotosSection } from "@/landingPage/portfolio/PhotosSection";
+import { VideosSection } from "@/landingPage/portfolio/VideosSection";
 
 export function PortfolioPage() {
   useDocumentTitle("The Strength Way");
@@ -21,10 +21,10 @@ export function PortfolioPage() {
       <Navbar />
       <main className="pt-16 w-full max-w-full overflow-x-clip flex-1">
         <PortfolioHeroSection />
-        <PhotosSection onSelectPhoto={setSelectedPhoto} />
-        <VideosSection />
         <SessionsSection />
         <FeedbackSection />
+        <PhotosSection onSelectPhoto={setSelectedPhoto} />
+        <VideosSection />
       </main>
       <Footer />
 

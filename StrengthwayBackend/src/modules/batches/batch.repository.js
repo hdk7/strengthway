@@ -11,7 +11,28 @@ class BatchRepository {
   }
 
   async findById(id) {
-    return Batch.findOne({ id }).lean();
+    if (!id) return null;
+    let batch = await Batch.findOne({ id }).lean();
+    if (!batch) {
+      const candidates = [id, id.toUpperCase(), id.toLowerCase()];
+      const numMatch = id.match(/\d+/);
+      if (numMatch) {
+        const n = parseInt(numMatch[0], 10);
+        candidates.push(`BATCH-${String(n).padStart(2, "0")}`);
+        candidates.push(`BATCH-${n}`);
+        candidates.push(`Batch ${n}`);
+        candidates.push(`BATCH ${n}`);
+        candidates.push(`batch ${n}`);
+      }
+      batch = await Batch.findOne({
+        $or: [
+          { id: { $in: candidates } },
+          { name: { $in: candidates } },
+          { shortName: { $in: candidates } },
+        ],
+      }).lean();
+    }
+    return batch;
   }
 
   async create(data) {

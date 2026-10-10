@@ -214,9 +214,9 @@ export default function TrainersPaymentsPage() {
             <span className="text-[11px] font-semibold uppercase tracking-wider">
               Disbursed Coaches
             </span>
-            <CheckCircle2 size={16} className="text-emerald-400" />
+            <CheckCircle2 size={16} className="text-emerald-500" />
           </div>
-          <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-400">
+          <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
             {kpis.disbursedCount}
           </div>
           <p className="mt-0.5 text-[10px] text-muted-foreground">

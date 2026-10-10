@@ -15,9 +15,47 @@ import {
   X,
   RotateCcw,
   Plus,
+  ArrowLeftRight,
+  History,
 } from "lucide-react";
 import Pagination from "@/components/table/Pagination";
 import { hasClassStarted } from "@/lib/batchUtils";
+import { ShuffleClassModal } from "../../schedule/components/ShuffleClassModal";
+import { ScheduleHistoryDrawer } from "../../schedule/components/ScheduleHistoryDrawer";
+
+const MONTH_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+function formatDateAndMonth(session) {
+  const rawDate = session?.sessionDate || session?.date;
+  if (rawDate && typeof rawDate === "string") {
+    const parts = rawDate.slice(0, 10).split("-");
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const monthIndex = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (!isNaN(day) && monthIndex >= 0 && monthIndex < 12) {
+        return `${day} ${MONTH_NAMES[monthIndex]}`;
+      }
+    }
+  }
+
+  if (session?.displayDate && typeof session.displayDate === "string") {
+    const parsed = new Date(session.displayDate);
+    if (!isNaN(parsed.getTime())) {
+      return `${parsed.getDate()} ${MONTH_NAMES[parsed.getMonth()]}`;
+    }
+    return session.displayDate;
+  }
+
+  if (session?.weekNumber && session?.dayOfWeek) {
+    return `Week ${session.weekNumber} • ${session.dayOfWeek}`;
+  }
+
+  return "—";
+}
 
 export default function BatchClassesTab({
   batch,
@@ -35,9 +73,19 @@ export default function BatchClassesTab({
   onMarkCompleted,
   onCancelSession,
   onRestoreSession,
-  onOpenAssignProgram,
   onCreateMasterSchedule,
+  onOpenAddClasses,
+  onRefresh,
 }) {
+  const [isShuffleOpen, setIsShuffleOpen] = useState(false);
+  const [shuffleSourceSessionId, setShuffleSourceSessionId] = useState("");
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const handleOpenShuffle = (sourceId = "") => {
+    setShuffleSourceSessionId(sourceId);
+    setIsShuffleOpen(true);
+  };
+
   // Pagination for Scheduled Classes (fixed 6 classes per page)
   const PAGE_SIZE = 6;
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,13 +110,6 @@ export default function BatchClassesTab({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-150">
-      <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
-        <span>
-          Curriculum progression and floor sessions for <strong>{batch?.name}</strong>
-        </span>
-        <span>{currentBatchSessions.length} total classes</span>
-      </div>
-
       {masterSchedule || currentBatchSessions.length > 0 ? (
         <div className="space-y-4">
           {/* Sessions Submodule Workflow Tabs inside Batch */}
@@ -139,47 +180,33 @@ export default function BatchClassesTab({
             })}
           </div>
 
-          {/* Week Filter Pills & Status Info */}
-          <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold">
+          {/* Week Filter Pills */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold pt-1">
+            <button
+              type="button"
+              onClick={() => setSelectedWeekFilter("all")}
+              className={`rounded-xl px-3 py-1.5 transition-all cursor-pointer ${
+                selectedWeekFilter === "all"
+                  ? "bg-primary text-background font-bold shadow-xs border border-transparent"
+                  : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              All Weeks
+            </button>
+            {[1, 2, 3, 4].map((wk) => (
               <button
+                key={wk}
                 type="button"
-                onClick={() => setSelectedWeekFilter("all")}
+                onClick={() => setSelectedWeekFilter(wk)}
                 className={`rounded-xl px-3 py-1.5 transition-all cursor-pointer ${
-                  selectedWeekFilter === "all"
+                  selectedWeekFilter === wk
                     ? "bg-primary text-background font-bold shadow-xs border border-transparent"
                     : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
               >
-                All Weeks
+                Week {wk}
               </button>
-              {[1, 2, 3, 4].map((wk) => (
-                <button
-                  key={wk}
-                  type="button"
-                  onClick={() => setSelectedWeekFilter(wk)}
-                  className={`rounded-xl px-3 py-1.5 transition-all cursor-pointer ${
-                    selectedWeekFilter === wk
-                      ? "bg-primary text-background font-bold shadow-xs border border-transparent"
-                      : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  Week {wk}
-                </button>
-              ))}
-            </div>
-
-            <span className="text-xs text-muted-foreground">
-              Showing{" "}
-              {displayedSessions.length > 0
-                ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(
-                    safePage * PAGE_SIZE,
-                    displayedSessions.length
-                  )} of ${displayedSessions.length}`
-                : 0}{" "}
-              {sessionsTab === "All" ? "" : sessionsTab.toLowerCase()} classes for{" "}
-              {batch?.name || batch?.shortName}
-            </span>
+            ))}
           </div>
 
           {/* Floor Sessions & Curriculum Cards Grid */}
@@ -246,74 +273,49 @@ export default function BatchClassesTab({
                         </div>
 
                         <div className="flex items-center gap-1.5">
-                          <span className="rounded-md bg-muted border border-border/70 px-2 py-0.5 text-[11px] font-semibold text-foreground">
-                            Week {session.weekNumber} • {session.dayOfWeek}
-                          </span>
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
-                              isCancelled
-                                ? "bg-destructive/15 text-destructive"
-                                : isCompleted
-                                  ? "bg-emerald-500/15 text-emerald-400"
-                                  : isToday
-                                    ? "bg-amber-500/15 text-amber-400"
-                                    : "bg-blue-500/15 text-blue-400"
-                            }`}
+                            className="rounded-md bg-muted border border-border/70 px-2.5 py-1 text-xs font-bold text-foreground"
+                            title={session.displayDate || session.sessionDate || ""}
                           >
-                            {session.status || "SCHEDULED"}
+                            {formatDateAndMonth(session)}
                           </span>
                         </div>
                       </div>
 
-                      {/* Title & Subject */}
-                      <div>
-                        <h4 className="font-bold text-sm text-foreground leading-snug line-clamp-2">
-                          {session.subject}
-                        </h4>
-                        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-3 leading-relaxed">
-                          {session.message ||
-                            "Standard functional training session curriculum."}
-                        </p>
-                      </div>
-
-                      {/* Session Floor Meta: Time, Coach, Room, Attendee Count */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
-                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
-                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
-                            Slot
-                          </span>
-                          <span className="font-bold text-foreground text-xs truncate block">
-                            {session.timing || batch?.timingLabel || "—"}
-                          </span>
+                      {/* Title, Subject & Workouts */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-sm text-foreground leading-snug">
+                            {session.subject || session.className}
+                          </h4>
+                          {session.classId && (
+                            <span className="font-mono text-[10px] text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded font-bold">
+                              {session.classId}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
-                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
-                            Coach
-                          </span>
-                          <span className="font-bold text-foreground text-xs truncate block">
-                            {session.coachName || "Faculty Coach"}
-                          </span>
-                        </div>
-
-                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
-                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
-                            Room
-                          </span>
-                          <span className="font-bold text-foreground text-xs truncate block">
-                            {session.roomName || batch?.room || "Main Studio"}
-                          </span>
-                        </div>
-
-                        <div className="rounded-xl bg-muted/40 p-2 border border-border/50">
-                          <span className="text-[10px] text-muted-foreground uppercase font-semibold block">
-                            Attendees
-                          </span>
-                          <span className="font-bold text-primary text-xs flex items-center gap-1">
-                            <Users size={11} />
-                            {session.attendeesCount ?? batch?.currentPax ?? 0}
-                          </span>
-                        </div>
+                        {session.beginnerWorkouts || session.intermediateWorkouts ? (
+                          <div className="space-y-1 text-xs pt-0.5">
+                            {session.beginnerWorkouts && session.beginnerWorkouts !== "Not specified" && (
+                              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 text-[11px] text-foreground">
+                                <span className="font-bold text-emerald-600 dark:text-emerald-400">Beg: </span>
+                                <span className="text-muted-foreground line-clamp-2">{session.beginnerWorkouts}</span>
+                              </div>
+                            )}
+                            {session.intermediateWorkouts && session.intermediateWorkouts !== "Not specified" && (
+                              <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2 py-1 text-[11px] text-foreground">
+                                <span className="font-bold text-blue-600 dark:text-blue-400">Int: </span>
+                                <span className="text-muted-foreground line-clamp-2">{session.intermediateWorkouts}</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            {session.message ||
+                              "Standard functional training session curriculum."}
+                          </p>
+                        )}
                       </div>
 
                       {/* Notes Preview Pill */}
@@ -340,15 +342,25 @@ export default function BatchClassesTab({
                           <span>{session.notes ? "Notes" : "Add Note"}</span>
                         </button>
 
-                        {matchingItem && (
+                        <button
+                          type="button"
+                          onClick={() => onEditMasterItem(session, matchingItem)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                          title="Edit Class Program & Workouts"
+                        >
+                          <Edit3 size={11} />
+                          <span>Edit Item</span>
+                        </button>
+
+                        {!isCompleted && !isCancelled && currentBatchSessions.length >= 2 && (
                           <button
                             type="button"
-                            onClick={() => onEditMasterItem(matchingItem)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-                            title="Edit Curriculum Item"
+                            onClick={() => handleOpenShuffle(session.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/70 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950/40 px-2 py-1 text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
+                            title="Swap this class with another scheduled day"
                           >
-                            <Edit3 size={11} />
-                            <span>Edit Item</span>
+                            <ArrowLeftRight size={11} />
+                            <span>Swap</span>
                           </button>
                         )}
                       </div>
@@ -427,32 +439,57 @@ export default function BatchClassesTab({
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border p-8 text-center bg-card/40">
           <Calendar className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <h3 className="text-base font-bold text-foreground">
-            No Scheduled Class Program Assigned Yet
+            No Scheduled Classes Yet
           </h3>
           <p className="mt-1 max-w-md text-xs text-muted-foreground">
-            This batch currently has no curriculum assigned. You can assign an existing
-            reusable program or create a new program.
+            There are currently no scheduled classes for this batch.
           </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2.5">
-            <button
-              type="button"
-              onClick={onOpenAssignProgram}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-sm"
-            >
-              <Layers size={15} />
-              <span>Assign Existing Reusable Program</span>
-            </button>
-            <button
-              type="button"
-              onClick={onCreateMasterSchedule}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all cursor-pointer"
-            >
-              <Plus size={15} />
-              <span>Create New Program for {batch?.shortName || batch?.name}</span>
-            </button>
-          </div>
+          {onOpenAddClasses ? (
+            <div className="mt-4 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={onOpenAddClasses}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
+              >
+                <Plus size={15} />
+                <span>Add Classes</span>
+              </button>
+            </div>
+          ) : onCreateMasterSchedule ? (
+            <div className="mt-4 flex items-center justify-center">
+              <button
+                type="button"
+                onClick={onCreateMasterSchedule}
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-all cursor-pointer"
+              >
+                <Plus size={15} />
+                <span>Create New Program</span>
+              </button>
+            </div>
+          ) : null}
         </div>
       )}
+
+      {/* Swap / Shuffle Modal (Phase 5) */}
+      <ShuffleClassModal
+        isOpen={isShuffleOpen}
+        onClose={() => {
+          setIsShuffleOpen(false);
+          setShuffleSourceSessionId("");
+        }}
+        batch={batch}
+        sessions={currentBatchSessions}
+        initialSourceSessionId={shuffleSourceSessionId}
+        onSuccess={onRefresh}
+        allowRandomizeRange={false}
+      />
+
+      {/* Schedule History Audit Drawer (Phase 5) */}
+      <ScheduleHistoryDrawer
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        batch={batch}
+      />
     </div>
   );
 }

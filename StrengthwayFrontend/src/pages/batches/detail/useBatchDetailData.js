@@ -55,17 +55,30 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
         getSessions(),
       ]);
 
-      setAllBatches(Array.isArray(allB) ? allB : []);
+      const batchesList = Array.isArray(allB) ? allB : [];
+      setAllBatches(batchesList);
       setAllMasterSchedules(Array.isArray(allScheds) ? allScheds : []);
       setSessions(Array.isArray(floorSessions) ? floorSessions : []);
 
-      if (foundBatch) {
-        setBatch(foundBatch);
+      let currentBatch = foundBatch;
+      if (!currentBatch && batchesList.length > 0) {
+        const clean = targetId.toLowerCase().replace(/[^a-z0-9]/g, "");
+        currentBatch = batchesList.find((b) => {
+          const bClean = (b.id || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          const nameClean = (b.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+          return b.id === targetId || bClean === clean || nameClean === clean;
+        }) || null;
+      }
+
+      const effectiveId = currentBatch?.id || targetId;
+
+      if (currentBatch) {
+        setBatch(currentBatch);
         setScheduledClasses(Array.isArray(cls) ? cls : []);
 
         const allT = Array.isArray(trnsList) ? trnsList : [];
         setAllTrainers(allT);
-        const resolvedTrns = getBatchTrainers(foundBatch.trainerIds, allT, foundBatch.id);
+        const resolvedTrns = getBatchTrainers(currentBatch.trainerIds, allT, currentBatch.id);
         setTrainers(resolvedTrns);
 
         const allM = Array.isArray(memsList) ? memsList : [];
@@ -73,7 +86,7 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
         const assignedM = allM.filter(
           (m) =>
             !m.isDeleted &&
-            (m.batchId === foundBatch.id || m.schedule?.batchId === foundBatch.id)
+            (m.batchId === currentBatch.id || m.schedule?.batchId === currentBatch.id)
         );
         setMembers(assignedM);
       } else {
@@ -81,7 +94,7 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
       }
 
       // Load mapped Master Class Schedule for this batch
-      const mcs = await getMasterScheduleByBatchId(targetId);
+      const mcs = await getMasterScheduleByBatchId(effectiveId);
       setMasterSchedule(mcs);
       if (mcs) {
         const items = await getScheduleItems(mcs.id);
@@ -222,40 +235,80 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
   // Current batch sessions mapped from month-tracking (or sessions state / masterClassItems)
   const currentBatchSessions = useMemo(() => {
     if (!batch) return [];
+    let list = [];
     const monthSessions = monthTracking?.category3_ScheduledClasses?.sessions;
     if (Array.isArray(monthSessions) && monthSessions.length > 0) {
-      return monthSessions;
-    }
-    const list = sessions.filter((s) => {
-      if (s.batchId !== batch.id) return false;
-      if (s.sessionDate && selectedMonth) {
-        return s.sessionDate.startsWith(selectedMonth);
+      list = monthSessions;
+    } else {
+      const isBatchMatch = (sBatchId) => {
+        if (!sBatchId || !batch?.id) return false;
+        if (sBatchId === batch.id) return true;
+        const cleanS = sBatchId.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const cleanB = batch.id.toLowerCase().replace(/[^a-z0-9]/g, "");
+        return cleanS === cleanB;
+      };
+      const filtered = sessions.filter((s) => {
+        if (!isBatchMatch(s.batchId)) return false;
+        if (s.sessionDate && selectedMonth) {
+          return s.sessionDate.startsWith(selectedMonth);
+        }
+        return true;
+      });
+      if (filtered.length > 0) {
+        list = filtered;
+      } else {
+        const batchList = sessions.filter((s) => isBatchMatch(s.batchId));
+        if (batchList.length > 0) {
+          list = batchList;
+        } else {
+          list = masterClassItems.map((item) => ({
+            id: `SES-${masterSchedule?.id || "mcs"}-${batch.id}-${String(item.classNumber).padStart(2, "0")}`,
+            masterClassItemId: item.id,
+            classNumber: item.classNumber,
+            weekNumber: item.weekNumber,
+            dayOfWeek: item.dayOfWeek,
+            batchId: batch.id,
+            batchName: batch.name || batch.shortName,
+            coachName: masterSchedule?.coachName || "Assigned Coach",
+            timing: batch.timingLabel || `${batch.startTime} - ${batch.endTime}`,
+            room: batch.room || "Studio 1",
+            attendeesCount: batch.currentPax || members.length,
+            sessionDate: item.sessionDate || "",
+            displayDate: item.displayDate || "",
+            subject: item.subject,
+            message: item.message,
+            status: "SCHEDULED",
+            notes: "",
+          }));
+        }
       }
-      return true;
+    }
+
+    // Strictly enforce only one class per single day in batch scheduled classes
+    const uniqueByDate = new Map();
+    for (const s of list) {
+      const dateKey = s.sessionDate || s.displayDate || s.id;
+      if (!uniqueByDate.has(dateKey)) {
+        uniqueByDate.set(dateKey, s);
+      } else {
+        const existing = uniqueByDate.get(dateKey);
+        // Prefer assigned class with explicit classId or non-scheduled status
+        if (s.classId && !existing.classId) {
+          uniqueByDate.set(dateKey, s);
+        }
+      }
+    }
+
+    const uniqueList = Array.from(uniqueByDate.values()).sort((a, b) => {
+      const dA = a.sessionDate || "";
+      const dB = b.sessionDate || "";
+      if (dA && dB) return dA.localeCompare(dB);
+      return (a.classNumber || 0) - (b.classNumber || 0);
     });
-    if (list.length > 0) return list;
 
-    const batchList = sessions.filter((s) => s.batchId === batch.id);
-    if (batchList.length > 0) return batchList;
-
-    return masterClassItems.map((item) => ({
-      id: `SES-${masterSchedule?.id || "mcs"}-${batch.id}-${String(item.classNumber).padStart(2, "0")}`,
-      masterClassItemId: item.id,
-      classNumber: item.classNumber,
-      weekNumber: item.weekNumber,
-      dayOfWeek: item.dayOfWeek,
-      batchId: batch.id,
-      batchName: batch.name || batch.shortName,
-      coachName: masterSchedule?.coachName || "Assigned Coach",
-      timing: batch.timingLabel || `${batch.startTime} - ${batch.endTime}`,
-      room: batch.room || "Studio 1",
-      attendeesCount: batch.currentPax || members.length,
-      sessionDate: item.sessionDate || "",
-      displayDate: item.displayDate || "",
-      subject: item.subject,
-      message: item.message,
-      status: "SCHEDULED",
-      notes: "",
+    return uniqueList.map((s, idx) => ({
+      ...s,
+      classNumber: idx + 1,
     }));
   }, [sessions, batch, monthTracking, selectedMonth, masterClassItems, masterSchedule, members.length]);
 

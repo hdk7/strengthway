@@ -128,7 +128,7 @@ export function TrainerProfileView({
                 <span className="text-xs text-muted-foreground font-medium block">
                   Trainer ID
                 </span>
-                <span className="text-sm font-mono font-bold text-emerald-400 block">
+                <span className="text-sm font-mono font-bold text-emerald-600 dark:text-emerald-400 block">
                   {trainer.id}
                 </span>
               </div>
@@ -161,8 +161,8 @@ export function TrainerProfileView({
                   Availability
                 </span>
                 <div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 px-3 py-1 text-xs font-semibold text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400"></span>
                     {isInactive ? "Inactive / On Leave" : "Available for Coaching"}
                   </span>
                 </div>
@@ -228,17 +228,6 @@ export function TrainerProfileView({
                     No batches currently assigned
                   </span>
                 )}
-              </div>
-
-              <div className="space-y-1 pt-3 sm:pt-0 sm:col-span-2">
-                <span className="text-xs text-muted-foreground font-medium block">
-                  Tags
-                </span>
-                <div className="flex flex-wrap gap-1.5 text-xs font-semibold text-foreground/80">
-                  <span className="text-accent font-medium">
-                    #CrossFitL2, #StrengthAndConditioning, #Endurance
-                  </span>
-                </div>
               </div>
             </div>
           </div>

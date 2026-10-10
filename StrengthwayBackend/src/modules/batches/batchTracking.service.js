@@ -145,12 +145,35 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
     };
   });
 
-  // Category 3: Scheduled Classes & Sessions in this Month
+  // Category 3: Scheduled Classes & Sessions in this Month (strictly 1 class per day)
   const Session = require("../schedules/session.model");
-  const sessions = await Session.find({
-    batchId,
+  const batchCandidates = [batchId, batchId.toUpperCase(), batchId.toLowerCase()];
+  const batchNumMatch = batchId.match(/\d+/);
+  if (batchNumMatch) {
+    const bn = parseInt(batchNumMatch[0], 10);
+    batchCandidates.push(`BATCH-${String(bn).padStart(2, "0")}`);
+    batchCandidates.push(`BATCH-${bn}`);
+  }
+  const rawSessions = await Session.find({
+    batchId: { $in: batchCandidates },
     sessionDate: { $regex: `^${ym}` },
-  }).sort({ sessionDate: 1, startTime: 1 }).lean();
+  }).sort({ sessionDate: 1, startTime: 1, createdAt: -1 }).lean();
+
+  const sessionByDate = new Map();
+  for (const s of rawSessions) {
+    const d = s.sessionDate;
+    if (!d) continue;
+    if (!sessionByDate.has(d)) {
+      sessionByDate.set(d, s);
+    } else {
+      const existing = sessionByDate.get(d);
+      if (s.classId && !existing.classId) {
+        sessionByDate.set(d, s);
+      }
+    }
+  }
+  const sessions = Array.from(sessionByDate.values())
+    .sort((a, b) => (a.sessionDate || "").localeCompare(b.sessionDate || ""));
 
   const completedSessions = sessions.filter((s) => s.status === "COMPLETED").length;
   const scheduledSessions = sessions.filter((s) => s.status === "SCHEDULED").length;

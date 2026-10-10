@@ -39,7 +39,7 @@ const FEEDBACK = [
 export function FeedbackSection() {
   const [api, setApi] = useState();
   return (
-    <section className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+    <section id="feedback" className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
       <Reveal className="min-w-0">
         <SectionHeading
           eyebrow="Feedback"

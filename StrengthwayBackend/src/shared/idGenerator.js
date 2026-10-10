@@ -140,6 +140,39 @@ function generateInquiryId(currentMax = 0, year = new Date().getFullYear()) {
   return `${ID_PREFIXES.INQUIRY}-${year}-${num}`;
 }
 
+// ─── Class Program ID ─────────────────────────────────────────────────────────
+/**
+ * Produces format: CLS-001, CLS-002, … CLS-015
+ * @param {number} currentMax - The highest numeric suffix in DB
+ * @returns {string} e.g. "CLS-001"
+ */
+function generateClassId(currentMax = 0) {
+  const num = String(currentMax + 1).padStart(3, "0");
+  return `${ID_PREFIXES.CLASS || "CLS"}-${num}`;
+}
+
+// ─── Schedule History ID ──────────────────────────────────────────────────────
+/**
+ * Produces format: SCH-HIST-172767-1234
+ * @returns {string}
+ */
+function generateScheduleHistoryId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.SCHEDULE_HISTORY || "SCH-HIST"}-${ts}-${rand}`;
+}
+
+// ─── Portfolio Media ID ───────────────────────────────────────────────────────
+/**
+ * Produces format: PORT-001, PORT-002, … PORT-999
+ * @param {number} currentMax - The highest numeric suffix in DB
+ * @returns {string} e.g. "PORT-001"
+ */
+function generatePortfolioId(currentMax = 0) {
+  const num = String(currentMax + 1).padStart(3, "0");
+  return `${ID_PREFIXES.PORTFOLIO || "PORT"}-${num}`;
+}
+
 module.exports = {
   generateMemberId,
   generateTrainerId,
@@ -152,6 +185,9 @@ module.exports = {
   generateAttendanceId,
   generateTrainerLogId,
   generateTrainerLeaveId,
+  generateClassId,
+  generateScheduleHistoryId,
+  generatePortfolioId,
 };
 
 

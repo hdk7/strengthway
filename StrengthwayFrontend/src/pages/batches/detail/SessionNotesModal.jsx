@@ -35,12 +35,19 @@ export default function SessionNotesModal({
         </div>
 
         <form onSubmit={onSave} className="mt-4 space-y-4">
-          <div className="text-xs text-slate-500 dark:text-muted-foreground">
-            <strong className="text-slate-800 dark:text-foreground">Class #{selectedSessionForNotes.classNumber}:</strong>{" "}
-            {selectedSessionForNotes.subject}
-            <div className="text-blue-700 dark:text-primary font-medium mt-0.5">
-              {selectedSessionForNotes.displayDate} •{" "}
-              {selectedSessionForNotes.timing || batch?.timingLabel} • {batch?.name}
+          <div className="rounded-xl bg-slate-50 dark:bg-muted/30 border border-slate-200/80 dark:border-border/60 p-3 text-xs text-slate-600 dark:text-muted-foreground">
+            <div className="font-semibold text-slate-900 dark:text-foreground">
+              Class #{selectedSessionForNotes.classNumber}:{" "}
+              <span className="font-normal">
+                {selectedSessionForNotes.subject || selectedSessionForNotes.className || "Floor Session"}
+              </span>
+            </div>
+            <div className="text-blue-700 dark:text-primary font-medium mt-1 flex items-center gap-1.5 flex-wrap">
+              <span>{selectedSessionForNotes.displayDate}</span>
+              <span>•</span>
+              <span>{selectedSessionForNotes.timing || batch?.timingLabel || "Standard Schedule"}</span>
+              <span>•</span>
+              <span>{batch?.name}</span>
             </div>
           </div>
 
@@ -53,7 +60,7 @@ export default function SessionNotesModal({
               value={sessionNoteText}
               onChange={(e) => setSessionNoteText(e.target.value)}
               placeholder="Record PRs, floor observations, or substitution notes here..."
-              className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 p-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-xl border border-slate-200/90 dark:border-border bg-slate-50/90 dark:bg-muted/40 p-3 text-xs text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground/60 focus:border-[#1e40af] dark:focus:border-primary focus:bg-white dark:focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all"
             />
           </div>
 
@@ -61,13 +68,13 @@ export default function SessionNotesModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
+              className="rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted cursor-pointer transition-colors shadow-2xs active:scale-95"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="rounded-lg bg-blue-900 hover:bg-blue-800 dark:bg-primary dark:hover:bg-primary/90 px-4 py-2 text-xs font-bold text-white cursor-pointer shadow-sm"
+              className="inline-flex items-center justify-center rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 px-5 py-2 text-xs font-bold cursor-pointer shadow-sm transition-all active:scale-[0.99]"
             >
               Save Note
             </button>

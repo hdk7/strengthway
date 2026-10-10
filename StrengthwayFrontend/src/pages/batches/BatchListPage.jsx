@@ -122,7 +122,7 @@ export function BatchListPage() {
   }, [batches, statusFilter, searchQuery]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 12;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -400,7 +400,13 @@ export function BatchListPage() {
                 <BatchGridCard
                   key={b.id}
                   batch={b}
-                  onView={(batchId) => navigate(`/admin/batches/${batchId}`)}
+                  onView={(batchId) =>
+                    navigate(
+                      window.location.pathname.startsWith("/admin/schedule")
+                        ? `/admin/schedule/batches/${batchId}`
+                        : `/admin/batches/${batchId}`
+                    )
+                  }
                   onEdit={handleOpenEdit}
                   onDelete={handleDeleteBatch}
                 />
@@ -427,7 +433,13 @@ export function BatchListPage() {
                   <BatchTableRow
                     key={b.id}
                     batch={b}
-                    onView={(batchId) => navigate(`/admin/batches/${batchId}`)}
+                    onView={(batchId) =>
+                      navigate(
+                        window.location.pathname.startsWith("/admin/schedule")
+                          ? `/admin/schedule/batches/${batchId}`
+                          : `/admin/batches/${batchId}`
+                      )
+                    }
                     onEdit={handleOpenEdit}
                     onDelete={handleDeleteBatch}
                   />

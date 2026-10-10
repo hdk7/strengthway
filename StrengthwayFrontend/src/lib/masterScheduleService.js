@@ -33,187 +33,159 @@ export const ALL_COACHES = [
   { id: "TRN-106", name: "F Coach", shortName: "F Coach", role: "Floor Master Coach" },
 ];
 
-// 12-Class Standard Strength Curriculum Template
-export const DEFAULT_12_CLASS_CURRICULUM = [
+// 15 Standard Reusable Class Programs Seed
+export const REUSABLE_CLASSES_SEED = [
   {
-    classNumber: 1,
-    subject: "Introduction to Training & Movement Assessment",
-    message:
-      "Welcome athletes! Foundational movement mechanics, baseline squat/hinge screening, core activation, and breath work.",
+    id: "CLS-001",
+    name: "Push, Legs, Pull",
+    beginnerWorkouts: "Not specified",
+    intermediateWorkouts:
+      "Push: Push ups 5–10 × 3; Dips 4–10 × 3; OH Press 6–10 × 3. Legs: GB Squats 8–10 × 3; Deadlift 6–10 × 3; Calf Raises 15–20 × 3; Step Ups 6–10 × 3. Pull: Hori Pulls 6–10 × 3; Lateral Pull down 6–8 × 3; Bent over rows 6–10 × 3.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 2,
-    subject: "Lower Body Foundational Mechanics (Squat & Lunge)",
-    message:
-      "Bilateral squat depth, knee tracking, hip mobility drill, and eccentric tempo control under moderate load.",
+    id: "CLS-002",
+    name: "EMOM",
+    beginnerWorkouts:
+      "8 mins: Pull-ups, Push ups, Deadlifts. E2MOM (10 mins): Elbow plank 30s/30s Rest; Hollow body 30s/30s Rest. Alternate bicep curls 10 × 3; OH Tricep Extensions 6–8 × 3.",
+    intermediateWorkouts:
+      "EMOM (10 mins each): Swings 15–20 + Farmer's Carry 30–40s; Pull ups 2–6 + Deadhang 30s; Squats 6–10 + Ape Hops 30s; Push ups/Dips 4–6 + Goblet Carry 30s.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 3,
-    subject: "Upper Body Press & Scapular Stability",
-    message:
-      "Overhead mechanics, push-up & bench setups, shoulder retraction, and rotator cuff stability protocols.",
+    id: "CLS-003",
+    name: "5×5",
+    beginnerWorkouts: "Not specified",
+    intermediateWorkouts:
+      "Push ups/Plate Press/OH Press; Squats; Deadlift; Pulls.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 4,
-    subject: "Posterior Chain Hinge & Deadlift Fundamentals",
-    message:
-      "Hip hinge pattern, Romanian deadlifts, hamstring flexibility, and maintaining spinal neutrality under tension.",
+    id: "CLS-004",
+    name: "Circuit Training",
+    beginnerWorkouts:
+      "1 min Skipping; 1 min Elbow Plank; 10 Goblet Squats; 30s Ape Hops; 30s Lateral Bear Crawl; 60s Wall Sit; 10 Walking Burpees; × 3 sets. Additional circuit: Walking Burpees 5/7/9; Elbow plank 45s/60s/45s; Backward bear crawl 10m/15m/20m; GB Squats 10/8/6; Swings 15/20; Wall Sit 45s/60s/45s; Walking burpees 5/7/9; GB Carry hold 30s/45s/30s; × 3.",
+    intermediateWorkouts:
+      "100 Skips; 10 Squat Jumps; 10 Push ups; 1 min Elbow plank; 10 Burpees; 100 mts Farmer's Carry; × 5 sets.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 5,
-    subject: "Core Bracing & Anti-Rotational Strength",
-    message:
-      "Pallof presses, weighted plank progressions, farmer carries, and intra-abdominal pressure management.",
+    id: "CLS-005",
+    name: "Five-O/ Fiery 50",
+    beginnerWorkouts: "Not specified",
+    intermediateWorkouts:
+      "50 Squats; 50 Pulls; 50 Hinges; 50 Push; 50mt Crawl; 500m Carry.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 6,
-    subject: "Mid-Program Athletic Conditioning & Agility",
-    message:
-      "High-intensity sled pushes, battle ropes, lateral hurdle drills, and cardiovascular capacity benchmark.",
+    id: "CLS-006",
+    name: "Super-sets",
+    beginnerWorkouts:
+      "Push-ups 4–8; Bear Crawl 10m × 3. GB Squats 10; Wall Sit 30–60s × 3. Deadlift 10; Elbow plank 30–60s × 3. Hori Pulls 6–8; Farmer's Carry 40m × 3.",
+    intermediateWorkouts:
+      "Push-ups 10; OH Press 10 × 3. GB Squats 10; Sumo Squat hold 30s × 3. Hori Pulls 8; Lat Pull down 10 × 3. Farmers March 30–45s; Inchworm 5 × 3. GB Swings 15; Step Ups 8/8 × 3.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 7,
-    subject: "Progressive Overload & Barbell Mechanics",
-    message:
-      "Barbell trajectory, grip techniques, incremental loading protocols, and technical bailout safety cues.",
+    id: "CLS-007",
+    name: "Easy Strength",
+    beginnerWorkouts:
+      "Farmer's Carry 100m × 3; Bear Crawl 10m × 3; Push-ups 8 × 3; Deadhang 30–60s × 3; GB Squats 10 × 3; Hori Pulls 10 × 3; Wall Sit 45s × 3; Ape Hops 20m × 3.",
+    intermediateWorkouts: "Not specified",
+    status: "ACTIVE",
   },
   {
-    classNumber: 8,
-    subject: "Unilateral Strength & Balance Optimization",
-    message:
-      "Bulgarian split squats, single-leg RDLs, dumbbell rows, and eliminating bilateral strength deficits.",
+    id: "CLS-008",
+    name: "4 Levels",
+    beginnerWorkouts:
+      "Hori Pulls 8; GB Swings 15; Bird Dog 8/8; Elbow plank 45–60s; × 3. Marching (w/weights) 1 min; Superman plank 30s; Push ups 3; GB Squats 8; Deadhang 40s; × 3.",
+    intermediateWorkouts: "Not specified",
+    status: "ACTIVE",
   },
   {
-    classNumber: 9,
-    subject: "Explosive Power & Plyometric Mechanics",
-    message:
-      "Plyo box jumps, kettlebell power swings, medicine ball slams, and kinetic chain energy transfer.",
+    id: "CLS-009",
+    name: "Tri-sets",
+    beginnerWorkouts: "Not specified",
+    intermediateWorkouts:
+      "Set 1: Hori Pulls 6; Deadhang shrugs 10; F.Carry hold 30–60s; × 2–3 sets. Set 2: Deadlift 5–8; Step Ups 8/8; Hip Bridge hold w/weight 30s; × 2–3 sets. Set 3: Push ups 4–6; OH press 5–8; High Plank 30s; × 2–3 sets. Set 4: Squats 8; Ape Hops 10m; Sumo Squat hold 30s; × 2–3 sets.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 10,
-    subject: "High-Intensity Metabolic Threshold Training",
-    message:
-      "AMRAP circuits, rowing intervals, lactate threshold pacing, and athletic endurance resilience.",
+    id: "CLS-010",
+    name: "4321",
+    beginnerWorkouts:
+      "Push ups/Plate/Bench Press 5–10 × 4. Goblet Squats 8–12; TB Deadlift 5–8 × 3. Hori Pull 10; Pulls/Lat Pull down 2–6; Single Arm Rows 8/8 × 2. Wall Sit 100s; Elbow plank 60s; Deadhang 60s; Burpees 20.",
+    intermediateWorkouts:
+      "Push-ups 4–8 × 4. Lat Pull down 6–10; Bent over rows 6–8; F.Carry hold 30s × 3. Deadlift 5–8; Squats 6–10 × 2. Burpees 40; Mixed Crawls 3 mins; Calf/Toe Raises 50; Plank 3 mins × 1.",
+    status: "ACTIVE",
   },
   {
-    classNumber: 11,
-    subject: "Deload, Mobility & Joint Restoration",
-    message:
-      "Active recovery, fascial release, thoracic spine mobility drills, and parasympathetic recovery breathing.",
+    id: "CLS-011",
+    name: "Pull,Push, Squats, Core",
+    beginnerWorkouts:
+      "3 sets each: Pulls — Hori Pulls 6–8, Single Arm rows 8/8. Push — Push-ups 6, Plate press 8. Squats — Step Ups 8/8, GB Squats 6–8, Trap Bar Deadlift 8. Core — Deadbug 10/10, Superman pulses 30s, Elbow plank 60s.",
+    intermediateWorkouts: "Not specified",
+    status: "ACTIVE",
   },
   {
-    classNumber: 12,
-    subject: "Final Strength Benchmark & PR Assessment",
-    message:
-      "Culminating benchmark testing, personal record (PR) verification, certificate ceremony, and cycle review.",
+    id: "CLS-012",
+    name: "Double Trouble",
+    beginnerWorkouts:
+      "Push-ups 5; Rest 30s; Push ups 5. GB Squats 6–8; Rest 30s; GB Squats 6–8. Hori Pulls 6–8; Rest 30s; Hori Pulls 6–8. GB Swings 12–15; Rest 30s; GB Swings 12–15. Crawls 10m/30s; Rest 30s; Crawls 10m/30s. Carries 1–2 min; Rest 30s; Carries 1–2 min.",
+    intermediateWorkouts: "Not specified",
+    status: "ACTIVE",
+  },
+  {
+    id: "CLS-013",
+    name: "Farmer's Strength",
+    beginnerWorkouts:
+      "Get the Numbers; Stairs; Wall Sit; Carries; Crawl; Elbow plank; Squats; Pulls; Walking burpees.",
+    intermediateWorkouts: "Not specified",
+    status: "ACTIVE",
+  },
+  {
+    id: "CLS-014",
+    name: "250",
+    beginnerWorkouts:
+      "5 Push ups; 5 GB Squats; 5 Pulls; 5 Deadlift; 5 Walking Burpees; × 5 sets; and repeat. 125 reps – break – 125 reps.",
+    intermediateWorkouts: "Not specified",
+    status: "ACTIVE",
+  },
+  {
+    id: "CLS-015",
+    name: "Pull & Legs",
+    beginnerWorkouts: "Not specified",
+    intermediateWorkouts:
+      "Pulls 2–5 × 3–5 sets; Bent over rows 8 × 3; Hori Pulls 8 × 3; Single Arm rows 8/8 × 3. Staggered Goblet Squat 8/8 × 3; Step Ups 8/8 × 3; Stationary Lunges 10/10 × 3; Wt Wall Sit 45s × 3.",
+    status: "ACTIVE",
   },
 ];
 
-export const ALTERNATIVE_CURRICULUM_ATHLETIC = [
-  { classNumber: 1, subject: "Athletic Baseline & Dynamic Screening", message: "Initial screening of mobility, joint angles, and cardiovascular capacity." },
-  { classNumber: 2, subject: "Linear Acceleration & Foot Strike Mechanics", message: "Wall drills, sprint starts, and posture during acceleration phase." },
-  { classNumber: 3, subject: "Multi-Directional Agility & Deceleration", message: "Change of direction, 5-10-5 agility shuttle, and ankle stability." },
-  { classNumber: 4, subject: "Barbell Power Cleans & Triple Extension", message: "Hip drive, rapid elbow turnover, and barbell catch positioning." },
-  { classNumber: 5, subject: "Rotational Power & Med-Ball Throw Dynamics", message: "Transverse plane power, rotational slams, and core deceleration." },
-  { classNumber: 6, subject: "Lactate Tolerance & High-Output Intervals", message: "SkiErg and Assault Bike pyramid intervals with short rest windows." },
-  { classNumber: 7, subject: "Loaded Carries & Grip Endurance Challenge", message: "Trap bar carries, suitcase holds, and overhead waiter walks." },
-  { classNumber: 8, subject: "Reactive Plyometrics & Ground Contact Speed", message: "Depth drops, reactive hurdle hops, and minimizing ground contact time." },
-  { classNumber: 9, subject: "Heavy Barbell Complexes & Posterior Strength", message: "Snatch grip high pulls, zercher squats, and barbell hip thrusts." },
-  { classNumber: 10, subject: "Combat Conditioning & Functional Stamina", message: "Heavy bag striking intervals, tire flips, and sprawl conditioning." },
-  { classNumber: 11, subject: "Joint Decompression & Fascial Stretch Therapy", message: "Band-assisted joint distraction, hip capsule stretches, and soft tissue work." },
-  { classNumber: 12, subject: "Athletic Gauntlet & Graduation Benchmark", message: "Comprehensive obstacle course challenge, final times recording, and badges award." },
-];
+const buildCurriculum = (offset = 0) => {
+  return Array.from({ length: 12 }, (_, i) => {
+    const cls = REUSABLE_CLASSES_SEED[(i + offset) % REUSABLE_CLASSES_SEED.length];
+    return {
+      classNumber: i + 1,
+      classId: cls.id,
+      className: cls.name,
+      subject: cls.name,
+      message: `Beginner: ${cls.beginnerWorkouts}\nIntermediate: ${cls.intermediateWorkouts}`,
+      beginnerWorkouts: cls.beginnerWorkouts,
+      intermediateWorkouts: cls.intermediateWorkouts,
+    };
+  });
+};
 
-export const BATCH_1_CURRICULUM = [
-  { classNumber: 1, subject: "Movement Assessment & Baseline Mobility Screen", message: "Baseline movement screen, overhead squat assessment, thoracic spine mobility flows, and core activation protocols." },
-  { classNumber: 2, subject: "Lower Body Mechanics & Goblet Squat Depth", message: "Foot tripod pressure, knee tracking alignment, goblet squat depth standards, and eccentric tempo control under moderate load." },
-  { classNumber: 3, subject: "Horizontal Push/Pull & Scapular Stability", message: "Dumbbell bench press setups, chest-supported rows, serratus anterior activation, and rotator cuff stability protocols." },
-  { classNumber: 4, subject: "Hip Hinge Patterning & Romanian Deadlifts", message: "Posterior chain engagement, Romanian deadlift bar path, hamstring tension without lumbar flexion, and glute squeeze." },
-  { classNumber: 5, subject: "Unilateral Lunge Variations & Hip Stability", message: "Reverse lunges, split squat balance, pelvic leveling drills, and addressing side-to-side strength asymmetries." },
-  { classNumber: 6, subject: "Core Bracing & Anti-Rotational Protocols", message: "Intra-abdominal pressure bracing, Pallof presses, suitcase carries, and plank with reaching taps." },
-  { classNumber: 7, subject: "Barbell Back Squat Introduction & Walkout", message: "Barbell positioning across upper traps, rack safety pin heights, walkout cadence, and consistent depth calibration." },
-  { classNumber: 8, subject: "Overhead Pressing Mechanics & Shoulder Health", message: "Standing strict dumbbell overhead press, active core lockout, rib flare prevention, and rear deltoid accessory work." },
-  { classNumber: 9, subject: "Barbell Deadlift Setup & Tension Calibration", message: "Conventional deadlift setup, bar against shins, lat engagement to pack the bar, and explosive leg drive off the floor." },
-  { classNumber: 10, subject: "Compound Super-Set Density & Work Capacity", message: "Pairing barbell squats with inverted bodyweight rows for cardiovascular demand and time-under-tension overload." },
-  { classNumber: 11, subject: "Mobility Decompression & Fascial Recovery", message: "Active recovery flow, hip flexor release, latissimus dorsi foam rolling, and parasympathetic diaphragmatic breathing." },
-  { classNumber: 12, subject: "Strength Benchmark Testing & PR Validation", message: "3-rep working max assessment across squat and deadlift, movement milestone celebration, and individual progression reviews." },
-];
+export const DEFAULT_12_CLASS_CURRICULUM = buildCurriculum(0);
+export const ALTERNATIVE_CURRICULUM_ATHLETIC = buildCurriculum(1);
 
-export const BATCH_2_CURRICULUM = [
-  { classNumber: 1, subject: "Hypertrophy Primer & Kinetic Chain Warmup", message: "Dynamic kinetic chain activation, motor unit recruitment drills, and establishing 3-second eccentric tempo baseline." },
-  { classNumber: 2, subject: "Quad Hypertrophy & Front Squat Mechanics", message: "Front rack positioning, clean grip vs crossed arm setups, quad isolation, and high-volume goblet squat dropsets." },
-  { classNumber: 3, subject: "Pectoral Hypertrophy & Incline Dumbbell Press", message: "Incline dumbbell bench pressing, 45-degree angle path, chest contraction squeeze at apex, and cable chest flyes." },
-  { classNumber: 4, subject: "Hamstring Hypertrophy & Stiff-Leg Deadlifts", message: "Stiff-leg barbell deadlifts, hamstring stretch under load, seated leg curl control, and glute-ham tie-in development." },
-  { classNumber: 5, subject: "Back Thickness & Barbell Bent-Over Rows", message: "Pendlay rows, lat pull-down squeeze techniques, scapular depression, and mid-trap hypertrophy volume." },
-  { classNumber: 6, subject: "Deltoid Sculpting & Lateral Raise Mechanics", message: "Dumbbell lateral raise form, overhead push press, upright row variations, and rear deltoid fly volume." },
-  { classNumber: 7, subject: "Arm Hypertrophy Superset Specialization", message: "Bicep barbell curls paired with tricep skull crushers, pump volume protocols, and forearm grip endurance." },
-  { classNumber: 8, subject: "Bulgarian Split Squat & Glute Focus", message: "Rear foot elevated split squats, forward torso lean for glute recruitment, and walking lunges with dumbbells." },
-  { classNumber: 9, subject: "Close-Grip Bench Press & Tricep Overload", message: "Close-grip barbell pressing for triceps and inner chest, dip progressions, and diamond pushup volume." },
-  { classNumber: 10, subject: "Metabolic Hypertrophy Circuit (Giant Sets)", message: "4-station non-stop giant sets for maximum metabolic fatigue, glycogen depletion, and vascular pump." },
-  { classNumber: 11, subject: "Fascial Stretch Therapy & Muscle Recovery", message: "Inter-muscular fascial stretching, soft tissue lacrosse ball release on traps and pecs, and recovery hydration." },
-  { classNumber: 12, subject: "Hypertrophy Volume Assessment & PR Pump", message: "8-rep max benchmark challenges on primary lifts, body composition milestone tracking, and certificate awards." },
-];
-
-export const BATCH_3_CURRICULUM = [
-  { classNumber: 1, subject: "Olympic Movement Screen & Ankle/Wrist Mobility", message: "Front rack wrist mobility, ankle dorsiflexion screening, PVC pipe snatch balance drills, and thoracic extension." },
-  { classNumber: 2, subject: "Hang Power Clean Mechanics & Elbow Speed", message: "Triple extension from hang position, aggressive hip pop, rapid elbow turnover, and stable front rack catch." },
-  { classNumber: 3, subject: "Heavy Barbell Back Squat & Core Stability", message: "Low bar vs high bar back squats, breathing into weight belt, driving out of the hole, and heavy 5x5 protocols." },
-  { classNumber: 4, subject: "Snatch High Pull & Hip Contact Drills", message: "Snatch grip width measurement, brushing the hip crease, explosive vertical jump shrug, and bar path tracking." },
-  { classNumber: 5, subject: "Push Press & Split Jerk Footwork Dynamics", message: "Dip and drive mechanics, vertical torso alignment, split footwork chalk drill, and catching with locked elbows." },
-  { classNumber: 6, subject: "Deadlift Velocity & Deficit Pull Power", message: "1-inch deficit deadlifts, building explosive starting speed off floor, and heavy trap bar pulls for neural drive." },
-  { classNumber: 7, subject: "Full Power Clean & Front Squat Complex", message: "Transitioning from power clean into full squat clean, catching in deep squat, and standing tall with composure." },
-  { classNumber: 8, subject: "Overhead Squat Balance & Core Bracing", message: "Wide grip overhead squats, active shoulder push into the bar, maintaining balance over mid-foot, and bailout safety." },
-  { classNumber: 9, subject: "Clean and Jerk Combination Execution", message: "Putting clean and jerk together, pacing between clean and dip-drive, mental focus under heavy barbell loads." },
-  { classNumber: 10, subject: "Olympic Barbell Complex & High Power Output", message: "1 Clean + 1 Hang Clean + 1 Front Squat + 1 Jerk unbroken complexes for peak power endurance." },
-  { classNumber: 11, subject: "Spinal Decompression & Barbell Deload Flow", message: "Hanging bar decompressions, hip capsule mobilization with monster bands, and central nervous system recovery." },
-  { classNumber: 12, subject: "Olympic Lifting Max Testing & PR Celebration", message: "Testing 1RM/3RM Clean & Jerk and Snatch benchmarks, technical video analysis review, and ceremony." },
-];
-export const BATCH_3_SEPTEMBER_CURRICULUM = BATCH_3_CURRICULUM;
-
-export const BATCH_4_CURRICULUM = [
-  { classNumber: 1, subject: "Athletic Movement Screen & Dynamic Primer", message: "Linear dynamic warmup, A-skips, B-skips, ankle stiffness drills, and multi-planar joint preparation." },
-  { classNumber: 2, subject: "Linear Acceleration & 10m Sprint Starts", message: "45-degree forward lean posture, positive shin angles, explosive first three steps, and wall acceleration drills." },
-  { classNumber: 3, subject: "Multi-Directional Agility & Lateral Shuffle", message: "Lateral bounding, low center of gravity shuffles, cone drill reactions, and knee stabilization cues." },
-  { classNumber: 4, subject: "Deceleration Mechanics & Landing Control", message: "Bilateral stick-and-land mechanics, shock absorption through ankles/knees/hips, and preventing valgus collapse." },
-  { classNumber: 5, subject: "Box Jumps & Explosive Vertical Power", message: "Step-down plyometric box jumps, triple extension power, seated explosive jumps, and landing soft on balls of feet." },
-  { classNumber: 6, subject: "Pro Agility (5-10-5 Shuttle) Benchmark", message: "Pro agility shuttle setup, touch-and-turn pivot mechanics, crossover steps, and timed sprint runs." },
-  { classNumber: 7, subject: "Depth Jumps & Reactive Elastic Stiffness", message: "18-inch box depth drops, minimizing ground contact time, rebound vertical jumps, and Achilles tendon stiffness." },
-  { classNumber: 8, subject: "Medicine Ball Rotational Throws & Core Power", message: "Rotational scoop throws against solid wall, transverse plane force transmission, and anti-flexion bracing." },
-  { classNumber: 9, subject: "Agility Ladder Footwork & Coordination", message: "Ickey shuffle, in-out fast feet, reactive tennis ball drops, and spatial awareness under fatigue." },
-  { classNumber: 10, subject: "Sled Pushes & Resisted Sprint Acceleration", message: "Heavy prowler sled push sprints, overcoming static inertia, leg drive turnover, and anaerobic power output." },
-  { classNumber: 11, subject: "Joint Restoration, Ankle Mobility & Soft Tissue", message: "Calf and Achilles fascial release, band-assisted ankle mobilization, hamstring stretches, and mobility." },
-  { classNumber: 12, subject: "Athletic Combine Benchmark & Graduation", message: "Official 10m sprint, vertical jump measurement, pro agility shuttle scores, and athletic graduation awards." },
-];
-
-export const BATCH_5_CURRICULUM = [
-  { classNumber: 1, subject: "Metabolic Conditioning Baseline & Pacing Test", message: "500m rowing sprint benchmark, breathing rhythm, lactate threshold awareness, and heart rate recovery rate." },
-  { classNumber: 2, subject: "Kettlebell Swing Mechanics & Hip Snap", message: "Russian vs American kettlebell swings, posterior hinge snap, avoiding shoulder elevation, and continuous rhythm." },
-  { classNumber: 3, subject: "Tactical Sandbag Carries & Core Endurance", message: "Front bear-hug sandbag carries, shoulder carries, pacing under heavy unstable load, and grip endurance." },
-  { classNumber: 4, subject: "EMOM Aerobic Conditioning (SkiErg & Burpees)", message: "16-minute Every Minute on the Minute (EMOM): alternating SkiErg calories with chest-to-floor burpees." },
-  { classNumber: 5, subject: "Kettlebell Clean & Push Press Density", message: "Double kettlebell cleans, rack hold breathing, push press dip-drive, and building upper-body stamina." },
-  { classNumber: 6, subject: "Assault Bike Sprint Ladders & Mental Resilience", message: "10-20-30 second calorie sprint ladders on Assault AirBike with active recovery intervals." },
-  { classNumber: 7, subject: "Battle Rope Waves & Rotational Slams", message: "Alternating waves, double slams, lateral wave lunges, and sustained upper extremity anaerobic capacity." },
-  { classNumber: 8, subject: "Farmer Walk Grip Gauntlet & Trap Stamina", message: "Heavy trap bar farmer walks for distance, suitcase carries, dead hangs from pullup bar, and pinch grip hold." },
-  { classNumber: 9, subject: "Cross-Training AMRAP Circuit (Chippers)", message: "20-minute As Many Rounds As Possible: wall balls, kettlebell snatches, box jump-overs, and rowing." },
-  { classNumber: 10, subject: "Tactical Obstacle Course & Work Capacity", message: "Heavy tire flips, sled drags, sandbag clean-over-shoulder, and continuous pacing under metabolic fatigue." },
-  { classNumber: 11, subject: "Diaphragmatic Recovery & Heat Regulation", message: "Parasympathetic recovery drills, controlled nasal breathing, hip opener flows, and spinal mobility." },
-  { classNumber: 12, subject: "Grand Metabolic Gauntlet & Cycle Certification", message: "The ultimate 12-minute work capacity test, milestone badges, performance score recording, and celebration." },
-];
-
-export const BATCH_6_CURRICULUM = [
-  { classNumber: 1, subject: "Postural Decompression & Evening Warmup Flow", message: "Reversing desk posture, thoracic extension with foam rollers, glute activation, and evening joint prep." },
-  { classNumber: 2, subject: "Lower Body Bilateral Power & Trap Bar Deadlifts", message: "Trap bar high handle deadlifts, vertical torso alignment, quadriceps and glute drive, and sub-maximal loading." },
-  { classNumber: 3, subject: "Upper Body Posterior Chain & Face Pull Dynamics", message: "Banded and cable face pulls, chest-supported dumbbell rows, external shoulder rotation, and posture building." },
-  { classNumber: 4, subject: "Core Bracing & Anti-Extension Stability", message: "Ab wheel rollouts, dead bugs with kettlebell counterbalance, hollow body holds, and lumbar protection." },
-  { classNumber: 5, subject: "Kettlebell Snatch Progressions & Hip Snap", message: "Single-arm kettlebell high pulls to snatches, punch-through at lockout, and explosive posterior hip snap." },
-  { classNumber: 6, subject: "Evening Metabolic Density & Controlled Pace", message: "Dumbbell thrusters, rowing steady-state intervals, jump rope double-unders, and aerobic tempo maintenance." },
-  { classNumber: 7, subject: "Unilateral Strength & Step-Up Overload", message: "High box dumbbell step-ups, single-leg calf raises, balance stability under fatigue, and hip stabilizer work." },
-  { classNumber: 8, subject: "Overhead Dumbbell Push Press & Core Lockout", message: "Neutral-grip dumbbell overhead pressing, slight leg dip, strict overhead finish, and tricep pushdown burnout." },
-  { classNumber: 9, subject: "Loaded Heavy Carries & Evening Grit", message: "Dual dumbbell farmer walks, zercher barbell carry, core anti-lateral flexion, and forearm grip stamina." },
-  { classNumber: 10, subject: "Full-Body Functional Strength Circuit", message: "Kettlebell renegade rows, pushups, goblet squats, and sled pushes for total-body athletic durability." },
-  { classNumber: 11, subject: "Fascial Release & Parasympathetic Sleep Prep", message: "Deep tissue release, hamstring contract-relax stretching, guided down-regulation breathing for restful sleep." },
-  { classNumber: 12, subject: "Final Durability Assessment & Milestone PRs", message: "Functional movement re-test, strength benchmark verification, awards presentation, and graduation toast." },
-];
+export const BATCH_1_CURRICULUM = buildCurriculum(0);
+export const BATCH_2_CURRICULUM = buildCurriculum(1);
+export const BATCH_3_CURRICULUM = buildCurriculum(2);
+export const BATCH_3_SEPTEMBER_CURRICULUM = buildCurriculum(2);
+export const BATCH_4_CURRICULUM = buildCurriculum(3);
+export const BATCH_5_CURRICULUM = buildCurriculum(4);
+export const BATCH_6_CURRICULUM = buildCurriculum(5);
 
 export const BATCH_CURRICULUMS = {
   "BATCH-01": BATCH_1_CURRICULUM,

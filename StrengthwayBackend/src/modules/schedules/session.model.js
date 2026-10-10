@@ -14,8 +14,9 @@ const sessionSchema = new mongoose.Schema(
     },
     masterScheduleId: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+      default: "",
       index: true,
     },
     masterScheduleName: {
@@ -24,6 +25,17 @@ const sessionSchema = new mongoose.Schema(
       default: "",
     },
     masterClassItemId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    classId: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+    className: {
       type: String,
       trim: true,
       default: "",
@@ -99,6 +111,16 @@ const sessionSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    beginnerWorkouts: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    intermediateWorkouts: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     status: {
       type: String,
       enum: Object.values(SESSION_STATUS),
@@ -131,6 +153,10 @@ const sessionSchema = new mongoose.Schema(
 );
 
 sessionSchema.index({ masterScheduleId: 1, batchId: 1, classNumber: 1 });
-sessionSchema.index({ batchId: 1, sessionDate: 1 });
+sessionSchema.index(
+  { batchId: 1, sessionDate: 1 },
+  { unique: true, partialFilterExpression: { sessionDate: { $type: "string", $gt: "" } } }
+);
+sessionSchema.index({ batchId: 1, classId: 1 });
 
 module.exports = mongoose.model("Session", sessionSchema);

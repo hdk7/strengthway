@@ -6,7 +6,6 @@ import {
   Search,
   ArrowRightLeft,
   Plus,
-  Layers,
 } from "lucide-react";
 
 export default function BatchDetailTabsNav({
@@ -23,7 +22,7 @@ export default function BatchDetailTabsNav({
   setMemberSearch,
   onOpenTransferModal,
   onOpenAddMember,
-  onOpenAssignProgram,
+  onOpenAddClasses,
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2 sm:pb-0">
@@ -145,18 +144,6 @@ export default function BatchDetailTabsNav({
           >
             <Plus size={14} />
             <span>Add Member</span>
-          </button>
-        </div>
-      )}
-
-      {activeTab === "classes" && (
-        <div className="flex items-center gap-2 sm:pr-1 sm:pb-1">
-          <button
-            onClick={onOpenAssignProgram}
-            className="inline-flex items-center gap-1.5 shrink-0 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
-          >
-            <Layers size={14} />
-            <span>Assign Program</span>
           </button>
         </div>
       )}

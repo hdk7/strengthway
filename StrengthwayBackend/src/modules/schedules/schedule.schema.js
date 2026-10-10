@@ -67,6 +67,10 @@ const updateItemSchema = yup.object().shape({
   classNumber: yup.number().min(1).nullable(),
   subject: yup.string().trim().nullable(),
   message: yup.string().trim().nullable(),
+  className: yup.string().trim().nullable(),
+  classId: yup.string().trim().nullable(),
+  beginnerWorkouts: yup.string().trim().nullable(),
+  intermediateWorkouts: yup.string().trim().nullable(),
   dayOfWeek: yup.string().trim().nullable(),
   weekNumber: yup.number().nullable(),
   sessionDate: yup.string().trim().nullable(),
@@ -86,6 +90,10 @@ const updateSessionSchema = yup.object().shape({
   coachName: yup.string().trim().nullable(),
   subject: yup.string().trim().nullable(),
   message: yup.string().trim().nullable(),
+  className: yup.string().trim().nullable(),
+  classId: yup.string().trim().nullable(),
+  beginnerWorkouts: yup.string().trim().nullable(),
+  intermediateWorkouts: yup.string().trim().nullable(),
 });
 
 const createHolidaySchema = yup.object().shape({

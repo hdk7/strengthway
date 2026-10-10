@@ -11,7 +11,7 @@
 
 @custom-variant dark (&:is(.dark, .dark *));
 
-/* ── Dark theme (Default — <html> has "dark") ─────────────────────── */
+/* ── Theme definition via CSS variables ─────────────────────────── */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-display: var(--font-sans);
@@ -24,55 +24,64 @@
   --radius-2xl: 1rem;
   --radius-3xl: 1.25rem;
 
-  /* Reusable Base & Semantic Tokens */
-  --color-background: #09090b;
-  --color-foreground: #fafafa;
-  --color-card: #18181b;
-  --color-card-foreground: #fafafa;
-  --color-muted: #27272a;
-  --color-muted-foreground: #a1a1aa;
-  --color-primary: #f4f4f5;
-  --color-primary-foreground: #18181b;
-  --color-accent: #e4e4e7;
-  --color-accent-foreground: #18181b;
-  --color-border: var(--color-muted);
-  --color-ring: #71717a;
-  --color-destructive: #ef4444;
-}
-
-/* Layout Tokens */
-:root {
-  --sidebar-width: 256px;
-  --sidebar-width-collapsed: 72px;
-}
-
-html.dark {
-  color-scheme: dark;
-}
-
-/* ── Light theme overrides ────────────────────────────────────────── */
-:root:is(.light),
-html.light {
-  color-scheme: light;
-
-  /* Reusable Light Theme Tokens */
-  --color-background: #f4f4f5;
-  --color-foreground: #09090b;
-  --color-card: #ffffff;
-  --color-card-foreground: #09090b;
-  --color-muted: #f4f4f5;
-  --color-muted-foreground: #71717a;
-  --color-primary: #18181b;
-  --color-primary-foreground: #f4f4f5;
-  --color-accent: #27272a;
-  --color-accent-foreground: #fafafa;
-  --color-border: #e4e4e7;
-  --color-ring: var(--color-primary);
-  --color-destructive: #dc2626;
+  /* Semantic Tokens mapped to dynamic CSS variables */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
 }
 
 /* ── Base Layer Consolidated Styles ──────────────────────────────── */
 @layer base {
+  :root,
+  html.dark {
+    color-scheme: dark;
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #18181b;
+    --card-foreground: #fafafa;
+    --muted: #27272a;
+    --muted-foreground: #a1a1aa;
+    --primary: #f4f4f5;
+    --primary-foreground: #18181b;
+    --accent: #e4e4e7;
+    --accent-foreground: #18181b;
+    --border: #27272a;
+    --ring: #71717a;
+    --destructive: #ef4444;
+
+    --sidebar-width: 256px;
+    --sidebar-width-collapsed: 72px;
+  }
+
+  html.light {
+    color-scheme: light;
+    --background: #f4f4f5;
+    --foreground: #09090b;
+    --card: #ffffff;
+    --card-foreground: #09090b;
+    --muted: #e4e4e7;
+    --muted-foreground: #71717a;
+    --primary: #18181b;
+    --primary-foreground: #ffffff;
+    --accent: #27272a;
+    --accent-foreground: #fafafa;
+    --border: #e4e4e7;
+    --ring: #18181b;
+    --destructive: #dc2626;
+
+    --sidebar-width: 256px;
+    --sidebar-width-collapsed: 72px;
+  }
   *,
   *::before,
   *::after {
@@ -108,6 +117,56 @@ html.light {
   #root {
     @apply min-h-full relative flex flex-col;
     min-height: 100dvh;
+  }
+
+  /* ── Form Controls & Select Dropdown Theme Adaptation ───────────── */
+  select {
+    color-scheme: light dark;
+  }
+
+  html.dark select {
+    color-scheme: dark;
+  }
+
+  html.light select {
+    color-scheme: light;
+  }
+
+  select option {
+    background-color: #ffffff;
+    color: #09090b;
+  }
+
+  html.dark select option {
+    background-color: #18181b !important;
+    color: #fafafa !important;
+  }
+
+  html.light select option {
+    background-color: #ffffff !important;
+    color: #09090b !important;
+  }
+
+  html.dark select option[value=""] {
+    color: #e4e4e7 !important;
+    background-color: #18181b !important;
+  }
+
+  html.light select option[value=""] {
+    color: #334155 !important;
+    background-color: #ffffff !important;
+  }
+
+  html.dark select option:disabled,
+  html.dark select option[disabled] {
+    color: #a1a1aa !important;
+    background-color: #18181b !important;
+  }
+
+  html.light select option:disabled,
+  html.light select option[disabled] {
+    color: #64748b !important;
+    background-color: #ffffff !important;
   }
 }
 

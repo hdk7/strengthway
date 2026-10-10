@@ -11,6 +11,18 @@ try {
   // Fall back to system DNS
 }
 
+if (typeof global.performance === "undefined") {
+  try {
+    global.performance = require("perf_hooks").performance;
+  } catch (_) {}
+}
+
+if (typeof global.crypto === "undefined") {
+  try {
+    global.crypto = require("crypto");
+  } catch (_) {}
+}
+
 let isConnected = false;
 
 /**

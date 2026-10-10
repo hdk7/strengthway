@@ -4,7 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Shield, Sparkles } from "lucide-react";
 import gymLogo from "@/assets/gym_logo.png";
 import loginHero from "@/assets/login-admin.jpg";
-import { InputField, PasswordField, CheckboxField } from "@/components/form";
+import { InputField, CheckboxField } from "@/components/form";
 import Button from "@/components/ui/Button";
 import { loginSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
 import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS } from "@/auth/authService";
@@ -89,8 +89,9 @@ export function LoginForm({ onSuccess }) {
         disabled={submitting}
       />
 
-      <PasswordField
+      <InputField
         label="Password"
+        type="password"
         name="password"
         autoComplete="new-password"
         placeholder="Enter your password"

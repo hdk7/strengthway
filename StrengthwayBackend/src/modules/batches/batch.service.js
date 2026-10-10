@@ -64,8 +64,11 @@ class BatchService {
     const Member = require("../members/member.model");
     const Trainer = require("../trainers/trainer.model");
 
+    const canonicalId = batch.id;
+    const batchIdCandidates = [canonicalId, id, id.toUpperCase(), id.toLowerCase()];
+
     const activeMembers = await Member.find(
-      { isDeleted: false, $or: [{ batchId: id }, { "schedule.batchId": id }] },
+      { isDeleted: false, $or: [{ batchId: { $in: batchIdCandidates } }, { "schedule.batchId": { $in: batchIdCandidates } }] },
       { id: 1 }
     ).lean();
     const allTrainers = await Trainer.find(
@@ -75,7 +78,7 @@ class BatchService {
     const validTrainerMap = new Map(allTrainers.map((t) => [t.id, t]));
     const rawTrainerIds = Array.isArray(batch.trainerIds) ? batch.trainerIds : [];
     const trainerIdsFromTrainers = allTrainers
-      .filter((t) => Array.isArray(t.batchIds) && t.batchIds.includes(id))
+      .filter((t) => Array.isArray(t.batchIds) && t.batchIds.some((bId) => batchIdCandidates.includes(bId)))
       .map((t) => t.id);
 
     const unionTrainerIds = Array.from(

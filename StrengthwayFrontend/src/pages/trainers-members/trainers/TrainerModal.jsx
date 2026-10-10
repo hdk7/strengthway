@@ -248,22 +248,6 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 ]}
               />
 
-              <SelectField
-                id="trainer-status"
-                name="status"
-                label="Faculty Status"
-                value={form.status}
-                onChange={handleChange}
-                size="sm"
-                options={[
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                ]}
-              />
-            </div>
-
-            {/* Experience */}
-            <div>
               <InputField
                 id="trainer-experience"
                 name="experience"
@@ -277,6 +261,23 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 size="sm"
               />
             </div>
+
+            {trainerToEdit && (
+              <div>
+                <SelectField
+                  id="trainer-status"
+                  name="status"
+                  label="Faculty Status"
+                  value={form.status}
+                  onChange={handleChange}
+                  size="sm"
+                  options={[
+                    { value: "Active", label: "Active" },
+                    { value: "Inactive", label: "Inactive" },
+                  ]}
+                />
+              </div>
+            )}
           </div>
 
           {/* 2. Contact Channels */}

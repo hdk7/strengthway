@@ -56,7 +56,16 @@ class SessionService {
   async getAllSessions({ scheduleId, batchId, status, date } = {}) {
     const filter = {};
     if (scheduleId) filter.masterScheduleId = scheduleId;
-    if (batchId) filter.batchId = batchId;
+    if (batchId) {
+      const candidates = [batchId, batchId.toUpperCase(), batchId.toLowerCase()];
+      const numMatch = batchId.match(/\d+/);
+      if (numMatch) {
+        const n = parseInt(numMatch[0], 10);
+        candidates.push(`BATCH-${String(n).padStart(2, "0")}`);
+        candidates.push(`BATCH-${n}`);
+      }
+      filter.batchId = { $in: candidates };
+    }
     if (status) filter.status = status;
     if (date) filter.sessionDate = date;
 
