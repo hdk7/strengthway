@@ -34,21 +34,6 @@ async function uploadDocument(req, res, next) {
 }
 
 /**
- * POST /api/v1/uploads/media
- * Uploads media (image or video) to Cloudinary for portfolio.
- * Expects multipart/form-data with field name "file" or "media".
- */
-async function uploadMedia(req, res, next) {
-  try {
-    const file = req.file;
-    const result = await uploadService.uploadMedia(file);
-    return success(res, result, "Media uploaded successfully.");
-  } catch (err) {
-    next(err);
-  }
-}
-
-/**
  * DELETE /api/v1/uploads/:publicId
  * Deletes an asset from Cloudinary.
  * Query param: ?type=image|raw  (default: image)
@@ -66,5 +51,5 @@ async function deleteAsset(req, res, next) {
   }
 }
 
-module.exports = { uploadPhoto, uploadDocument, uploadMedia, deleteAsset };
+module.exports = { uploadPhoto, uploadDocument, deleteAsset };
 

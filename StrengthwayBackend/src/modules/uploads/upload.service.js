@@ -119,49 +119,6 @@ class UploadService {
   }
 
   /**
-   * Upload portfolio media (image or video) to Cloudinary.
-   */
-  async uploadMedia(file) {
-    if (!file) {
-      throw new BadRequestError("No file provided.");
-    }
-
-    const isVideo = file.mimetype.startsWith("video/");
-    const isImage = file.mimetype.startsWith("image/");
-
-    if (!isVideo && !isImage) {
-      throw new BadRequestError("Invalid file type. Only images and videos are supported.");
-    }
-
-    try {
-      const options = {
-        folder: "strengthway/portfolio",
-        resource_type: isVideo ? "video" : "image",
-      };
-
-      if (isImage) {
-        options.transformation = [
-          { width: 1600, height: 1600, crop: "limit" },
-          { quality: "auto", fetch_format: "auto" },
-        ];
-      }
-
-      const result = await uploadToCloudinary(file.buffer, options);
-
-      return {
-        url: result.secure_url,
-        publicId: result.public_id,
-        format: result.format,
-        resourceType: result.resource_type,
-        bytes: result.bytes,
-        duration: result.duration,
-      };
-    } catch (err) {
-      throw new InternalError("Media upload failed: " + err.message);
-    }
-  }
-
-  /**
    * Delete an asset from Cloudinary by its public_id.
    */
   async deleteAsset(publicId, resourceType) {

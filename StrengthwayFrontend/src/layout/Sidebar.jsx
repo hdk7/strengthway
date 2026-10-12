@@ -81,7 +81,6 @@ const navConfig = [
         path: "/admin/masters/attendance-policy",
       },
       { id: "payment-fee", label: "Payment Fee Master", path: "/admin/masters/payment-fee" },
-      { id: "portfolio", label: "Portfolio Master", path: "/admin/masters/portfolio" },
     ],
   },
   { id: "settings", label: "Settings", icon: Settings, path: "/admin/settings" },

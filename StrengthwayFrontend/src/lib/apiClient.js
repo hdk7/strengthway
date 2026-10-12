@@ -73,10 +73,8 @@ export function clearAuthToken() {
 async function request(method, path, body, options = {}) {
   const token = getAuthToken();
 
-  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
-
   const headers = {
-    ...(isFormData ? {} : { "Content-Type": "application/json" }),
+    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers ?? {}),
   };
@@ -86,7 +84,7 @@ async function request(method, path, body, options = {}) {
     response = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
-      body: isFormData ? body : (body !== undefined ? JSON.stringify(body) : undefined),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: options.signal,
     });
   } catch (networkError) {

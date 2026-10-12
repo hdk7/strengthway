@@ -104,7 +104,6 @@ const ID_PREFIXES = Object.freeze({
   TRAINER_LEAVE:    "TLREQ",
   CLASS:            "CLS",
   SCHEDULE_HISTORY: "SCH-HIST",
-  PORTFOLIO:        "PORT",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -215,34 +214,6 @@ const TRAINER_LEAVE_STATUS = Object.freeze({
   CANCELLED: "CANCELLED",
 });
 
-// ─── Portfolio Constants ───────────────────────────────────────────────────────
-const PORTFOLIO_CATEGORY = Object.freeze({
-  PHOTO:              "PHOTO",
-  MOVEMENT_VIDEO:     "MOVEMENT_VIDEO",
-  SESSION_CLIP:       "SESSION_CLIP",
-  FEEDBACK_STORY:     "FEEDBACK_STORY",
-  SESSION_DISCIPLINE: "SESSION_DISCIPLINE",
-});
-
-const PORTFOLIO_STATUS = Object.freeze({
-  ACTIVE:   "Active",
-  DRAFT:    "Draft",
-  ARCHIVED: "Archived",
-});
-
-const PORTFOLIO_ASPECT_RATIO = Object.freeze({
-  FOUR_BY_FIVE:     "4:5",
-  SIXTEEN_BY_NINE:  "16:9",
-  NINE_BY_SIXTEEN:  "9:16",
-  ONE_BY_ONE:       "1:1",
-  THREE_BY_FOUR:    "3:4",
-});
-
-const PORTFOLIO_MEDIA_TYPE = Object.freeze({
-  IMAGE: "IMAGE",
-  VIDEO: "VIDEO",
-});
-
 module.exports = {
   MEMBER_STATUS,
   TRAINER_STATUS,
@@ -259,10 +230,6 @@ module.exports = {
   ATTENDANCE_STATUS,
   TRAINER_LOG_STATUS,
   TRAINER_LEAVE_STATUS,
-  PORTFOLIO_CATEGORY,
-  PORTFOLIO_STATUS,
-  PORTFOLIO_ASPECT_RATIO,
-  PORTFOLIO_MEDIA_TYPE,
   GENDER,
   CONTACT_METHODS,
   BLOOD_GROUPS,

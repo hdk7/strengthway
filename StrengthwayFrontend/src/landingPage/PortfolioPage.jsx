@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDocumentTitle } from "@/hooks/theme";
 
 import { Navbar } from "@/landingPage/Navbar";
 import { Footer } from "@/landingPage/Footer";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { getPublicPortfolio } from "@/lib/portfolioService";
 
 // Site Sections - Portfolio
 import { PortfolioHeroSection } from "@/landingPage/portfolio/PortfolioHeroSection";
@@ -16,39 +15,16 @@ import { VideosSection } from "@/landingPage/portfolio/VideosSection";
 export function PortfolioPage() {
   useDocumentTitle("The Strength Way");
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [portfolioData, setPortfolioData] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    getPublicPortfolio()
-      .then((data) => {
-        if (isMounted && data) {
-          setPortfolioData(data);
-        }
-      })
-      .catch((err) => {
-        console.warn("Public portfolio fetch failed, using default assets:", err);
-      });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background w-full max-w-full overflow-x-clip">
       <Navbar />
       <main className="pt-16 w-full max-w-full overflow-x-clip flex-1">
         <PortfolioHeroSection />
-        <SessionsSection
-          disciplines={portfolioData?.sessionDisciplines}
-          sessionClips={portfolioData?.sessionClips}
-        />
-        <FeedbackSection feedbackStories={portfolioData?.feedbackStories} />
-        <PhotosSection
-          photos={portfolioData?.photos}
-          onSelectPhoto={setSelectedPhoto}
-        />
-        <VideosSection videos={portfolioData?.movementVideos} />
+        <SessionsSection />
+        <FeedbackSection />
+        <PhotosSection onSelectPhoto={setSelectedPhoto} />
+        <VideosSection />
       </main>
       <Footer />
 

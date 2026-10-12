@@ -162,17 +162,6 @@ function generateScheduleHistoryId() {
   return `${ID_PREFIXES.SCHEDULE_HISTORY || "SCH-HIST"}-${ts}-${rand}`;
 }
 
-// ─── Portfolio Media ID ───────────────────────────────────────────────────────
-/**
- * Produces format: PORT-001, PORT-002, … PORT-999
- * @param {number} currentMax - The highest numeric suffix in DB
- * @returns {string} e.g. "PORT-001"
- */
-function generatePortfolioId(currentMax = 0) {
-  const num = String(currentMax + 1).padStart(3, "0");
-  return `${ID_PREFIXES.PORTFOLIO || "PORT"}-${num}`;
-}
-
 module.exports = {
   generateMemberId,
   generateTrainerId,
@@ -187,7 +176,6 @@ module.exports = {
   generateTrainerLeaveId,
   generateClassId,
   generateScheduleHistoryId,
-  generatePortfolioId,
 };
 
 

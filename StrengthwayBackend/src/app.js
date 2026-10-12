@@ -69,7 +69,6 @@ app.get("/api/v1", (req, res) => {
       trainerLeaves: "/api/v1/trainer-leaves",
       reports:    "/api/v1/reports",
       uploads:    "/api/v1/uploads",
-      portfolio:  "/api/v1/portfolio",
     },
     docs: "See README.md for full API reference.",
   });
@@ -90,7 +89,6 @@ const trainerLeaveRoutes = require("./modules/attendance/trainerLeave.routes");
 const reportsRoutes      = require("./modules/reports/reports.routes");
 const uploadRoutes       = require("./modules/uploads/upload.routes");
 const classRoutes        = require("./modules/classes/class.routes");
-const portfolioRoutes    = require("./modules/portfolio/portfolio.routes");
 
 app.use("/api/v1/auth",           authRoutes);
 app.use("/api/v1/members",        memberRoutes);
@@ -106,7 +104,6 @@ app.use("/api/v1/attendance",     attendanceRoutes);
 app.use("/api/v1/trainer-leaves", trainerLeaveRoutes);
 app.use("/api/v1/reports",        reportsRoutes);
 app.use("/api/v1/uploads",        uploadRoutes);
-app.use("/api/v1/portfolio",      portfolioRoutes);
 
 
 

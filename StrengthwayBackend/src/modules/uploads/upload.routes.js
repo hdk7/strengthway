@@ -44,20 +44,6 @@ function handleMulterError(err, req, res, next) {
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 
-const mediaFileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/") || file.mimetype.startsWith("video/")) {
-    cb(null, true);
-  } else {
-    cb(new BadRequestError(`Unsupported media type: ${file.mimetype}`), false);
-  }
-};
-
-const mediaUpload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
-  fileFilter: mediaFileFilter,
-});
-
 // POST /api/v1/uploads/photo
 // Accepts field name "photo" (single file)
 router.post(
@@ -76,16 +62,6 @@ router.post(
   upload.single("document"),
   handleMulterError,
   ctrl.uploadDocument
-);
-
-// POST /api/v1/uploads/media
-// Accepts field name "file" (single file: image or video)
-router.post(
-  "/media",
-  authenticate,
-  mediaUpload.single("file"),
-  handleMulterError,
-  ctrl.uploadMedia
 );
 
 // DELETE /api/v1/uploads/*path
