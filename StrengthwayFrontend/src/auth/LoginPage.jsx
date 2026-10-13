@@ -7,7 +7,7 @@ import loginHero from "@/assets/login-admin.jpg";
 import { InputField, CheckboxField } from "@/components/form";
 import Button from "@/components/ui/Button";
 import { loginSchema, validateWithYup, validateFieldWithYup } from "@/lib/validation";
-import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS } from "@/auth/authService";
+import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS, DEMO_ACCOUNTS } from "@/auth/authService";
 import ForgotPasswordForm from "@/auth/ForgotPasswordForm";
 import { ThemeToggle } from "@/hooks/theme";
 import { STORAGE_KEYS } from "@/config/storageKeys";
@@ -37,6 +37,12 @@ export function LoginForm({ onSuccess }) {
 
   const handleFillDemo = () => {
     setForm(DEMO_CREDENTIALS);
+    setFieldErrors({});
+    setFormError("");
+  };
+
+  const handleSelectDemoAccount = (acc) => {
+    setForm({ email: acc.email, password: acc.password });
     setFieldErrors({});
     setFormError("");
   };
@@ -119,17 +125,40 @@ export function LoginForm({ onSuccess }) {
       </Button>
 
       {DEMO_MODE && (
-        <button
-          type="button"
-          className="flex flex-col items-center gap-1 -mt-1 px-3 py-2.5 rounded-lg bg-accent/10 border border-dashed border-accent/30 text-foreground cursor-pointer text-center hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={handleFillDemo}
-          disabled={submitting}
-        >
-          <span className="text-[12.5px] font-semibold">Use demo credentials</span>
-          <span className="font-mono text-[11px] text-muted-foreground">
-            {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
-          </span>
-        </button>
+        <div className="flex flex-col gap-2 -mt-1 p-3 rounded-xl bg-accent/5 border border-dashed border-accent/25">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Demo Access (RBAC)
+            </span>
+            <span className="text-[10px] text-muted-foreground">Click to fill</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {DEMO_ACCOUNTS.map((acc) => {
+              const isSelected = form.email === acc.email;
+              return (
+                <button
+                  key={acc.role}
+                  type="button"
+                  onClick={() => handleSelectDemoAccount(acc)}
+                  disabled={submitting}
+                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg border text-center transition-all cursor-pointer ${
+                    isSelected
+                      ? "bg-accent text-accent-foreground border-accent shadow-xs font-bold"
+                      : "bg-card hover:bg-muted/60 border-border text-foreground hover:border-foreground/30"
+                  }`}
+                >
+                  <span className="text-xs font-bold capitalize">{acc.label}</span>
+                  <span className="text-[10px] text-muted-foreground font-mono truncate max-w-full px-1">
+                    {acc.role}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="text-center font-mono text-[10.5px] text-muted-foreground pt-0.5">
+            {form.email ? `${form.email} • ${form.password}` : "Select a role above to quick-fill credentials"}
+          </div>
+        </div>
       )}
     </form>
   );

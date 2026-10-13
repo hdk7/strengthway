@@ -2,14 +2,17 @@
 
 const router = require("express").Router();
 const ctrl = require("./trainerLeave.controller");
+const { authenticate } = require("../../middleware/auth.middleware");
+const { requireAdmin, requireTrainer } = require("../../middleware/role.middleware");
 
 // ─── Trainer Leave Requests Endpoints ─────────────────────────────────────────
-router.post("/", ctrl.createLeaveRequest);
-router.get("/", ctrl.getLeaveRequests);
-router.get("/monthly-summary", ctrl.getMonthlyLeaveSummary);
-router.get("/:id", ctrl.getLeaveRequestById);
-router.patch("/:id/status", ctrl.updateLeaveStatus);
-router.delete("/:id", ctrl.cancelLeaveRequest);
-router.post("/:id/cancel", ctrl.cancelLeaveRequest);
+// Members forbidden; Trainers can submit & view own; Admin has full access
+router.post("/", authenticate, requireTrainer, ctrl.createLeaveRequest);
+router.get("/", authenticate, requireTrainer, ctrl.getLeaveRequests);
+router.get("/monthly-summary", authenticate, requireTrainer, ctrl.getMonthlyLeaveSummary);
+router.get("/:id", authenticate, requireTrainer, ctrl.getLeaveRequestById);
+router.patch("/:id/status", authenticate, requireAdmin, ctrl.updateLeaveStatus);
+router.delete("/:id", authenticate, requireTrainer, ctrl.cancelLeaveRequest);
+router.post("/:id/cancel", authenticate, requireTrainer, ctrl.cancelLeaveRequest);
 
 module.exports = router;

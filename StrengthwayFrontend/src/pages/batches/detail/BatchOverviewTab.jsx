@@ -5,6 +5,7 @@ import {
   Calendar,
   ChevronRight,
 } from "lucide-react";
+import { isMember } from "@/auth/currentUser";
 
 export default function BatchOverviewTab({
   monthTracking,
@@ -80,7 +81,7 @@ export default function BatchOverviewTab({
       </div>
 
       {/* 3 Category Summary Preview Panels */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className={`grid grid-cols-1 ${isMember() ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-6`}>
         {/* Category A Preview: Trainers */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
           <div className="space-y-4">
@@ -130,13 +131,14 @@ export default function BatchOverviewTab({
             onClick={() => onSelectTab("trainers")}
             className="mt-4 pt-3 border-t border-border flex items-center justify-between text-xs font-bold text-primary hover:underline cursor-pointer"
           >
-            <span>Manage Faculty Coaches</span>
+            <span>{isMember() ? "View Faculty Coaches" : "Manage Faculty Coaches"}</span>
             <ChevronRight size={14} />
           </button>
         </div>
 
         {/* Category B Preview: Members & Flex Flow */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
+        {!isMember() && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <div className="flex items-center gap-2">
@@ -191,6 +193,7 @@ export default function BatchOverviewTab({
             <ChevronRight size={14} />
           </button>
         </div>
+        )}
 
         {/* Category C Preview: Scheduled Classes */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm flex flex-col justify-between">

@@ -12,13 +12,39 @@ const bcrypt = require("bcryptjs");
 const { connectDB, disconnectDB } = require("../config/database");
 const User = require("../modules/auth/user.model");
 
-const DEFAULT_ADMINS = [
+const DEFAULT_USERS = [
   {
     name: "StrengthWay Admin",
     email: "admin@strengthway.com",
     password: "Admin@2026",
     role: "admin",
-  }
+    trainerId: null,
+    memberId: null,
+  },
+  {
+    name: "StrengthWay Admin (Demo)",
+    email: "admin@thestrengthway.com",
+    password: "Admin@12345",
+    role: "admin",
+    trainerId: null,
+    memberId: null,
+  },
+  {
+    name: "Dolliee Ellens (Trainer Demo)",
+    email: "trainer@strengthway.com",
+    password: "Trainer@2026",
+    role: "trainer",
+    trainerId: "TRN-101",
+    memberId: null,
+  },
+  {
+    name: "Arun Varma (Member Demo)",
+    email: "member@strengthway.com",
+    password: "Member@2026",
+    role: "member",
+    trainerId: null,
+    memberId: "MEM-2001",
+  },
 ];
 
 async function seedAdmin(options = {}) {
@@ -26,29 +52,33 @@ async function seedAdmin(options = {}) {
   let seeded = 0;
   let skipped = 0;
 
-  for (const adminData of DEFAULT_ADMINS) {
-    const passwordHash = await bcrypt.hash(adminData.password, 12);
-    const existing = await User.findOne({ email: adminData.email.toLowerCase() });
+  for (const userData of DEFAULT_USERS) {
+    const passwordHash = await bcrypt.hash(userData.password, 12);
+    const existing = await User.findOne({ email: userData.email.toLowerCase() });
     if (existing) {
       existing.passwordHash = passwordHash;
-      existing.name = adminData.name;
-      existing.role = adminData.role;
+      existing.name = userData.name;
+      existing.role = userData.role;
+      existing.trainerId = userData.trainerId || null;
+      existing.memberId = userData.memberId || null;
       existing.isActive = true;
       await existing.save();
       seeded++;
-      if (!silent) console.log(`[Seed:Admin] ✓ Admin account updated: ${adminData.email} with password ${adminData.password}`);
+      if (!silent) console.log(`[Seed:User] ✓ User account updated: ${userData.email} (${userData.role})`);
       continue;
     }
 
     await User.create({
-      name: adminData.name,
-      email: adminData.email.toLowerCase(),
+      name: userData.name,
+      email: userData.email.toLowerCase(),
       passwordHash,
-      role: adminData.role,
+      role: userData.role,
+      trainerId: userData.trainerId || null,
+      memberId: userData.memberId || null,
     });
     seeded++;
     if (!silent) {
-      console.log(`[Seed:Admin] ✓ Admin account created: ${adminData.email} (${adminData.name})`);
+      console.log(`[Seed:User] ✓ User account created: ${userData.email} (${userData.role})`);
     }
   }
 

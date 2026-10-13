@@ -1,11 +1,10 @@
 import {
   Calendar,
-  ChevronLeft,
-  ChevronRight,
   CheckCircle2,
   Sparkles,
   XCircle,
 } from "lucide-react";
+import { MonthPicker } from "@/components/ui/MonthPicker";
 
 export function MemberAttendanceCalendar({
   selectedMonth,
@@ -32,40 +31,11 @@ export function MemberAttendanceCalendar({
         </div>
 
         {/* Month Navigator Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-xs">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title="Previous Month"
-            >
-              <ChevronLeft size={14} />
-            </button>
-
-            <div className="relative px-2">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                title="Select Month"
-              />
-              <span className="text-xs font-bold text-foreground font-mono cursor-pointer select-none">
-                {formattedSelectedMonth}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title="Next Month"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
+        <MonthPicker
+          value={selectedMonth}
+          onChange={setSelectedMonth}
+          align="right"
+        />
       </div>
 
       {/* Attendance Stats Banner */}

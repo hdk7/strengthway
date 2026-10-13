@@ -28,13 +28,18 @@ import {
   checkBatchScheduleAccess,
   calculateDailyKpis,
 } from "./memberAttendanceUtils";
+import { isMember } from "@/auth/currentUser";
+import { MemberPersonalAttendanceView } from "./MemberPersonalAttendanceView";
+import { stepMonth, getCurrentYearMonth } from "@/components/ui/MonthPicker";
 
 export default function MembersAttendancePage() {
+  if (isMember()) {
+    return <MemberPersonalAttendanceView />;
+  }
+
   const [viewMode, setViewMode] = useState("daily"); // "daily" | "matrix"
   const [selectedDate, setSelectedDate] = useState(() => getTodayDateString());
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().toISOString().slice(0, 7)
-  );
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
   const [selectedBatchId, setSelectedBatchId] = useState("");
 
   // Data State
@@ -394,14 +399,8 @@ export default function MembersAttendancePage() {
         selectedMonth={selectedMonth}
         setSelectedMonth={setSelectedMonth}
         formattedSelectedMonth={formattedSelectedMonth}
-        handlePrevMonth={() => setSelectedMonth((m) => {
-          const [y, mon] = m.split("-").map(Number);
-          return new Date(y, mon - 2, 1).toISOString().slice(0, 7);
-        })}
-        handleNextMonth={() => setSelectedMonth((m) => {
-          const [y, mon] = m.split("-").map(Number);
-          return new Date(y, mon, 1).toISOString().slice(0, 7);
-        })}
+        handlePrevMonth={() => setSelectedMonth((m) => stepMonth(m, -1))}
+        handleNextMonth={() => setSelectedMonth((m) => stepMonth(m, 1))}
         loadMatrixData={loadMatrixData}
         isLoadingMatrix={isLoadingMatrix}
       />

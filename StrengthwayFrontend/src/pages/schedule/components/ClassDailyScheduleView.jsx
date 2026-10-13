@@ -15,6 +15,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { getClassCalendar } from "@/lib/classProgramService";
+import { isAdmin } from "@/auth/currentUser";
 
 export function ClassDailyScheduleView({
   batches = [],
@@ -189,7 +190,7 @@ export function ClassDailyScheduleView({
               Use the Assign Classes modal to schedule curriculum slots.
             </p>
           </div>
-          {onOpenAssign && (
+          {isAdmin() && onOpenAssign && (
             <button
               type="button"
               onClick={onOpenAssign}
@@ -285,7 +286,7 @@ export function ClassDailyScheduleView({
                 </span>
 
                 <div className="flex items-center gap-2">
-                  {onOpenSwap && s.status !== "COMPLETED" && (
+                  {isAdmin() && onOpenSwap && s.status !== "COMPLETED" && (
                     <button
                       type="button"
                       onClick={() => onOpenSwap(s)}

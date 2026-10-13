@@ -7,6 +7,7 @@ import { syncTrainerBatches } from "@/lib/batchesService";
 import { DataTable } from "@/components/table";
 import { TrainerModal } from "./TrainerModal";
 import { getTrainerColumns } from "./trainerColumns";
+import { isAdmin } from "@/auth/currentUser";
 
 export default function TrainersPage() {
   const navigate = useNavigate();
@@ -83,14 +84,16 @@ export default function TrainersPage() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAddModal}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-        >
-          <UserPlus size={16} />
-          <span>Add Trainer</span>
-        </button>
+        {isAdmin() && (
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+          >
+            <UserPlus size={16} />
+            <span>Add Trainer</span>
+          </button>
+        )}
       </div>
 
       {/* Error Banner */}

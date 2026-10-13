@@ -21,6 +21,12 @@ import { getBatches } from "@/lib/batchesService";
 import { TrainerModal } from "./TrainerModal";
 import { TrainerProfileView } from "./TrainerProfileView";
 import { TrainerMonthlyCoachingPanel } from "./TrainerMonthlyCoachingPanel";
+import { isAdmin, isTrainer } from "@/auth/currentUser";
+import {
+  stepMonth,
+  getCurrentYearMonth,
+  formatYearMonth,
+} from "@/components/ui/MonthPicker";
 
 export default function TrainerProfilePage() {
   const { id } = useParams();
@@ -31,7 +37,7 @@ export default function TrainerProfilePage() {
   const [assignedBatches, setAssignedBatches] = useState([]);
 
   // Phase 6: Monthly Coaching & Class Conduction State
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
   const [monthTracking, setMonthTracking] = useState(null);
   const [isTrackingLoading, setIsTrackingLoading] = useState(false);
 
@@ -89,31 +95,19 @@ export default function TrainerProfilePage() {
   }, [loadMonthTracking]);
 
   const handlePrevMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const prevDate = new Date(y, m - 2, 1);
-    setSelectedMonth(prevDate.toISOString().slice(0, 7));
+    setSelectedMonth((prev) => stepMonth(prev, -1));
   };
 
   const handleNextMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const nextDate = new Date(y, m, 1);
-    setSelectedMonth(nextDate.toISOString().slice(0, 7));
+    setSelectedMonth((prev) => stepMonth(prev, 1));
   };
 
   const handleCurrentMonth = () => {
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    setSelectedMonth(getCurrentYearMonth());
   };
 
   const formattedSelectedMonth = useMemo(() => {
-    try {
-      const [y, m] = selectedMonth.split("-").map(Number);
-      return new Date(y, m - 1, 1).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return selectedMonth;
-    }
+    return formatYearMonth(selectedMonth);
   }, [selectedMonth]);
 
   const coachingSummary = useMemo(() => {
@@ -217,14 +211,25 @@ export default function TrainerProfilePage() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/trainers-members/trainers")}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
-          >
-            <ArrowLeft size={16} />
-            <span>Back to Trainers</span>
-          </button>
+          {isTrainer() ? (
+            <button
+              type="button"
+              onClick={() => navigate("/admin/dashboard")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+            >
+              <ArrowLeft size={16} />
+              <span>Back to Dashboard</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate("/admin/trainers-members/trainers")}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+            >
+              <ArrowLeft size={16} />
+              <span>Back to Trainers</span>
+            </button>
+          )}
 
           <Link
             to={`/trainers/${trainer.id}`}
@@ -236,23 +241,27 @@ export default function TrainerProfilePage() {
             <span>View Public Profile</span>
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-          >
-            <Edit3 size={16} />
-            <span>Edit Profile</span>
-          </button>
+          {isAdmin() && (
+            <>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+              >
+                <Edit3 size={16} />
+                <span>Edit Profile</span>
+              </button>
 
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 text-destructive px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
-          >
-            <Trash2 size={16} />
-            <span>Delete</span>
-          </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 text-destructive px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+              >
+                <Trash2 size={16} />
+                <span>Delete</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 

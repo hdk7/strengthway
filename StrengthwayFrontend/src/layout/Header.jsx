@@ -36,6 +36,10 @@ export default function Header({ onToggle, sidebarVisible }) {
   const navigate = useNavigate();
 
   const fetchReminders = useCallback(async () => {
+    if (currentUser?.role !== "admin") {
+      setReminders([]);
+      return;
+    }
     try {
       const data = await getInquiries();
       const today = new Date().toISOString().split("T")[0];
@@ -174,7 +178,8 @@ export default function Header({ onToggle, sidebarVisible }) {
           />
         </div>
 
-        {/* Notification Icon & Dropdown */}
+        {/* Notification Icon & Dropdown (Admin Only) */}
+        {currentUser?.role === "admin" && (
         <div className="relative" ref={notifRef}>
           <button
             type="button"
@@ -304,6 +309,7 @@ export default function Header({ onToggle, sidebarVisible }) {
             </div>
           )}
         </div>
+        )}
 
         {/* Theme toggle */}
         <button
@@ -326,10 +332,12 @@ export default function Header({ onToggle, sidebarVisible }) {
             rawName.toLowerCase().includes("gym admin")
               ? "StrengthWay"
               : rawName;
+          const displayRole = currentUser?.displayRole || (currentUser?.role ? currentUser.role.toUpperCase() : "ADMIN");
           return (
             <div className="flex items-center gap-2 sm:gap-2.5 pl-1.5 sm:pl-2.5 border-l border-border">
               <div className="hidden min-[768px]:flex flex-col text-right leading-[1.3]">
                 <span className="text-[13px] font-semibold text-foreground">{displayName}</span>
+                <span className="text-[11px] font-medium text-muted-foreground">{displayRole}</span>
               </div>
               <Avatar name={displayName} />
             </div>

@@ -115,6 +115,16 @@ const updateHolidaySchema = yup.object().shape({
   status: yup.string().trim().nullable(),
 });
 
+const upsertSessionNoteSchema = yup.object().shape({
+  sessionId: yup.string().trim().required("Session ID is required."),
+  trainerId: yup.string().trim().required("Trainer ID is required."),
+  trainerName: yup.string().trim().nullable(),
+  sessionSummary: yup.string().trim().required("Session summary is required."),
+  memberPerformance: yup.string().trim().nullable(),
+  observations: yup.string().trim().nullable(),
+  followUpRequired: yup.boolean().nullable(),
+});
+
 module.exports = {
   createScheduleSchema,
   updateScheduleSchema,
@@ -125,4 +135,6 @@ module.exports = {
   updateSessionSchema,
   createHolidaySchema,
   updateHolidaySchema,
+  upsertSessionNoteSchema,
 };
+

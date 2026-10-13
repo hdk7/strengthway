@@ -7,6 +7,7 @@
  */
 
 const mongoose = require("mongoose");
+const { USER_ROLES } = require("../../shared/constants");
 
 const userSchema = new mongoose.Schema(
   {
@@ -30,8 +31,21 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "staff"],
-      default: "admin",
+      enum: Object.values(USER_ROLES),
+      default: USER_ROLES.ADMIN,
+      index: true,
+    },
+    trainerId: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
+    memberId: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
     },
     isActive: {
       type: Boolean,

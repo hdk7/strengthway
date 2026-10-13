@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Edit3, Trash2, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export function ClassCard({
   classItem,
@@ -30,8 +31,8 @@ export function ClassCard({
       <div className="p-5 pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            {/* Multi-Select Checkbox */}
-            {onToggleSelect && (
+            {/* Multi-Select Checkbox (Admin Only) */}
+            {isAdmin() && onToggleSelect && (
               <button
                 type="button"
                 onClick={() => onToggleSelect(classItem.id)}
@@ -67,25 +68,27 @@ export function ClassCard({
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => onEdit(classItem)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-700 hover:bg-blue-50 dark:text-muted-foreground dark:hover:text-primary dark:hover:bg-primary/10 cursor-pointer transition-colors"
-              title="Edit class"
-            >
-              <Edit3 size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(classItem)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:text-muted-foreground dark:hover:text-rose-400 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-              title="Delete class"
-            >
-              <Trash2 size={15} />
-            </button>
-          </div>
+          {/* Quick Actions (Admin Only) */}
+          {isAdmin() && (
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => onEdit(classItem)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-700 hover:bg-blue-50 dark:text-muted-foreground dark:hover:text-primary dark:hover:bg-primary/10 cursor-pointer transition-colors"
+                title="Edit class"
+              >
+                <Edit3 size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(classItem)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:text-muted-foreground dark:hover:text-rose-400 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
+                title="Delete class"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

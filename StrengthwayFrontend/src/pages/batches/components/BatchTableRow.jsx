@@ -1,4 +1,5 @@
 import { Clock, Eye, Edit3, Trash2 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 const SHORT_DAYS_MAP = {
   Monday: "Mon",
@@ -92,22 +93,26 @@ export function BatchTableRow({
           >
             <Eye size={15} />
           </button>
-          <button
-            type="button"
-            onClick={() => onEdit(b)}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer hover:scale-105 active:scale-95"
-            title="Edit Batch"
-          >
-            <Edit3 size={15} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(b.id, b.name)}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
-            title="Delete Batch"
-          >
-            <Trash2 size={15} />
-          </button>
+          {isAdmin() && (
+            <>
+              <button
+                type="button"
+                onClick={() => onEdit(b)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all cursor-pointer hover:scale-105 active:scale-95"
+                title="Edit Batch"
+              >
+                <Edit3 size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(b.id, b.name)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
+                title="Delete Batch"
+              >
+                <Trash2 size={15} />
+              </button>
+            </>
+          )}
         </div>
       </td>
     </tr>

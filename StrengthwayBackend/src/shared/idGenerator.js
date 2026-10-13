@@ -162,6 +162,17 @@ function generateScheduleHistoryId() {
   return `${ID_PREFIXES.SCHEDULE_HISTORY || "SCH-HIST"}-${ts}-${rand}`;
 }
 
+// ─── Session Note ID ──────────────────────────────────────────────────────────
+/**
+ * Produces format: SNOTE-172767-1234
+ * @returns {string}
+ */
+function generateSessionNoteId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.SESSION_NOTE || "SNOTE"}-${ts}-${rand}`;
+}
+
 module.exports = {
   generateMemberId,
   generateTrainerId,
@@ -176,6 +187,7 @@ module.exports = {
   generateTrainerLeaveId,
   generateClassId,
   generateScheduleHistoryId,
+  generateSessionNoteId,
 };
 
 

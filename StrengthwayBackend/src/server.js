@@ -2,19 +2,28 @@
 
 const { connectDB, disconnectDB } = require("./config/database");
 const { PORT, NODE_ENV } = require("./config/env");
+const seedAdmin = require("./seeds/seed.admin");
 const app = require("./app");
 
 /**
  * Bootstrap the HTTP server:
  *   1. Connect to MongoDB Atlas
- *   2. Start the Express server
- *   3. Register graceful shutdown handlers (SIGTERM, SIGINT)
+ *   2. Ensure core RBAC demo accounts exist
+ *   3. Start the Express server
+ *   4. Register graceful shutdown handlers (SIGTERM, SIGINT)
  */
 async function bootstrap() {
   // 1. Establish database connection before accepting traffic
   await connectDB();
 
-  // 2. Start listening
+  // 2. Ensure default demo accounts (admin, trainer, member) exist in database
+  try {
+    await seedAdmin({ silent: false });
+  } catch (seedErr) {
+    console.warn("[Server] Notice: Seed accounts sync:", seedErr.message);
+  }
+
+  // 3. Start listening
   const server = app.listen(PORT, () => {
     console.log("─────────────────────────────────────────────");
     console.log(`  Strengthway API`);

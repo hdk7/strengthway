@@ -16,6 +16,13 @@ import {
 } from "@/lib/masterScheduleService";
 import { getTrainers } from "@/lib/trainersService";
 import { getMembers } from "@/lib/membersService";
+import { isMember } from "@/auth/currentUser";
+import {
+  stepMonth,
+  getCurrentYearMonth,
+  formatYearMonth,
+} from "@/components/ui/MonthPicker";
+import { getSessionNotes } from "@/lib/sessionNotesService";
 
 export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab, selectedWeekFilter) {
   const [batch, setBatch] = useState(null);
@@ -37,23 +44,30 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
   const [allTrainers, setAllTrainers] = useState([]);
   const [allMembers, setAllMembers] = useState([]);
 
+  // Session Notes for classes in this batch
+  const [sessionNotes, setSessionNotes] = useState([]);
+
   // Month-wise Category Tracking state
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
   const [monthTracking, setMonthTracking] = useState(null);
   const [isTrackingLoading, setIsTrackingLoading] = useState(false);
 
   const loadBatchData = useCallback(async () => {
     const targetId = id || "BATCH-01";
     try {
-      const [foundBatch, cls, trnsList, memsList, allB, allScheds, floorSessions] = await Promise.all([
-        getBatchById(targetId),
-        getScheduledClassesByBatch(targetId),
-        getTrainers(),
-        getMembers(true),
-        getBatches(),
-        getMasterSchedules(),
-        getSessions(),
+      const [foundBatch, cls, trnsList, memsList, allB, allScheds, floorSessions, notesRes] = await Promise.all([
+        getBatchById(targetId).catch(() => null),
+        getScheduledClassesByBatch(targetId).catch(() => []),
+        getTrainers().catch(() => []),
+        getMembers(true).catch(() => []),
+        getBatches().catch(() => []),
+        getMasterSchedules().catch(() => []),
+        getSessions().catch(() => []),
+        getSessionNotes({ batchId: targetId }).catch(() => []),
       ]);
+
+      const loadedNotes = Array.isArray(notesRes?.data) ? notesRes.data : Array.isArray(notesRes) ? notesRes : [];
+      setSessionNotes(loadedNotes);
 
       const batchesList = Array.isArray(allB) ? allB : [];
       setAllBatches(batchesList);
@@ -68,6 +82,12 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
           const nameClean = (b.name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
           return b.id === targetId || bClean === clean || nameClean === clean;
         }) || null;
+
+        if (!currentBatch && isMember()) {
+          currentBatch = batchesList[0];
+        }
+      } else if (!currentBatch && isMember() && batchesList.length > 0) {
+        currentBatch = batchesList[0];
       }
 
       const effectiveId = currentBatch?.id || targetId;
@@ -94,10 +114,10 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
       }
 
       // Load mapped Master Class Schedule for this batch
-      const mcs = await getMasterScheduleByBatchId(effectiveId);
+      const mcs = await getMasterScheduleByBatchId(effectiveId).catch(() => null);
       setMasterSchedule(mcs);
       if (mcs) {
-        const items = await getScheduleItems(mcs.id);
+        const items = await getScheduleItems(mcs.id).catch(() => []);
         setMasterClassItems(Array.isArray(items) ? items : []);
       } else {
         setMasterClassItems([]);
@@ -114,7 +134,7 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
     if (!batchId) return;
     setIsTrackingLoading(true);
     try {
-      const data = await getBatchMonthTracking(batchId, ym);
+      const data = await getBatchMonthTracking(batchId, ym).catch(() => null);
       setMonthTracking(data);
     } catch (err) {
       console.error("Failed to load month tracking:", err);
@@ -128,33 +148,25 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
   }, [loadBatchData]);
 
   useEffect(() => {
-    const targetId = id || "BATCH-01";
+    const targetId = batch?.id || id || "BATCH-01";
     loadMonthTracking(targetId, selectedMonth);
-  }, [id, selectedMonth, loadMonthTracking]);
+  }, [batch?.id, id, selectedMonth, loadMonthTracking]);
 
   // Month navigation helpers
   const handlePrevMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const prevDate = new Date(y, m - 2, 1);
-    const ym = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, "0")}`;
-    setSelectedMonth(ym);
+    setSelectedMonth((prev) => stepMonth(prev, -1));
   };
 
   const handleNextMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const nextDate = new Date(y, m, 1);
-    const ym = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}`;
-    setSelectedMonth(ym);
+    setSelectedMonth((prev) => stepMonth(prev, 1));
   };
 
   const handleCurrentMonth = () => {
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    setSelectedMonth(getCurrentYearMonth());
   };
 
   const formattedMonthLabel = useMemo(() => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const date = new Date(y, m - 1, 1);
-    return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    return formatYearMonth(selectedMonth);
   }, [selectedMonth]);
 
   // Occupancy stats
@@ -414,5 +426,7 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
     currentBatchSessions,
     sessionTabCounts,
     displayedSessions,
+    sessionNotes,
+    setSessionNotes,
   };
 }

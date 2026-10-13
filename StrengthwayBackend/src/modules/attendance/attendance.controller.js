@@ -47,9 +47,26 @@ async function getMemberAttendance(req, res, next) {
   }
 }
 
+const rbacScope = require("../../shared/rbacScope");
+const { ForbiddenError } = require("../../shared/apiError");
+
 async function getAttendanceRecords(req, res, next) {
   try {
-    const records = await attendanceService.getAttendanceRecords(req.query);
+    const query = { ...req.query };
+
+    if (req.user?.role === "member") {
+      query.memberId = req.user.memberId;
+    } else if (req.user?.role === "trainer") {
+      const assignedIds = await rbacScope.getTrainerAssignedMemberIds(req.user.trainerId);
+      if (query.memberId && !assignedIds.includes(query.memberId)) {
+        throw new ForbiddenError("Access denied. You can only view attendance for assigned members.");
+      }
+      if (!query.memberId) {
+        query.memberId = { $in: assignedIds };
+      }
+    }
+
+    const records = await attendanceService.getAttendanceRecords(query);
     return success(res, records, "Attendance records retrieved successfully.");
   } catch (err) {
     next(err);
@@ -67,6 +84,13 @@ async function recordTrainerLog(req, res, next) {
 
 async function getTrainerLogs(req, res, next) {
   try {
+    if (req.user?.role === "member") {
+      throw new ForbiddenError("Access denied. Members do not have access to trainer logs.");
+    }
+    if (req.user?.role === "trainer" && req.user.trainerId !== req.params.trainerId) {
+      throw new ForbiddenError("Access denied. You can only view your own trainer logs.");
+    }
+
     const { month, date } = req.query;
     const logs = await attendanceService.getTrainerLogs(req.params.trainerId, month, date);
     return success(res, logs, "Trainer logs retrieved successfully.");
@@ -79,7 +103,16 @@ const trainerLeavePolicyService = require("./trainerLeavePolicy.service");
 
 async function getAllTrainerLogs(req, res, next) {
   try {
-    const { month, date, trainerId } = req.query;
+    if (req.user?.role === "member") {
+      throw new ForbiddenError("Access denied. Members do not have access to trainer logs.");
+    }
+
+    let trainerId = req.query.trainerId;
+    if (req.user?.role === "trainer") {
+      trainerId = req.user.trainerId; // enforce self-only
+    }
+
+    const { month, date } = req.query;
     const logs = await attendanceService.getTrainerLogs(trainerId, month, date);
     return success(res, logs, "Trainer logs retrieved successfully.");
   } catch (err) {

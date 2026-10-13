@@ -3,6 +3,9 @@
 const router = require("express").Router();
 const ctrl = require("./batch.controller");
 const { validate } = require("../../middleware/validate.middleware");
+const { authenticate } = require("../../middleware/auth.middleware");
+const { requireAdmin } = require("../../middleware/role.middleware");
+const { scopeBatchQuery, scopeBatchDoc, scopeMemberDoc } = require("../../middleware/scope.middleware");
 const {
   createBatchSchema,
   updateBatchSchema,
@@ -17,53 +20,57 @@ const {
 } = require("./batch.schema");
 
 // ─── Literal Routes (Must precede /:id) ───────────────────────────────────────
-router.get("/coach-shifts", ctrl.getCoachShifts);
-router.patch("/coach-shifts/toggle", validate(toggleCoachSlotSchema), ctrl.toggleCoachShift);
+router.get("/coach-shifts", authenticate, ctrl.getCoachShifts);
+router.patch("/coach-shifts/toggle", authenticate, requireAdmin, validate(toggleCoachSlotSchema), ctrl.toggleCoachShift);
 
-router.get("/classes", ctrl.getAllClasses);
-router.put("/classes/:classId", validate(updateClassSchema), ctrl.updateClass);
-router.delete("/classes/:classId", ctrl.deleteClass);
+router.get("/classes", authenticate, ctrl.getAllClasses);
+router.put("/classes/:classId", authenticate, requireAdmin, validate(updateClassSchema), ctrl.updateClass);
+router.delete("/classes/:classId", authenticate, requireAdmin, ctrl.deleteClass);
 
 // ─── Batch Assignments & Transfers Literal Routes ─────────────────────────────
-router.post("/assignments/transfer", validate(permanentTransferSchema), ctrl.transferMember);
-router.post("/assignments/flex", validate(flexibleAssignmentSchema), ctrl.createFlexAssignment);
-router.get("/assignments/member/:memberId", ctrl.getMemberAssignments);
-router.delete("/assignments/:assignmentId/revoke", validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
-router.delete("/assignments/:id/revoke", validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
-router.post("/assignments/:assignmentId/revoke", validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
-router.post("/assignments/:id/revoke", validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
+router.post("/assignments/transfer", authenticate, requireAdmin, validate(permanentTransferSchema), ctrl.transferMember);
+router.post("/assignments/flex", authenticate, requireAdmin, validate(flexibleAssignmentSchema), ctrl.createFlexAssignment);
+router.get("/assignments/member/:memberId", authenticate, (req, res, next) => {
+  req.params.id = req.params.memberId;
+  next();
+}, scopeMemberDoc, ctrl.getMemberAssignments);
+router.delete("/assignments/:assignmentId/revoke", authenticate, requireAdmin, validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
+router.delete("/assignments/:id/revoke", authenticate, requireAdmin, validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
+router.post("/assignments/:assignmentId/revoke", authenticate, requireAdmin, validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
+router.post("/assignments/:id/revoke", authenticate, requireAdmin, validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
 
 // ─── Batches Core ─────────────────────────────────────────────────────────────
-router.get("/", ctrl.getAll);
-router.post("/", validate(createBatchSchema), ctrl.create);
-router.get("/:id", ctrl.getById);
-router.put("/:id", validate(updateBatchSchema), ctrl.update);
-router.patch("/:id", validate(updateBatchSchema), ctrl.update);
-router.delete("/:id", ctrl.remove);
+// GET /api/v1/batches — Admin sees all; Trainer sees assigned; Member sees enrolled
+router.get("/", authenticate, scopeBatchQuery, ctrl.getAll);
+router.post("/", authenticate, requireAdmin, validate(createBatchSchema), ctrl.create);
+router.get("/:id", authenticate, scopeBatchDoc, ctrl.getById);
+router.put("/:id", authenticate, requireAdmin, validate(updateBatchSchema), ctrl.update);
+router.patch("/:id", authenticate, requireAdmin, validate(updateBatchSchema), ctrl.update);
+router.delete("/:id", authenticate, requireAdmin, ctrl.remove);
 
-// ─── Batch Sub-routes ─────────────────────────────────────────────────────────
-router.patch("/:id/enroll", validate(enrollMemberSchema), ctrl.enroll);
-router.patch("/:id/unenroll", validate(enrollMemberSchema), ctrl.unenroll);
-router.patch("/:id/sync-trainers", validate(syncTrainersSchema), ctrl.syncTrainers);
-router.patch("/:id/toggle-status", ctrl.toggleStatus);
+// ─── Batch Sub-routes (Admin only) ───────────────────────────────────────────
+router.patch("/:id/enroll", authenticate, requireAdmin, validate(enrollMemberSchema), ctrl.enroll);
+router.patch("/:id/unenroll", authenticate, requireAdmin, validate(enrollMemberSchema), ctrl.unenroll);
+router.patch("/:id/sync-trainers", authenticate, requireAdmin, validate(syncTrainersSchema), ctrl.syncTrainers);
+router.patch("/:id/toggle-status", authenticate, requireAdmin, ctrl.toggleStatus);
 
 // ─── Month-Wise Tracking & Dynamic Capacity Sub-routes ────────────────────────
-router.get("/:id/month-tracking", ctrl.getMonthTracking);
-router.get("/:id/capacity-check", ctrl.getCapacityCheck);
-router.get("/:id/effective-attendees", ctrl.getEffectiveAttendees);
+router.get("/:id/month-tracking", authenticate, scopeBatchDoc, ctrl.getMonthTracking);
+router.get("/:id/capacity-check", authenticate, scopeBatchDoc, ctrl.getCapacityCheck);
+router.get("/:id/effective-attendees", authenticate, scopeBatchDoc, ctrl.getEffectiveAttendees);
 
 // ─── Batch Scheduled Classes Sub-routes ───────────────────────────────────────
-router.get("/:id/classes", ctrl.getClassesByBatch);
-router.post("/:id/classes", validate(createClassSchema), ctrl.createClass);
-router.put("/:id/classes/:classId", validate(updateClassSchema), ctrl.updateClass);
-router.delete("/:id/classes/:classId", ctrl.deleteClass);
+router.get("/:id/classes", authenticate, scopeBatchDoc, ctrl.getClassesByBatch);
+router.post("/:id/classes", authenticate, requireAdmin, validate(createClassSchema), ctrl.createClass);
+router.put("/:id/classes/:classId", authenticate, requireAdmin, validate(updateClassSchema), ctrl.updateClass);
+router.delete("/:id/classes/:classId", authenticate, requireAdmin, ctrl.deleteClass);
 
 // ─── Batch Reusable Classes Scheduling, Shuffling & History Sub-routes ────────
 const batchScheduleCtrl = require("../classes/batchSchedule.controller");
-router.get("/:id/schedule", batchScheduleCtrl.getBatchSchedule);
-router.post("/:id/schedule/assign-classes", batchScheduleCtrl.assignClasses);
-router.post("/:id/schedule/shuffle", batchScheduleCtrl.shuffleClasses);
-router.get("/:id/schedule/history", batchScheduleCtrl.getScheduleHistory);
+router.get("/:id/schedule", authenticate, scopeBatchDoc, batchScheduleCtrl.getBatchSchedule);
+router.post("/:id/schedule/assign-classes", authenticate, requireAdmin, batchScheduleCtrl.assignClasses);
+router.post("/:id/schedule/shuffle", authenticate, requireAdmin, batchScheduleCtrl.shuffleClasses);
+router.get("/:id/schedule/history", authenticate, scopeBatchDoc, batchScheduleCtrl.getScheduleHistory);
 
 module.exports = router;
 

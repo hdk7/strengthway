@@ -15,13 +15,13 @@ import { MembersReportTab } from "./tabs/MembersReportTab";
 import { TrainersReportTab } from "./tabs/TrainersReportTab";
 import { ClassesReportTab } from "./tabs/ClassesReportTab";
 import { formatMonthTitle, handleExportReportCsv } from "./tabs/reportsExportUtils";
+import { isMember } from "@/auth/currentUser";
+import { stepMonth, getCurrentYearMonth } from "@/components/ui/MonthPicker";
 
 export default function ReportsPage() {
   // ─── Active Tab & Month State ────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = useState("batches"); // "batches" | "members" | "trainers" | "classes"
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().toISOString().slice(0, 7)
-  );
+  const [activeTab, setActiveTab] = useState(() => (isMember() ? "members" : "batches"));
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
 
   // ─── Loading & Error States ──────────────────────────────────────────────────
   const [isLoading, setIsLoading] = useState(true);
@@ -96,22 +96,15 @@ export default function ReportsPage() {
 
   // ─── Month Navigation ────────────────────────────────────────────────────────
   const handlePrevMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const date = new Date(y, m - 2, 1);
-    const newYm = date.toISOString().slice(0, 7);
-    setSelectedMonth(newYm);
+    setSelectedMonth((prev) => stepMonth(prev, -1));
   };
 
   const handleNextMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const date = new Date(y, m, 1);
-    const newYm = date.toISOString().slice(0, 7);
-    setSelectedMonth(newYm);
+    setSelectedMonth((prev) => stepMonth(prev, 1));
   };
 
   const handleCurrentMonth = () => {
-    const current = new Date().toISOString().slice(0, 7);
-    setSelectedMonth(current);
+    setSelectedMonth(getCurrentYearMonth());
   };
 
   // ─── Filtered Data Collections ───────────────────────────────────────────────

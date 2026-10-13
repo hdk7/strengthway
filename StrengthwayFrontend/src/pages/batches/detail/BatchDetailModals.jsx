@@ -25,9 +25,9 @@ export default function BatchDetailModals({
   // Session Notes Modal
   selectedSessionForNotes,
   setSelectedSessionForNotes,
-  sessionNoteText,
-  setSessionNoteText,
-  onSaveSessionNotes,
+  sessionNotes,
+  onSaveTrainerNote,
+  selectedTrainerIdForNotes,
   // Assign Program Modal
   isAssignProgramOpen,
   setIsAssignProgramOpen,
@@ -67,10 +67,11 @@ export default function BatchDetailModals({
       <SessionNotesModal
         selectedSessionForNotes={selectedSessionForNotes}
         onClose={() => setSelectedSessionForNotes(null)}
-        sessionNoteText={sessionNoteText}
-        setSessionNoteText={setSessionNoteText}
-        onSave={onSaveSessionNotes}
         batch={batch}
+        trainers={trainers}
+        sessionNotes={sessionNotes}
+        onSaveTrainerNote={onSaveTrainerNote}
+        initialTrainerId={selectedTrainerIdForNotes}
       />
 
       <AssignProgramModal

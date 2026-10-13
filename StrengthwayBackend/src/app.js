@@ -64,6 +64,7 @@ app.get("/api/v1", (req, res) => {
       schedules:  "/api/v1/schedules",
       classes:    "/api/v1/classes",
       sessions:   "/api/v1/sessions",
+      sessionNotes: "/api/v1/session-notes",
       holidays:   "/api/v1/holidays",
       attendance: "/api/v1/attendance",
       trainerLeaves: "/api/v1/trainer-leaves",
@@ -89,6 +90,7 @@ const trainerLeaveRoutes = require("./modules/attendance/trainerLeave.routes");
 const reportsRoutes      = require("./modules/reports/reports.routes");
 const uploadRoutes       = require("./modules/uploads/upload.routes");
 const classRoutes        = require("./modules/classes/class.routes");
+const sessionNoteRoutes  = require("./modules/schedules/sessionNote.routes");
 
 app.use("/api/v1/auth",           authRoutes);
 app.use("/api/v1/members",        memberRoutes);
@@ -99,6 +101,7 @@ app.use("/api/v1/inquiries",      inquiryRoutes);
 app.use("/api/v1/schedules",      scheduleRoutes);
 app.use("/api/v1/classes",        classRoutes);
 app.use("/api/v1/sessions",       sessionRoutes);
+app.use("/api/v1/session-notes",   sessionNoteRoutes);
 app.use("/api/v1/holidays",       holidayRoutes);
 app.use("/api/v1/attendance",     attendanceRoutes);
 app.use("/api/v1/trainer-leaves", trainerLeaveRoutes);

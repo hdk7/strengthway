@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { MonthPicker } from "@/components/ui/MonthPicker";
 
 export function TrainerAttendanceToolbar({
   shiftOptions,
@@ -79,46 +80,11 @@ export function TrainerAttendanceToolbar({
         </div>
       ) : (
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-background p-1 shadow-xs">
-            <button
-              type="button"
-              onClick={() => {
-                const [y, m] = selectedMonth.split("-").map(Number);
-                const d = new Date(y, m - 2, 1);
-                setSelectedMonth(d.toISOString().slice(0, 7));
-              }}
-              className="rounded-xl p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title="Previous Month"
-            >
-              <ChevronLeft size={15} />
-            </button>
-
-            <div className="relative px-3">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                title="Select Month"
-              />
-              <span className="text-xs sm:text-sm font-black text-foreground font-mono cursor-pointer select-none">
-                {formattedSelectedMonth}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                const [y, m] = selectedMonth.split("-").map(Number);
-                const d = new Date(y, m, 1);
-                setSelectedMonth(d.toISOString().slice(0, 7));
-              }}
-              className="rounded-xl p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title="Next Month"
-            >
-              <ChevronRight size={15} />
-            </button>
-          </div>
+          <MonthPicker
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            align="right"
+          />
         </div>
       )}
     </div>

@@ -32,8 +32,14 @@ class MemberService {
     status,
     includeDeleted = false,
     search = "",
+    scopedMemberIds = null,
   } = {}) {
     const filter = {};
+
+    // RBAC Scope: When provided, restricts query strictly to authorized member IDs
+    if (scopedMemberIds !== null && Array.isArray(scopedMemberIds)) {
+      filter.id = { $in: scopedMemberIds };
+    }
 
     if (!includeDeleted) {
       filter.isDeleted = false;

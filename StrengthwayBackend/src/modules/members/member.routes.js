@@ -3,6 +3,9 @@
 const router = require("express").Router();
 const ctrl = require("./member.controller");
 const { validate } = require("../../middleware/validate.middleware");
+const { authenticate } = require("../../middleware/auth.middleware");
+const { requireAdmin } = require("../../middleware/role.middleware");
+const { scopeMemberQuery, scopeMemberDoc } = require("../../middleware/scope.middleware");
 const {
   createMemberSchema,
   updateMemberSchema,
@@ -10,22 +13,27 @@ const {
 } = require("./member.schema");
 
 // ── Collection routes ────────────────────────────────────────────────────────
-router.get("/", ctrl.getAll);
-router.post("/", validate(createMemberSchema), ctrl.create);
+// GET /api/v1/members — Admin sees all; Trainer sees assigned members; Member sees self
+router.get("/", authenticate, scopeMemberQuery, ctrl.getAll);
+// POST /api/v1/members — Admin only
+router.post("/", authenticate, requireAdmin, validate(createMemberSchema), ctrl.create);
 
 // ── Document routes ──────────────────────────────────────────────────────────
-router.get("/:id", ctrl.getById);
-router.get("/:id/month-tracking", ctrl.getMonthTracking);
-router.put("/:id", validate(updateMemberSchema), ctrl.update);
-router.delete("/:id", ctrl.permanentDelete);
+// GET /api/v1/members/:id — Scoped to Admin, assigned Trainer, or Member's own profile
+router.get("/:id", authenticate, scopeMemberDoc, ctrl.getById);
+router.get("/:id/month-tracking", authenticate, scopeMemberDoc, ctrl.getMonthTracking);
 
-// ── Action routes (PATCH / POST) ─────────────────────────────────────────────
-router.patch("/:id/soft-delete", ctrl.softDelete);
-router.patch("/:id/restore", ctrl.restore);
-router.patch("/:id/toggle-status", ctrl.toggleStatus);
-router.patch("/:id/convert", validate(convertLeadSchema), ctrl.convertLead);
-router.post("/:id/contact", ctrl.recordContact);
-router.patch("/:id/archive", ctrl.archiveInquiry);
+// Write/Delete operations — Admin only
+router.put("/:id", authenticate, requireAdmin, validate(updateMemberSchema), ctrl.update);
+router.delete("/:id", authenticate, requireAdmin, ctrl.permanentDelete);
+
+// ── Action routes (Admin only) ───────────────────────────────────────────────
+router.patch("/:id/soft-delete", authenticate, requireAdmin, ctrl.softDelete);
+router.patch("/:id/restore", authenticate, requireAdmin, ctrl.restore);
+router.patch("/:id/toggle-status", authenticate, requireAdmin, ctrl.toggleStatus);
+router.patch("/:id/convert", authenticate, requireAdmin, validate(convertLeadSchema), ctrl.convertLead);
+router.post("/:id/contact", authenticate, requireAdmin, ctrl.recordContact);
+router.patch("/:id/archive", authenticate, requireAdmin, ctrl.archiveInquiry);
 
 module.exports = router;
 

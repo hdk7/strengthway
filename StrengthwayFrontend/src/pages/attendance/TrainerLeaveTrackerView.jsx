@@ -26,6 +26,7 @@ import {
   cancelTrainerLeave,
 } from "@/lib/trainerLeaveService";
 import { Pagination } from "@/components/table";
+import { MonthPicker, getCurrentYearMonth } from "@/components/ui/MonthPicker";
 
 export function TrainerLeaveTrackerView({
   trainers = [],
@@ -41,7 +42,7 @@ export function TrainerLeaveTrackerView({
   const [statusFilter, setStatusFilter] = useState("ALL"); // ALL | PENDING | APPROVED | REJECTED | CANCELLED
   const [selectedTrainerFilter, setSelectedTrainerFilter] = useState("ALL");
   const [complianceFilter, setComplianceFilter] = useState("ALL"); // ALL | COMPLIANT | OVERRIDDEN
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
 
   // Action Modals State
   const [actionModal, setActionModal] = useState({
@@ -299,12 +300,12 @@ export function TrainerLeaveTrackerView({
             ))}
           </select>
 
-          {/* Month Selector */}
-          <input
-            type="month"
+          {/* Themed Month Picker */}
+          <MonthPicker
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-semibold text-foreground focus:outline-none"
+            onChange={setSelectedMonth}
+            compact
+            align="right"
           />
 
           {/* Request Leave Button */}

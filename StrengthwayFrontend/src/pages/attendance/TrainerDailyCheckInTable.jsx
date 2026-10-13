@@ -20,6 +20,7 @@ import {
   checkTrainerScheduleAccess,
   getEffectiveTrainerStatus,
 } from "./trainerAttendanceUtils";
+import { isAdmin } from "@/auth/currentUser";
 
 export function TrainerDailyCheckInTable({
   searchQuery,
@@ -129,8 +130,8 @@ export function TrainerDailyCheckInTable({
             ))}
           </div>
 
-          {/* Mark All Present: Only active for Today during open shifts */}
-          {isToday && (
+          {/* Mark All Present: Only active for Today during open shifts (Admin Only) */}
+          {isToday && isAdmin() && (
             <button
               type="button"
               onClick={handleMarkAllPresent}

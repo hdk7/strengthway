@@ -10,6 +10,7 @@ const {
   ConflictError,
   BadRequestError,
 } = require("../../shared/apiError");
+const { USER_ROLES } = require("../../shared/constants");
 
 const SALT_ROUNDS = 12;
 
@@ -21,7 +22,14 @@ class AuthService {
    */
   _signToken(user) {
     return jwt.sign(
-      { id: user._id.toString(), email: user.email, role: user.role, name: user.name },
+      {
+        id: user._id.toString(),
+        email: user.email,
+        role: user.role,
+        name: user.name,
+        trainerId: user.trainerId || null,
+        memberId: user.memberId || null,
+      },
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
@@ -40,7 +48,7 @@ class AuthService {
   // ─── Core Auth Operations ───────────────────────────────────────────────────
 
   /**
-   * Register a new admin / staff user.
+   * Register a new user account (admin, trainer, member, or staff).
    * In production, this should be restricted to existing admins via RBAC.
    */
   async register(body) {
@@ -55,7 +63,9 @@ class AuthService {
       name: body.name.trim(),
       email: body.email.toLowerCase().trim(),
       passwordHash,
-      role: body.role || "admin",
+      role: body.role || USER_ROLES.ADMIN,
+      trainerId: body.trainerId || null,
+      memberId: body.memberId || null,
     });
 
     const token = this._signToken(user);
@@ -136,6 +146,37 @@ class AuthService {
 
     const token = this._signToken(user);
     return { token, user: this._sanitize(user) };
+  }
+
+  // ─── User Management Operations (Admin Only) ────────────────────────────────
+
+  /**
+   * Retrieves all registered user accounts.
+   */
+  async getAllUsers() {
+    const users = await User.find().sort({ createdAt: -1 });
+    return users.map((u) => this._sanitize(u));
+  }
+
+  /**
+   * Toggles the active status of a user account.
+   */
+  async toggleUserStatus(userId) {
+    const user = await User.findById(userId);
+    if (!user) throw new NotFoundError("User not found.");
+
+    user.isActive = !user.isActive;
+    await user.save();
+    return this._sanitize(user);
+  }
+
+  /**
+   * Permanently removes a user account.
+   */
+  async deleteUser(userId) {
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) throw new NotFoundError("User not found.");
+    return { deleted: true, id: userId };
   }
 }
 

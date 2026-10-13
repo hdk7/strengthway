@@ -6,6 +6,7 @@ import {
   Calendar,
   Sparkles,
 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 import { MemberAttendanceCalendar } from "./MemberAttendanceCalendar";
 import { MemberBatchHistoryTable } from "./MemberBatchHistoryTable";
 
@@ -106,17 +107,19 @@ export function MemberBatchManagementCard({
           ) : (
             <div className="rounded-xl border border-dashed border-border p-4 text-center">
               <p className="text-xs text-muted-foreground">No primary batch currently allocated.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setTransferModalTab("transfer");
-                  setIsTransferModalOpen(true);
-                }}
-                className="mt-2 text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1 cursor-pointer"
-              >
-                <ArrowRightLeft size={12} />
-                <span>Assign Primary Batch</span>
-              </button>
+              {isAdmin() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferModalTab("transfer");
+                    setIsTransferModalOpen(true);
+                  }}
+                  className="mt-2 text-xs font-semibold text-accent hover:underline inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <ArrowRightLeft size={12} />
+                  <span>Assign Primary Batch</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -185,17 +188,19 @@ export function MemberBatchManagementCard({
               <p className="text-xs text-muted-foreground">
                 No active temporary flex passes. Member is authorized solely for primary batch sessions.
               </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setTransferModalTab("flex");
-                  setIsTransferModalOpen(true);
-                }}
-                className="mt-2 text-xs font-semibold text-amber-500 hover:underline inline-flex items-center gap-1 cursor-pointer"
-              >
-                <Sparkles size={12} />
-                <span>Grant Flex Pass</span>
-              </button>
+              {isAdmin() && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferModalTab("flex");
+                    setIsTransferModalOpen(true);
+                  }}
+                  className="mt-2 text-xs font-semibold text-amber-500 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles size={12} />
+                  <span>Grant Flex Pass</span>
+                </button>
+              )}
             </div>
           )}
         </div>

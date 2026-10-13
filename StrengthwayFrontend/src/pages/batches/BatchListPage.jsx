@@ -21,6 +21,7 @@ import { BatchFormModal } from "./components/BatchFormModal";
 import { BatchDeleteModal } from "./components/BatchDeleteModal";
 import { BatchGridCard } from "./components/BatchGridCard";
 import { BatchTableRow } from "./components/BatchTableRow";
+import { isAdmin, isMember } from "@/auth/currentUser";
 
 export function BatchListPage() {
   const navigate = useNavigate();
@@ -91,6 +92,11 @@ export function BatchListPage() {
       });
 
       setBatches(synchronized);
+
+      if (isMember() && synchronized.length > 0) {
+        navigate(`/admin/batches/${synchronized[0].id}`, { replace: true });
+        return;
+      }
     } catch (err) {
       console.error("Error loading batches:", err);
       setError(err?.message || "Failed to load batches from backend.");
@@ -98,7 +104,7 @@ export function BatchListPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     loadBatches();
@@ -225,6 +231,37 @@ export function BatchListPage() {
     }
   };
 
+  if (isMember()) {
+    if (isLoading) {
+      return (
+        <div className="space-y-6 pb-12 animate-pulse">
+          <div className="h-6 w-48 rounded bg-muted" />
+          <div className="h-28 rounded-2xl border border-border bg-card p-6" />
+          <div className="h-72 rounded-2xl border border-border bg-card" />
+        </div>
+      );
+    }
+    if (batches.length === 0) {
+      return (
+        <div className="flex min-h-[450px] flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/40 p-8 text-center animate-in fade-in">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-4">
+            <Boxes size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">No Enrolled Batch Found</h2>
+          <p className="mt-2 max-w-md text-sm text-muted-foreground">
+            You are not currently enrolled in any gym batch. Please contact the front desk or your coach to get assigned to a batch slot.
+          </p>
+          <button
+            onClick={() => navigate("/admin/dashboard")}
+            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      );
+    }
+  }
+
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5">
       {/* Page Header */}
@@ -238,13 +275,15 @@ export function BatchListPage() {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99] self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          <span>Create Batch</span>
-        </button>
+        {isAdmin() && (
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99] self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            <span>Create Batch</span>
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}

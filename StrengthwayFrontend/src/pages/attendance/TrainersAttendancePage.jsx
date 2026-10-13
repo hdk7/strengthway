@@ -26,6 +26,7 @@ import {
   getTrainerLeaves,
   getTrainerLeaveMonthlySummary,
 } from "@/lib/trainerLeaveService";
+import { getCurrentYearMonth } from "@/components/ui/MonthPicker";
 
 import {
   isDateToday,
@@ -47,9 +48,7 @@ export default function TrainersAttendancePage() {
   const [selectedDate, setSelectedDate] = useState(() =>
     new Date().toISOString().slice(0, 10)
   );
-  const [selectedMonth, setSelectedMonth] = useState(() =>
-    new Date().toISOString().slice(0, 7)
-  );
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
   const [selectedShift, setSelectedShift] = useState("All");
   const [statusFilter, setStatusFilter] = useState("ALL"); // "ALL" | "PRESENT" | "ABSENT" | "LEAVE"
   const [searchQuery, setSearchQuery] = useState("");

@@ -1,4 +1,5 @@
 import { Clock, ArrowRight, Edit3, Trash2 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export function BatchGridCard({
   batch: b,
@@ -81,22 +82,26 @@ export function BatchGridCard({
           <span>View Details</span>
           <ArrowRight size={13} />
         </button>
-        <button
-          type="button"
-          onClick={() => onEdit(b)}
-          className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          title="Edit Batch"
-        >
-          <Edit3 size={14} />
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(b.id, b.name)}
-          className="rounded-lg border border-destructive/30 bg-destructive/10 p-2 text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
-          title="Delete Batch"
-        >
-          <Trash2 size={14} />
-        </button>
+        {isAdmin() && (
+          <>
+            <button
+              type="button"
+              onClick={() => onEdit(b)}
+              className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+              title="Edit Batch"
+            >
+              <Edit3 size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(b.id, b.name)}
+              className="rounded-lg border border-destructive/30 bg-destructive/10 p-2 text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
+              title="Delete Batch"
+            >
+              <Trash2 size={14} />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

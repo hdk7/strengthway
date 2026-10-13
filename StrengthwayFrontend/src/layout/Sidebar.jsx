@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
+import { getCurrentUser } from "@/auth/currentUser";
+
 const navConfig = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
   { id: "inquiries", label: "Inquiries", icon: Inbox, path: "/admin/inquiries" },
@@ -86,9 +88,102 @@ const navConfig = [
   { id: "settings", label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
-function findNavItemByPath(pathname) {
-  for (const top of navConfig) {
-    if (top.path === pathname || (top.path && pathname.startsWith(`${top.path}/`))) {
+function getNavConfigForUser(user) {
+  const role = user?.role || "admin";
+  const memberId = user?.memberId || "MEM-2001";
+  const trainerId = user?.trainerId || "TRN-101";
+
+  if (role === "admin") {
+    return navConfig;
+  }
+
+  if (role === "trainer") {
+    return [
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+      {
+        id: "trainers-members",
+        label: "Trainers & Members",
+        icon: Users,
+        children: [
+          { id: "member-list", label: "Assigned Members", path: "/admin/trainers-members/members" },
+          { id: "trainer-list", label: "My Profile", path: `/admin/trainers-members/trainers/${trainerId}` },
+        ],
+      },
+      {
+        id: "schedule",
+        label: "Schedule",
+        icon: CalendarDays,
+        children: [
+          { id: "batch-schedule", label: "Assigned Batches", path: "/admin/schedule/batches" },
+          { id: "master-class-schedule", label: "Class Schedule", path: "/admin/schedule/master-class" },
+        ],
+      },
+      {
+        id: "attendance",
+        label: "Attendance",
+        icon: ClipboardCheck,
+        children: [
+          { id: "members-attendance", label: "Members Attendance", path: "/admin/attendance/members" },
+          { id: "trainers-attendance", label: "My Attendance", path: "/admin/attendance/trainers" },
+        ],
+      },
+      {
+        id: "payments",
+        label: "Payments",
+        icon: Wallet,
+        children: [
+          { id: "trainers", label: "My Payouts", path: "/admin/payments/trainers" },
+        ],
+      },
+      { id: "reports", label: "My Reports", icon: BarChart3, path: "/admin/reports" },
+    ];
+  }
+
+  if (role === "member") {
+    return [
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+      {
+        id: "my-profile",
+        label: "My Profile",
+        icon: Users,
+        path: `/admin/trainers-members/members/${memberId}`,
+      },
+      {
+        id: "schedule",
+        label: "My Batch Schedule",
+        icon: CalendarDays,
+        path: "/admin/schedule/batches",
+      },
+      {
+        id: "attendance",
+        label: "My Attendance",
+        icon: ClipboardCheck,
+        path: "/admin/attendance/members",
+      },
+      {
+        id: "payments",
+        label: "My Receipts",
+        icon: Wallet,
+        path: "/admin/payments/members",
+      },
+      { id: "reports", label: "My Reports", icon: BarChart3, path: "/admin/reports" },
+    ];
+  }
+
+  return navConfig;
+}
+
+function findNavItemByPath(pathname, items = navConfig) {
+  for (const top of items) {
+    if (
+      top.path === pathname ||
+      (top.path && pathname.startsWith(`${top.path}/`)) ||
+      (top.id === "schedule" &&
+        (pathname === "/admin/batches" ||
+          pathname.startsWith("/admin/batches/") ||
+          pathname === "/admin/schedule/batches" ||
+          pathname.startsWith("/admin/schedule/batches/")))
+    ) {
       return { top, child: undefined };
     }
     const child = top.children?.find(
@@ -164,33 +259,43 @@ function SidebarNavItem({
   const paddingClass = isCollapsed ? "justify-center px-0" : "px-3";
 
   if (item.path) {
+    const isCustomActive =
+      item.id === "schedule" &&
+      (currentPath === "/admin/batches" ||
+        currentPath.startsWith("/admin/batches/") ||
+        currentPath === "/admin/schedule/batches" ||
+        currentPath.startsWith("/admin/schedule/batches/"));
+
     return (
       <NavLink
         to={item.path}
         className={({ isActive }) =>
-          `${itemBase} ${paddingClass}${isActive ? ` ${itemActive}` : ""}`
+          `${itemBase} ${paddingClass}${isActive || isCustomActive ? ` ${itemActive}` : ""}`
         }
         title={isCollapsed ? item.label : undefined}
       >
-        {({ isActive }) => (
-          <>
-            <span
-              className={`shrink-0 transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-              }`}
-            >
-              <Icon size={18} />
-            </span>
-            {!isCollapsed && (
-              <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-                {item.label}
+        {({ isActive }) => {
+          const active = isActive || isCustomActive;
+          return (
+            <>
+              <span
+                className={`shrink-0 transition-colors ${
+                  active ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                }`}
+              >
+                <Icon size={18} />
               </span>
-            )}
-            {isActive && !isCollapsed && (
-              <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-            )}
-          </>
-        )}
+              {!isCollapsed && (
+                <span className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                  {item.label}
+                </span>
+              )}
+              {active && !isCollapsed && (
+                <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+              )}
+            </>
+          );
+        }}
       </NavLink>
     );
   }
@@ -325,20 +430,22 @@ export default function Sidebar({
   const location = useLocation();
   const navigate = useNavigate();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const currentUser = getCurrentUser();
+  const roleNavItems = getNavConfigForUser(currentUser);
 
   const [openGroupId, setOpenGroupId] = useState(() => {
-    const match = findNavItemByPath(location.pathname);
+    const match = findNavItemByPath(location.pathname, roleNavItems);
     return match?.child ? match.top.id : null;
   });
 
   useEffect(() => {
-    const match = findNavItemByPath(location.pathname);
+    const match = findNavItemByPath(location.pathname, roleNavItems);
     if (match?.child) {
       setOpenGroupId(match.top.id);
     }
-  }, [location.pathname]);
+  }, [location.pathname, currentUser.role]);
 
-  const activeMatch = findNavItemByPath(location.pathname);
+  const activeMatch = findNavItemByPath(location.pathname, roleNavItems);
 
   const toggleGroup = (item) => {
     const isAlreadyOpen = openGroupId === item.id;
@@ -375,7 +482,7 @@ export default function Sidebar({
             if (mobileOpen && e.target.closest("a")) onMobileClose?.();
           }}
         >
-          {navConfig.map((item) => (
+          {roleNavItems.map((item) => (
             <SidebarNavItem
               key={item.id}
               item={item}
@@ -387,6 +494,20 @@ export default function Sidebar({
             />
           ))}
         </nav>
+
+        {/* User Role Badge (Expanded view) */}
+        {!isCollapsed && (
+          <div className="px-3.5 py-2 border-t border-border/70 bg-muted/30">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground font-medium truncate max-w-[120px]">
+                {currentUser.name}
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-primary/15 text-primary border border-primary/20">
+                {currentUser.displayRole}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className={`border-t border-border p-2.5 ${isCollapsed ? "flex justify-center" : ""}`}>
           {isCollapsed ? (

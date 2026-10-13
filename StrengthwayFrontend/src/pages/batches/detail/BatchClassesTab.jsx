@@ -17,11 +17,14 @@ import {
   Plus,
   ArrowLeftRight,
   History,
+  Flag,
+  User,
 } from "lucide-react";
 import Pagination from "@/components/table/Pagination";
 import { hasClassStarted } from "@/lib/batchUtils";
 import { ShuffleClassModal } from "../../schedule/components/ShuffleClassModal";
 import { ScheduleHistoryDrawer } from "../../schedule/components/ScheduleHistoryDrawer";
+import { isAdmin, isMember, isTrainer, getCurrentUser } from "@/auth/currentUser";
 
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -57,6 +60,47 @@ function formatDateAndMonth(session) {
   return "—";
 }
 
+function getSessionAssignedTrainers(session, batch, trainers = []) {
+  const ids = new Set();
+  if (Array.isArray(batch?.trainerIds)) {
+    batch.trainerIds.forEach((id) => id && ids.add(id));
+  }
+  if (session?.coachId) {
+    ids.add(session.coachId);
+  }
+  if (Array.isArray(session?.assignedTrainerIds)) {
+    session.assignedTrainerIds.forEach((id) => id && ids.add(id));
+  }
+
+  const trainerMap = new Map();
+  (trainers || []).forEach((t) => {
+    if (t?.id) trainerMap.set(t.id, t);
+  });
+
+  const list = Array.from(ids).map((tid) => {
+    const match = trainerMap.get(tid);
+    const name =
+      match?.name ||
+      `${match?.firstName || ""} ${match?.lastName || ""}`.trim() ||
+      (session?.coachId === tid ? session.coachName : tid);
+    return {
+      id: tid,
+      name: name || tid,
+      role: match?.role || "Faculty Coach",
+    };
+  });
+
+  if (list.length === 0) {
+    list.push({
+      id: session?.coachId || "TRN-101",
+      name: session?.coachName || "Assigned Coach",
+      role: "Faculty Coach",
+    });
+  }
+
+  return list;
+}
+
 export default function BatchClassesTab({
   batch,
   masterSchedule,
@@ -68,6 +112,8 @@ export default function BatchClassesTab({
   selectedWeekFilter,
   setSelectedWeekFilter,
   masterClassItems = [],
+  sessionNotes = [],
+  trainers = [],
   onOpenNotes,
   onEditMasterItem,
   onMarkCompleted,
@@ -77,6 +123,10 @@ export default function BatchClassesTab({
   onOpenAddClasses,
   onRefresh,
 }) {
+  const currentUser = getCurrentUser() || {};
+  const userIsTrainer = isTrainer();
+  const myTrainerId = currentUser.trainerId || currentUser.id;
+
   const [isShuffleOpen, setIsShuffleOpen] = useState(false);
   const [shuffleSourceSessionId, setShuffleSourceSessionId] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -209,6 +259,41 @@ export default function BatchClassesTab({
             ))}
           </div>
 
+          {/* Today's Conduction & Coach Session Notes Overview Banner */}
+          {sessionsTab === "Today" && displayedSessions.length > 0 && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs mb-1">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <AlertCircle size={15} className="text-amber-500 shrink-0" />
+                  <h4 className="font-bold text-foreground text-sm">
+                    {userIsTrainer ? "Today's Class Session Notes" : "Today's Ongoing & Completed Classes Debrief"}
+                  </h4>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  {userIsTrainer
+                    ? "Manage and submit your session notes for today's classes."
+                    : "Real-time monitoring of session summary and trainer observations for today's classes."}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border/70 bg-card px-3 py-1.5">
+                  <span className="text-muted-foreground font-semibold">Today Classes:</span>
+                  <span className="font-bold text-foreground">{displayedSessions.length}</span>
+                </div>
+                <div className="flex items-center gap-1.5 rounded-xl border border-border/70 bg-card px-3 py-1.5">
+                  <span className="text-muted-foreground font-semibold">Notes Logged:</span>
+                  <span className="font-bold text-emerald-500">
+                    {(sessionNotes || []).filter((n) => {
+                      if (!displayedSessions.some((s) => s.id === n.sessionId)) return false;
+                      if (userIsTrainer) return n.trainerId === myTrainerId;
+                      return true;
+                    }).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Floor Sessions & Curriculum Cards Grid */}
           {displayedSessions.length === 0 ? (
             <div className="flex min-h-45 flex-col items-center justify-center rounded-2xl border border-dashed border-border p-6 text-center bg-card/30">
@@ -246,6 +331,34 @@ export default function BatchClassesTab({
                     i.id === session.masterClassItemId ||
                     i.classNumber === session.classNumber
                 );
+
+                const currentUser = getCurrentUser() || {};
+                const userIsTrainer = isTrainer();
+                const myTrainerId = currentUser.trainerId || currentUser.id;
+
+                const allAssignedCoaches = getSessionAssignedTrainers(session, batch, trainers);
+
+                // If user is a trainer, strictly isolate coaches to only themselves
+                const assignedCoaches = userIsTrainer
+                  ? (allAssignedCoaches.filter((c) => c.id === myTrainerId).length > 0
+                      ? allAssignedCoaches.filter((c) => c.id === myTrainerId)
+                      : [{ id: myTrainerId || "TRN-CURRENT", name: currentUser.name || "My Coach Notes", role: "Trainer" }])
+                  : allAssignedCoaches;
+
+                const notesForThisSession = (sessionNotes || []).filter((n) => {
+                  if (n.sessionId !== session.id) return false;
+                  if (userIsTrainer) {
+                    return n.trainerId === myTrainerId;
+                  }
+                  return true;
+                });
+
+                const submittedNotesForSession = notesForThisSession.filter(
+                  (n) => n.sessionSummary && n.sessionSummary.trim().length > 0
+                );
+                const submittedCount = submittedNotesForSession.length;
+                const visibleCoaches = assignedCoaches.slice(0, 2);
+                const hasMoreCoaches = assignedCoaches.length > 2;
 
                 return (
                   <div
@@ -318,57 +431,176 @@ export default function BatchClassesTab({
                         )}
                       </div>
 
-                      {/* Notes Preview Pill */}
-                      {session.notes && (
+                      {/* Assigned Trainers & Individual Notes Submission Status */}
+                      <div className="space-y-1.5 pt-2 border-t border-border/40">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <User size={12} className="text-primary" />
+                            <span>{userIsTrainer ? "My Session Status:" : `Assigned ${assignedCoaches.length > 1 ? "Coaches" : "Coach"}:`}</span>
+                          </span>
+                          {!userIsTrainer && (
+                            <span className="text-[10px] text-muted-foreground/80 font-mono">
+                              {submittedCount}/{assignedCoaches.length} notes
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          {visibleCoaches.map((coach) => {
+                            const coachNote = notesForThisSession.find((n) => n.trainerId === coach.id);
+                            const isSubmitted = !!(coachNote && coachNote.sessionSummary?.trim());
+                            return (
+                              <button
+                                key={coach.id}
+                                type="button"
+                                onClick={() => onOpenNotes(session, coach.id)}
+                                className={`group/trainer inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] transition-all cursor-pointer ${
+                                  isSubmitted
+                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
+                                    : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                                }`}
+                                title={`${coach.name} • ${isSubmitted ? "Notes Submitted" : "Notes Pending"}. Click to view or edit notes.`}
+                              >
+                                <span className="font-semibold truncate max-w-[100px]">{coach.name}</span>
+                                <span
+                                  className={`inline-flex items-center gap-0.5 rounded px-1 py-0.2 text-[9px] font-bold uppercase tracking-wider ${
+                                    isSubmitted
+                                      ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                                      : "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                                  }`}
+                                >
+                                  {isSubmitted ? (
+                                    <>
+                                      <CheckCircle2 size={9} />
+                                      <span>Submitted</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Clock size={9} />
+                                      <span>Notes Pending</span>
+                                    </>
+                                  )}
+                                </span>
+                              </button>
+                            );
+                          })}
+
+                          {hasMoreCoaches && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenNotes(session, "")}
+                              className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-card/80 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                              title="View all assigned coaches"
+                            >
+                              <span>+{assignedCoaches.length - 2} More</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Debrief & Session Notes for Today / Completed classes */}
+                      {(isToday || isCompleted) && submittedNotesForSession.length > 0 ? (
+                        <div className="rounded-xl border border-border/80 bg-muted/40 p-2.5 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-[11px] text-foreground flex items-center gap-1.5">
+                              <FileText size={12} className="text-primary" />
+                              <span>{userIsTrainer ? "My Session Notes" : "Coach Session Notes"}</span>
+                            </span>
+                          </div>
+
+                          <div className="space-y-2 divide-y divide-border/40">
+                            {submittedNotesForSession.map((note) => (
+                              <div key={note.id || note.trainerId} className="pt-1.5 first:pt-0 space-y-1">
+                                <div className="flex items-center justify-between text-[11px]">
+                                  <span className="font-bold text-foreground">
+                                    {userIsTrainer ? "Session Notes" : (note.trainerName || note.trainerId)}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {note.submittedAt ? new Date(note.submittedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                  </span>
+                                </div>
+
+                                {note.sessionSummary && (
+                                  <p className="text-[11px] text-muted-foreground leading-relaxed italic">
+                                    &quot;{note.sessionSummary}&quot;
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : session.notes ? (
                         <div className="rounded-xl bg-primary/5 border border-primary/20 p-2 text-xs text-foreground flex items-start gap-1.5">
                           <FileText size={13} className="text-primary shrink-0 mt-0.5" />
                           <span className="line-clamp-2 italic text-[11px]">
                             {session.notes}
                           </span>
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* Footer Actions */}
                     <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => onOpenNotes(session)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-                          title="View / Edit Coach Notes"
-                        >
-                          <FileText size={11} />
-                          <span>{session.notes ? "Notes" : "Add Note"}</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => onEditMasterItem(session, matchingItem)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-                          title="Edit Class Program & Workouts"
-                        >
-                          <Edit3 size={11} />
-                          <span>Edit Item</span>
-                        </button>
-
-                        {!isCompleted && !isCancelled && currentBatchSessions.length >= 2 && (
+                        {isMember() ? (
+                          submittedNotesForSession.length > 0 || session.notes ? (
+                            <button
+                              type="button"
+                              onClick={() => onOpenNotes(session, "")}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                              title="View Coach Notes"
+                            >
+                              <FileText size={11} />
+                              <span>Coach Note</span>
+                            </button>
+                          ) : null
+                        ) : (
                           <button
                             type="button"
-                            onClick={() => handleOpenShuffle(session.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/70 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950/40 px-2 py-1 text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
-                            title="Swap this class with another scheduled day"
+                            onClick={() => onOpenNotes(session, userIsTrainer ? myTrainerId : "")}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                            title="View / Edit Coach Notes"
                           >
-                            <ArrowLeftRight size={11} />
-                            <span>Swap</span>
+                            <FileText size={11} />
+                            <span>
+                              {userIsTrainer
+                                ? (submittedCount > 0 ? "My Notes" : "Add Note")
+                                : (submittedCount > 0 ? `Notes (${submittedCount}/${assignedCoaches.length})` : "Add Notes")}
+                            </span>
                           </button>
+                        )}
+
+                        {isAdmin() && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onEditMasterItem(session, matchingItem)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                              title="Edit Class Program & Workouts"
+                            >
+                              <Edit3 size={11} />
+                              <span>Edit Item</span>
+                            </button>
+
+                            {!isCompleted && !isCancelled && currentBatchSessions.length >= 2 && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenShuffle(session.id)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/70 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-950/40 px-2 py-1 text-[11px] font-semibold cursor-pointer transition-colors shadow-2xs"
+                                title="Swap this class with another scheduled day"
+                              >
+                                <ArrowLeftRight size={11} />
+                                <span>Swap</span>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
 
                       <div className="flex items-center gap-1">
                         {!isCompleted && !isCancelled && (
                           <>
-                            {canComplete ? (
+                            {isAdmin() && canComplete && (
                               <button
                                 type="button"
                                 onClick={() => onMarkCompleted(session.id, session.subject, session)}
@@ -378,29 +610,32 @@ export default function BatchClassesTab({
                                 <Check size={12} />
                                 <span>Done</span>
                               </button>
-                            ) : (
+                            )}
+                            {(!isAdmin() || !canComplete) && (
                               <span
                                 className="inline-flex items-center gap-1 rounded-lg bg-muted/40 text-muted-foreground/60 border border-border/40 px-2 py-1 text-[11px] font-medium cursor-not-allowed select-none"
-                                title={`Class scheduled for ${session.displayDate || session.sessionDate || "future"}${session.timing ? ` (${session.timing})` : ""}. Available once class starts.`}
+                                title={`Class scheduled for ${session.displayDate || session.sessionDate || "future"}${session.timing ? ` (${session.timing})` : ""}.`}
                               >
                                 <Clock size={11} />
                                 <span>Scheduled</span>
                               </span>
                             )}
 
-                            <button
-                              type="button"
-                              onClick={() => onCancelSession(session.id, session.subject)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-destructive/25 bg-destructive/10 hover:bg-destructive/20 text-destructive px-2 py-1 text-[11px] font-bold transition-colors cursor-pointer"
-                              title="Cancel class session"
-                            >
-                              <X size={12} />
-                              <span>Cancel</span>
-                            </button>
+                            {isAdmin() && (
+                              <button
+                                type="button"
+                                onClick={() => onCancelSession(session.id, session.subject)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-destructive/25 bg-destructive/10 hover:bg-destructive/20 text-destructive px-2 py-1 text-[11px] font-bold transition-colors cursor-pointer"
+                                title="Cancel class session"
+                              >
+                                <X size={12} />
+                                <span>Cancel</span>
+                              </button>
+                            )}
                           </>
                         )}
 
-                        {(isCompleted || isCancelled) && (
+                        {isAdmin() && (isCompleted || isCancelled) && (
                           <button
                             type="button"
                             onClick={() => onRestoreSession(session.id, session.subject)}
@@ -439,12 +674,14 @@ export default function BatchClassesTab({
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border p-8 text-center bg-card/40">
           <Calendar className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <h3 className="text-base font-bold text-foreground">
-            No Scheduled Classes Yet
+            {isMember() ? "No Workout Classes Scheduled" : "No Scheduled Classes Yet"}
           </h3>
           <p className="mt-1 max-w-md text-xs text-muted-foreground">
-            There are currently no scheduled classes for this batch.
+            {isMember()
+              ? "There are currently no scheduled classes for your batch slot. Please check back soon or consult your coach."
+              : "There are currently no scheduled classes for this batch."}
           </p>
-          {onOpenAddClasses ? (
+          {!isMember() && (onOpenAddClasses ? (
             <div className="mt-4 flex items-center justify-center">
               <button
                 type="button"
@@ -466,7 +703,7 @@ export default function BatchClassesTab({
                 <span>Create New Program</span>
               </button>
             </div>
-          ) : null}
+          ) : null)}
         </div>
       )}
 

@@ -104,6 +104,7 @@ const ID_PREFIXES = Object.freeze({
   TRAINER_LEAVE:    "TLREQ",
   CLASS:            "CLS",
   SCHEDULE_HISTORY: "SCH-HIST",
+  SESSION_NOTE:     "SNOTE",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -113,10 +114,12 @@ const PAGINATION = Object.freeze({
   MAX_PAGE_SIZE:     5000,
 });
 
-// ─── User Roles (for auth) ────────────────────────────────────────────────────
+// ─── User Roles (for auth & RBAC) ─────────────────────────────────────────────
 const USER_ROLES = Object.freeze({
-  ADMIN: "admin",
-  STAFF: "staff",
+  ADMIN:   "admin",
+  TRAINER: "trainer",
+  MEMBER:  "member",
+  STAFF:   "staff",
 });
 
 // ─── Emergency Relationship options (mirrors frontend dropdown) ───────────────

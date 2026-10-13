@@ -11,6 +11,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export default function BatchMembersTab({
   batch,
@@ -89,14 +90,16 @@ export default function BatchMembersTab({
                       <p className="text-xs text-muted-foreground mt-1 text-center">
                         There are currently no members enrolled in this batch.
                       </p>
-                      <button
-                        type="button"
-                        onClick={onOpenAddMember}
-                        className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
-                      >
-                        <Plus size={14} />
-                        <span>Enroll Member in Batch</span>
-                      </button>
+                      {isAdmin() && (
+                        <button
+                          type="button"
+                          onClick={onOpenAddMember}
+                          className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+                        >
+                          <Plus size={14} />
+                          <span>Enroll Member in Batch</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -207,19 +210,21 @@ export default function BatchMembersTab({
                       {/* Actions */}
                       <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onRemoveMember(
-                                mem.id,
-                                `${mem.firstName} ${mem.lastName || ""}`
-                              )
-                            }
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                            title="Remove member from batch"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                          {isAdmin() && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                onRemoveMember(
+                                  mem.id,
+                                  `${mem.firstName} ${mem.lastName || ""}`
+                                )
+                              }
+                              className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                              title="Remove member from batch"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -360,17 +365,19 @@ export default function BatchMembersTab({
 
                       {/* Action */}
                       <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onRevokeFlexPass(item.assignmentId, item.name)
-                          }
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                          title="Revoke flexible pass"
-                        >
-                          <RotateCcw size={12} />
-                          <span>Revoke Pass</span>
-                        </button>
+                        {isAdmin() && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onRevokeFlexPass(item.assignmentId, item.name)
+                            }
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                            title="Revoke flexible pass"
+                          >
+                            <RotateCcw size={12} />
+                            <span>Revoke Pass</span>
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

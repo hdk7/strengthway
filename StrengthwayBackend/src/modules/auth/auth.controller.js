@@ -90,4 +90,56 @@ async function changePassword(req, res, next) {
   }
 }
 
-module.exports = { register, login, logout, getMe, refresh, changePassword };
+/**
+ * GET /api/v1/auth/users
+ * Returns list of all user accounts.
+ * Protected — Admin only.
+ */
+async function getAllUsers(req, res, next) {
+  try {
+    const users = await authService.getAllUsers();
+    return success(res, users, "Users retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * PATCH /api/v1/auth/users/:id/status
+ * Toggles a user's active/suspended status.
+ * Protected — Admin only.
+ */
+async function toggleUserStatus(req, res, next) {
+  try {
+    const user = await authService.toggleUserStatus(req.params.id);
+    return success(res, user, "User status updated successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * DELETE /api/v1/auth/users/:id
+ * Permanently deletes a user account.
+ * Protected — Admin only.
+ */
+async function deleteUser(req, res, next) {
+  try {
+    const result = await authService.deleteUser(req.params.id);
+    return success(res, result, "User account deleted successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  register,
+  login,
+  logout,
+  getMe,
+  refresh,
+  changePassword,
+  getAllUsers,
+  toggleUserStatus,
+  deleteUser,
+};

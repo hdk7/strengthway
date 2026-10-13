@@ -1,4 +1,5 @@
 import { Phone, Mail, FileCheck, UserCheck, Loader2, RotateCcw } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export default function MemberTableRow({
   member,
@@ -138,7 +139,7 @@ export default function MemberTableRow({
               <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
               <span>Archived</span>
             </span>
-            {onMoveToInquiry && (
+            {isAdmin() && onMoveToInquiry && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -159,14 +160,16 @@ export default function MemberTableRow({
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
               <span>Inquiry</span>
             </span>
-            <button
-              type="button"
-              onClick={() => onNavigate(`/admin/trainers-members/members/${member.id}`)}
-              title="View profile and record contact details"
-              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-2 py-0.5 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
-            >
-              <span>Workflow</span>
-            </button>
+            {isAdmin() && (
+              <button
+                type="button"
+                onClick={() => onNavigate(`/admin/trainers-members/members/${member.id}`)}
+                title="View profile and record contact details"
+                className="inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-2 py-0.5 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <span>Workflow</span>
+              </button>
+            )}
           </div>
         ) : member.status === "Contacted" ? (
           <div className="flex items-center justify-center gap-2 flex-wrap">
@@ -174,17 +177,19 @@ export default function MemberTableRow({
               <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
               <span>Contacted</span>
             </span>
-            <button
-              type="button"
-              onClick={() => onOpenConfirmModal(member)}
-              title="Confirm contacted inquiry, complete details & convert to active gym member"
-              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
-            >
-              <UserCheck size={12} />
-              <span>Confirm</span>
-            </button>
+            {isAdmin() && (
+              <button
+                type="button"
+                onClick={() => onOpenConfirmModal(member)}
+                title="Confirm contacted inquiry, complete details & convert to active gym member"
+                className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <UserCheck size={12} />
+                <span>Confirm</span>
+              </button>
+            )}
           </div>
-        ) : (
+        ) : isAdmin() ? (
           <button
             type="button"
             onClick={() => onToggleStatus(member.id)}
@@ -204,6 +209,21 @@ export default function MemberTableRow({
             {togglingId === member.id && <Loader2 size={10} className="animate-spin" />}
             <span>{member.status || "Active"}</span>
           </button>
+        ) : (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+              member.status === "Inactive"
+                ? "bg-muted text-muted-foreground border-border"
+                : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                member.status === "Inactive" ? "bg-muted-foreground" : "bg-emerald-500"
+              }`}
+            />
+            <span>{member.status || "Active"}</span>
+          </span>
         )}
       </td>
     </tr>

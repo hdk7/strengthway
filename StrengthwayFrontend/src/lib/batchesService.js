@@ -280,11 +280,12 @@ export async function deleteDayClass(classId, batchId) {
  * @returns {object[]}
  */
 export function getBatchTrainers(trainerIds = [], cachedTrainers = null, batchId = null) {
-  const allTrainers = Array.isArray(cachedTrainers)
-    ? cachedTrainers
-    : Array.isArray(SEED_TRAINERS)
-      ? SEED_TRAINERS
-      : [];
+  const allTrainers =
+    Array.isArray(cachedTrainers) && cachedTrainers.length > 0
+      ? cachedTrainers
+      : Array.isArray(SEED_TRAINERS)
+        ? SEED_TRAINERS
+        : [];
   return allTrainers.filter(
     (t) =>
       !t.isDeleted &&

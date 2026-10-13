@@ -14,7 +14,7 @@ const { UnauthorizedError } = require("../shared/apiError");
  * On failure: passes a 401 UnauthorizedError to the global error handler.
  *
  * Decoded payload shape (set by auth.service.js at login):
- *   { id, email, role, iat, exp }
+ *   { id, email, role, name, trainerId, memberId, iat, exp }
  */
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -35,7 +35,7 @@ function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    req.user = payload; // { id, email, role, iat, exp }
+    req.user = payload; // { id, email, role, name, trainerId, memberId, iat, exp }
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {

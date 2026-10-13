@@ -64,9 +64,11 @@ router.post(
   ctrl.uploadDocument
 );
 
+const { requireAdmin } = require("../../middleware/role.middleware");
+
 // DELETE /api/v1/uploads/*path
 // publicId is passed as wildcard path (handles nested folder paths)
 // Example: DELETE /api/v1/uploads/strengthway%2Fphotos%2Fabc123?type=image
-router.delete("/*path", authenticate, ctrl.deleteAsset);
+router.delete("/*path", authenticate, requireAdmin, ctrl.deleteAsset);
 
 module.exports = router;

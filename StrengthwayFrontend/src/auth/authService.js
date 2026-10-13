@@ -2,10 +2,13 @@ import { ApiError } from "@/lib/apiClient";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5000/api";
 
-// Re-exported so LoginPage can show the demo credentials hint in the UI.
-// DEMO_MODE is now always false — the backend is live.
-export const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
-export const DEMO_CREDENTIALS = { email: "admin@thestrengthway.com", password: "Admin@12345" };
+export const DEMO_ACCOUNTS = [
+  { role: "admin", label: "Admin", email: "admin@strengthway.com", password: "Admin@2026" },
+  { role: "trainer", label: "Trainer", email: "trainer@strengthway.com", password: "Trainer@2026" },
+  { role: "member", label: "Member", email: "member@strengthway.com", password: "Member@2026" },
+];
+export const DEMO_CREDENTIALS = { email: "admin@strengthway.com", password: "Admin@2026" };
+export const DEMO_MODE = true;
 
 // Re-export ApiError under the legacy name so imports in LoginPage keep working.
 export { ApiError as AuthError };

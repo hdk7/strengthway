@@ -8,7 +8,10 @@ const { success, created } = require("../../shared/response");
 async function getAll(req, res, next) {
   try {
     const { status } = req.query;
-    const batches = await batchService.getAll({ status });
+    const batches = await batchService.getAll({
+      status,
+      scopedBatchIds: req.scopedBatchIds ?? null,
+    });
     return success(res, batches, "Batches retrieved successfully.");
   } catch (err) {
     next(err);

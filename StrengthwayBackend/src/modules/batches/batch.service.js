@@ -14,8 +14,11 @@ const { getBatchMonthTracking } = require("./batchTracking.service");
 
 class BatchService {
   // ─── Batches ────────────────────────────────────────────────────────────────
-  async getAll({ status } = {}) {
+  async getAll({ status, scopedBatchIds = null } = {}) {
     const filter = {};
+    if (scopedBatchIds !== null && Array.isArray(scopedBatchIds)) {
+      filter.id = { $in: scopedBatchIds };
+    }
     if (status && status !== "All" && status !== "ALL") filter.status = status;
     const batches = await batchRepository.findAll({ filter });
 

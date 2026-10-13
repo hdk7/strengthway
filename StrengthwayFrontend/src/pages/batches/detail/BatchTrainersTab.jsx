@@ -4,6 +4,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { getTrainerPhoto } from "@/lib/trainersService";
+import { isAdmin } from "@/auth/currentUser";
 
 export default function BatchTrainersTab({
   batch,
@@ -38,7 +39,7 @@ export default function BatchTrainersTab({
               ? "Try searching with a different coach name or phone number."
               : `No coaches are currently assigned to ${batch?.name}. Assign an existing trainer to this batch.`}
           </p>
-          {!trainerSearch && (
+          {!trainerSearch && isAdmin() && (
             <button
               type="button"
               onClick={onOpenAddTrainer}
@@ -82,14 +83,16 @@ export default function BatchTrainersTab({
                       <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/20">
                         {trn.status || "Active"}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => onUnassignTrainer(trn.id, trn.name)}
-                        className="rounded-lg p-1 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
-                        title="Remove coach from this batch"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      {isAdmin() && (
+                        <button
+                          type="button"
+                          onClick={() => onUnassignTrainer(trn.id, trn.name)}
+                          className="rounded-lg p-1 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                          title="Remove coach from this batch"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </div>
                   </div>
                   <span className="text-[11px] text-muted-foreground truncate block">

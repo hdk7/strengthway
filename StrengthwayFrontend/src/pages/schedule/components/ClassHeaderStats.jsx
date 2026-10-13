@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Clock,
 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export function ClassHeaderStats({
   activeView = "library",
@@ -87,13 +88,15 @@ export function ClassHeaderStats({
             </div>
           )}
 
-          <button
-            onClick={onOpenCreate}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 dark:bg-primary px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white dark:text-primary-foreground shadow-md hover:bg-blue-800 dark:hover:bg-primary/90 cursor-pointer active:scale-95 transition-all shrink-0 whitespace-nowrap"
-          >
-            <Plus size={16} />
-            <span>Create Class</span>
-          </button>
+          {isAdmin() && (
+            <button
+              onClick={onOpenCreate}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 dark:bg-primary px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white dark:text-primary-foreground shadow-md hover:bg-blue-800 dark:hover:bg-primary/90 cursor-pointer active:scale-95 transition-all shrink-0 whitespace-nowrap"
+            >
+              <Plus size={16} />
+              <span>Create Class</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -170,7 +173,7 @@ export function ClassHeaderStats({
                 ))}
               </div>
 
-              {onSelectAll && hasClasses && (
+              {isAdmin() && onSelectAll && hasClasses && (
                 <div className="flex items-center gap-2">
                   <button
                     type="button"

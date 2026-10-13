@@ -11,6 +11,7 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export function ClassSessionDetailModal({
   isOpen,
@@ -150,7 +151,7 @@ export function ClassSessionDetailModal({
 
         {/* Footer Actions */}
         <div className="border-t border-slate-100 dark:border-border pt-3.5 flex items-center justify-between">
-          {onOpenSwap && session.status !== "COMPLETED" ? (
+          {isAdmin() && onOpenSwap && session.status !== "COMPLETED" ? (
             <button
               type="button"
               onClick={() => {

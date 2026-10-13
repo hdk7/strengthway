@@ -1,6 +1,7 @@
 "use strict";
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
 
 // ─── Required variables — app will not start without these ───────────────────
 const REQUIRED_VARS = ["MONGODB_URI", "JWT_SECRET"];

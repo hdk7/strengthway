@@ -16,6 +16,7 @@ async function getAll(req, res, next) {
       status,
       search: search?.trim() || "",
       includeDeleted: includeDeleted === "true" || includeDeleted === true,
+      scopedTrainerIds: req.scopedTrainerIds ?? null,
     });
 
     return paginated(

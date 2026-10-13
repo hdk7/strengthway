@@ -12,6 +12,7 @@ import NotFoundPage, {
 
 import AdminLayout from "@/layout/AdminLayout";
 import LoginPage from "@/auth/LoginPage";
+import RoleGuard from "@/auth/RoleGuard";
 
 import DashboardHome from "@/pages/dashboard/DashboardHome";
 import InquiriesPage from "@/pages/inquiries/InquiriesPage";
@@ -51,53 +52,65 @@ export function AppRoutes() {
       <Route path="/403" element={<ForbiddenPage />} />
       <Route path="/500" element={<ServerErrorPage />} />
 
-      {/* Admin shell */}
-      <Route path="/admin" element={<AdminLayout />}>
+      {/* Admin shell - Authenticated */}
+      <Route
+        path="/admin"
+        element={
+          <RoleGuard requireAuth={true}>
+            <AdminLayout />
+          </RoleGuard>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
 
-        <Route path="dashboard" element={<DashboardHome />} />
-        <Route path="inquiries" element={<InquiriesPage />} />
-        <Route path="inquiries/:id" element={<InquiryProfilePage />} />
+        {/* Accessible to Admin, Trainer, and Member */}
+        <Route element={<RoleGuard allowedRoles={["admin", "trainer", "member"]} />}>
+          <Route path="dashboard" element={<DashboardHome />} />
+          <Route path="trainers-members/members/:id" element={<MemberProfilePage />} />
+          <Route path="schedule" element={<Navigate to="/admin/schedule/batches" replace />} />
+          <Route path="schedule/calendar" element={<Navigate to="/admin/schedule/batches" replace />} />
+          <Route path="schedule/batches" element={<BatchListPage />} />
+          <Route path="schedule/batches/:id" element={<BatchDetailPage />} />
+          <Route path="batches" element={<BatchListPage />} />
+          <Route path="batches/list" element={<Navigate to="/admin/batches" replace />} />
+          <Route path="batches/:id" element={<BatchDetailPage />} />
+          <Route path="attendance/members" element={<MembersAttendancePage />} />
+          <Route path="reports" element={<ReportsPage />} />
+        </Route>
 
-        <Route path="trainers-members/trainers" element={<TrainersPage />} />
-        <Route path="trainers-members/trainers/:id" element={<TrainerProfilePage />} />
-        <Route path="trainers-members/members" element={<MembersPage />} />
-        <Route path="trainers-members/members/:id" element={<MemberProfilePage />} />
+        {/* Accessible to Admin and Trainer */}
+        <Route element={<RoleGuard allowedRoles={["admin", "trainer"]} />}>
+          <Route path="schedule/master-class" element={<MasterClassSchedulePage />} />
+          <Route path="schedule/classes" element={<Navigate to="/admin/schedule/master-class" replace />} />
+          <Route path="schedule/class" element={<Navigate to="/admin/schedule/master-class" replace />} />
+          <Route path="schedule/class-schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
+          <Route path="schedule/sessions" element={<Navigate to="/admin/schedule/master-class" replace />} />
+          <Route path="trainers-members/members" element={<MembersPage />} />
+          <Route path="trainers-members/trainers/:id" element={<TrainerProfilePage />} />
+          <Route path="attendance/trainers" element={<TrainersAttendancePage />} />
+          <Route path="payments/trainers" element={<TrainersPaymentsPage />} />
+        </Route>
 
-        {/* Schedule Menu Routes */}
-        <Route path="schedule" element={<Navigate to="/admin/schedule/batches" replace />} />
-        <Route path="schedule/calendar" element={<Navigate to="/admin/schedule/batches" replace />} />
-        <Route path="schedule/batches" element={<BatchListPage />} />
-        <Route path="schedule/batches/:id" element={<BatchDetailPage />} />
-        <Route path="schedule/master-class" element={<MasterClassSchedulePage />} />
-        <Route path="schedule/classes" element={<Navigate to="/admin/schedule/master-class" replace />} />
-        <Route path="schedule/class" element={<Navigate to="/admin/schedule/master-class" replace />} />
-        <Route path="schedule/class-schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
-        <Route path="schedule/sessions" element={<Navigate to="/admin/schedule/master-class" replace />} />
-        <Route path="schedule/holidays" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
+        {/* Accessible to Admin and Member */}
+        <Route element={<RoleGuard allowedRoles={["admin", "member"]} />}>
+          <Route path="payments/members" element={<MembersPaymentsPage />} />
+        </Route>
 
-        {/* Existing Batches Routes */}
-        <Route path="batches" element={<BatchListPage />} />
-        <Route path="batches/list" element={<Navigate to="/admin/batches" replace />} />
-        <Route path="batches/:id" element={<BatchDetailPage />} />
-
-        <Route path="attendance/members" element={<MembersAttendancePage />} />
-        <Route path="attendance/trainers" element={<TrainersAttendancePage />} />
-
-        <Route path="payments/members" element={<MembersPaymentsPage />} />
-        <Route path="payments/trainers" element={<TrainersPaymentsPage />} />
-
-        <Route path="reports" element={<ReportsPage />} />
-
-        <Route path="masters/shift" element={<Navigate to="/admin/masters/membership-plan" replace />} />
-        <Route path="masters/batch" element={<Navigate to="/admin/batches" replace />} />
-        <Route path="masters/membership-plan" element={<MembershipPlanMasterPage />} />
-        <Route path="masters/schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
-        <Route path="masters/attendance-policy" element={<AttendancePolicyMasterPage />} />
-        <Route path="masters/holiday" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
-        <Route path="masters/payment-fee" element={<PaymentFeeMasterPage />} />
-
-        <Route path="settings" element={<SettingsPage />} />
+        {/* Admin-only Routes */}
+        <Route element={<RoleGuard allowedRoles={["admin"]} />}>
+          <Route path="inquiries" element={<InquiriesPage />} />
+          <Route path="inquiries/:id" element={<InquiryProfilePage />} />
+          <Route path="trainers-members/trainers" element={<TrainersPage />} />
+          <Route path="schedule/holidays" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
+          <Route path="masters/shift" element={<Navigate to="/admin/masters/membership-plan" replace />} />
+          <Route path="masters/batch" element={<Navigate to="/admin/batches" replace />} />
+          <Route path="masters/membership-plan" element={<MembershipPlanMasterPage />} />
+          <Route path="masters/schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
+          <Route path="masters/attendance-policy" element={<AttendancePolicyMasterPage />} />
+          <Route path="masters/holiday" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
+          <Route path="masters/payment-fee" element={<PaymentFeeMasterPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
 
         <Route path="*" element={<AdminNotFoundPage embedded />} />
       </Route>

@@ -12,7 +12,9 @@ import {
   XCircle,
   Sparkles,
   ArrowRightLeft,
+  Clock,
 } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 import {
   isDateToday,
   isDatePast,
@@ -124,8 +126,8 @@ export function MemberDailyCheckInTable({
             ))}
           </div>
 
-          {/* Mark All Present: Only active for Today during open batch schedule */}
-          {isToday && (
+          {/* Mark All Present: Only active for Today during open batch schedule (Admin Only) */}
+          {isToday && isAdmin() && (
             <button
               type="button"
               onClick={handleMarkAllPresent}
@@ -335,48 +337,70 @@ export function MemberDailyCheckInTable({
                       ) : (
                         /* Active Schedule Slot OR After Class End */
                         <div className="inline-flex items-center justify-center gap-1.5">
-                          {/* 1. If NOT checked in yet */}
-                          {!hasCheckedIn && (
-                            scheduleAccess.isAfterEnd ? (
-                              <div
-                                className="inline-flex items-center gap-1 rounded-lg bg-muted/40 border border-border/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground select-none"
-                                title={scheduleAccess.reason}
-                              >
-                                <Lock size={11} className="shrink-0 text-muted-foreground/60" />
-                                <span>Restricted • Class Ended</span>
-                              </div>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleQuickCheckIn(attendee)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer"
-                                title="Check In Athlete (Automatically marks status as Present)"
-                              >
+                          {isAdmin() ? (
+                            <>
+                              {/* 1. If NOT checked in yet */}
+                              {!hasCheckedIn && (
+                                scheduleAccess.isAfterEnd ? (
+                                  <div
+                                    className="inline-flex items-center gap-1 rounded-lg bg-muted/40 border border-border/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground select-none"
+                                    title={scheduleAccess.reason}
+                                  >
+                                    <Lock size={11} className="shrink-0 text-muted-foreground/60" />
+                                    <span>Restricted • Class Ended</span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleQuickCheckIn(attendee)}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                    title="Check In Athlete (Automatically marks status as Present)"
+                                  >
+                                    <LogIn size={12} />
+                                    <span>Check In</span>
+                                  </button>
+                                )
+                              )}
+
+                              {/* 2. If checked in but NOT checked out: ONLY Check Out action */}
+                              {hasCheckedIn && !hasCheckedOut && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleQuickCheckOut(attendee, record)}
+                                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                  title="Check Out Athlete (Records check-out time)"
+                                >
+                                  <LogOut size={12} />
+                                  <span>Check Out</span>
+                                </button>
+                              )}
+
+                              {/* 3. If checked out: Session completed */}
+                              {hasCheckedIn && hasCheckedOut && (
+                                <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-1 rounded-lg">
+                                  <CheckCircle2 size={12} />
+                                  <span>Checked Out</span>
+                                </span>
+                              )}
+                            </>
+                          ) : (
+                            /* Read-only Biometric Attendance Status for Trainers & Members */
+                            hasCheckedIn && hasCheckedOut ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-1 rounded-lg">
+                                <CheckCircle2 size={12} />
+                                <span>Checked Out</span>
+                              </span>
+                            ) : hasCheckedIn ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-lg">
                                 <LogIn size={12} />
-                                <span>Check In</span>
-                              </button>
+                                <span>On Floor</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted/40 border border-border/50 px-2.5 py-1 rounded-lg">
+                                <Clock size={12} />
+                                <span>Awaiting Punch</span>
+                              </span>
                             )
-                          )}
-
-                          {/* 2. If checked in but NOT checked out: ONLY Check Out action */}
-                          {hasCheckedIn && !hasCheckedOut && (
-                            <button
-                              type="button"
-                              onClick={() => handleQuickCheckOut(attendee, record)}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 text-xs font-bold shadow-xs transition-all cursor-pointer"
-                              title="Check Out Athlete (Records check-out time)"
-                            >
-                              <LogOut size={12} />
-                              <span>Check Out</span>
-                            </button>
-                          )}
-
-                          {/* 3. If checked out: Session completed */}
-                          {hasCheckedIn && hasCheckedOut && (
-                            <span className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/25 px-2.5 py-1 rounded-lg">
-                              <CheckCircle2 size={12} />
-                              <span>Checked Out</span>
-                            </span>
                           )}
                         </div>
                       )}

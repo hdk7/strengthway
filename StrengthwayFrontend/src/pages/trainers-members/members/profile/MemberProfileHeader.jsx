@@ -7,6 +7,7 @@ import {
   PhoneCall,
   Archive,
 } from "lucide-react";
+import { isAdmin, isMember } from "@/auth/currentUser";
 
 export function MemberProfileHeader({
   member,
@@ -35,6 +36,8 @@ export function MemberProfileHeader({
     member?.contactDetails?.outcome === "Needs Follow-Up";
   const isConverted =
     !isDeleted && (member.status === "Converted" || member.status === "Active");
+  const adminUser = isAdmin();
+  const memberUser = isMember();
 
   return (
     <>
@@ -79,17 +82,28 @@ export function MemberProfileHeader({
 
         {/* Back & Action Buttons */}
         <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={() => navigate("/admin/trainers-members/members")}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
-          >
-            <ArrowLeft size={16} />
-            <span>Back to Members List</span>
-          </button>
+          {memberUser ? (
+            <button
+              type="button"
+              onClick={() => navigate("/admin/dashboard")}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+            >
+              <ArrowLeft size={16} />
+              <span>Back to Dashboard</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => navigate("/admin/trainers-members/members")}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
+            >
+              <ArrowLeft size={16} />
+              <span>Back to Members List</span>
+            </button>
+          )}
 
-          {/* Inquiry Workflow: Step 1 Contact button */}
-          {isLeadOrInquiry && (
+          {/* Admin-only mutations & inquiry workflows */}
+          {adminUser && isLeadOrInquiry && (
             <button
               type="button"
               onClick={handleOpenContact}
@@ -100,8 +114,7 @@ export function MemberProfileHeader({
             </button>
           )}
 
-          {/* Inquiry Workflow: Step 2 Convert & Archive buttons */}
-          {isContacted && (
+          {adminUser && isContacted && (
             <>
               {isNeedsFollowUp && (
                 <button
@@ -136,7 +149,7 @@ export function MemberProfileHeader({
             </>
           )}
 
-          {isDeleted || member.status === "Archived" ? (
+          {adminUser && (isDeleted || member.status === "Archived" ? (
             <>
               {handleMoveToInquiry && (
                 <button
@@ -166,16 +179,18 @@ export function MemberProfileHeader({
               <Trash2 size={16} />
               <span>Archive (Soft Delete)</span>
             </button>
-          )}
+          ))}
 
-          <button
-            type="button"
-            onClick={() => setIsEditModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-          >
-            <Edit3 size={16} />
-            <span>Edit Profile</span>
-          </button>
+          {adminUser && (
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+            >
+              <Edit3 size={16} />
+              <span>Edit Profile</span>
+            </button>
+          )}
         </div>
       </div>
 

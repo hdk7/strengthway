@@ -1,6 +1,7 @@
 "use strict";
 
 const { ForbiddenError, UnauthorizedError } = require("../shared/apiError");
+const { USER_ROLES } = require("../shared/constants");
 
 /**
  * Role-based access control (RBAC) middleware factory.
@@ -14,12 +15,14 @@ const { ForbiddenError, UnauthorizedError } = require("../shared/apiError");
  *   // Require admin role
  *   router.delete("/:id", authenticate, requireRole("admin"), ctrl.permanentDelete);
  *
- *   // Allow either admin OR staff
- *   router.post("/", authenticate, requireRole("admin", "staff"), ctrl.create);
+ *   // Allow either admin OR trainer
+ *   router.get("/", authenticate, requireRole("admin", "trainer"), ctrl.list);
  *
  * Defined roles (from constants.js USER_ROLES):
- *   "admin" — Full access: create, read, update, delete, manage users
- *   "staff" — Limited: read, create, update; no permanent delete or user management
+ *   "admin"   — Full access across all modules
+ *   "trainer" — Read-only access to assigned members, batches, classes, own logs
+ *   "member"  — Read-only access to own profile, own schedule, own logs, own receipts
+ *   "staff"   — Legacy staff role (admin-like limited access)
  *
  * @param {...string} roles - One or more allowed role strings
  * @returns {import('express').RequestHandler}
@@ -50,11 +53,27 @@ function requireRole(...roles) {
 /**
  * Shorthand guard for admin-only routes.
  */
-const requireAdmin = requireRole("admin");
+const requireAdmin = requireRole(USER_ROLES.ADMIN);
+
+/**
+ * Shorthand guard for admin or trainer routes.
+ */
+const requireTrainer = requireRole(USER_ROLES.ADMIN, USER_ROLES.TRAINER);
+
+/**
+ * Shorthand guard for admin or member routes.
+ */
+const requireMember = requireRole(USER_ROLES.ADMIN, USER_ROLES.MEMBER);
 
 /**
  * Shorthand guard for admin or staff routes.
  */
-const requireStaff = requireRole("admin", "staff");
+const requireStaff = requireRole(USER_ROLES.ADMIN, USER_ROLES.STAFF);
 
-module.exports = { requireRole, requireAdmin, requireStaff };
+module.exports = {
+  requireRole,
+  requireAdmin,
+  requireTrainer,
+  requireMember,
+  requireStaff,
+};

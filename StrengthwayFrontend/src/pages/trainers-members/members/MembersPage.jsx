@@ -14,6 +14,7 @@ import { AdminMemberRegistrationModal } from "./MembersRegistration";
 import { getMembers, toggleMemberStatus } from "@/lib/membersService";
 import { createInquiry } from "@/lib/inquiriesService";
 import { Pagination } from "@/components/table";
+import { isAdmin } from "@/auth/currentUser";
 import MemberMetricsRow from "./MemberMetricsRow";
 import MemberTableRow from "./MemberTableRow";
 
@@ -185,17 +186,19 @@ export default function MembersPage() {
           </p>
         </div>
 
-        {/* Add Member CTA Button */}
-        <div className="shrink-0">
-          <button
-            type="button"
-            onClick={handleOpenAddModal}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
-          >
-            <UserPlus size={16} />
-            <span>Add Member</span>
-          </button>
-        </div>
+        {/* Add Member CTA Button (Admin Only) */}
+        {isAdmin() && (
+          <div className="shrink-0">
+            <button
+              type="button"
+              onClick={handleOpenAddModal}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+            >
+              <UserPlus size={16} />
+              <span>Add Member</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Metrics Summary Row */}

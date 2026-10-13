@@ -1,6 +1,7 @@
 "use strict";
 
 const yup = require("yup");
+const { USER_ROLES } = require("../../shared/constants");
 
 /**
  * Yup schema for POST /api/v1/auth/login
@@ -37,7 +38,12 @@ const registerSchema = yup.object().shape({
     .string()
     .required("Password is required.")
     .min(8, "Password must be at least 8 characters."),
-  role: yup.string().oneOf(["admin", "staff"]).default("admin"),
+  role: yup
+    .string()
+    .oneOf(Object.values(USER_ROLES))
+    .default(USER_ROLES.ADMIN),
+  trainerId: yup.string().trim().nullable(),
+  memberId: yup.string().trim().nullable(),
 });
 
 /**

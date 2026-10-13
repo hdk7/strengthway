@@ -7,8 +7,21 @@ const { NotFoundError, ConflictError } = require("../../shared/apiError");
 const { TRAINER_STATUS } = require("../../shared/constants");
 
 class TrainerService {
-  async getAll({ page = 1, pageSize = 50, skip = 0, status, search = "", includeDeleted = false } = {}) {
+  async getAll({
+    page = 1,
+    pageSize = 50,
+    skip = 0,
+    status,
+    search = "",
+    includeDeleted = false,
+    scopedTrainerIds = null,
+  } = {}) {
     const filter = {};
+
+    // RBAC Scope: When provided, restricts query strictly to authorized trainer IDs
+    if (scopedTrainerIds !== null && Array.isArray(scopedTrainerIds)) {
+      filter.id = { $in: scopedTrainerIds };
+    }
 
     if (!includeDeleted) {
       filter.isDeleted = false;

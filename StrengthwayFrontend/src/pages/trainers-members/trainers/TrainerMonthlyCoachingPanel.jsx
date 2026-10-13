@@ -8,14 +8,18 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { MonthPicker } from "@/components/ui/MonthPicker";
+
 export function TrainerMonthlyCoachingPanel({
   id,
+  selectedMonth,
+  setSelectedMonth,
   coachingSummary,
   activelyCoachedBatches,
 }) {
   return (
     <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm space-y-8">
-      {/* Header with Title */}
+      {/* Header with Title and Month Picker */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
         <div className="flex items-center gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-accent/10 text-accent">
@@ -32,6 +36,14 @@ export function TrainerMonthlyCoachingPanel({
             </p>
           </div>
         </div>
+
+        {selectedMonth && setSelectedMonth && (
+          <MonthPicker
+            value={selectedMonth}
+            onChange={setSelectedMonth}
+            align="right"
+          />
+        )}
       </div>
 
 

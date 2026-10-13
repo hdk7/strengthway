@@ -1,8 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { getMemberMonthTracking } from "@/lib/membersService";
+import {
+  stepMonth,
+  getCurrentYearMonth,
+  formatYearMonth,
+} from "@/components/ui/MonthPicker";
 
 export function useMemberProfileTracking({ id, member, allBatches }) {
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
   const [monthTracking, setMonthTracking] = useState(null);
   const [isTrackingLoading, setIsTrackingLoading] = useState(false);
 
@@ -23,31 +28,19 @@ export function useMemberProfileTracking({ id, member, allBatches }) {
   }, [loadMonthTracking]);
 
   const handlePrevMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const prevDate = new Date(y, m - 2, 1);
-    setSelectedMonth(prevDate.toISOString().slice(0, 7));
+    setSelectedMonth((prev) => stepMonth(prev, -1));
   };
 
   const handleNextMonth = () => {
-    const [y, m] = selectedMonth.split("-").map(Number);
-    const nextDate = new Date(y, m, 1);
-    setSelectedMonth(nextDate.toISOString().slice(0, 7));
+    setSelectedMonth((prev) => stepMonth(prev, 1));
   };
 
   const handleCurrentMonth = () => {
-    setSelectedMonth(new Date().toISOString().slice(0, 7));
+    setSelectedMonth(getCurrentYearMonth());
   };
 
   const formattedSelectedMonth = useMemo(() => {
-    try {
-      const [y, m] = selectedMonth.split("-").map(Number);
-      return new Date(y, m - 1, 1).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return selectedMonth;
-    }
+    return formatYearMonth(selectedMonth);
   }, [selectedMonth]);
 
   const primaryBatchDetails = useMemo(() => {
@@ -109,8 +102,9 @@ export function useMemberProfileTracking({ id, member, allBatches }) {
       const [year, month] = selectedMonth.split("-").map(Number);
       const totalDays = new Date(year, month, 0).getDate();
       const recordsByDate = {};
-      if (monthTracking?.dailyRecords && Array.isArray(monthTracking.dailyRecords)) {
-        monthTracking.dailyRecords.forEach((rec) => {
+      const records = monthTracking?.attendanceLedger || monthTracking?.dailyRecords;
+      if (records && Array.isArray(records)) {
+        records.forEach((rec) => {
           if (rec.date) recordsByDate[rec.date] = rec;
         });
       }

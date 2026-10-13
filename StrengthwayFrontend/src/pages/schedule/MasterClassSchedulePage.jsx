@@ -17,6 +17,7 @@ import { ClassDailyScheduleView } from "./components/ClassDailyScheduleView";
 import { ClassSessionDetailModal } from "./components/ClassSessionDetailModal";
 import { ShuffleClassModal } from "./components/ShuffleClassModal";
 import Pagination from "@/components/table/Pagination";
+import { isAdmin } from "@/auth/currentUser";
 
 export default function MasterClassSchedulePage() {
   const [classes, setClasses] = useState([]);
@@ -293,7 +294,7 @@ export default function MasterClassSchedulePage() {
                   : "No reusable classes exist in the library yet. Click below to create your first class!"}
               </p>
             </div>
-            {!searchQuery && (
+            {!searchQuery && isAdmin() && (
               <button
                 onClick={handleOpenCreate}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-blue-700 dark:bg-primary px-4 py-2 text-xs font-bold text-white dark:text-primary-foreground hover:bg-blue-800 cursor-pointer"
@@ -455,8 +456,8 @@ export default function MasterClassSchedulePage() {
         />
       )}
 
-      {/* Floating Selection Action Bar */}
-      {activeView === "library" && selectedClassIds.length > 0 && (
+      {/* Floating Selection Action Bar (Admin Only) */}
+      {activeView === "library" && selectedClassIds.length > 0 && isAdmin() && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3.5 rounded-2xl border border-slate-200/90 dark:border-border bg-white/95 dark:bg-card/95 backdrop-blur-md px-5 py-3 shadow-2xl animate-in slide-in-from-bottom-5 duration-200">
           <div className="flex items-center gap-2.5 pr-3 border-r border-slate-200 dark:border-border">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 dark:bg-primary text-white text-xs font-bold shadow-xs">

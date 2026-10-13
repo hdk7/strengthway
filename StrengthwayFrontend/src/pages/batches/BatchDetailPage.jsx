@@ -13,12 +13,15 @@ import BatchDetailModals from "./detail/BatchDetailModals";
 import { BatchClassAssignmentModal } from "../schedule/components/BatchClassAssignmentModal";
 import { useBatchDetailData } from "./detail/useBatchDetailData";
 import { useBatchDetailActions } from "./detail/useBatchDetailActions";
+import { isMember } from "@/auth/currentUser";
+import { saveSessionNote } from "@/lib/sessionNotesService";
+import { toast } from "sonner";
 
 export default function BatchDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "trainers" | "members" | "classes"
+  const [activeTab, setActiveTab] = useState(() => (isMember() ? "classes" : "overview")); // "overview" | "trainers" | "members" | "classes"
   const [memberSearch, setMemberSearch] = useState("");
   const [trainerSearch, setTrainerSearch] = useState("");
   const [sessionsTab, setSessionsTab] = useState("Upcoming");
@@ -30,6 +33,7 @@ export default function BatchDetailPage() {
   const [editingMasterItem, setEditingMasterItem] = useState(null);
   const [isAssignProgramOpen, setIsAssignProgramOpen] = useState(false);
   const [selectedSessionForNotes, setSelectedSessionForNotes] = useState(null);
+  const [selectedTrainerIdForNotes, setSelectedTrainerIdForNotes] = useState("");
   const [sessionNoteText, setSessionNoteText] = useState("");
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [transferTargetMember, setTransferTargetMember] = useState(null);
@@ -69,7 +73,31 @@ export default function BatchDetailPage() {
     currentBatchSessions,
     sessionTabCounts,
     displayedSessions,
+    sessionNotes,
+    setSessionNotes,
   } = useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab, selectedWeekFilter);
+
+  const handleSaveTrainerNote = async (notePayload) => {
+    try {
+      const saved = await saveSessionNote(notePayload);
+      const updatedNote = saved?.data || saved;
+      setSessionNotes((prev) => {
+        const filtered = (prev || []).filter(
+          (n) => !(n.sessionId === updatedNote.sessionId && n.trainerId === updatedNote.trainerId)
+        );
+        return [...filtered, updatedNote];
+      });
+      toast.success("Trainer session notes saved successfully.");
+      setSelectedSessionForNotes(null);
+      await loadBatchData();
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to save trainer notes."
+      );
+    }
+  };
 
   const {
     handleRevokeFlexPass,
@@ -131,10 +159,10 @@ export default function BatchDetailPage() {
           The requested batch does not exist or has been removed.
         </p>
         <button
-          onClick={() => navigate("/admin/batches")}
+          onClick={() => navigate(isMember() ? "/admin/dashboard" : "/admin/batches")}
           className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
         >
-          <ArrowLeft size={16} /> Back to Batches
+          <ArrowLeft size={16} /> {isMember() ? "Back to Dashboard" : "Back to Batches"}
         </button>
       </div>
     );
@@ -201,7 +229,7 @@ export default function BatchDetailPage() {
         />
       )}
 
-      {activeTab === "members" && (
+      {activeTab === "members" && !isMember() && (
         <BatchMembersTab
           batch={batch}
           formattedMonthLabel={formattedMonthLabel}
@@ -230,9 +258,11 @@ export default function BatchDetailPage() {
           selectedWeekFilter={selectedWeekFilter}
           setSelectedWeekFilter={setSelectedWeekFilter}
           masterClassItems={masterClassItems}
-          onOpenNotes={(session) => {
+          sessionNotes={sessionNotes}
+          trainers={allTrainers.length > 0 ? allTrainers : trainers}
+          onOpenNotes={(session, trainerId) => {
             setSelectedSessionForNotes(session);
-            setSessionNoteText(session.notes || "");
+            setSelectedTrainerIdForNotes(trainerId || "");
           }}
           onEditMasterItem={async (sessionOrItem, matchingItem) => {
             const isSession =
@@ -291,7 +321,7 @@ export default function BatchDetailPage() {
         currentPax={currentPax}
         capacity={capacity}
         remainingSlots={remainingSlots}
-        trainers={trainers}
+        trainers={allTrainers.length > 0 ? allTrainers : trainers}
         members={members}
         allTrainers={allTrainers}
         allMembers={allMembers}
@@ -304,6 +334,9 @@ export default function BatchDetailPage() {
         onSaveMasterClassItem={handleSaveMasterClassItem}
         selectedSessionForNotes={selectedSessionForNotes}
         setSelectedSessionForNotes={setSelectedSessionForNotes}
+        sessionNotes={sessionNotes}
+        onSaveTrainerNote={handleSaveTrainerNote}
+        selectedTrainerIdForNotes={selectedTrainerIdForNotes}
         sessionNoteText={sessionNoteText}
         setSessionNoteText={setSessionNoteText}
         onSaveSessionNotes={handleSaveSessionNotes}
@@ -336,8 +369,9 @@ export default function BatchDetailPage() {
       />
 
       {/* Multi-Class Reusable Assignment Modal */}
-      <BatchClassAssignmentModal
-        isOpen={isAssignClassesOpen}
+      {!isMember() && (
+        <BatchClassAssignmentModal
+          isOpen={isAssignClassesOpen}
         onClose={() => setIsAssignClassesOpen(false)}
         batches={allBatches.length > 0 ? allBatches : (batch ? [batch] : [])}
         preselectedBatchId={batch?.id}
@@ -347,7 +381,8 @@ export default function BatchDetailPage() {
             await loadMonthTracking(batch.id, selectedMonth);
           }
         }}
-      />
+        />
+      )}
     </div>
   );
 }
