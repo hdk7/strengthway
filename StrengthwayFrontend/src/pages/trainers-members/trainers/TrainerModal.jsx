@@ -88,10 +88,11 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
     }
   };
 
-  const handleBlur = async (e) => {
+  const handleBlur = (e) => {
     const { name, value } = e.target;
-    const fieldError = await validateFieldWithYup(trainerSchema, name, value);
-    setErrors((prev) => ({ ...prev, [name]: fieldError }));
+    const currentForm = { ...form, [name]: value };
+    const fieldError = validateFieldWithYup(trainerSchema, name, currentForm);
+    setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
   };
 
   const handlePhotoFileChange = (e) => {
@@ -152,8 +153,8 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = await validateWithYup(trainerSchema, form);
-    if (validationErrors) {
+    const validationErrors = validateWithYup(trainerSchema, form);
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       toast.error("Please check the form for validation errors.");
       return;
@@ -161,15 +162,19 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
 
     setIsSubmitting(true);
     try {
+      const submitPayload = {
+        ...form,
+        bio: form.bio?.trim() || "Certified Faculty Coach at The Strength Way.",
+      };
       let savedTrainer;
       if (trainerToEdit) {
-        savedTrainer = await updateTrainer(trainerToEdit.id, form);
-        await syncTrainerBatches(trainerToEdit.id, form.batchIds);
+        savedTrainer = await updateTrainer(trainerToEdit.id, submitPayload);
+        await syncTrainerBatches(trainerToEdit.id, submitPayload.batchIds);
         toast.success(`Trainer "${form.name}" updated successfully.`);
       } else {
-        savedTrainer = await createTrainer(form);
-        if (savedTrainer?.id && form.batchIds.length > 0) {
-          await syncTrainerBatches(savedTrainer.id, form.batchIds);
+        savedTrainer = await createTrainer(submitPayload);
+        if (savedTrainer?.id && submitPayload.batchIds.length > 0) {
+          await syncTrainerBatches(savedTrainer.id, submitPayload.batchIds);
         }
         toast.success(`Trainer "${form.name}" created successfully.`);
       }

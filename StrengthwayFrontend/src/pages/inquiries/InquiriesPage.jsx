@@ -255,7 +255,7 @@ export default function InquiriesPage() {
           <button
             type="button"
             onClick={() => setIsLogModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-10 text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
           >
             <Plus size={16} />
             <span>New Inquiry</span>
@@ -286,7 +286,7 @@ export default function InquiriesPage() {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 min-h-[40px] text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+              className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 min-h-10 text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap shadow-xs ${
                 statusFilter === status
                   ? "bg-[#1e3a8a] text-white shadow-sm"
                   : "border border-border bg-card/60 text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -312,7 +312,7 @@ export default function InquiriesPage() {
             placeholder="Search inquiries..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full min-h-[40px] rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+            className="w-full min-h-10 rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
           />
         </div>
       </div>

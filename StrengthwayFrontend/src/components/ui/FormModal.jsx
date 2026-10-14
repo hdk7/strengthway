@@ -204,7 +204,7 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
             type="button"
             onClick={onClear}
             disabled={isSubmitting}
-            className="px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground rounded-lg hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-[40px]"
+            className="px-3.5 py-2 text-xs sm:text-sm font-medium text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground rounded-lg hover:bg-slate-100 dark:hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-10"
           >
             {clearText}
           </button>
@@ -215,7 +215,7 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="w-full sm:w-auto rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground shadow-xs hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-[40px]"
+            className="w-full sm:w-auto rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground shadow-xs hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-10"
           >
             {cancelText}
           </button>
@@ -227,7 +227,7 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
             onClick={onSubmit}
             disabled={isSubmitting || submitDisabled}
             className={cn(
-              "w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-50 min-h-[40px]",
+              "w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-50 min-h-10",
               submitVariant === "danger"
                 ? "bg-rose-600 hover:bg-rose-700 text-white active:scale-[0.99]"
                 : "bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white active:scale-[0.99]",

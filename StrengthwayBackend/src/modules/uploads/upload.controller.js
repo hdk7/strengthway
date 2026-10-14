@@ -34,9 +34,40 @@ async function uploadDocument(req, res, next) {
 }
 
 /**
+ * POST /api/v1/uploads/video
+ * Uploads a video to Cloudinary.
+ * Expects multipart/form-data with field name "video".
+ * Returns: { url, thumbnailUrl, publicId, duration, format, bytes, resourceType }
+ */
+async function uploadVideo(req, res, next) {
+  try {
+    const result = await uploadService.uploadVideo(req.file);
+    return success(res, result, "Video uploaded successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /api/v1/uploads/portfolio-media
+ * Uploads either a photo or video for the portfolio module.
+ * Expects multipart/form-data with field name "media" or "file".
+ * Returns: { url, thumbnailUrl, publicId, format, width, height, bytes, resourceType }
+ */
+async function uploadPortfolioMedia(req, res, next) {
+  try {
+    const file = req.file;
+    const result = await uploadService.uploadPortfolioMedia(file);
+    return success(res, result, "Portfolio media uploaded successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * DELETE /api/v1/uploads/:publicId
  * Deletes an asset from Cloudinary.
- * Query param: ?type=image|raw  (default: image)
+ * Query param: ?type=image|video|raw  (default: image)
  */
 async function deleteAsset(req, res, next) {
   try {
@@ -51,5 +82,11 @@ async function deleteAsset(req, res, next) {
   }
 }
 
-module.exports = { uploadPhoto, uploadDocument, deleteAsset };
+module.exports = {
+  uploadPhoto,
+  uploadDocument,
+  uploadVideo,
+  uploadPortfolioMedia,
+  deleteAsset,
+};
 

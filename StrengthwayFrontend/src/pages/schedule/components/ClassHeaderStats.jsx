@@ -5,7 +5,6 @@ import {
   Search,
   Sparkles,
   CalendarDays,
-  Clock,
 } from "lucide-react";
 
 export function ClassHeaderStats({
@@ -24,74 +23,61 @@ export function ClassHeaderStats({
   onClearSelection,
 }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-2.5 shrink-0">
       {/* Page Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary shadow-xs shrink-0">
-              <Dumbbell size={22} />
+            <span className="flex h-8.5 w-8.5 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-accent/10 text-accent shadow-xs shrink-0">
+              <Dumbbell size={18} />
             </span>
             <div>
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-foreground">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground font-display">
                 Class Schedule & Library
               </h1>
-              <p className="mt-0.5 text-xs sm:text-sm text-slate-500 dark:text-muted-foreground">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Manage reusable workout classes independently and map them to batch calendar schedules.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {setActiveView && (
-            <div className="flex items-center rounded-xl bg-slate-100 dark:bg-muted p-1 border border-slate-200/80 dark:border-border text-xs font-bold shrink-0">
+            <div className="flex items-center rounded-xl bg-muted p-1 border border-border text-xs font-semibold shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveView("library")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 transition-all cursor-pointer whitespace-nowrap ${
                   activeView === "library"
-                    ? "bg-white dark:bg-card text-blue-700 dark:text-primary shadow-xs font-extrabold"
-                    : "text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground"
+                    ? "bg-card text-accent shadow-xs font-extrabold"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <Dumbbell size={14} />
+                <Dumbbell size={13} />
                 <span>Class Library</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveView("month")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 transition-all cursor-pointer whitespace-nowrap ${
                   activeView === "month"
-                    ? "bg-white dark:bg-card text-blue-700 dark:text-primary shadow-xs font-extrabold"
-                    : "text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground"
+                    ? "bg-card text-accent shadow-xs font-extrabold"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <CalendarDays size={14} />
+                <CalendarDays size={13} />
                 <span>Month Calendar</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveView("daily")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 transition-all cursor-pointer whitespace-nowrap ${
-                  activeView === "daily"
-                    ? "bg-white dark:bg-card text-blue-700 dark:text-primary shadow-xs font-extrabold"
-                    : "text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground"
-                }`}
-              >
-                <Clock size={14} />
-                <span>Daily Schedule</span>
               </button>
             </div>
           )}
 
           <button
             onClick={onOpenCreate}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 dark:bg-primary px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-bold text-white dark:text-primary-foreground shadow-md hover:bg-blue-800 dark:hover:bg-primary/90 cursor-pointer active:scale-95 transition-all shrink-0 whitespace-nowrap"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-3.5 sm:px-4 py-2 min-h-9 text-xs sm:text-sm font-semibold shadow-xs transition-all cursor-pointer active:scale-[0.99] shrink-0 whitespace-nowrap"
           >
-            <Plus size={16} />
+            <Plus size={15} />
             <span>Create Class</span>
           </button>
         </div>
@@ -100,69 +86,67 @@ export function ClassHeaderStats({
       {activeView === "library" && (
         <>
           {/* KPI Stats Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 shrink-0">
             {/* KPI 1: Total Reusable Classes */}
-            <div className="rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-4.5 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-muted-foreground">
-                <span className="text-xs font-bold uppercase tracking-wider">
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
                   Total Classes
                 </span>
-                <Dumbbell size={18} className="text-blue-700 dark:text-primary" />
+                <Dumbbell size={16} className="text-accent" />
               </div>
-              <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-foreground">
-                {stats.total}
-              </div>
-              <div className="mt-1 text-[11px] text-slate-400 dark:text-muted-foreground">
-                TSW curriculum workouts
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-foreground">{stats.total}</span>
+                <span className="text-[11px] text-muted-foreground">TSW curriculum workouts</span>
               </div>
             </div>
 
             {/* KPI 2: Active Classes */}
-            <div className="rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-4.5 shadow-xs">
-              <div className="flex items-center justify-between text-slate-500 dark:text-muted-foreground">
-                <span className="text-xs font-bold uppercase tracking-wider">
+            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
                   Active Library
                 </span>
-                <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
+                <CheckCircle2 size={16} className="text-emerald-500" />
               </div>
-              <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                {stats.active}
-              </div>
-              <div className="mt-1 text-[11px] text-slate-400 dark:text-muted-foreground">
-                Ready for batch assignment
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-extrabold text-emerald-500">{stats.active}</span>
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Ready for batch assignment
+                </span>
               </div>
             </div>
           </div>
 
           {/* Search, Filter Action Banner */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs shrink-0">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 sm:max-w-md">
               <Search
-                size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-muted-foreground"
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
               />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search classes by name, beginner or intermediate workout..."
-                className="w-full rounded-xl border border-slate-200 dark:border-border bg-slate-50/60 dark:bg-muted/40 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-700 dark:focus:border-primary focus:bg-white dark:focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all"
+                placeholder="Search classes by name, workout..."
+                className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
               />
             </div>
 
             {/* Status Filter Controls & Select All */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center rounded-xl bg-slate-100 dark:bg-muted p-1 border border-slate-200/70 dark:border-border/70 text-xs font-semibold">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="flex items-center rounded-lg border border-border bg-muted/40 p-0.5 text-xs font-semibold">
                 {["ALL", "ACTIVE", "ARCHIVED"].map((status) => (
                   <button
                     key={status}
                     type="button"
                     onClick={() => setSelectedStatusFilter(status)}
-                    className={`rounded-lg px-3 py-1.5 transition-all cursor-pointer ${
+                    className={`rounded-md px-2.5 py-1 text-xs transition-all cursor-pointer ${
                       selectedStatusFilter === status
-                        ? "bg-white dark:bg-card text-slate-900 dark:text-foreground shadow-xs font-bold"
-                        : "text-slate-500 dark:text-muted-foreground hover:text-slate-800 dark:hover:text-foreground"
+                        ? "bg-card text-foreground shadow-xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {status}
@@ -171,15 +155,13 @@ export function ClassHeaderStats({
               </div>
 
               {onSelectAll && hasClasses && (
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={onSelectAll}
-                    className="text-xs font-bold text-blue-700 dark:text-primary hover:underline cursor-pointer transition-colors px-1 py-1"
-                  >
-                    Select All
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={onSelectAll}
+                  className="text-xs font-bold text-accent hover:underline cursor-pointer transition-colors px-1"
+                >
+                  Select All
+                </button>
               )}
             </div>
           </div>

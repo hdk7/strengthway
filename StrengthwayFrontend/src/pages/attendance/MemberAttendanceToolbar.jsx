@@ -67,8 +67,8 @@ export function MemberAttendanceToolbar({
         )}
       </div>
 
-      {/* Date Navigator (Daily Mode) or Month Navigator (Matrix Mode) */}
-      {viewMode === "daily" ? (
+      {/* Date Navigator (Daily Mode Only) */}
+      {viewMode === "daily" && (
         <div className="flex items-center gap-2 flex-wrap">
           <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background p-1 shadow-xs">
             <button
@@ -119,51 +119,6 @@ export function MemberAttendanceToolbar({
             title="Refresh Roster"
           >
             <RefreshCw size={14} className={isLoadingDaily ? "animate-spin text-accent" : ""} />
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background p-1 shadow-xs">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title="Previous Month"
-            >
-              <ChevronLeft size={14} />
-            </button>
-
-            <div className="relative px-2.5">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                title="Select Month"
-              />
-              <span className="text-xs font-black text-foreground font-mono cursor-pointer select-none">
-                {formattedSelectedMonth}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-              title="Next Month"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={loadMatrixData}
-            disabled={isLoadingMatrix}
-            className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs disabled:opacity-50"
-            title="Refresh Grid"
-          >
-            <RefreshCw size={14} className={isLoadingMatrix ? "animate-spin text-accent" : ""} />
           </button>
         </div>
       )}

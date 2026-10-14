@@ -21,8 +21,22 @@ const ALLOWED_DOC_TYPES = [
   "image/png",
   "image/webp",
 ];
+const ALLOWED_VIDEO_TYPES = [
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "video/x-matroska",
+];
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_PORTFOLIO_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50 MB
+
+const isCloudinaryConfigured =
+  Boolean(CLOUDINARY_CLOUD_NAME) &&
+  CLOUDINARY_CLOUD_NAME !== "your_cloud_name" &&
+  Boolean(CLOUDINARY_API_KEY) &&
+  CLOUDINARY_API_KEY !== "your_api_key";
 
 /**
  * Upload a buffer to Cloudinary using upload_stream.
@@ -57,6 +71,18 @@ class UploadService {
 
     if (file.size > MAX_FILE_SIZE) {
       throw new BadRequestError("File too large. Maximum allowed size is 5 MB.");
+    }
+
+    if (!isCloudinaryConfigured) {
+      const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+      return {
+        url: dataUrl,
+        publicId: `dev-photo-${Date.now()}`,
+        format: file.mimetype.split("/")[1] || "webp",
+        width: 800,
+        height: 800,
+        bytes: file.size,
+      };
     }
 
     try {
@@ -100,6 +126,17 @@ class UploadService {
       throw new BadRequestError("File too large. Maximum allowed size is 5 MB.");
     }
 
+    if (!isCloudinaryConfigured) {
+      const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+      return {
+        url: dataUrl,
+        publicId: `dev-doc-${Date.now()}`,
+        format: file.mimetype.split("/")[1] || "pdf",
+        bytes: file.size,
+        resourceType: file.mimetype.includes("pdf") ? "raw" : "image",
+      };
+    }
+
     try {
       const result = await uploadToCloudinary(file.buffer, {
         folder: "strengthway/documents",
@@ -119,11 +156,136 @@ class UploadService {
   }
 
   /**
+   * Upload a video (MP4, WebM, MOV) to Cloudinary.
+   * Extracts poster frame thumbnail URL automatically.
+   */
+  async uploadVideo(file) {
+    if (!file) {
+      throw new BadRequestError("No video file provided.");
+    }
+
+    if (!ALLOWED_VIDEO_TYPES.includes(file.mimetype)) {
+      throw new BadRequestError(
+        `Invalid video type. Allowed types: MP4, WebM, QuickTime (MOV). Received: ${file.mimetype}`
+      );
+    }
+
+    if (file.size > MAX_VIDEO_SIZE) {
+      throw new BadRequestError("Video file too large. Maximum allowed size is 50 MB.");
+    }
+
+    if (!isCloudinaryConfigured) {
+      const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+      return {
+        url: dataUrl,
+        thumbnailUrl: "",
+        publicId: `dev-vid-${Date.now()}`,
+        duration: null,
+        format: file.mimetype.split("/")[1] || "mp4",
+        bytes: file.size,
+        resourceType: "video",
+      };
+    }
+
+    try {
+      const result = await uploadToCloudinary(file.buffer, {
+        folder: "strengthway/portfolio/videos",
+        resource_type: "video",
+      });
+
+      // Extract poster thumbnail frame
+      const thumbnailUrl = result.secure_url
+        ? result.secure_url.replace(/\.[^/.]+$/, ".jpg")
+        : "";
+
+      return {
+        url: result.secure_url,
+        thumbnailUrl,
+        publicId: result.public_id,
+        duration: result.duration || null,
+        format: result.format,
+        width: result.width,
+        height: result.height,
+        bytes: result.bytes,
+        resourceType: "video",
+      };
+    } catch (err) {
+      throw new InternalError("Video upload failed: " + err.message);
+    }
+  }
+
+  /**
+   * Upload portfolio media (either a high-res photo or video).
+   * Automatically inspects MIME type and routes appropriately.
+   */
+  async uploadPortfolioMedia(file) {
+    if (!file) {
+      throw new BadRequestError("No media file provided.");
+    }
+
+    if (ALLOWED_VIDEO_TYPES.includes(file.mimetype)) {
+      return this.uploadVideo(file);
+    }
+
+    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      if (file.size > MAX_PORTFOLIO_IMAGE_SIZE) {
+        throw new BadRequestError("Image file too large. Maximum allowed size is 10 MB.");
+      }
+
+      if (!isCloudinaryConfigured) {
+        const dataUrl = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+        return {
+          url: dataUrl,
+          thumbnailUrl: dataUrl,
+          publicId: `dev-photo-${Date.now()}`,
+          format: file.mimetype.split("/")[1] || "webp",
+          width: 1200,
+          height: 1500,
+          bytes: file.size,
+          resourceType: "image",
+        };
+      }
+
+      try {
+        const result = await uploadToCloudinary(file.buffer, {
+          folder: "strengthway/portfolio/photos",
+          resource_type: "image",
+          transformation: [
+            { width: 1600, height: 2000, crop: "limit" },
+            { quality: "auto", fetch_format: "auto" },
+          ],
+        });
+
+        return {
+          url: result.secure_url,
+          thumbnailUrl: result.secure_url,
+          publicId: result.public_id,
+          format: result.format,
+          width: result.width,
+          height: result.height,
+          bytes: result.bytes,
+          resourceType: "image",
+        };
+      } catch (err) {
+        throw new InternalError("Portfolio photo upload failed: " + err.message);
+      }
+    }
+
+    throw new BadRequestError(
+      `Unsupported media type: ${file.mimetype}. Allowed: Images (JPEG, PNG, WEBP, GIF) and Videos (MP4, WebM, QuickTime).`
+    );
+  }
+
+  /**
    * Delete an asset from Cloudinary by its public_id.
    */
   async deleteAsset(publicId, resourceType) {
     if (!publicId) {
-      throw new BadRequestError("publicId is required.");
+      return { publicId: null, result: "skipped" };
+    }
+
+    if (publicId.startsWith("dev-") || !isCloudinaryConfigured) {
+      return { publicId, result: "ok" };
     }
 
     try {
@@ -132,7 +294,8 @@ class UploadService {
       });
       return { publicId, result: result.result };
     } catch (err) {
-      throw new InternalError("Asset deletion failed: " + err.message);
+      console.error(`[UploadService] Warning: Failed to destroy Cloudinary asset "${publicId}":`, err.message);
+      return { publicId, error: err.message };
     }
   }
 }

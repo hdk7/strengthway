@@ -26,10 +26,10 @@ import MembersAttendancePage from "@/pages/attendance/MembersAttendancePage";
 import TrainersAttendancePage from "@/pages/attendance/TrainersAttendancePage";
 import MembersPaymentsPage from "@/pages/payments/MembersPaymentsPage";
 import TrainersPaymentsPage from "@/pages/payments/TrainersPaymentsPage";
-import ReportsPage from "@/pages/reports/ReportsPage";
 import MembershipPlanMasterPage from "@/pages/masters/MembershipPlanMasterPage";
 import AttendancePolicyMasterPage from "@/pages/masters/AttendancePolicyMasterPage";
 import PaymentFeeMasterPage from "@/pages/masters/PaymentFeeMasterPage";
+import PortfolioMasterPage from "@/pages/masters/PortfolioMasterPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
 
 import MasterClassSchedulePage from "@/pages/schedule/MasterClassSchedulePage";
@@ -87,8 +87,6 @@ export function AppRoutes() {
         <Route path="payments/members" element={<MembersPaymentsPage />} />
         <Route path="payments/trainers" element={<TrainersPaymentsPage />} />
 
-        <Route path="reports" element={<ReportsPage />} />
-
         <Route path="masters/shift" element={<Navigate to="/admin/masters/membership-plan" replace />} />
         <Route path="masters/batch" element={<Navigate to="/admin/batches" replace />} />
         <Route path="masters/membership-plan" element={<MembershipPlanMasterPage />} />
@@ -96,6 +94,7 @@ export function AppRoutes() {
         <Route path="masters/attendance-policy" element={<AttendancePolicyMasterPage />} />
         <Route path="masters/holiday" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
         <Route path="masters/payment-fee" element={<PaymentFeeMasterPage />} />
+        <Route path="masters/portfolio" element={<PortfolioMasterPage />} />
 
         <Route path="settings" element={<SettingsPage />} />
 

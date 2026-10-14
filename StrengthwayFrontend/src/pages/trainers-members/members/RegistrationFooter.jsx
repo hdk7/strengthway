@@ -17,7 +17,7 @@ export function RegistrationFooter({
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer shadow-xs min-h-[40px]"
+            className="rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer shadow-xs min-h-10"
           >
             Cancel
           </button>
@@ -27,7 +27,7 @@ export function RegistrationFooter({
           type="button"
           onClick={handleCompleteRegistration}
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] disabled:opacity-60 cursor-pointer min-h-[40px]"
+          className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] disabled:opacity-60 cursor-pointer min-h-10"
         >
           {isSubmitting ? (
             <>
