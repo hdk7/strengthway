@@ -217,7 +217,7 @@ export default function LoginPage() {
         {/* Multilayer gradient overlays for contrast & brand vibe */}
         <div className="absolute inset-0 bg-linear-to-t from-black via-black/55 to-black/35" />
         <div className="absolute inset-0 bg-linear-to-r from-black/60 via-transparent to-black/40 lg:to-transparent" />
-        <div className="absolute inset-0 radial-brand opacity-60 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(1000px_500px_at_50%_-10%,color-mix(in_oklab,var(--color-accent)_25%,transparent),transparent_60%),radial-gradient(800px_400px_at_90%_20%,color-mix(in_oklab,var(--color-accent)_15%,transparent),transparent_60%)] opacity-60 pointer-events-none" />
 
         {/* Content Container */}
         <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 lg:p-10 xl:p-12 min-h-65 lg:min-h-0">

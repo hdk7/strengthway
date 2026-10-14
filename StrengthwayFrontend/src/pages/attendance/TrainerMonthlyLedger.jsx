@@ -89,7 +89,7 @@ export function TrainerMonthlyLedger({
                   return (
                     <tr key={trainer.id} className="group transition-all duration-150 hover:-translate-y-px">
                       {/* Faculty Member */}
-                      <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                      <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                         <div className="flex items-center gap-3 whitespace-nowrap">
                           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-xs border border-accent/25 uppercase">
                             {trainer.name ? trainer.name.charAt(0) : "T"}
@@ -185,7 +185,7 @@ export function TrainerMonthlyLedger({
                       </td>
 
                       {/* Payroll Impact */}
-                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
                         {deductionAmount > 0 ? (
                           <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                             <span className="font-mono font-bold text-xs text-rose-500">
@@ -251,7 +251,7 @@ export function TrainerMonthlyLedger({
                   return (
                     <tr key={leave.id} className="group transition-all duration-150 hover:-translate-y-px">
                       {/* Window */}
-                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                         <div className="flex items-center gap-2 whitespace-nowrap">
                           <div className="flex items-center gap-1.5 font-bold text-foreground">
                             <Calendar size={13} className="text-primary shrink-0" />
@@ -340,7 +340,7 @@ export function TrainerMonthlyLedger({
                       </td>
 
                       {/* Status */}
-                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
+                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ${
                             leave.status === "APPROVED"

@@ -536,7 +536,7 @@ export function BatchClassAssignmentModal({
                   disabled={Boolean(preselectedBatchId) && internalBatches.length <= 1}
                   className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-3.5 py-2.5 text-xs sm:text-sm text-foreground focus:border-blue-700 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all cursor-pointer disabled:opacity-75"
                 >
-                  <option value="" className="bg-white dark:bg-[#18181b] text-slate-700 dark:text-zinc-200">
+                  <option value="" className="bg-white dark:bg-card text-slate-700 dark:text-zinc-200">
                     {isLoadingLookups ? "Loading Batches…" : "Select Batch…"}
                   </option>
                   {internalBatches.map((b) => (

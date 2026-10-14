@@ -293,7 +293,7 @@ export default function TrainerProfilePage() {
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
               >
                 <Edit3 size={16} />
                 <span>Edit Profile</span>

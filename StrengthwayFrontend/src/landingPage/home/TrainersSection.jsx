@@ -39,7 +39,7 @@ export function TrainersSection() {
             Trainers
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
-            Train with the <span className="text-gradient">best</span>.
+            Train with the <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">best</span>.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
             Click on any trainer to view their full profile and form details.

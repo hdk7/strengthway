@@ -67,7 +67,7 @@ export const FormModal = forwardRef(function FormModal(
             sizeClass,
             "max-h-[92vh] flex flex-col rounded-2xl border border-slate-200/90 dark:border-border",
             "bg-white dark:bg-card text-foreground",
-            "shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)]",
+            "shadow-2xl",
             "overflow-hidden focus:outline-none duration-200",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
             contentClassName,
@@ -238,7 +238,7 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
               "w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-50 min-h-10",
               submitVariant === "danger"
                 ? "bg-rose-600 hover:bg-rose-700 text-white active:scale-[0.99]"
-                : "bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white active:scale-[0.99]",
+                : "bg-blue-900 hover:bg-blue-700 text-white active:scale-[0.99]",
             )}
           >
             {isSubmitting ? (

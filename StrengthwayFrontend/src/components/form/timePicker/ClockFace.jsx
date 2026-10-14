@@ -33,18 +33,6 @@ export default function ClockFace({
 
   const handTip = polarToXY(handAngle, HAND_R);
 
-  // Use CSS vars with correct syntax (values are full hex, not HSL channels)
-  const C = {
-    ring: "#3f3f46", // zinc-700 — visible ring track
-    ringStroke: "#52525b", // zinc-600 — ring border
-    dial: "#27272a", // surface-2 — inner circle
-    hand: "var(--color-primary)",
-    active: "var(--color-primary)",
-    activeFg: "var(--color-background)",
-    text: "var(--color-foreground)",
-    mutedText: "var(--color-muted-foreground)",
-  };
-
   return (
     <div className="flex flex-col items-center gap-3">
       {/* AM / PM toggle */}
@@ -73,9 +61,9 @@ export default function ClockFace({
         className="block select-none"
       >
         {/* Outer ring */}
-        <circle cx={CX} cy={CY} r={CX - 4} fill={C.ring} stroke={C.ringStroke} strokeWidth="1" />
+        <circle cx={CX} cy={CY} r={CX - 4} className="fill-zinc-700 stroke-zinc-600 stroke-1" />
         {/* Inner dial */}
-        <circle cx={CX} cy={CY} r={54} fill={C.dial} />
+        <circle cx={CX} cy={CY} r={54} className="fill-zinc-800" />
 
         {/* Clock hand line */}
         <line
@@ -83,14 +71,13 @@ export default function ClockFace({
           y1={CY}
           x2={handTip.x}
           y2={handTip.y}
-          stroke={C.hand}
-          strokeWidth="2"
+          className="stroke-primary stroke-2"
           strokeLinecap="round"
         />
         {/* Hand tip dot */}
-        <circle cx={handTip.x} cy={handTip.y} r="11" fill={C.active} />
+        <circle cx={handTip.x} cy={handTip.y} r="11" className="fill-primary" />
         {/* Centre dot */}
-        <circle cx={CX} cy={CY} r="4" fill={C.active} />
+        <circle cx={CX} cy={CY} r="4" className="fill-primary" />
 
         {/* Hour numbers */}
         {isHourStep &&
@@ -100,7 +87,7 @@ export default function ClockFace({
             const isActive = h === clockHour;
             return (
               <g key={h} onClick={() => onHourClick(h)} className="cursor-pointer">
-                <circle cx={x} cy={y} r="17" fill={isActive ? C.active : "transparent"} />
+                <circle cx={x} cy={y} r="17" className={isActive ? "fill-primary" : "fill-transparent"} />
                 <text
                   x={x}
                   y={y}
@@ -108,7 +95,7 @@ export default function ClockFace({
                   dominantBaseline="central"
                   fontSize="13"
                   fontWeight={isActive ? "700" : "500"}
-                  fill={isActive ? C.activeFg : C.text}
+                  className={isActive ? "fill-primary-foreground" : "fill-foreground"}
                 >
                   {h}
                 </text>
@@ -124,7 +111,7 @@ export default function ClockFace({
             const isActive = m === clockMinute;
             return (
               <g key={m} onClick={() => onMinuteClick(m)} className="cursor-pointer">
-                <circle cx={x} cy={y} r="17" fill={isActive ? C.active : "transparent"} />
+                <circle cx={x} cy={y} r="17" className={isActive ? "fill-primary" : "fill-transparent"} />
                 <text
                   x={x}
                   y={y}
@@ -132,7 +119,7 @@ export default function ClockFace({
                   dominantBaseline="central"
                   fontSize="12"
                   fontWeight={isActive ? "700" : "500"}
-                  fill={isActive ? C.activeFg : C.text}
+                  className={isActive ? "fill-primary-foreground" : "fill-foreground"}
                 >
                   {String(m).padStart(2, "0")}
                 </text>

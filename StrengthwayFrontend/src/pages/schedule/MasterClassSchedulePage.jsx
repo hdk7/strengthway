@@ -428,7 +428,7 @@ export default function MasterClassSchedulePage() {
             {!searchQuery && isAdmin() && (
               <button
                 onClick={handleOpenCreate}
-                className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-3.5 py-1.5 text-xs font-bold text-white cursor-pointer"
+                className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-blue-900 hover:bg-blue-700 px-3.5 py-1.5 text-xs font-bold text-white cursor-pointer"
               >
                 <Plus size={15} />
                 <span>Create Class</span>

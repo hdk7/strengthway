@@ -221,7 +221,7 @@ export function MemberDailyCheckInTable({
                     }`}
                   >
                     {/* Athlete Info */}
-                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
                       <div className="flex items-center gap-2.5">
                         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent font-bold text-xs uppercase">
                           {attendee.name?.[0] || "A"}
@@ -285,7 +285,7 @@ export function MemberDailyCheckInTable({
                     </td>
 
                     {/* Action Column: Retain ONLY Check In and Check Out, governed by schedule */}
-                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
                       {attendee.isFlexOut ? (
                         <span className="text-xs font-semibold text-muted-foreground italic">
                           Handled at target batch

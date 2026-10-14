@@ -227,7 +227,7 @@ export function TrainerDailyCheckInTable({
                     className="group transition-all duration-150 hover:-translate-y-px whitespace-nowrap"
                   >
                     {/* Faculty Coach Info */}
-                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       <div className="flex items-center gap-2.5 whitespace-nowrap">
                         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent font-bold text-xs uppercase">
                           {trainer.name?.[0] || "T"}
@@ -293,7 +293,7 @@ export function TrainerDailyCheckInTable({
                     </td>
 
                     {/* Status Badge */}
-                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {renderStatusBadge(effectiveStatus)}
                     </td>
                   </tr>

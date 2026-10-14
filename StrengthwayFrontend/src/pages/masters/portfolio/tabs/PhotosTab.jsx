@@ -243,15 +243,17 @@ export function PhotosTab({
                             alt={p.title || ""}
                             className="h-full w-full object-cover transition-transform group-hover:scale-110"
                             onError={(e) => {
-                              e.currentTarget.style.display = "none";
+                              e.currentTarget.classList.add("hidden");
                               const fallback = e.currentTarget.parentElement?.querySelector(".fallback-icon");
-                              if (fallback) fallback.style.display = "flex";
+                              if (fallback) {
+                                fallback.classList.remove("hidden");
+                                fallback.classList.add("flex");
+                              }
                             }}
                           />
                         ) : null}
                         <div
-                          className="fallback-icon items-center justify-center text-muted-foreground"
-                          style={{ display: p.mediaUrl ? "none" : "flex" }}
+                          className={`fallback-icon items-center justify-center text-muted-foreground ${p.mediaUrl ? "hidden" : "flex"}`}
                         >
                           <ImageIcon size={12} />
                         </div>

@@ -18,7 +18,7 @@ export function VideosSection({ dataVideos = [] }) {
           eyebrow="Videos"
           title={
             <>
-              See the <span className="text-gradient">movement</span>.
+              See the <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">movement</span>.
             </>
           }
         />

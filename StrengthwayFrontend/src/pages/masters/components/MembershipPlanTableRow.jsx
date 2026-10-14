@@ -22,7 +22,7 @@ export function MembershipPlanTableRow({
       }`}
     >
       {/* Plan ID Badge */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
         <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/70 text-foreground/85 font-mono text-xs font-semibold tracking-tight shadow-2xs">
           #{plan.id}
         </span>
@@ -103,7 +103,7 @@ export function MembershipPlanTableRow({
         )}
       </td>
 
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-right">
         <div className="flex items-center justify-end gap-1.5">
           {plan.isDeleted ? (
             <>

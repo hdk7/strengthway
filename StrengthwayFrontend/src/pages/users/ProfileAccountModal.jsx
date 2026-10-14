@@ -261,7 +261,7 @@ export default function ProfileAccountModal({
                 <button
                   type="submit"
                   disabled={isResetting || !resetPassword}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all cursor-pointer disabled:opacity-50 shrink-0 min-h-[42px]"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-900 hover:bg-blue-700 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all cursor-pointer disabled:opacity-50 shrink-0 min-h-[42px]"
                 >
                   {isResetting && <RefreshCw size={13} className="animate-spin" />}
                   <span>Save Password</span>

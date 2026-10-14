@@ -23,7 +23,7 @@ export function FeedbackSection({ dataQuotes = [], dataVideos = [] }) {
           eyebrow="Feedback"
           title={
             <>
-              What members <span className="text-gradient">say</span>.
+              What members <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">say</span>.
             </>
           }
         />

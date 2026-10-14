@@ -55,7 +55,7 @@ export function MemberProfileHeader({
                 alt={fullName}
                 className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl object-cover border-2 border-border/80 shadow-md shrink-0"
                 onError={(e) => {
-                  e.currentTarget.style.display = "none";
+                  e.currentTarget.classList.add("hidden");
                 }}
               />
             )}
@@ -128,7 +128,7 @@ export function MemberProfileHeader({
             <button
               type="button"
               onClick={handleOpenContact}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
             >
               <PhoneCall size={16} />
               <span>Contact Prospect</span>
@@ -141,7 +141,7 @@ export function MemberProfileHeader({
                 <button
                   type="button"
                   onClick={handleOpenContact}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
                 >
                   <PhoneCall size={16} />
                   <span>Recontact Prospect</span>
@@ -221,7 +221,7 @@ export function MemberProfileHeader({
             <button
               type="button"
               onClick={() => setIsEditModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
             >
               <Edit3 size={16} />
               <span>Edit Profile</span>

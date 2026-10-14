@@ -21,7 +21,7 @@ export function HeroSection() {
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-black/55" />
-      <div className="absolute inset-0 radial-brand" />
+      <div className="absolute inset-0 bg-[radial-gradient(1000px_500px_at_50%_-10%,color-mix(in_oklab,var(--color-accent)_25%,transparent),transparent_60%),radial-gradient(800px_400px_at_90%_20%,color-mix(in_oklab,var(--color-accent)_15%,transparent),transparent_60%)]" />
 
       <div className="relative mx-auto w-full max-w-[100rem] px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
         <div className="relative ml-auto max-w-xl text-left md:pr-6 lg:max-w-2xl">

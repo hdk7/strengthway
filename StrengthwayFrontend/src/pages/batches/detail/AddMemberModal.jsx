@@ -37,7 +37,7 @@ export default function AddMemberModal({
       aria-modal="true"
     >
       <div
-        className="relative w-full max-w-xl max-h-[85vh] flex flex-col rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-xl max-h-[85vh] flex flex-col rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -116,7 +116,7 @@ export default function AddMemberModal({
                     ) : (
                       <button
                         onClick={() => onEnrollMember(mem)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer"
+                        className="inline-flex items-center gap-1 rounded-lg bg-blue-900 hover:bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer"
                       >
                         <Plus size={13} />
                         Enroll

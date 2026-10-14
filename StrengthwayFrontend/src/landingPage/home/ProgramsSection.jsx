@@ -79,7 +79,7 @@ export function ProgramsSection() {
               Programs
             </div>
             <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
-              Pick your <span className="text-gradient">discipline</span>.
+              Pick your <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">discipline</span>.
             </h2>
           </div>
           <p className="max-w-md text-sm text-muted-foreground">
@@ -90,7 +90,7 @@ export function ProgramsSection() {
         <div className="mt-8 sm:mt-10 grid gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {ITEMS.map((it, i) => (
             <Reveal key={it.title} delay={(i % 5) * 80} className="min-w-0">
-              <SpotlightCard className="overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-6 transition-all hover:border-foreground/30 hover:card-glow min-w-0 h-full flex flex-col justify-between group">
+              <SpotlightCard className="overflow-hidden rounded-2xl border border-border/80 bg-card p-5 sm:p-6 transition-all hover:border-foreground/30 hover:shadow-xl hover:shadow-accent/15 min-w-0 h-full flex flex-col justify-between group">
                 <div>
                   <it.icon className="h-8 w-8 text-foreground shrink-0 transition-colors group-hover:text-primary" />
                   <h3 className="mt-6 font-display text-xl sm:text-2xl font-bold text-foreground wrap-break-word">

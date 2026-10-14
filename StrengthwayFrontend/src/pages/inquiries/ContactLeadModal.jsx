@@ -172,7 +172,7 @@ export default function ContactLeadModal({
           {leadName && (
             <div className="flex items-center justify-between rounded-lg border border-slate-200/90 dark:border-border/80 bg-slate-50/80 dark:bg-muted/30 px-3.5 py-1.5 text-xs">
               <span className="font-semibold text-slate-900 dark:text-foreground">
-                Prospect: <span className="text-[#1e3a8a] dark:text-blue-400 font-bold">{leadName}</span>
+                Prospect: <span className="text-blue-900 dark:text-blue-400 font-bold">{leadName}</span>
               </span>
               <div className="flex items-center gap-3 text-slate-500 dark:text-muted-foreground text-[11px]">
                 {leadPhone && <span>{leadPhone}</span>}
@@ -204,14 +204,14 @@ export default function ContactLeadModal({
                     onClick={() => setContactMethod(m.id)}
                     className={`flex items-center justify-center gap-1.5 rounded-lg border py-2 px-1.5 text-xs font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? "border-[#1e3a8a] bg-blue-50/90 text-[#1e3a8a] dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300 font-semibold shadow-xs"
+                        ? "border-blue-900 bg-blue-50/90 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300 font-semibold shadow-xs"
                         : "border-slate-200/90 dark:border-border bg-slate-50/80 dark:bg-muted/20 text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-muted/40 hover:text-slate-900 dark:hover:text-foreground"
                     }`}
                   >
                     <Icon
                       size={13}
                       className={
-                        isSelected ? "text-[#1e3a8a] dark:text-blue-400 shrink-0" : "text-slate-400 shrink-0"
+                        isSelected ? "text-blue-900 dark:text-blue-400 shrink-0" : "text-slate-400 shrink-0"
                       }
                     />
                     <span className="truncate">{m.label}</span>

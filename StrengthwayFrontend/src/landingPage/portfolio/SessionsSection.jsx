@@ -36,7 +36,7 @@ export function SessionsSection({ dataSessions = [], dataClips = [] }) {
             eyebrow="Training sessions"
             title={
               <>
-                Sessions we <span className="text-gradient">run</span>.
+                Sessions we <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">run</span>.
               </>
             }
           />

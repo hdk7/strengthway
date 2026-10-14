@@ -280,8 +280,8 @@ export default function NotFoundPage() {
   useDocumentTitle("The Strength Way");
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
-      <div className="absolute inset-0 grid-bg opacity-30" />
-      <div className="absolute inset-0 radial-brand" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_oklab,var(--color-foreground)_4%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--color-foreground)_4%,transparent)_1px,transparent_1px)] bg-[size:48px_48px] opacity-30" />
+      <div className="absolute inset-0 bg-[radial-gradient(1000px_500px_at_50%_-10%,color-mix(in_oklab,var(--color-accent)_25%,transparent),transparent_60%),radial-gradient(800px_400px_at_90%_20%,color-mix(in_oklab,var(--color-accent)_15%,transparent),transparent_60%)]" />
       <div className="relative mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-16 text-center">
         <Link
           to="/"
@@ -295,7 +295,7 @@ export default function NotFoundPage() {
         <Link to="/" className="mb-10 flex items-center gap-2">
           <Logo />
         </Link>
-        <h1 className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500 font-display text-7xl font-bold text-gradient sm:text-8xl">
+        <h1 className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500 font-display text-7xl font-bold bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent sm:text-8xl">
           404
         </h1>
         <h2 className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500 delay-100 mt-4 text-xl font-semibold sm:text-2xl">

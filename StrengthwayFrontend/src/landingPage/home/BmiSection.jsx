@@ -88,7 +88,7 @@ function BmiCalculator() {
           <Activity className="h-3.5 w-3.5 text-foreground" /> Health check
         </div>
         <h3 className="mt-4 font-display text-3xl font-bold text-foreground sm:text-4xl">
-          Quick <span className="text-gradient">BMI</span> Calculator
+          Quick <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">BMI</span> Calculator
         </h3>
         <p className="mt-2 text-sm text-muted-foreground">
           Know your starting point. Adjust height and weight to see your Body Mass Index.

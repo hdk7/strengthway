@@ -21,7 +21,7 @@ export function AboutSection() {
             About The Strength Way
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
-            A gym built like a <span className="text-gradient">product</span>.
+            A gym built like a <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">product</span>.
           </h2>
           <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
             We combine world-class Trainering with software that treats every member like an athlete

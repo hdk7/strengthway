@@ -155,7 +155,7 @@ export function LogInquiryModal({ isOpen, onClose, onSuccess }) {
           {/* Reference ID Callout */}
           <FormCalloutBox className="flex items-center justify-between text-xs">
             <span className="font-semibold text-slate-800 dark:text-foreground">
-              Inquiry Reference: <span className="font-mono text-[#1e3a8a] dark:text-blue-400 font-bold">{previewId || "Generating ID..."}</span>
+              Inquiry Reference: <span className="font-mono text-blue-900 dark:text-blue-400 font-bold">{previewId || "Generating ID..."}</span>
             </span>
             <span className="text-slate-500 dark:text-muted-foreground text-[11px]">
               Logged Date: {nowDate}

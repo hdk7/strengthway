@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const HOVER_TARGETS = "a, button, [role='button'], input, textarea, select, .spotlight-card";
+const HOVER_TARGETS = "a, button, [role='button'], input, textarea, select, [data-spotlight]";
 
 // Bold, premium cursor: a precise dot plus a trailing ring that eases toward
 // it (lerp via requestAnimationFrame). mix-blend-mode: difference keeps it

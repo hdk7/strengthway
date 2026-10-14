@@ -11,13 +11,13 @@ export const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white shadow-sm font-semibold",
+          "bg-blue-900 hover:bg-blue-700 text-white shadow-sm font-semibold",
         primary:
-          "bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white shadow-sm font-semibold",
+          "bg-blue-900 hover:bg-blue-700 text-white shadow-sm font-semibold",
         success:
           "bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm font-semibold",
         modalPrimary:
-          "bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white shadow-sm font-semibold",
+          "bg-blue-900 hover:bg-blue-700 text-white shadow-sm font-semibold",
         destructive:
           "bg-rose-600 hover:bg-rose-700 text-white shadow-sm font-semibold",
         destructiveOutline:
@@ -31,7 +31,7 @@ export const buttonVariants = cva(
         ghost:
           "text-slate-600 dark:text-muted-foreground hover:text-slate-900 dark:hover:text-foreground hover:bg-slate-100 dark:hover:bg-muted font-semibold",
         link:
-          "text-[#1e3a8a] dark:text-blue-400 underline-offset-4 hover:underline font-semibold",
+          "text-blue-900 dark:text-blue-400 underline-offset-4 hover:underline font-semibold",
       },
       size: {
         default: "min-h-[40px] px-5 py-2.5 text-xs sm:text-sm",

@@ -137,7 +137,7 @@ const Pagination = ({
               aria-current={isActive ? "page" : undefined}
               className={`${btnSize} rounded-full transition-all cursor-pointer flex items-center justify-center ${
                 isActive && totalItems !== 0
-                  ? "bg-[#c57463] text-white font-bold shadow-xs ring-2 ring-[#c57463]/20"
+                  ? "bg-terracotta text-white font-bold shadow-xs ring-2 ring-terracotta/20"
                   : "border border-border/80 hover:border-foreground/30 bg-card text-foreground hover:bg-muted font-medium disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs active:scale-95"
               }`}
             >

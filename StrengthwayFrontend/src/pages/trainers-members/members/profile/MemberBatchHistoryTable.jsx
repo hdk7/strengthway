@@ -36,7 +36,7 @@ export function MemberBatchHistoryTable({ assignmentHistory }) {
                 return (
                   <tr key={item.id || idx} className="group transition-all duration-150 hover:-translate-y-px">
                     {/* Assignment Type */}
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
                           isTransfer
@@ -51,7 +51,7 @@ export function MemberBatchHistoryTable({ assignmentHistory }) {
                     </td>
 
                     {/* Batch Transition */}
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
+                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-muted-foreground">
                           {item.fromBatchName || item.fromBatchId || "Initial"}
@@ -64,7 +64,7 @@ export function MemberBatchHistoryTable({ assignmentHistory }) {
                     </td>
 
                     {/* Effective Window / Flex Days */}
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       <div className="space-y-1">
                         <div className="font-mono text-foreground font-medium text-xs">
                           {item.startDate || item.effectiveDate || "Immediate"}
@@ -87,7 +87,7 @@ export function MemberBatchHistoryTable({ assignmentHistory }) {
                     </td>
 
                     {/* Transferred By & Reason */}
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors max-w-xs">
+                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors max-w-xs">
                       <div>
                         <span className="font-semibold text-foreground block text-xs">
                           {item.transferredBy || item.changedBy || "System Admin"}
@@ -99,7 +99,7 @@ export function MemberBatchHistoryTable({ assignmentHistory }) {
                     </td>
 
                     {/* Status / Logged Date */}
-                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
+                    <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
                       <div>
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${

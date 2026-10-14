@@ -8,7 +8,7 @@ export function PortfolioHeroSection() {
           Portfolio
         </div>
         <h1 className="mt-4 font-display text-4xl font-bold sm:text-5xl">
-          Real training. <span className="text-gradient">Real people.</span>
+          Real training. <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">Real people.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
           A look inside The Strength Way — the sessions, the sweat, and the members who show up for

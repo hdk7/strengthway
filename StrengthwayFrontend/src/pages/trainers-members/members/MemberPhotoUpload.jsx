@@ -24,7 +24,7 @@ export default function MemberPhotoUpload({
               alt="Member Preview"
               className="h-full w-full object-cover object-top"
               onError={(e) => {
-                e.currentTarget.style.display = "none";
+                e.currentTarget.classList.add("hidden");
               }}
             />
           ) : (

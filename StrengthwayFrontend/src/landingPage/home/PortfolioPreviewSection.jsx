@@ -34,7 +34,7 @@ export function PortfolioPreviewSection() {
               Portfolio
             </div>
             <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
-              Break Yourself & <span className="text-gradient">Recreate Yourself</span>.
+              Break Yourself & <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">Recreate Yourself</span>.
             </h2>
           </div>
           <Link

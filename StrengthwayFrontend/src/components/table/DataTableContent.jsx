@@ -151,7 +151,7 @@ export default function DataTableContent({
                     return (
                       <td
                         key={`cell-${colKey}-${cIdx}-${rowKey}`}
-                        className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors ${getAlignmentClass(
+                        className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors ${getAlignmentClass(
                           col.align
                         )} ${col.className || ""}`}
                       >

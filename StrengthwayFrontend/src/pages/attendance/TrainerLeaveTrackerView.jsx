@@ -358,7 +358,7 @@ export function TrainerLeaveTrackerView({
                       className="group transition-all duration-150 hover:-translate-y-px"
                     >
                       {/* 1. Request ID & Date */}
-                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                         <div className="flex items-center gap-2 whitespace-nowrap">
                           <span className="font-mono font-bold text-accent">
                             {leave.id}
@@ -455,7 +455,7 @@ export function TrainerLeaveTrackerView({
                       </td>
 
                       {/* 8. Actions */}
-                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           {leave.status === "PENDING" && (
                             <>

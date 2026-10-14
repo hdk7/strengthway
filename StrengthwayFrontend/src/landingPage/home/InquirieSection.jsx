@@ -20,7 +20,7 @@ export function ContactSection() {
             Inquiries
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
-            Send us an <span className="text-gradient">inquiry</span>.
+            Send us an <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">inquiry</span>.
           </h2>
           <p className="mt-3 sm:mt-4 max-w-md text-sm sm:text-base text-muted-foreground">
             Drop by for a tour or send us an inquiry — we're happy to help you find the right plan.

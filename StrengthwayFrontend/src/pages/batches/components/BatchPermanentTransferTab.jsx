@@ -217,7 +217,7 @@ export default function BatchPermanentTransferTab({
             isTransferBatchFull ||
             selectedTransferBatch?.status === "Inactive"
           }
-          className="inline-flex items-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting && <Loader2 size={14} className="animate-spin" />}
           <span>Confirm Permanent Transfer</span>

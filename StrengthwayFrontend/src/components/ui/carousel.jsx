@@ -267,8 +267,8 @@ export function CarouselDots({ api: propApi, count, className }) {
             <span
               key={selected}
               className={cn(
-                "carousel-dot-fill animation-duration-[4000ms] block h-full w-full bg-foreground",
-                playing ? "" : "paused",
+                "origin-left block h-full w-full bg-foreground animate-[carousel-dot-fill_4000ms_linear_forwards]",
+                playing ? "" : "[animation-play-state:paused]",
               )}
             />
           )}

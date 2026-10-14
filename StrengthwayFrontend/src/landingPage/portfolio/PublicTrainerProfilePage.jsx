@@ -105,7 +105,7 @@ export default function PublicTrainerProfilePage() {
   }
 
   return (
-    <div className="custom-cursor-scope min-h-screen flex flex-col bg-background text-foreground">
+    <div className="[@media(hover:hover)_and_(pointer:fine)]:cursor-none [@media(hover:hover)_and_(pointer:fine)]:[&_*]:cursor-none min-h-screen flex flex-col bg-background text-foreground">
       <Navbar />
 
       <main className="pt-24 pb-20 flex-1">

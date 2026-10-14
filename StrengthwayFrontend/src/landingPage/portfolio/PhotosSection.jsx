@@ -48,7 +48,7 @@ export function PhotosSection({ onSelectPhoto, dataPhotos = [] }) {
             eyebrow="Photos"
             title={
               <>
-                Moments from the <span className="text-gradient">floor</span>.
+                Moments from the <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">floor</span>.
               </>
             }
           />

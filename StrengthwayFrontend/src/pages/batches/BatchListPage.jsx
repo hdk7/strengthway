@@ -289,7 +289,7 @@ export function BatchListPage() {
         {isAdmin() && (
           <button
             onClick={handleOpenCreate}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99] self-start sm:self-auto"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99] self-start sm:self-auto"
           >
             <Plus size={16} />
             <span>Create Batch</span>

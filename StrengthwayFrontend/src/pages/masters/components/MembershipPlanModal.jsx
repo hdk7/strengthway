@@ -244,12 +244,12 @@ export function MembershipPlanModal({
                     handleAddFeature();
                   }
                 }}
-                className="flex-1 rounded-lg border border-slate-200/90 dark:border-border bg-slate-50/90 dark:bg-muted/40 px-3.5 py-2 text-xs text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground/60 focus:border-[#1e40af] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-card focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 focus:outline-none transition-colors"
+                className="flex-1 rounded-lg border border-slate-200/90 dark:border-border bg-slate-50/90 dark:bg-muted/40 px-3.5 py-2 text-xs text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground/60 focus:border-blue-800 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-card focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30 focus:outline-none transition-colors"
               />
               <button
                 type="button"
                 onClick={handleAddFeature}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all active:scale-[0.99] cursor-pointer shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-900 hover:bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all active:scale-[0.99] cursor-pointer shrink-0"
               >
                 <Plus size={14} />
                 <span>Add Benefit</span>

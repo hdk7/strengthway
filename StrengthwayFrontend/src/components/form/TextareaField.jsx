@@ -36,7 +36,7 @@ const TextareaField = forwardRef(function TextareaField(
 
   const stateStyles = error
     ? "border-destructive bg-destructive/5 text-destructive focus:border-destructive focus:ring-2 focus:ring-destructive/20"
-    : "border-slate-200/90 dark:border-border hover:border-slate-300 dark:hover:border-border/80 focus:border-[#1e40af] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-card focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30";
+    : "border-slate-200/90 dark:border-border hover:border-slate-300 dark:hover:border-border/80 focus:border-blue-800 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-card focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30";
 
   const currentLength = typeof value === "string" ? value.length : 0;
 

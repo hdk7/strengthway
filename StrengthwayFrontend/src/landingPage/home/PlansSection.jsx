@@ -39,7 +39,7 @@ export function PlansSection() {
             Memberships
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
-            A plan for every <span className="text-gradient">athlete</span>.
+            A plan for every <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">athlete</span>.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
             Transparent pricing with zero hidden fees. Choose the commitment that aligns with your

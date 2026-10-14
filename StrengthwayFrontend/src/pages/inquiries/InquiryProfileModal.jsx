@@ -78,7 +78,7 @@ export function InquiryProfileModal({
       onClick={onClose}
     >
       <div
-        className="no-scrollbar relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card text-foreground shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="no-scrollbar relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card text-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Bar with Close Button */}
@@ -97,7 +97,7 @@ export function InquiryProfileModal({
               <button
                 type="button"
                 onClick={() => onContact?.(inquiry)}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
               >
                 <PhoneCall size={13} />
                 <span>Contact Lead</span>

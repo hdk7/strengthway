@@ -32,14 +32,14 @@ export default function InquiryTableRow({
       className="group transition-all duration-150 hover:-translate-y-px cursor-pointer"
     >
       {/* Inquiry ID badge */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
         <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-muted/60 text-muted-foreground px-2.5 py-1 rounded-full border border-border/40">
           #{displayId}
         </span>
       </td>
 
       {/* Client / Sender */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors">
         <div className="flex items-center gap-2.5 group/item">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent group-hover/item:scale-105 text-xs font-extrabold transition-transform">
             {inq.name ? inq.name.charAt(0).toUpperCase() : "U"}
@@ -53,7 +53,7 @@ export default function InquiryTableRow({
       </td>
 
       {/* Gender */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
         {inq.gender ? (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted/70 text-foreground/80 border border-border/40 capitalize">
             {inq.gender}
@@ -64,7 +64,7 @@ export default function InquiryTableRow({
       </td>
 
       {/* Contact */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
         <div className="space-y-0.5">
           {inq.mobile ? (
             <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
@@ -85,7 +85,7 @@ export default function InquiryTableRow({
       </td>
 
       {/* Subject & Message */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors max-w-xs">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors max-w-xs">
         <div className="space-y-0.5">
           <div className="font-semibold text-xs text-foreground truncate flex items-center gap-1.5">
             <span>{inq.subject || "General Inquiry"}</span>
@@ -104,12 +104,12 @@ export default function InquiryTableRow({
       </td>
 
       {/* Received */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground whitespace-nowrap">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground whitespace-nowrap">
         {dateLabel}
       </td>
 
       {/* Workflow Status Badge (Last column) */}
-      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
+      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-1.5 flex-wrap">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${

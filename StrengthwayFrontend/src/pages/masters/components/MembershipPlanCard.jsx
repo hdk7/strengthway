@@ -23,7 +23,7 @@ export function MembershipPlanCard({
         plan.isDeleted
           ? "border-destructive/30 border-dashed bg-card/60 opacity-80"
           : plan.popular
-            ? "border-amber-500/80 ring-2 ring-amber-500/40 shadow-[0_0_30px_-5px_rgba(245,158,11,0.25)] bg-linear-to-b from-amber-500/8 via-card to-card hover:border-amber-400"
+            ? "border-amber-500/80 ring-2 ring-amber-500/40 shadow-2xl shadow-amber-500/25 bg-linear-to-b from-amber-500/8 via-card to-card hover:border-amber-400"
             : "border-border bg-card hover:border-foreground/30"
       } ${!plan.isDeleted && plan.status === "Inactive" ? "opacity-60" : ""}`}
     >

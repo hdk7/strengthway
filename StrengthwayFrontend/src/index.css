@@ -3,15 +3,14 @@
 
 /* ─────────────────────────────────────────────────────────────────
    The Strength Way — Master Design System & Theme Engine
-   Every component reads colors through CSS variables + Tailwind utilities
-   defined here (bg-background, text-foreground, border-border, bg-accent, etc.).
+   Every component reads colors through Tailwind utility classes and
+   configured theme tokens (bg-background, text-foreground, border-border, etc.).
    Toggling <html> between "dark" and "light" switches all tokens seamlessly.
-   Derived tokens reference base tokens to avoid duplicate hex definitions.
 ───────────────────────────────────────────────────────────────── */
 
 @custom-variant dark (&:is(.dark, .dark *));
 
-/* ── Theme definition via CSS variables ─────────────────────────── */
+/* ── Theme definition via CSS variables & tokens ─────────────────── */
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-display: var(--font-sans);
@@ -38,9 +37,21 @@
   --color-border: var(--border);
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
+
+  /* Configured Theme Color Tokens */
+  --color-terracotta: #c57463;
+
+  @keyframes carousel-dot-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
 }
 
-/* ── Base Layer Consolidated Styles ──────────────────────────────── */
+/* ── Base Layer Framework Setup ──────────────────────────────────── */
 @layer base {
   :root,
   html.dark {
@@ -82,6 +93,7 @@
     --sidebar-width: 256px;
     --sidebar-width-collapsed: 72px;
   }
+
   *,
   *::before,
   *::after {
@@ -119,7 +131,7 @@
     min-height: 100dvh;
   }
 
-  /* ── Form Controls & Select Dropdown Theme Adaptation ───────────── */
+  /* Form Controls & Select Dropdown Theme Adaptation */
   select {
     color-scheme: light dark;
   }
@@ -167,116 +179,5 @@
   html.light select option[disabled] {
     color: #64748b !important;
     background-color: #ffffff !important;
-  }
-}
-
-/* ── Custom Utilities (Active Application Components) ─────────────── */
-
-@utility text-gradient {
-  background: linear-gradient(135deg, var(--color-foreground) 0%, var(--color-muted-foreground) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-@utility card-glow {
-  box-shadow:
-    0 1px 0 0 color-mix(in oklab, var(--color-foreground) 4%, transparent) inset,
-    0 20px 40px -20px color-mix(in oklab, var(--color-accent) 30%, transparent);
-}
-
-@utility grid-bg {
-  background-image:
-    linear-gradient(
-      color-mix(in oklab, var(--color-foreground) 4%, transparent) 1px,
-      transparent 1px
-    ),
-    linear-gradient(
-      90deg,
-      color-mix(in oklab, var(--color-foreground) 4%, transparent) 1px,
-      transparent 1px
-    );
-  background-size: 48px 48px;
-}
-
-@utility radial-brand {
-  background:
-    radial-gradient(
-      1000px 500px at 50% -10%,
-      color-mix(in oklab, var(--color-accent) 25%, transparent),
-      transparent 60%
-    ),
-    radial-gradient(
-      800px 400px at 90% 20%,
-      color-mix(in oklab, var(--color-accent) 15%, transparent),
-      transparent 60%
-    );
-}
-
-@utility no-scrollbar {
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-  &::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-}
-
-@utility spotlight-card {
-  position: relative;
-  isolation: isolate;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    border-radius: inherit;
-    background: radial-gradient(
-      220px circle at var(--spot-x, 50%) var(--spot-y, 50%),
-      color-mix(in oklab, var(--color-foreground) 12%, transparent),
-      transparent 70%
-    );
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-
-  &:hover::before {
-    opacity: 1;
-  }
-}
-
-@utility carousel-dot-fill {
-  transform-origin: left center;
-  animation-name: carousel-dot-fill;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
-}
-
-@keyframes carousel-dot-fill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/* Custom cursor scoped to fine-pointer landing page */
-@media (hover: hover) and (pointer: fine) {
-  .custom-cursor-scope,
-  .custom-cursor-scope * {
-    @apply cursor-none!;
-  }
-}
-
-@media print {
-  .no-print {
-    @apply hidden!;
-  }
-  main {
-    @apply p-0! h-auto! overflow-visible!;
   }
 }

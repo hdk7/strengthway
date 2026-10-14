@@ -387,7 +387,7 @@ export default function UsersAccessPage() {
           <button
             type="button"
             onClick={() => setIsProvisionModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] text-white px-5 py-2.5 min-h-[42px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-900 hover:bg-blue-700 text-white px-5 py-2.5 min-h-[42px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
           >
             <Plus size={16} />
             <span>Provision User Account</span>
