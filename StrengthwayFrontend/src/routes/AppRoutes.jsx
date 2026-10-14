@@ -31,6 +31,7 @@ import ReportsPage from "@/pages/reports/ReportsPage";
 import MembershipPlanMasterPage from "@/pages/masters/MembershipPlanMasterPage";
 import AttendancePolicyMasterPage from "@/pages/masters/AttendancePolicyMasterPage";
 import PaymentFeeMasterPage from "@/pages/masters/PaymentFeeMasterPage";
+import PortfolioMasterPage from "@/pages/masters/PortfolioMasterPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import UsersAccessPage from "@/pages/users/UsersAccessPage";
 
@@ -111,6 +112,7 @@ export function AppRoutes() {
           <Route path="masters/attendance-policy" element={<AttendancePolicyMasterPage />} />
           <Route path="masters/holiday" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
           <Route path="masters/payment-fee" element={<PaymentFeeMasterPage />} />
+          <Route path="masters/portfolio" element={<PortfolioMasterPage />} />
           <Route path="users" element={<UsersAccessPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>

@@ -134,7 +134,7 @@ export default function DashboardHome() {
           value: myRecord.status || "Active",
           change: myRecord.planName || "Member Profile",
           icon: UserCheck,
-          path: `/admin/trainers-members/members/${currentUser.memberId || myRecord.id || "MEM-2001"}`,
+          path: `/admin/trainers-members/members/${currentUser?.memberId || myRecord.id || "MEM-2001"}`,
           badge: "Enrolled",
           description:
             "Personal biometric attendance, body vitals, and plan dossier",

@@ -173,6 +173,16 @@ function generateSessionNoteId() {
   return `${ID_PREFIXES.SESSION_NOTE || "SNOTE"}-${ts}-${rand}`;
 }
 
+// ─── Portfolio Item ID ────────────────────────────────────────────────────────
+/**
+ * Produces format: PTF-1001, PTF-1002, …
+ * @param {number} currentMax - The highest PTF-XXXX number currently in DB
+ * @returns {string} e.g. "PTF-1001"
+ */
+function generatePortfolioId(currentMax = 1000) {
+  return `${ID_PREFIXES.PORTFOLIO || "PTF"}-${currentMax + 1}`;
+}
+
 module.exports = {
   generateMemberId,
   generateTrainerId,
@@ -188,6 +198,5 @@ module.exports = {
   generateClassId,
   generateScheduleHistoryId,
   generateSessionNoteId,
+  generatePortfolioId,
 };
-
-

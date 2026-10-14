@@ -62,9 +62,6 @@ export function MemberMonthlyMatrixTable({
                   <th className="sticky left-0 z-20 bg-card px-3 py-2 font-bold border-r border-border/60 min-w-40">
                     Athlete
                   </th>
-                  <th className="px-2.5 py-2 font-bold text-center border-r border-border/60 min-w-17.5">
-                    Type
-                  </th>
                   {(() => {
                     const scheduledDays = getBatchDaysList(currentBatch);
                     return Array.from({ length: matrixData.daysInMonth }, (_, i) => {
@@ -116,14 +113,11 @@ export function MemberMonthlyMatrixTable({
                       );
                     });
                   })()}
-                  <th className="px-3 py-2 font-bold text-right min-w-23.75">Turnout Rate</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 bg-card">
                 {paginatedMatrixMembers.map((mem) => {
                   const memberMatrix = matrixData.matrix[mem.id] || {};
-                  let presentCount = 0;
-                  let loggedCount = 0;
 
                   return (
                     <tr key={mem.id} className="hover:bg-muted/20 transition-colors">
@@ -138,19 +132,6 @@ export function MemberMonthlyMatrixTable({
                         <span className="text-[9px] font-mono text-muted-foreground block">
                           {mem.id}
                         </span>
-                      </td>
-
-                      {/* Member Type */}
-                      <td className="px-2.5 py-2 text-center border-r border-border/60">
-                        {mem.isFlexIn ? (
-                          <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-400 whitespace-nowrap">
-                            Flex
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 whitespace-nowrap">
-                            Primary
-                          </span>
-                        )}
                       </td>
 
                       {/* 1 to daysInMonth Cells */}
@@ -168,7 +149,6 @@ export function MemberMonthlyMatrixTable({
                         let title = `${dateStr}: No session recorded`;
 
                         if (att) {
-                          loggedCount++;
                           const st = att.status;
                           if (att.isFlexAttendance) {
                             code = "F";
@@ -177,7 +157,6 @@ export function MemberMonthlyMatrixTable({
                             title = `${dateStr}: Flex Attendance • In: ${att.checkInTime || "—"}${
                               att.checkOutTime ? ` • Out: ${att.checkOutTime}` : ""
                             }`;
-                            presentCount++;
                           } else if (st === "PRESENT" || att.checkInTime || st === "CHECKED_IN" || st === "CHECKED_OUT") {
                             code = "P";
                             cellClass =
@@ -185,7 +164,6 @@ export function MemberMonthlyMatrixTable({
                             title = `${dateStr}: Present • In: ${att.checkInTime || "—"}${
                               att.checkOutTime ? ` • Out: ${att.checkOutTime}` : ""
                             }`;
-                            presentCount++;
                           } else if (st === "ABSENT") {
                             code = "A";
                             cellClass =
@@ -269,18 +247,6 @@ export function MemberMonthlyMatrixTable({
                           </td>
                         );
                       })}
-
-                      {/* Rate Column */}
-                      <td className="px-3 py-2 text-right whitespace-nowrap">
-                        <span className="font-bold text-foreground font-mono">
-                          {loggedCount > 0
-                            ? `${Math.round((presentCount / loggedCount) * 100)}%`
-                            : "—"}
-                        </span>
-                        <span className="block text-[9px] text-muted-foreground">
-                          ({presentCount}/{loggedCount})
-                        </span>
-                      </td>
                     </tr>
                   );
                 })}

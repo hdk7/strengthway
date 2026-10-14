@@ -68,7 +68,7 @@ export function MemberAttendanceToolbar({
         )}
       </div>
 
-      {/* Date Navigator (Daily Mode) or Month Navigator (Matrix Mode) */}
+      {/* Date Navigator (Daily Mode Only) */}
       {viewMode === "daily" ? (
         <div className="flex items-center gap-2 flex-wrap">
           <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-background p-1 shadow-xs">

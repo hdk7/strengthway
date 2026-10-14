@@ -10,11 +10,11 @@ import {
   Users,
   ClipboardCheck,
   Wallet,
-  BarChart3,
   Database,
   Settings,
   CalendarDays,
   ShieldCheck,
+  BarChart3,
 } from "lucide-react";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
@@ -68,7 +68,6 @@ const navConfig = [
       { id: "trainers", label: "Trainers Payments", path: "/admin/payments/trainers" },
     ],
   },
-  { id: "reports", label: "Reports & Analytics", icon: BarChart3, path: "/admin/reports" },
   {
     id: "masters",
     label: "Masters",
@@ -85,6 +84,7 @@ const navConfig = [
         path: "/admin/masters/attendance-policy",
       },
       { id: "payment-fee", label: "Payment Fee Master", path: "/admin/masters/payment-fee" },
+      { id: "portfolio-master", label: "Portfolio Master", path: "/admin/masters/portfolio" },
     ],
   },
   { id: "users", label: "Users & Access", icon: ShieldCheck, path: "/admin/users" },

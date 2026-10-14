@@ -1,4 +1,4 @@
-import { CalendarCheck, Grid3X3, Download } from "lucide-react";
+import { CalendarCheck, Grid3X3 } from "lucide-react";
 
 export function MemberAttendanceHeader({
   viewMode,
@@ -8,9 +8,6 @@ export function MemberAttendanceHeader({
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0">
       <div>
-        <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground font-mono">
-          Facility Operations • Athlete Turnout
-        </div>
         <h1 className="font-display text-xl sm:text-2xl font-black text-foreground tracking-tight">
           Members Attendance Management
         </h1>
@@ -47,17 +44,6 @@ export function MemberAttendanceHeader({
             <span>Monthly Matrix</span>
           </button>
         </div>
-
-        {viewMode === "matrix" && (
-          <button
-            type="button"
-            onClick={handleExportMatrixCSV}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted transition-all shadow-xs cursor-pointer hover:border-foreground/30"
-          >
-            <Download size={13} className="text-accent" />
-            <span>Export CSV</span>
-          </button>
-        )}
       </div>
     </div>
   );

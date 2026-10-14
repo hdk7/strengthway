@@ -18,9 +18,33 @@ if (NODE_ENV === "production") {
 }
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  CLIENT_ORIGIN,
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "http://localhost:5176",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  "http://127.0.0.1:5175",
+  "http://127.0.0.1:5176",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: CLIENT_ORIGIN,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        NODE_ENV !== "production" &&
+        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -68,8 +92,8 @@ app.get("/api/v1", (req, res) => {
       holidays:   "/api/v1/holidays",
       attendance: "/api/v1/attendance",
       trainerLeaves: "/api/v1/trainer-leaves",
-      reports:    "/api/v1/reports",
       uploads:    "/api/v1/uploads",
+      portfolio:  "/api/v1/portfolio",
     },
     docs: "See README.md for full API reference.",
   });
@@ -87,11 +111,12 @@ const sessionRoutes      = require("./modules/schedules/session.routes");
 const holidayRoutes      = require("./modules/schedules/holiday.routes");
 const attendanceRoutes   = require("./modules/attendance/attendance.routes");
 const trainerLeaveRoutes = require("./modules/attendance/trainerLeave.routes");
-const reportsRoutes      = require("./modules/reports/reports.routes");
 const uploadRoutes       = require("./modules/uploads/upload.routes");
+const reportsRoutes      = require("./modules/reports/reports.routes");
 const classRoutes        = require("./modules/classes/class.routes");
 const sessionNoteRoutes  = require("./modules/schedules/sessionNote.routes");
 const permissionRoutes   = require("./modules/permissions/permission.routes");
+const portfolioRoutes    = require("./modules/portfolio/portfolio.routes");
 
 app.use("/api/v1/auth",           authRoutes);
 app.use("/api/v1/members",        memberRoutes);
@@ -109,6 +134,9 @@ app.use("/api/v1/trainer-leaves", trainerLeaveRoutes);
 app.use("/api/v1/reports",        reportsRoutes);
 app.use("/api/v1/uploads",        uploadRoutes);
 app.use("/api/v1/permissions",    permissionRoutes);
+app.use("/api/v1/portfolio",      portfolioRoutes);
+
+
 
 // ── 404 handler (must come AFTER all valid routes) ────────────────────────────
 app.use(notFoundMiddleware);

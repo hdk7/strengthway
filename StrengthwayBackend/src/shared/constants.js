@@ -105,6 +105,7 @@ const ID_PREFIXES = Object.freeze({
   CLASS:            "CLS",
   SCHEDULE_HISTORY: "SCH-HIST",
   SESSION_NOTE:     "SNOTE",
+  PORTFOLIO:        "PTF",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -217,6 +218,21 @@ const TRAINER_LEAVE_STATUS = Object.freeze({
   CANCELLED: "CANCELLED",
 });
 
+// ─── Portfolio Sections & Statuses ───────────────────────────────────────────
+const PORTFOLIO_SECTION = Object.freeze({
+  TRAINING_SESSION: "TRAINING_SESSION",
+  SESSION_CLIP:     "SESSION_CLIP",
+  FEEDBACK_QUOTE:   "FEEDBACK_QUOTE",
+  FEEDBACK_VIDEO:   "FEEDBACK_VIDEO",
+  PHOTO:            "PHOTO",
+  VIDEO:            "VIDEO",
+});
+
+const PORTFOLIO_STATUS = Object.freeze({
+  ACTIVE:   "Active",
+  INACTIVE: "Inactive",
+});
+
 module.exports = {
   MEMBER_STATUS,
   TRAINER_STATUS,
@@ -233,6 +249,8 @@ module.exports = {
   ATTENDANCE_STATUS,
   TRAINER_LOG_STATUS,
   TRAINER_LEAVE_STATUS,
+  PORTFOLIO_SECTION,
+  PORTFOLIO_STATUS,
   GENDER,
   CONTACT_METHODS,
   BLOOD_GROUPS,

@@ -72,9 +72,10 @@ export function clearAuthToken() {
  */
 async function request(method, path, body, options = {}) {
   const token = getAuthToken();
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers ?? {}),
   };
@@ -84,7 +85,7 @@ async function request(method, path, body, options = {}) {
     response = await fetch(`${BASE_URL}${path}`, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body !== undefined ? (isFormData ? body : JSON.stringify(body)) : undefined,
       signal: options.signal,
     });
   } catch (networkError) {
@@ -171,6 +172,11 @@ export const api = {
       return request("DELETE", path, undefined, bodyOrOptions);
     }
     return request("DELETE", path, bodyOrOptions, options);
+  },
+
+  /** File upload request using FormData (POST by default, or method in options). */
+  upload(path, formData, options = {}) {
+    return request(options.method || "POST", path, formData, options);
   },
 };
 

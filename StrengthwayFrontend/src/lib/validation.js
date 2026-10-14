@@ -35,7 +35,12 @@ export function validateFieldWithYup(schema, fieldName, formData) {
     return "";
   }
   try {
-    schema.validateSyncAt(fieldName, formData);
+    const data =
+      typeof formData === "object" && formData !== null && !Array.isArray(formData) && (fieldName in formData)
+        ? formData
+        : { [fieldName]: formData };
+
+    schema.validateSyncAt(fieldName, data);
     return "";
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -273,7 +278,7 @@ export const trainerSchema = yup.object().shape({
   quote: yup.string().trim().max(300, "Quote cannot exceed 300 characters.").nullable(),
   programs: yup.mixed().nullable(),
   photo: yup.string().trim().nullable(),
-  bio: textValidator("Bio", 10, 1000, true),
+  bio: yup.string().trim().nullable(),
   shift: yup.string().trim().nullable(),
   batchIds: yup.array().nullable(),
 });

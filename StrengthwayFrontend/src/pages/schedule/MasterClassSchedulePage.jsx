@@ -13,7 +13,6 @@ import { ClassCard } from "./components/ClassCard";
 import { ClassFormModal } from "./components/ClassFormModal";
 import { BatchClassAssignmentModal } from "./components/BatchClassAssignmentModal";
 import { ClassMonthlyCalendarView } from "./components/ClassMonthlyCalendarView";
-import { ClassDailyScheduleView } from "./components/ClassDailyScheduleView";
 import { ClassSessionDetailModal } from "./components/ClassSessionDetailModal";
 import { ShuffleClassModal } from "./components/ShuffleClassModal";
 import Pagination from "@/components/table/Pagination";
@@ -25,7 +24,7 @@ export default function MasterClassSchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Active perspective: "library" | "month" | "daily"
+  // Active perspective: "library" | "month"
   const [activeView, setActiveView] = useState("library");
 
   // Filters & Search
@@ -204,7 +203,7 @@ export default function MasterClassSchedulePage() {
   }, [filteredClasses, safePage]);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto animate-in fade-in duration-150">
+    <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5 w-full animate-in fade-in duration-150">
       {/* Header, Stats & Search Controls */}
       <ClassHeaderStats
         activeView={activeView}
@@ -224,71 +223,55 @@ export default function MasterClassSchedulePage() {
 
       {/* Multi-Dimensional Perspectives */}
       {activeView === "month" ? (
-        <ClassMonthlyCalendarView
-          batches={batches}
-          onOpenSessionDetail={(session) => setInspectingSession(session)}
-          onOpenAssign={handleOpenBatchAssign}
-          onOpenSwap={(session) => {
-            const targetBatch =
-              batches.find((b) => b.id === session.batchId) || {
-                id: session.batchId,
-                name: session.batchName,
-              };
-            setShuffleModalState({
-              isOpen: true,
-              batch: targetBatch,
-              sourceSessionId: session.id,
-            });
-          }}
-        />
-      ) : activeView === "daily" ? (
-        <ClassDailyScheduleView
-          batches={batches}
-          onOpenSessionDetail={(session) => setInspectingSession(session)}
-          onOpenAssign={handleOpenBatchAssign}
-          onOpenSwap={(session) => {
-            const targetBatch =
-              batches.find((b) => b.id === session.batchId) || {
-                id: session.batchId,
-                name: session.batchName,
-              };
-            setShuffleModalState({
-              isOpen: true,
-              batch: targetBatch,
-              sourceSessionId: session.id,
-            });
-          }}
-        />
+        <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
+          <ClassMonthlyCalendarView
+            batches={batches}
+            onOpenSessionDetail={(session) => setInspectingSession(session)}
+            onOpenAssign={handleOpenBatchAssign}
+            onOpenSwap={(session) => {
+              const targetBatch =
+                batches.find((b) => b.id === session.batchId) || {
+                  id: session.batchId,
+                  name: session.batchName,
+                };
+              setShuffleModalState({
+                isOpen: true,
+                batch: targetBatch,
+                sourceSessionId: session.id,
+              });
+            }}
+          />
+        </div>
       ) : (
         /* Reusable Classes Library Grid */
         loading ? (
-          <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200/80 dark:border-border bg-white dark:bg-card p-8 text-center shadow-xs">
-            <RefreshCw size={26} className="animate-spin text-blue-700 dark:text-primary" />
-            <p className="text-sm font-semibold text-slate-700 dark:text-foreground">
+          <div className="flex-1 min-h-48 flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card p-6 text-center shadow-xs">
+            <RefreshCw size={24} className="animate-spin text-accent" />
+            <p className="text-xs font-semibold text-foreground">
               Loading reusable classes library…
             </p>
           </div>
         ) : error ? (
-          <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 p-8 text-center">
-            <AlertCircle size={28} className="text-rose-600 dark:text-rose-400" />
-            <p className="text-sm font-semibold text-rose-700 dark:text-rose-300">{error}</p>
+          <div className="flex-1 min-h-48 flex flex-col items-center justify-center gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-6 text-center">
+            <AlertCircle size={26} className="text-rose-500" />
+            <p className="text-xs font-semibold text-rose-500">{error}</p>
             <button
               onClick={loadData}
-              className="rounded-xl bg-rose-600 dark:bg-rose-500 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 cursor-pointer transition-colors"
+              className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 cursor-pointer transition-colors"
             >
               Retry
             </button>
           </div>
         ) : filteredClasses.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-300 dark:border-border bg-white dark:bg-card p-8 text-center shadow-xs">
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-muted text-slate-400 dark:text-muted-foreground">
-              <Dumbbell size={24} />
+          <div className="flex-1 min-h-48 flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card p-6 text-center shadow-xs">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <Dumbbell size={20} />
             </span>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-foreground">
+              <h3 className="text-sm font-bold text-foreground">
                 No Reusable Classes Found
               </h3>
-              <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5 max-w-sm">
+              <p className="text-xs text-muted-foreground mt-0.5 max-w-sm">
                 {searchQuery
                   ? `No classes matching "${searchQuery}". Try adjusting your search query or filters.`
                   : "No reusable classes exist in the library yet. Click below to create your first class!"}
@@ -297,30 +280,32 @@ export default function MasterClassSchedulePage() {
             {!searchQuery && isAdmin() && (
               <button
                 onClick={handleOpenCreate}
-                className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-blue-700 dark:bg-primary px-4 py-2 text-xs font-bold text-white dark:text-primary-foreground hover:bg-blue-800 cursor-pointer"
+                className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-3.5 py-1.5 text-xs font-bold text-white cursor-pointer"
               >
-                <Plus size={16} />
+                <Plus size={15} />
                 <span>Create Class</span>
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {paginatedClasses.map((cls) => (
-                <ClassCard
-                  key={cls.id}
-                  classItem={cls}
-                  isSelected={selectedClassIds.includes(cls.id)}
-                  onToggleSelect={handleToggleSelect}
-                  onEdit={handleOpenEdit}
-                  onDelete={(item) => setDeletingClass(item)}
-                />
-              ))}
+          <div className="flex-1 min-h-0 flex flex-col justify-between">
+            <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                {paginatedClasses.map((cls) => (
+                  <ClassCard
+                    key={cls.id}
+                    classItem={cls}
+                    isSelected={selectedClassIds.includes(cls.id)}
+                    onToggleSelect={handleToggleSelect}
+                    onEdit={handleOpenEdit}
+                    onDelete={(item) => setDeletingClass(item)}
+                  />
+                ))}
+              </div>
             </div>
 
             {filteredClasses.length > 0 && (
-              <div className="pt-2">
+              <div className="shrink-0 pt-1.5 border-t border-border/40 mt-1">
                 <Pagination
                   currentPage={safePage}
                   totalPages={totalPages}

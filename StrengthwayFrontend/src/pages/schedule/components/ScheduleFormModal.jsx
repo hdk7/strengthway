@@ -286,14 +286,14 @@ export function ScheduleFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground shadow-xs hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-[40px]"
+              className="w-full sm:w-auto rounded-lg border border-slate-300 dark:border-border bg-white dark:bg-card px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-medium text-slate-700 dark:text-foreground shadow-xs hover:bg-slate-50 dark:hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 min-h-10"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 min-h-[40px]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 min-h-10"
             >
               {submitting ? (
                 <>
