@@ -7,7 +7,10 @@ export default function DataTableContent({
   onRowClick,
   compact = false,
   isLoading = false,
-  loadingRowsCount = 5,
+  loading = false,
+  loadingRowsCount = 7,
+  renderRow,
+  children,
   emptyIcon: EmptyIcon = Inbox,
   emptyTitle = "No records found",
   emptyMessage = "Try adjusting your search query or filters.",
@@ -15,7 +18,9 @@ export default function DataTableContent({
   hasActiveFilters = false,
   onResetFilters,
   tableClassName = "",
+  theadClassName = "",
 }) {
+  const isDataLoading = Boolean(isLoading || loading);
   const cellPadding = compact ? "py-2.5 px-3.5 sm:px-4" : "py-3 px-4 sm:px-5";
   const headerPadding = compact ? "py-2 px-3.5 sm:px-4" : "py-2.5 px-4 sm:px-5";
 
@@ -26,7 +31,7 @@ export default function DataTableContent({
   };
 
   // 1. Loading Skeleton State
-  if (isLoading) {
+  if (isDataLoading) {
     return (
       <div className="overflow-x-auto overflow-y-auto no-scrollbar flex-1 min-h-0 flex flex-col pr-1">
         <table className={`w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px] ${tableClassName}`}>
@@ -101,7 +106,7 @@ export default function DataTableContent({
   return (
     <div className="overflow-x-auto overflow-y-auto no-scrollbar flex-1 min-h-0 flex flex-col pr-1">
       <table className={`w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px] ${tableClassName}`}>
-        <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
+        <thead className={`sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none ${theadClassName}`}>
           <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {columns.map((col, cIdx) => {
               const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
@@ -119,39 +124,45 @@ export default function DataTableContent({
           </tr>
         </thead>
         <tbody className={`${compact ? "text-xs sm:text-sm" : "text-sm"}`}>
-          {paginatedData.map((row, rowIdx) => {
-            const rowKey = row[keyField] || row.id || row._id || `row-${rowIdx}`;
+          {renderRow ? (
+            paginatedData.map((row, rowIdx) => renderRow(row, rowIdx))
+          ) : children ? (
+            children
+          ) : (
+            paginatedData.map((row, rowIdx) => {
+              const rowKey = row[keyField] || row.id || row._id || `row-${rowIdx}`;
 
-            return (
-              <tr
-                key={rowKey}
-                onClick={() => onRowClick && onRowClick(row, rowIdx)}
-                className={`group transition-all duration-150 hover:-translate-y-px ${
-                  onRowClick ? "cursor-pointer" : ""
-                }`}
-              >
-                {columns.map((col, cIdx) => {
-                  const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
-                  const cellContent = col.cell
-                    ? col.cell(row, rowIdx)
-                    : col.accessorKey
-                    ? row[col.accessorKey]
-                    : null;
+              return (
+                <tr
+                  key={rowKey}
+                  onClick={() => onRowClick && onRowClick(row, rowIdx)}
+                  className={`group transition-all duration-150 hover:-translate-y-px ${
+                    onRowClick ? "cursor-pointer" : ""
+                  }`}
+                >
+                  {columns.map((col, cIdx) => {
+                    const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
+                    const cellContent = col.cell
+                      ? col.cell(row, rowIdx)
+                      : col.accessorKey
+                      ? row[col.accessorKey]
+                      : null;
 
-                  return (
-                    <td
-                      key={`cell-${colKey}-${cIdx}-${rowKey}`}
-                      className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors ${getAlignmentClass(
-                        col.align
-                      )} ${col.className || ""}`}
-                    >
-                      {cellContent}
-                    </td>
-                  );
-                })}
-              </tr>
-            );
-          })}
+                    return (
+                      <td
+                        key={`cell-${colKey}-${cIdx}-${rowKey}`}
+                        className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors ${getAlignmentClass(
+                          col.align
+                        )} ${col.className || ""}`}
+                      >
+                        {cellContent}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })
+          )}
         </tbody>
       </table>
     </div>

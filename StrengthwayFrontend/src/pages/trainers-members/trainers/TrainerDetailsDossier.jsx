@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ShieldCheck, Mail, Phone, Copy, Check } from "lucide-react";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function TrainerDetailsDossier({
   trainer,
@@ -67,7 +68,7 @@ export function TrainerDetailsDossier({
                 {assignedBatches.map((b) => (
                   <Link
                     key={b.id}
-                    to={`/admin/batches/${b.id}`}
+                    to={`${getRoleBasePath()}/batches/${b.id}`}
                     className="inline-flex items-center gap-1 rounded-lg bg-muted border border-border px-2 py-0.5 text-xs font-semibold text-foreground hover:bg-card hover:border-foreground/30 transition-colors"
                   >
                     <span>{b.name}</span>

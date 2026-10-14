@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { BatchReportStatsCards } from "./BatchReportStatsCards";
 import { getTailwindWidth } from "@/lib/tailwindUtils";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function BatchesReportTab({
   batchesReport,
@@ -126,7 +127,7 @@ export function BatchesReportTab({
                       <td className="py-3.5 px-4">
                         <div>
                           <Link
-                            to={`/admin/batches/${b.batchId}`}
+                            to={`${getRoleBasePath()}/batches/${b.batchId}`}
                             className="font-bold text-foreground hover:text-accent flex items-center gap-1.5"
                           >
                             <span>{b.name}</span>

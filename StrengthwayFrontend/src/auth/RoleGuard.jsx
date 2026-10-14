@@ -33,11 +33,21 @@ export default function RoleGuard({
 
   // 1. Unauthenticated check
   if (requireAuth && !authed) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   // 2. Role authorization check
   if (allowedRoles.length > 0 && !hasRole(...allowedRoles)) {
+    const user = getCurrentUser();
+    if (user?.role === "admin" && (location.pathname.startsWith("/trainer") || location.pathname.startsWith("/member"))) {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
+    if (user?.role === "trainer" && (location.pathname.startsWith("/admin") || location.pathname.startsWith("/member"))) {
+      return <Navigate to="/trainer/dashboard" replace />;
+    }
+    if (user?.role === "member" && (location.pathname.startsWith("/admin") || location.pathname.startsWith("/trainer"))) {
+      return <Navigate to="/member/dashboard" replace />;
+    }
     return <ForbiddenPage embedded />;
   }
 

@@ -5,12 +5,16 @@ import {
   Search,
   Sparkles,
   CalendarDays,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { isAdmin } from "@/auth/currentUser";
 
 export function ClassHeaderStats({
   activeView = "library",
   setActiveView,
+  viewMode = "table",
+  setViewMode,
   onOpenCreate,
   stats = { total: 0, active: 0 },
   searchQuery,
@@ -165,6 +169,36 @@ export function ClassHeaderStats({
                     className="text-xs font-bold text-blue-700 dark:text-primary hover:underline cursor-pointer transition-colors px-1 py-1"
                   >
                     Select All
+                  </button>
+                </div>
+              )}
+
+              {/* View Toggle (Grid / Table) */}
+              {setViewMode && (
+                <div className="flex items-center border border-border rounded-lg p-0.5 bg-background">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("grid")}
+                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                      viewMode === "grid"
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("table")}
+                    className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+                      viewMode === "table"
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    title="Table View"
+                  >
+                    <List size={14} />
                   </button>
                 </div>
               )}

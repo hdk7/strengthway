@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getTrainers } from "@/lib/trainersService";
 import { getAllTrainerLogs } from "@/lib/attendanceService";
-import { Pagination } from "@/components/table";
+import { DataTable } from "@/components/table";
 import { isTrainer } from "@/auth/currentUser";
 
 const SHIFT_OPTIONS = [
@@ -166,17 +166,124 @@ export default function TrainersPaymentsPage() {
 
   // Viewport Pagination State
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 7;
   useEffect(() => {
     setPage(1);
   }, [searchQuery, selectedShift, selectedStatus]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPayouts.length / pageSize));
   const safePage = Math.max(1, Math.min(page, totalPages));
-  const paginatedPayouts = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return filteredPayouts.slice(start, start + pageSize);
-  }, [filteredPayouts, safePage, pageSize]);
+
+  const columns = useMemo(() => [
+    {
+      header: "Faculty Member",
+      accessorKey: "name",
+      cell: (p) => (
+        <div>
+          <div className="font-bold text-foreground text-xs">{p.name}</div>
+          <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+            #{p.trainerId} • {p.phone}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Shift & Specialization",
+      cell: (p) => (
+        <div>
+          <span className="font-semibold text-foreground block">{p.specialization}</span>
+          <span className="inline-flex items-center rounded-md bg-accent/10 px-1.5 py-0.2 text-[9px] font-bold text-accent border border-accent/20 mt-0.5">
+            {p.shift}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Conducted Classes",
+      align: "center",
+      cell: (p) => (
+        <span className="font-mono font-bold text-foreground block">
+          {p.totalConducted} sessions
+        </span>
+      ),
+    },
+    {
+      header: "Floor Hours",
+      align: "center",
+      cell: (p) => (
+        <span className="font-mono font-bold text-foreground">
+          {p.totalHours} hrs
+        </span>
+      ),
+    },
+    {
+      header: "Base Stipend",
+      align: "center",
+      cell: (p) => (
+        <span className="font-mono text-muted-foreground font-semibold">
+          ₹{p.baseStipend.toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      header: "Leave & Deductions",
+      align: "center",
+      cell: (p) => (
+        p.leaveDaysCount === 0 ? (
+          <span className="font-mono text-[11px] text-muted-foreground font-semibold">
+            0d Leave
+          </span>
+        ) : p.unpaidLeaveDays === 0 ? (
+          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+            {p.leaveDaysCount}d Paid
+          </span>
+        ) : (
+          <div className="inline-flex flex-col items-center">
+            <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
+              {p.leaveDaysCount}d ({p.unpaidLeaveDays}d Unpaid)
+            </span>
+            <span className="text-[9px] font-bold text-rose-500 mt-0.5">
+              -₹{p.leaveDeduction.toLocaleString("en-IN")}
+            </span>
+          </div>
+        )
+      ),
+    },
+    {
+      header: "Total Remuneration",
+      align: "center",
+      cell: (p) => (
+        <div className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
+          <div>₹{p.totalPayout.toLocaleString("en-IN")}</div>
+          {p.leaveDeduction > 0 && (
+            <div className="text-[9px] text-rose-500 font-normal">
+              (Net of -₹{p.leaveDeduction.toLocaleString("en-IN")} leave)
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: "Status",
+      align: "center",
+      cell: (p) => (
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+            p.status === "Disbursed"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+          }`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              p.status === "Disbursed" ? "bg-emerald-500" : "bg-amber-500"
+            }`}
+          />
+          {p.status}
+        </span>
+      ),
+    },
+  ], []);
 
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5">
@@ -390,157 +497,23 @@ export default function TrainersPaymentsPage() {
       </div>
 
       {/* ─── Flexible Viewport Table Card with Separated Rows ────────────────── */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-          <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-            <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none">
-              <tr>
-                <th className="py-2.5 px-4">Faculty Member</th>
-                <th className="py-2.5 px-4">Shift & Specialization</th>
-                <th className="py-2.5 px-4 text-center">Conducted Classes</th>
-                <th className="py-2.5 px-4 text-center">Floor Hours</th>
-                <th className="py-2.5 px-4 text-center">Base Stipend</th>
-                <th className="py-2.5 px-4 text-center">Leave &amp; Deductions</th>
-                <th className="py-2.5 px-4 text-center">Total Remuneration</th>
-                <th className="py-2.5 px-4 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 size={16} className="animate-spin text-accent" />
-                      <span className="font-semibold text-xs">
-                        Loading faculty payroll records...
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              ) : paginatedPayouts.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
-                  >
-                    <div className="max-w-sm mx-auto space-y-1">
-                      <Award
-                        size={32}
-                        className="mx-auto text-muted-foreground/40"
-                      />
-                      <p className="font-bold text-foreground text-sm">
-                        No trainer records found
-                      </p>
-                      <p className="text-xs">
-                        Try adjusting your filters or search keywords.
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedPayouts.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="group transition-all duration-150 hover:-translate-y-px"
-                  >
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
-                      <div className="font-bold text-foreground text-xs">
-                        {p.name}
-                      </div>
-                      <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                        #{p.trainerId} • {p.phone}
-                      </div>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
-                      <span className="font-semibold text-foreground block">
-                        {p.specialization}
-                      </span>
-                      <span className="inline-flex items-center rounded-md bg-accent/10 px-1.5 py-0.2 text-[9px] font-bold text-accent border border-accent/20 mt-0.5">
-                        {p.shift}
-                      </span>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-                      <span className="font-mono font-bold text-foreground block">
-                        {p.totalConducted} sessions
-                      </span>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono font-bold text-foreground">
-                      {p.totalHours} hrs
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono text-muted-foreground font-semibold">
-                      ₹{p.baseStipend.toLocaleString("en-IN")}
-                    </td>
-
-                    {/* Leave Days & Deductions */}
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-                      {p.leaveDaysCount === 0 ? (
-                        <span className="font-mono text-[11px] text-muted-foreground font-semibold">
-                          0d Leave
-                        </span>
-                      ) : p.unpaidLeaveDays === 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                          {p.leaveDaysCount}d Paid
-                        </span>
-                      ) : (
-                        <div className="inline-flex flex-col items-center">
-                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
-                            {p.leaveDaysCount}d ({p.unpaidLeaveDays}d Unpaid)
-                          </span>
-                          <span className="text-[9px] font-bold text-rose-500 mt-0.5">
-                            -₹{p.leaveDeduction.toLocaleString("en-IN")}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-
-                    {/* Total Remuneration */}
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      <div>₹{p.totalPayout.toLocaleString("en-IN")}</div>
-                      {p.leaveDeduction > 0 && (
-                        <div className="text-[9px] text-rose-500 font-normal">
-                          (Net of -₹{p.leaveDeduction.toLocaleString("en-IN")} leave)
-                        </div>
-                      )}
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
-                          p.status === "Disbursed"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                        }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            p.status === "Disbursed"
-                              ? "bg-emerald-500"
-                              : "bg-amber-500"
-                          }`}
-                        />
-                        {p.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ─── Fixed / Sticky Bottom Viewport Pagination ──────────────────────── */}
-      <Pagination
+      {/* ─── Standardized Trainer Payouts Table ─────────────────────────── */}
+      <DataTable
+        columns={columns}
+        data={filteredPayouts}
+        pageSize={pageSize}
         currentPage={safePage}
-        totalPages={totalPages}
         onPageChange={setPage}
         totalItems={filteredPayouts.length}
-        pageSize={pageSize}
-        itemName="faculty"
-        compact
-        className="shrink-0 mt-auto"
+        totalPages={totalPages}
+        itemLabel="faculty"
+        loading={isLoading}
+        loadingRowsCount={7}
+        showToolbar={false}
+        emptyIcon={Award}
+        emptyTitle="No trainer records found"
+        emptyMessage="Try adjusting your filters or search keywords."
+        className="flex-1 min-h-0"
       />
     </div>
   );

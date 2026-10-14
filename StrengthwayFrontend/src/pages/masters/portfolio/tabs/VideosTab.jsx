@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Video,
   Play,
@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/portfolioMedia";
 import { PortfolioToolbar } from "../components";
-import Pagination from "@/components/table/Pagination";
 
 export function VideosTab({
   items = [],
@@ -39,20 +38,6 @@ export function VideosTab({
     [items]
   );
 
-  // Pagination for Videos
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 3;
-  const totalPages = Math.max(1, Math.ceil(videos.length / PAGE_SIZE));
-  const safePage = Math.max(1, Math.min(page, totalPages));
-  const paginatedVideos = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return videos.slice(start, start + PAGE_SIZE);
-  }, [videos, safePage]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery]);
-
   const handleMove = (index, direction) => {
     if (!onReorder) return;
     const targetIndex = direction === "left" ? index - 1 : index + 1;
@@ -71,7 +56,7 @@ export function VideosTab({
   };
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {/* Header & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1.5 border-b border-border/70 shrink-0">
         <div>
@@ -119,14 +104,14 @@ export function VideosTab({
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        <div className="space-y-2">
+        <div className="overflow-y-auto max-h-[495px] pr-1">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {paginatedVideos.map((v) => {
+            {videos.map((v) => {
               const videoIndex = videos.findIndex((item) => item.id === v.id);
               return (
                 <div
                   key={v.id}
-                  className="group relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-md h-[225px]"
+                  className="group relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between transition-all hover:border-primary/50 hover:shadow-md h-[235px]"
                 >
                   {/* 16:9 Landscape Video Container */}
                   <div className="relative flex-1 min-h-0 w-full bg-black/95 overflow-hidden flex items-center justify-center">
@@ -189,6 +174,9 @@ export function VideosTab({
                       <h3 className="text-xs font-bold text-foreground truncate" title={v.title}>
                         {v.title}
                       </h3>
+                      {v.subtitle && (
+                        <p className="text-[10px] text-muted-foreground truncate">{v.subtitle}</p>
+                      )}
                     </div>
 
                     {/* Reorder Left / Right in 3-column Grid */}
@@ -226,117 +214,93 @@ export function VideosTab({
               );
             })}
           </div>
-          {videos.length > 0 && (
-            <Pagination
-              currentPage={safePage}
-              totalPages={totalPages}
-              totalItems={videos.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-              itemLabel="videos"
-              compact
-            />
-          )}
         </div>
       ) : (
         /* Table View */
-        <div className="space-y-2">
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
-                <tr>
-                  <th className="py-2 px-3">Preview</th>
-                  <th className="py-2 px-3">Video Title</th>
-                  <th className="py-2 px-3">Grid Order</th>
-                  <th className="py-2 px-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y border-border">
-                {paginatedVideos.map((v) => {
-                  const videoIndex = videos.findIndex((item) => item.id === v.id);
-                  return (
-                    <tr key={v.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-1.5 px-3">
-                        <div
-                          onClick={() => v.mediaUrl && onPreview(v)}
-                          className="h-8 w-14 rounded-md overflow-hidden border border-border bg-black flex items-center justify-center relative group cursor-pointer shrink-0"
-                          title={v.mediaUrl ? "Click to preview video" : ""}
-                        >
-                          {v.thumbnailUrl ? (
-                            <img
-                              src={resolveMediaUrl(v.thumbnailUrl)}
-                              alt=""
-                              className="h-full w-full object-cover"
-                            />
-                          ) : v.mediaUrl ? (
-                            <video
-                              src={`${resolveMediaUrl(v.mediaUrl)}#t=1.2`}
-                              preload="metadata"
-                              className="h-full w-full object-cover pointer-events-none"
-                            />
-                          ) : (
-                            <Video size={12} className="text-muted-foreground" />
-                          )}
-                          {v.mediaUrl && (
-                            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 flex items-center justify-center transition-colors">
-                              <div className="h-4 w-4 rounded-full bg-black/60 text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-primary transition-all">
-                                <Play size={8} className="fill-white ml-0.5" />
-                              </div>
+        <div className="overflow-x-auto overflow-y-auto max-h-[495px] rounded-xl border border-border bg-card pr-1">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border sticky top-0 bg-card z-10">
+              <tr>
+                <th className="py-2 px-3">Preview</th>
+                <th className="py-2 px-3">Video Title</th>
+                <th className="py-2 px-3">Grid Order</th>
+                <th className="py-2 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {videos.map((v) => {
+                const videoIndex = videos.findIndex((item) => item.id === v.id);
+                return (
+                  <tr key={v.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="py-1.5 px-3">
+                      <div
+                        onClick={() => v.mediaUrl && onPreview(v)}
+                        className="h-8 w-14 rounded-md overflow-hidden border border-border bg-black flex items-center justify-center relative group cursor-pointer shrink-0"
+                        title={v.mediaUrl ? "Click to preview video" : ""}
+                      >
+                        {v.thumbnailUrl ? (
+                          <img
+                            src={resolveMediaUrl(v.thumbnailUrl)}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : v.mediaUrl ? (
+                          <video
+                            src={`${resolveMediaUrl(v.mediaUrl)}#t=1.2`}
+                            preload="metadata"
+                            className="h-full w-full object-cover pointer-events-none"
+                          />
+                        ) : (
+                          <Video size={12} className="text-muted-foreground" />
+                        )}
+                        {v.mediaUrl && (
+                          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 flex items-center justify-center transition-colors">
+                            <div className="h-4 w-4 rounded-full bg-black/60 text-white flex items-center justify-center group-hover:scale-110 group-hover:bg-primary transition-all">
+                              <Play size={8} className="fill-white ml-0.5" />
                             </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-1.5 px-3 font-semibold text-foreground max-w-sm truncate text-[11px]">
-                        {v.title}
-                      </td>
-                      <td className="py-1.5 px-3 text-muted-foreground font-mono text-[11px]">#{videoIndex + 1}</td>
-                      <td className="py-1.5 px-3 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          {v.mediaUrl && (
-                            <button
-                              type="button"
-                              onClick={() => onPreview(v)}
-                              className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                              title="Preview"
-                            >
-                              <Eye size={12} />
-                            </button>
-                          )}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-1.5 px-3 font-semibold text-foreground max-w-sm truncate text-[11px]">
+                      {v.title}
+                    </td>
+                    <td className="py-1.5 px-3 text-muted-foreground font-mono text-[11px]">#{videoIndex + 1}</td>
+                    <td className="py-1.5 px-3 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        {v.mediaUrl && (
                           <button
                             type="button"
-                            onClick={() => onEdit(v)}
+                            onClick={() => onPreview(v)}
                             className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                            title="Edit"
+                            title="Preview"
                           >
-                            <Pencil size={12} />
+                            <Eye size={12} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => onDelete(v)}
-                            className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {videos.length > 0 && (
-            <Pagination
-              currentPage={safePage}
-              totalPages={totalPages}
-              totalItems={videos.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-              itemLabel="videos"
-              compact
-            />
-          )}
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onEdit(v)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(v)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

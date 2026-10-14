@@ -11,6 +11,7 @@ import { loginAdmin, AuthError, DEMO_MODE, DEMO_CREDENTIALS, DEMO_ACCOUNTS } fro
 import ForgotPasswordForm from "@/auth/ForgotPasswordForm";
 import { ThemeToggle } from "@/hooks/theme";
 import { STORAGE_KEYS } from "@/config/storageKeys";
+import { getDefaultRouteForUser, isAuthenticated, getCurrentUser } from "@/auth/currentUser";
 
 export function LoginForm({ onSuccess }) {
   const [view, setView] = useState("login"); // 'login' | 'forgot'
@@ -176,10 +177,23 @@ export default function LoginPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const user = getCurrentUser();
+      navigate(getDefaultRouteForUser(user), { replace: true });
+    }
+  }, [navigate]);
+
   const handleSuccess = async (session) => {
     if (session?.token) {
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, session.token);
-      localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(session.user));
+      sessionStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, session.token);
+      sessionStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(session.user));
+      try {
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+      } catch {
+        // ignore
+      }
       try {
         const { refreshUserPermissions } = await import("@/auth/permissions");
         await refreshUserPermissions();
@@ -187,7 +201,7 @@ export default function LoginPage() {
         // fallback
       }
     }
-    navigate("/admin/dashboard");
+    navigate(getDefaultRouteForUser(session?.user));
   };
 
   return (

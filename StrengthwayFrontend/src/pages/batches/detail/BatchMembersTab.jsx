@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import Pagination from "@/components/table/Pagination";
+import { DataTable } from "@/components/table";
 import {
   Users,
   Plus,
@@ -11,7 +11,7 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { isAdmin } from "@/auth/currentUser";
+import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 
 export default function BatchMembersTab({
   batch,
@@ -25,8 +25,8 @@ export default function BatchMembersTab({
 }) {
   const navigate = useNavigate();
 
-  // Pagination for Primary Enrolled Members (5 members per page)
-  const PAGE_SIZE = 5;
+  // Pagination for Primary Enrolled Members (7 members per page)
+  const PAGE_SIZE = 7;
   const [currentPage, setCurrentPage] = useState(1);
 
   const totalPages = Math.ceil(filteredPrimaryMembers.length / PAGE_SIZE) || 1;
@@ -38,14 +38,9 @@ export default function BatchMembersTab({
     }
   }, [totalPages, currentPage]);
 
-  const paginatedPrimaryMembers = filteredPrimaryMembers.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
-  );
-
-  // Pagination for Inbound Flexible Attendees
+  // Pagination for Inbound Flexible Attendees (7 attendees per page)
   const [flexPage, setFlexPage] = useState(1);
-  const flexPageSize = 5;
+  const flexPageSize = 7;
   const totalFlexPages = Math.ceil(filteredFlexInMembers.length / flexPageSize) || 1;
   const safeFlexPage = Math.max(1, Math.min(flexPage, totalFlexPages));
 
@@ -55,203 +50,266 @@ export default function BatchMembersTab({
     }
   }, [totalFlexPages, flexPage]);
 
-  const paginatedFlexMembers = filteredFlexInMembers.slice(
-    (safeFlexPage - 1) * flexPageSize,
-    safeFlexPage * flexPageSize
+  // ─── 1. Declarative Columns for Primary Enrolled Members ───────────────────
+  const primaryMemberColumns = useMemo(
+    () => [
+      {
+        header: "Member",
+        cell: (mem) => {
+          const fullName = `${mem.firstName || ""} ${mem.lastName || ""}`.trim();
+          const initials = `${mem.firstName?.[0] || ""}${mem.lastName?.[0] || ""}`.toUpperCase();
+
+          return (
+            <div className="flex items-center gap-3">
+              {mem.photo ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(`${getRoleBasePath()}/trainers-members/members/${mem.id}`)}
+                  className="shrink-0 cursor-pointer focus:outline-none"
+                  title="View member profile"
+                >
+                  <img
+                    src={mem.photo}
+                    alt={fullName}
+                    className="h-9 w-9 rounded-xl object-cover border border-border/80 hover:scale-105 transition-all"
+                  />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate(`${getRoleBasePath()}/trainers-members/members/${mem.id}`)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs border border-primary/20 shadow-2xs hover:scale-105 transition-all cursor-pointer focus:outline-none"
+                  title="View member profile"
+                >
+                  {initials || "M"}
+                </button>
+              )}
+              <div className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => navigate(`${getRoleBasePath()}/trainers-members/members/${mem.id}`)}
+                  className="font-bold text-foreground text-xs sm:text-sm hover:text-primary hover:underline transition-colors cursor-pointer text-left truncate block"
+                >
+                  {fullName}
+                </button>
+                <span className="inline-flex items-center font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-2 py-0.5 rounded-md border border-border/50 mt-0.5">
+                  #{mem.id?.length > 7 ? mem.id.slice(-6).toUpperCase() : mem.id}
+                </span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Contact",
+        className: "whitespace-nowrap",
+        cell: (mem) => (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
+              <Phone size={12} className="text-muted-foreground shrink-0" />
+              <span>{mem.mobile || "—"}</span>
+            </div>
+            {mem.email && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Mail size={12} className="text-muted-foreground/70 shrink-0" />
+                <span className="truncate max-w-[190px]">{mem.email}</span>
+              </div>
+            )}
+          </div>
+        ),
+      },
+      {
+        header: "Gender",
+        className: "whitespace-nowrap",
+        cell: (mem) => (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted/60 text-foreground border border-border/60">
+            {mem.gender || "—"}
+          </span>
+        ),
+      },
+      {
+        header: "Flex Status",
+        className: "whitespace-nowrap",
+        cell: (mem) =>
+          mem.isFlexOutActive ? (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400 border border-amber-500/25 shadow-2xs"
+              title={mem.flexOutDetails?.map((f) => f.targetBatchName).join(", ")}
+            >
+              <CalendarRange size={12} className="text-amber-400 shrink-0" />
+              <span>Flex-Out ({mem.flexOutDetails?.[0]?.targetBatchName || "Active"})</span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground border border-border/50">
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+              <span>Primary Only</span>
+            </span>
+          ),
+      },
+      {
+        header: "Status",
+        className: "whitespace-nowrap",
+        cell: (mem) => (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2.5 py-1 text-xs font-semibold shadow-2xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{mem.status || "Active"}</span>
+          </span>
+        ),
+      },
+      {
+        header: "Actions",
+        align: "right",
+        className: "whitespace-nowrap",
+        cell: (mem) => (
+          <div className="flex items-center justify-end gap-1">
+            {isAdmin() && (
+              <button
+                type="button"
+                onClick={() =>
+                  onRemoveMember(
+                    mem.id,
+                    `${mem.firstName} ${mem.lastName || ""}`
+                  )
+                }
+                className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                title="Remove member from batch"
+              >
+                <Trash2 size={15} />
+              </button>
+            )}
+          </div>
+        ),
+      },
+    ],
+    [navigate, onRemoveMember]
+  );
+
+  // ─── 2. Declarative Columns for Inbound Flexible Attendees ─────────────────
+  const flexMemberColumns = useMemo(
+    () => [
+      {
+        header: "Member",
+        cell: (item) => (
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-xs font-bold text-amber-500 border border-amber-500/20 shadow-2xs">
+              {item.name?.charAt(0) || "M"}
+            </div>
+            <div>
+              <p className="font-bold text-foreground text-xs sm:text-sm">{item.name}</p>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                <span className="font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-2 py-0.5 rounded-md border border-border/50">
+                  #{item.memberId?.length > 7 ? item.memberId.slice(-6).toUpperCase() : item.memberId}
+                </span>
+                {item.mobile && <span className="text-[11px] font-medium">• {item.mobile}</span>}
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        header: "Home Batch",
+        className: "whitespace-nowrap",
+        cell: (item) => (
+          <span className="inline-flex items-center rounded-full bg-muted/60 border border-border/60 px-2.5 py-0.5 text-xs font-semibold text-foreground">
+            {item.primaryBatchName || "Home Batch"}
+          </span>
+        ),
+      },
+      {
+        header: "Permitted Days",
+        cell: (item) => (
+          <div className="flex flex-wrap gap-1">
+            {(item.selectedDays || []).map((day) => (
+              <span
+                key={day}
+                className="inline-flex items-center rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400"
+              >
+                {day.slice(0, 3)}
+              </span>
+            ))}
+          </div>
+        ),
+      },
+      {
+        header: "Validity Window",
+        className: "whitespace-nowrap font-mono text-xs text-muted-foreground",
+        cell: (item) => `${item.startDate} → ${item.endDate || "Ongoing"}`,
+      },
+      {
+        header: "Reason",
+        className: "text-xs text-muted-foreground max-w-xs truncate",
+        cell: (item) => item.reason || "Temporary flexible pass",
+      },
+      {
+        header: "Action",
+        align: "right",
+        className: "whitespace-nowrap",
+        cell: (item) => (
+          <div className="flex items-center justify-end">
+            {isAdmin() && (
+              <button
+                type="button"
+                onClick={() => onRevokeFlexPass(item.assignmentId, item.name)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                title="Revoke flexible pass"
+              >
+                <RotateCcw size={12} />
+                <span>Revoke Pass</span>
+              </button>
+            )}
+          </div>
+        ),
+      },
+    ],
+    [onRevokeFlexPass]
   );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
-      {/* Segment 1: Primary Enrolled Members Table */}
-      <div className="rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shadow-xs overflow-hidden flex flex-col justify-between">
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10 bg-muted/70 backdrop-blur-md border-b border-border/80 text-[11px] font-bold uppercase tracking-wider text-muted-foreground select-none">
-              <tr>
-                <th className="py-3 px-4 sm:px-5">Member</th>
-                <th className="py-3 px-4 sm:px-5">Contact</th>
-                <th className="py-3 px-4 sm:px-5">Gender</th>
-                <th className="py-3 px-4 sm:px-5">Flex Status</th>
-                <th className="py-3 px-4 sm:px-5">Status</th>
-                <th className="py-3 px-4 sm:px-5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs sm:text-sm divide-y divide-border/50 font-medium">
-              {filteredPrimaryMembers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 px-4 text-center">
-                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/60 border border-border/60 text-muted-foreground/60 mb-3">
-                        <Users size={24} />
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">
-                        No primary members found
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1 text-center">
-                        There are currently no members enrolled in this batch.
-                      </p>
-                      {isAdmin() && (
-                        <button
-                          type="button"
-                          onClick={onOpenAddMember}
-                          className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
-                        >
-                          <Plus size={14} />
-                          <span>Enroll Member in Batch</span>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedPrimaryMembers.map((mem) => {
-                  const fullName = `${mem.firstName || ""} ${mem.lastName || ""}`.trim();
-                  const initials = `${mem.firstName?.[0] || ""}${mem.lastName?.[0] || ""}`.toUpperCase();
-
-                  return (
-                    <tr
-                      key={mem.id}
-                      className="group hover:bg-muted/30 transition-colors"
-                    >
-                      {/* Member Info */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle">
-                        <div className="flex items-center gap-3">
-                          {mem.photo ? (
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/admin/trainers-members/members/${mem.id}`)}
-                              className="shrink-0 cursor-pointer focus:outline-none"
-                              title="View member profile"
-                            >
-                              <img
-                                src={mem.photo}
-                                alt={fullName}
-                                className="h-9 w-9 rounded-xl object-cover border border-border/80 hover:scale-105 transition-all"
-                              />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/admin/trainers-members/members/${mem.id}`)}
-                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs border border-primary/20 shadow-2xs hover:scale-105 transition-all cursor-pointer focus:outline-none"
-                              title="View member profile"
-                            >
-                              {initials || "M"}
-                            </button>
-                          )}
-                          <div className="min-w-0">
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/admin/trainers-members/members/${mem.id}`)}
-                              className="font-bold text-foreground text-xs sm:text-sm hover:text-primary hover:underline transition-colors cursor-pointer text-left truncate block"
-                            >
-                              {fullName}
-                            </button>
-                            <span className="inline-flex items-center font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-2 py-0.5 rounded-md border border-border/50 mt-0.5">
-                              #{mem.id?.length > 7 ? mem.id.slice(-6).toUpperCase() : mem.id}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Contact */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-xs text-foreground font-medium">
-                            <Phone size={12} className="text-muted-foreground shrink-0" />
-                            <span>{mem.mobile || "—"}</span>
-                          </div>
-                          {mem.email && (
-                            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                              <Mail size={12} className="text-muted-foreground/70 shrink-0" />
-                              <span className="truncate max-w-[190px]">{mem.email}</span>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Gender */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted/60 text-foreground border border-border/60">
-                          {mem.gender || "—"}
-                        </span>
-                      </td>
-
-                      {/* Flex Status */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
-                        {mem.isFlexOutActive ? (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400 border border-amber-500/25 shadow-2xs"
-                            title={mem.flexOutDetails
-                              ?.map((f) => f.targetBatchName)
-                              .join(", ")}
-                          >
-                            <CalendarRange size={12} className="text-amber-400 shrink-0" />
-                            <span>
-                              Flex-Out ({mem.flexOutDetails?.[0]?.targetBatchName || "Active"})
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground border border-border/50">
-                            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
-                            <span>Primary Only</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-2.5 py-1 text-xs font-semibold shadow-2xs">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span>{mem.status || "Active"}</span>
-                        </span>
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1">
-                          {isAdmin() && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                onRemoveMember(
-                                  mem.id,
-                                  `${mem.firstName} ${mem.lastName || ""}`
-                                )
-                              }
-                              className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                              title="Remove member from batch"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {/* Segment 1: Primary Enrolled Members Standardized Data Table */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+              Enrolled Primary Members
+            </h3>
+            <span className="rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-xs font-bold font-mono">
+              {filteredPrimaryMembers.length}
+            </span>
+          </div>
         </div>
 
-        {/* Pinned Pagination for Primary Members (5 per page, no per-page selector) */}
-        {filteredPrimaryMembers.length > 0 && (
-          <div className="p-3 border-t border-border/60 bg-muted/15">
-            <Pagination
-              currentPage={safePage}
-              totalPages={totalPages}
-              totalItems={filteredPrimaryMembers.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={(p) => setCurrentPage(p)}
-              itemLabel="members"
-              compact
-            />
-          </div>
-        )}
+        <DataTable
+          columns={primaryMemberColumns}
+          data={filteredPrimaryMembers}
+          keyField="id"
+          pageSize={PAGE_SIZE}
+          currentPage={safePage}
+          onPageChange={setCurrentPage}
+          totalItems={filteredPrimaryMembers.length}
+          totalPages={totalPages}
+          itemLabel="members"
+          showToolbar={false}
+          emptyIcon={Users}
+          emptyTitle="No primary members found"
+          emptyMessage="There are currently no members enrolled in this batch."
+          emptyAction={
+            isAdmin() ? (
+              <button
+                type="button"
+                onClick={onOpenAddMember}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-xs cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <Plus size={14} />
+                <span>Enroll Member in Batch</span>
+              </button>
+            ) : null
+          }
+          className="flex-1 min-h-0"
+        />
       </div>
 
-      {/* Segment 2: Inbound Flexible Attendees */}
+      {/* Segment 2: Inbound Flexible Attendees Standardized Data Table */}
       <div className="space-y-3 pt-4 border-t border-border">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
           <div>
@@ -286,120 +344,22 @@ export default function BatchMembersTab({
             </p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md shadow-xs overflow-hidden flex flex-col justify-between">
-            <div className="overflow-x-auto no-scrollbar">
-              <table className="w-full text-left border-collapse">
-                <thead className="sticky top-0 z-10 bg-muted/70 backdrop-blur-md border-b border-border/80 text-[11px] font-bold uppercase tracking-wider text-muted-foreground select-none">
-                  <tr>
-                    <th className="py-3 px-4 sm:px-5">Member</th>
-                    <th className="py-3 px-4 sm:px-5">Home Batch</th>
-                    <th className="py-3 px-4 sm:px-5">Permitted Days</th>
-                    <th className="py-3 px-4 sm:px-5">Validity Window</th>
-                    <th className="py-3 px-4 sm:px-5">Reason</th>
-                    <th className="py-3 px-4 sm:px-5 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs sm:text-sm divide-y divide-border/50 font-medium">
-                  {paginatedFlexMembers.map((item) => (
-                    <tr
-                      key={item.assignmentId || item.memberId}
-                      className="group hover:bg-muted/30 transition-colors"
-                    >
-                      {/* Member */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-xs font-bold text-amber-500 border border-amber-500/20 shadow-2xs">
-                            {item.name?.charAt(0) || "M"}
-                          </div>
-                          <div>
-                            <p className="font-bold text-foreground text-xs sm:text-sm">
-                              {item.name}
-                            </p>
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                              <span className="font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-2 py-0.5 rounded-md border border-border/50">
-                                #
-                                {item.memberId?.length > 7
-                                  ? item.memberId.slice(-6).toUpperCase()
-                                  : item.memberId}
-                              </span>
-                              {item.mobile && (
-                                <span className="text-[11px] font-medium">
-                                  • {item.mobile}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Home Batch */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
-                        <span className="inline-flex items-center rounded-full bg-muted/60 border border-border/60 px-2.5 py-0.5 text-xs font-semibold text-foreground">
-                          {item.primaryBatchName || "Home Batch"}
-                        </span>
-                      </td>
-
-                      {/* Permitted Days */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle">
-                        <div className="flex flex-wrap gap-1">
-                          {(item.selectedDays || []).map((day) => (
-                            <span
-                              key={day}
-                              className="inline-flex items-center rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400"
-                            >
-                              {day.slice(0, 3)}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-
-                      {/* Validity Window */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle text-xs text-muted-foreground font-mono whitespace-nowrap">
-                        {item.startDate} → {item.endDate || "Ongoing"}
-                      </td>
-
-                      {/* Reason */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle text-xs text-muted-foreground max-w-xs truncate">
-                        {item.reason || "Temporary flexible pass"}
-                      </td>
-
-                      {/* Action */}
-                      <td className="py-3.5 px-4 sm:px-5 align-middle text-right whitespace-nowrap">
-                        {isAdmin() && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              onRevokeFlexPass(item.assignmentId, item.name)
-                            }
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                            title="Revoke flexible pass"
-                          >
-                            <RotateCcw size={12} />
-                            <span>Revoke Pass</span>
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination for Inbound Flex Members if multi-page */}
-            {filteredFlexInMembers.length > flexPageSize && (
-              <div className="p-3 border-t border-border/60 bg-muted/15">
-                <Pagination
-                  currentPage={safeFlexPage}
-                  totalPages={totalFlexPages}
-                  totalItems={filteredFlexInMembers.length}
-                  pageSize={flexPageSize}
-                  onPageChange={(p) => setFlexPage(p)}
-                  itemLabel="attendees"
-                  compact
-                />
-              </div>
-            )}
-          </div>
+          <DataTable
+            columns={flexMemberColumns}
+            data={filteredFlexInMembers}
+            keyField="assignmentId"
+            pageSize={flexPageSize}
+            currentPage={safeFlexPage}
+            onPageChange={setFlexPage}
+            totalItems={filteredFlexInMembers.length}
+            totalPages={totalFlexPages}
+            itemLabel="attendees"
+            showToolbar={false}
+            emptyIcon={CalendarRange}
+            emptyTitle={`No Inbound Flexible Attendees in ${formattedMonthLabel}`}
+            emptyMessage="When members from other batches are granted flexible day passes to attend this batch slot, they will be tracked here."
+            className="flex-1 min-h-0"
+          />
         )}
       </div>
     </div>

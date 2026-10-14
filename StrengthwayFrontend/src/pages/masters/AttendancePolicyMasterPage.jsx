@@ -19,7 +19,7 @@ import {
   deleteHoliday,
 } from "@/lib/masterScheduleService";
 import { getBatches } from "@/lib/batchesService";
-import { Pagination } from "@/components/table";
+import { DataTable, Pagination } from "@/components/table";
 import { HolidayModal } from "./HolidayModal";
 import { TrainerLeavePolicyTab } from "./TrainerLeavePolicyTab";
 
@@ -94,16 +94,85 @@ export default function AttendancePolicyMasterPage() {
 
   // Viewport Pagination State
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 7;
   useEffect(() => {
     setPage(1);
   }, [searchQuery]);
   const totalPages = Math.max(1, Math.ceil(filteredHolidays.length / pageSize));
   const safePage = Math.max(1, Math.min(page, totalPages));
-  const paginatedHolidays = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return filteredHolidays.slice(start, start + pageSize);
-  }, [filteredHolidays, safePage, pageSize]);
+
+  const columns = useMemo(() => [
+    {
+      header: "Holiday Date",
+      accessorKey: "date",
+      cell: (holiday) => {
+        const isPast = holiday.date < new Date().toISOString().slice(0, 10);
+        return (
+          <span className="inline-flex items-center gap-1.5 font-bold text-foreground">
+            <Calendar size={13} className="text-primary shrink-0" />
+            <span>{holiday.date}</span>
+            {isPast && (
+              <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                Past
+              </span>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Name / Occasion",
+      accessorKey: "name",
+      className: "font-extrabold text-foreground",
+    },
+    {
+      header: "Type",
+      accessorKey: "type",
+      cell: (holiday) => (
+        <span className="rounded-full bg-muted/60 border border-border/60 px-2.5 py-0.5 text-xs font-semibold text-foreground">
+          {holiday.type}
+        </span>
+      ),
+    },
+    {
+      header: "Affected Batches",
+      accessorKey: "affectedBatches",
+      className: "text-xs text-muted-foreground font-medium",
+      cell: (holiday) => (
+        holiday.affectedBatches === "ALL" ? "All Batches & Shifts" : holiday.affectedBatches
+      ),
+    },
+    {
+      header: "Description",
+      accessorKey: "description",
+      className: "text-xs text-muted-foreground max-w-65 truncate",
+      cell: (holiday) => holiday.description || "—",
+    },
+    {
+      header: "Actions",
+      align: "right",
+      cell: (holiday) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => handleOpenEdit(holiday)}
+            className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
+            title="Edit holiday"
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDelete(holiday.id, holiday.name)}
+            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
+            title="Delete holiday"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
+    },
+  ], []);
 
   const handleOpenAdd = () => {
     setEditingHolidayId(null);
@@ -321,117 +390,22 @@ export default function AttendancePolicyMasterPage() {
             </div>
           </div>
 
-          {/* Holidays List Table Container */}
-          <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-            <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-              <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-                <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-                  <tr>
-                    <th className="py-2.5 px-4 sm:px-5">Holiday Date</th>
-                    <th className="py-2.5 px-4 sm:px-5">Name / Occasion</th>
-                    <th className="py-2.5 px-4 sm:px-5">Type</th>
-                    <th className="py-2.5 px-4 sm:px-5">Affected Batches</th>
-                    <th className="py-2.5 px-4 sm:px-5">Description</th>
-                    <th className="py-2.5 px-4 sm:px-5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs sm:text-sm font-medium">
-                  {loading ? (
-                    [1, 2, 3, 4, 5].map((i) => (
-                      <tr key={i} className="animate-pulse">
-                        <td colSpan={6} className="bg-card py-4 px-4 sm:px-5 border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r">
-                          <div className="h-4 bg-muted rounded w-3/4" />
-                        </td>
-                      </tr>
-                    ))
-                  ) : filteredHolidays.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="bg-card py-8 px-4 text-center text-muted-foreground border-y border-border/50 rounded-2xl border-x">
-                        No holidays found.
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedHolidays.map((holiday) => {
-                      const isPast = holiday.date < new Date().toISOString().slice(0, 10);
-                      return (
-                        <tr key={holiday.id} className="group transition-all duration-150 hover:-translate-y-px">
-                          {/* Holiday Date */}
-                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                            <span className="inline-flex items-center gap-1.5 font-bold text-foreground">
-                              <Calendar size={13} className="text-primary shrink-0" />
-                              <span>{holiday.date}</span>
-                              {isPast && (
-                                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                                  Past
-                                </span>
-                              )}
-                            </span>
-                          </td>
-
-                          {/* Name / Occasion */}
-                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors font-extrabold text-foreground">
-                            {holiday.name}
-                          </td>
-
-                          {/* Type */}
-                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                            <span className="rounded-full bg-muted/60 border border-border/60 px-2.5 py-0.5 text-xs font-semibold text-foreground">
-                              {holiday.type}
-                            </span>
-                          </td>
-
-                          {/* Affected Batches */}
-                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground font-medium">
-                            {holiday.affectedBatches === "ALL"
-                              ? "All Batches & Shifts"
-                              : holiday.affectedBatches}
-                          </td>
-
-                          {/* Description */}
-                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-xs text-muted-foreground max-w-65 truncate">
-                            {holiday.description || "—"}
-                          </td>
-
-                          {/* Actions */}
-                          <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEdit(holiday)}
-                                className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
-                                title="Edit holiday"
-                              >
-                                <Pencil size={14} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(holiday.id, holiday.name)}
-                                className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all cursor-pointer hover:scale-105 active:scale-95"
-                                title="Delete holiday"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pinned Bottom Pagination */}
-          <Pagination
+          {/* Standardized Holidays List Data Table */}
+          <DataTable
+            columns={columns}
+            data={filteredHolidays}
+            pageSize={pageSize}
             currentPage={safePage}
-            totalPages={totalPages}
             onPageChange={setPage}
             totalItems={filteredHolidays.length}
-            pageSize={pageSize}
-            itemName="holidays"
-            compact
-            className="shrink-0 mt-auto"
+            totalPages={totalPages}
+            itemLabel="holidays"
+            loading={loading}
+            loadingRowsCount={7}
+            showToolbar={false}
+            emptyTitle="No holidays found."
+            emptyMessage="Try adjusting your search query or add a new scheduled holiday."
+            className="flex-1 min-h-0"
           />
         </>
       )}

@@ -1,17 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  Filter,
-  Layers,
-  Clock,
-  Sparkles,
   RefreshCw,
-  Dumbbell,
-  ArrowLeftRight,
 } from "lucide-react";
 import { getClassCalendar } from "@/lib/classProgramService";
+import { MonthPicker } from "@/components/ui/MonthPicker";
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -65,17 +58,11 @@ export function ClassMonthlyCalendarView({
     loadCalendarSessions();
   }, [loadCalendarSessions]);
 
-  // Month navigation
-  const handlePrevMonth = () => {
-    setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
-  };
-
-  const handleCurrentMonth = () => {
-    setCurrentDate(new Date());
+  // Handle month/year change from MonthPicker
+  const handleMonthChange = (newYM) => {
+    if (!newYM || !/^\d{4}-\d{2}$/.test(newYM)) return;
+    const [y, m] = newYM.split("-").map(Number);
+    setCurrentDate(new Date(y, m - 1, 1));
   };
 
   const monthLabel = currentDate.toLocaleDateString("en-US", {
@@ -116,6 +103,14 @@ export function ClassMonthlyCalendarView({
       });
     }
 
+    // Trailing blank cells to complete the last week row
+    const remainder = cells.length % 7;
+    if (remainder > 0) {
+      for (let i = 0; i < 7 - remainder; i++) {
+        cells.push({ isCurrentMonth: false, dateStr: "", dayNumber: null });
+      }
+    }
+
     return cells;
   }, [year, month]);
 
@@ -142,47 +137,33 @@ export function ClassMonthlyCalendarView({
   }, [sessions]);
 
   return (
-    <div className="space-y-2.5 animate-in fade-in duration-150">
-      {/* Month Toolbar & Controls */}
+    <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5 overflow-hidden animate-in fade-in duration-150">
+      {/* Month Toolbar & Controls - Fixed at top */}
       <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-2.5 sm:p-3 shadow-xs lg:flex-row lg:items-center lg:justify-between shrink-0">
         {/* Month Navigator */}
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0">
-            <CalendarDays size={16} />
-          </span>
-          <div>
-            <h2 className="text-base sm:text-lg font-extrabold text-foreground">
-              {monthLabel}
-            </h2>
-            <p className="text-[11px] text-muted-foreground">
-              Month-wise multi-batch scheduled classes matrix
-            </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10 text-accent shrink-0">
+              <CalendarDays size={16} />
+            </span>
+            <div>
+              <h2 className="text-base sm:text-lg font-extrabold text-foreground leading-tight">
+                {monthLabel}
+              </h2>
+              <p className="text-[11px] text-muted-foreground">
+                Month-wise multi-batch scheduled classes matrix
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 ml-2">
-            <button
-              type="button"
-              onClick={handlePrevMonth}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
-              title="Previous Month"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={handleCurrentMonth}
-              className="rounded-lg px-2 py-0.5 text-xs font-bold text-accent hover:bg-accent/10 cursor-pointer transition-colors"
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              onClick={handleNextMonth}
-              className="rounded-lg p-1 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
-              title="Next Month"
-            >
-              <ChevronRight size={16} />
-            </button>
+          {/* Month & Year Picker with Previous & Next Month Navigation buttons */}
+          <div className="flex items-center ml-0 sm:ml-2">
+            <MonthPicker
+              value={monthStr}
+              onChange={handleMonthChange}
+              align="left"
+              showTodayButton={true}
+            />
           </div>
         </div>
 
@@ -237,7 +218,7 @@ export function ClassMonthlyCalendarView({
         </div>
       </div>
 
-      {/* Month Summary KPI Bar */}
+      {/* Month Summary KPI Bar - Fixed */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs shrink-0">
         <div className="rounded-xl border border-border bg-card p-2.5 shadow-xs">
           <span className="text-[10px] text-muted-foreground font-bold uppercase block">
@@ -273,10 +254,10 @@ export function ClassMonthlyCalendarView({
         </div>
       </div>
 
-      {/* Calendar Matrix Grid */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
-        {/* Days of Week Header */}
-        <div className="grid grid-cols-7 border-b border-border bg-muted/30 text-center text-xs font-bold text-foreground">
+      {/* Calendar Matrix Grid - Fixed weekday header + vertically scrollable calendar weeks */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+        {/* Days of Week Header - Fixed in place */}
+        <div className="shrink-0 grid grid-cols-7 border-b border-border bg-muted/40 text-center text-xs font-bold text-foreground z-10">
           {DAYS_OF_WEEK.map((d) => (
             <div key={d} className="py-2 px-1 truncate">
               <span className="hidden sm:inline">{d}</span>
@@ -285,14 +266,14 @@ export function ClassMonthlyCalendarView({
           ))}
         </div>
 
-        {/* Calendar Day Cells */}
-        <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-border/60">
+        {/* Calendar Day Cells - Independently scrollable vertically */}
+        <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-7 gap-px bg-border/60">
           {calendarCells.map((cell, idx) => {
             if (!cell.isCurrentMonth) {
               return (
                 <div
                   key={`blank-${idx}`}
-                  className="min-h-20 sm:min-h-24 bg-muted/10 p-1.5"
+                  className="min-h-24 sm:min-h-28 bg-muted/10 p-1.5"
                 />
               );
             }
@@ -302,14 +283,14 @@ export function ClassMonthlyCalendarView({
             return (
               <div
                 key={cell.dateStr}
-                className={`min-h-20 sm:min-h-24 p-1.5 flex flex-col justify-between transition-colors hover:bg-muted/20 ${
+                className={`min-h-24 sm:min-h-28 p-1.5 flex flex-col justify-between transition-colors ${
                   cell.isToday
-                    ? "bg-accent/5 ring-1 ring-inset ring-accent/30"
-                    : "bg-card"
+                    ? "bg-card ring-1 ring-inset ring-accent/40"
+                    : "bg-card hover:bg-muted/30"
                 }`}
               >
                 {/* Cell Header: Day Number & Count */}
-                <div className="flex items-center justify-between pb-1">
+                <div className="flex items-center justify-between pb-1 shrink-0">
                   <span
                     className={`flex h-5 w-5 sm:h-5.5 sm:w-5.5 items-center justify-center rounded-full text-[11px] font-bold ${
                       cell.isToday
@@ -328,7 +309,7 @@ export function ClassMonthlyCalendarView({
                 </div>
 
                 {/* Day Sessions List */}
-                <div className="space-y-1 flex-1 overflow-y-auto max-h-20 pr-0.5 no-scrollbar">
+                <div className="space-y-1 flex-1 overflow-y-auto max-h-24 pr-0.5 no-scrollbar">
                   {daySessions.map((s) => (
                     <div
                       key={s.id}

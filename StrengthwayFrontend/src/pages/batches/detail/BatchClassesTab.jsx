@@ -24,6 +24,7 @@ import Pagination from "@/components/table/Pagination";
 import { hasClassStarted } from "@/lib/batchUtils";
 import { ShuffleClassModal } from "../../schedule/components/ShuffleClassModal";
 import { ScheduleHistoryDrawer } from "../../schedule/components/ScheduleHistoryDrawer";
+import { isSessionEligibleForInterchange } from "@/lib/classInterchangeUtils";
 import { isAdmin, isMember, isTrainer, getCurrentUser } from "@/auth/currentUser";
 
 const MONTH_NAMES = [
@@ -231,35 +232,6 @@ export default function BatchClassesTab({
             })}
           </div>
 
-          {/* Week Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs font-semibold pt-1">
-            <button
-              type="button"
-              onClick={() => setSelectedWeekFilter("all")}
-              className={`rounded-xl px-3 py-1.5 transition-all cursor-pointer ${
-                selectedWeekFilter === "all"
-                  ? "bg-primary text-background font-bold shadow-xs border border-transparent"
-                  : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              All Weeks
-            </button>
-            {[1, 2, 3, 4].map((wk) => (
-              <button
-                key={wk}
-                type="button"
-                onClick={() => setSelectedWeekFilter(wk)}
-                className={`rounded-xl px-3 py-1.5 transition-all cursor-pointer ${
-                  selectedWeekFilter === wk
-                    ? "bg-primary text-background font-bold shadow-xs border border-transparent"
-                    : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                Week {wk}
-              </button>
-            ))}
-          </div>
-
           {/* Today's Conduction & Coach Session Notes Overview Banner */}
           {sessionsTab === "Today" && displayedSessions.length > 0 && (
             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-xs mb-1">
@@ -348,7 +320,7 @@ export default function BatchClassesTab({
                       : [{ id: myTrainerId || "TRN-101", name: currentUser.name || "Assigned Coach", role: "Faculty Coach" }]);
 
                 const notesForThisSession = (sessionNotes || []).filter(
-                  (n) => n.sessionId === session.id
+                  (n) => n.sessionId === session.id && (!userIsTrainer || n.trainerId === myTrainerId)
                 );
 
                 const submittedNotesForSession = notesForThisSession.filter(
@@ -440,7 +412,9 @@ export default function BatchClassesTab({
                           </span>
                           {(isEligibleForNotes || submittedCount > 0) && (
                             <span className="text-[10px] text-muted-foreground/80 font-mono">
-                              {submittedCount}/{assignedCoaches.length} notes
+                              {userIsTrainer
+                                ? (submittedCount > 0 ? "1 note" : "0 notes")
+                                : `${submittedCount}/${assignedCoaches.length} notes`}
                             </span>
                           )}
                         </div>
@@ -450,6 +424,19 @@ export default function BatchClassesTab({
                             const coachNote = notesForThisSession.find((n) => n.trainerId === coach.id);
                             const isSubmitted = !!(coachNote && coachNote.sessionSummary?.trim());
                             const isMyCoach = userIsTrainer && coach.id === myTrainerId;
+
+                            // When logged in as trainer, restrict interactive notes button to own coach profile only
+                            if (userIsTrainer && !isMyCoach) {
+                              return (
+                                <span
+                                  key={coach.id}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-2 py-1 text-[11px] text-muted-foreground"
+                                  title={`Assigned Faculty: ${coach.name}`}
+                                >
+                                  <span className="font-semibold truncate max-w-[130px]">{coach.name}</span>
+                                </span>
+                              );
+                            }
 
                             if (isEligibleForNotes || isSubmitted) {
                               return (
@@ -506,7 +493,7 @@ export default function BatchClassesTab({
                           })}
 
                           {hasMoreCoaches && (
-                            (isEligibleForNotes || submittedCount > 0) ? (
+                            (!userIsTrainer && (isEligibleForNotes || submittedCount > 0)) ? (
                               <button
                                 type="button"
                                 onClick={() => onOpenNotes(session, "")}
@@ -614,7 +601,7 @@ export default function BatchClassesTab({
                               <span>Edit Item</span>
                             </button>
 
-                            {!isCompleted && !isCancelled && currentBatchSessions.length >= 2 && (
+                            {!isCompleted && !isCancelled && isSessionEligibleForInterchange(session, batch) && currentBatchSessions.length >= 2 && (
                               <button
                                 type="button"
                                 onClick={() => handleOpenShuffle(session.id)}

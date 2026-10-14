@@ -4,6 +4,7 @@ import { Quote } from "lucide-react";
 import { getTrainerPhoto } from "@/lib/trainersService";
 import { getBatches } from "@/lib/batchesService";
 import { CertifiedAccreditations } from "./CertifiedAccreditations";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 /**
  * Reusable Trainer Profile Component
@@ -202,7 +203,7 @@ export function TrainerProfileView({
                       isAdmin ? (
                         <Link
                           key={b.id}
-                          to={`/admin/batches/${b.id}`}
+                          to={`${getRoleBasePath()}/batches/${b.id}`}
                           className="inline-flex items-center rounded-lg bg-muted border border-border px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-card hover:border-accent transition-colors"
                         >
                           <span>{b.name}</span>

@@ -9,6 +9,7 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function TrainerDailyRoster({
   searchQuery,
@@ -71,7 +72,7 @@ export function TrainerDailyRoster({
                       </div>
                       <div>
                         <Link
-                          to={`/admin/trainers-members/trainers/${trainer.id}`}
+                          to={`${getRoleBasePath()}/trainers-members/trainers/${trainer.id}`}
                           className="font-bold text-foreground text-sm hover:text-accent transition-colors flex items-center gap-1.5"
                         >
                           <span>{trainer.name}</span>
@@ -108,7 +109,7 @@ export function TrainerDailyRoster({
                         {assignedBatchObjects.map((b) => (
                           <Link
                             key={b.id}
-                            to={`/admin/batches/${b.id}`}
+                            to={`${getRoleBasePath()}/batches/${b.id}`}
                             className="inline-flex items-center gap-1 rounded-xl bg-card border border-border px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted transition-colors"
                           >
                             <Layers size={11} className="text-accent" />

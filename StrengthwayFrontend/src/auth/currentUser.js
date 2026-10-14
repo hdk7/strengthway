@@ -38,13 +38,14 @@ export function formatDisplayRole(role) {
 }
 
 /**
- * Retrieves the currently logged-in user from localStorage.
+ * Retrieves the currently logged-in user from the current tab's sessionStorage.
+ * This guarantees that each browser tab maintains its own independent session.
  */
 export function getCurrentUser() {
-  if (typeof window === "undefined") return FALLBACK_ADMIN;
+  if (typeof window === "undefined") return null;
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
+    const raw = sessionStorage.getItem(STORAGE_KEYS.AUTH_USER);
     if (raw) {
       const user = JSON.parse(raw);
       let name = user.name;
@@ -72,16 +73,16 @@ export function getCurrentUser() {
     // fallback
   }
 
-  return FALLBACK_ADMIN;
+  return isAuthenticated() ? FALLBACK_ADMIN : null;
 }
 
 /**
- * Checks whether an auth token exists in localStorage.
+ * Checks whether an auth token exists in the current tab's sessionStorage.
  */
 export function isAuthenticated() {
   if (typeof window === "undefined") return false;
   try {
-    const token = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const token = sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     return Boolean(token && token.trim().length > 0);
   } catch {
     return false;
@@ -89,10 +90,48 @@ export function isAuthenticated() {
 }
 
 /**
+ * Persists user session into the current tab's isolated sessionStorage.
+ */
+export function setAuthSession(token, user) {
+  if (typeof window === "undefined") return;
+  try {
+    if (token) {
+      sessionStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    }
+    if (user) {
+      sessionStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(user));
+    }
+    // Clear localStorage credentials so tabs cannot bleed auth state
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Clears authentication session for the current tab only.
+ */
+export function clearAuthSession() {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    sessionStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+    sessionStorage.removeItem("strengthway_user_permissions");
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+  } catch {
+    // ignore
+  }
+}
+
+/**
  * Returns true if the current user possesses one of the allowed roles.
  */
 export function hasRole(...allowedRoles) {
+  if (!isAuthenticated()) return false;
   const user = getCurrentUser();
+  if (!user) return false;
   const normalizedAllowed = allowedRoles.map((r) => normalizeRole(r));
   return normalizedAllowed.includes(user.role);
 }
@@ -109,3 +148,23 @@ export function isMember() {
   return hasRole("member");
 }
 
+/**
+ * Returns the base URL path prefix according to user role ('/trainer', '/member', '/admin').
+ */
+export function getRoleBasePath(role) {
+  const r = normalizeRole(role || getCurrentUser()?.role);
+  if (r === "trainer") return "/trainer";
+  if (r === "member") return "/member";
+  return "/admin";
+}
+
+/**
+ * Returns the primary landing dashboard route for the user.
+ */
+export function getDefaultRouteForUser(user) {
+  const u = user || getCurrentUser();
+  const r = normalizeRole(u?.role);
+  if (r === "trainer") return "/trainer/dashboard";
+  if (r === "member") return "/member/dashboard";
+  return "/admin/dashboard";
+}

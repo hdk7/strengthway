@@ -14,7 +14,7 @@ import {
 import { getBatches } from "@/lib/batchesService";
 import { createInquiry } from "@/lib/inquiriesService";
 import { checkProfileAccount } from "@/lib/usersService";
-import { isMember } from "@/auth/currentUser";
+import { isMember, isTrainer } from "@/auth/currentUser";
 import ProfileAccountModal from "@/pages/users/ProfileAccountModal";
 import BatchTransferModal from "@/pages/batches/components/BatchTransferModal";
 import ContactLeadModal from "@/pages/inquiries/ContactLeadModal";
@@ -310,7 +310,7 @@ export default function MemberProfilePage() {
         </p>
         <button
           type="button"
-          onClick={() => navigate(isMember() ? "/admin/dashboard" : "/admin/trainers-members/members")}
+          onClick={() => navigate(isMember() ? "/member/dashboard" : isTrainer() ? "/trainer/trainers-members/members" : "/admin/trainers-members/members")}
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />

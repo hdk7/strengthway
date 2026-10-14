@@ -415,7 +415,7 @@ export default function TrainersAttendancePage() {
 
   // Pagination State for Daily Faculty Roster
   const [dailyPage, setDailyPage] = useState(1);
-  const dailyPageSize = 5;
+  const dailyPageSize = 7;
   useEffect(() => {
     setDailyPage(1);
   }, [selectedShift, searchQuery, selectedDate, statusFilter]);
@@ -429,7 +429,7 @@ export default function TrainersAttendancePage() {
 
   // Pagination State for Monthly Faculty Ledger
   const [monthlyPage, setMonthlyPage] = useState(1);
-  const monthlyPageSize = 5;
+  const monthlyPageSize = 7;
   useEffect(() => {
     setMonthlyPage(1);
   }, [selectedMonth]);
@@ -598,7 +598,7 @@ export default function TrainersAttendancePage() {
 
       {/* Fixed / Sticky Viewport Bottom Pagination (Daily & Monthly) */}
       {viewMode !== "leaveTracker" && (
-        <div className="shrink-0 mt-auto">
+        <div className="shrink-0 mt-auto pt-2 border-t border-border/40 bg-background/95 backdrop-blur-xs">
           {viewMode === "daily" ? (
             <Pagination
               currentPage={safeDailyPage}

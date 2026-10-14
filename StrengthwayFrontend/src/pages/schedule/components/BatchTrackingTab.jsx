@@ -1,6 +1,7 @@
 import { Boxes, Users, ArrowUpRight, Plus } from "lucide-react";
 import { hasClassStarted } from "@/lib/batchUtils";
 import { getTailwindWidth } from "@/lib/tailwindUtils";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function BatchTrackingTab({
   viewingBatchTracking,
@@ -80,7 +81,7 @@ export function BatchTrackingTab({
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => navigate(`/admin/batches/${batchTrack.batchId}`)}
+                    onClick={() => navigate(`${getRoleBasePath()}/batches/${batchTrack.batchId}`)}
                     className="inline-flex items-center gap-1 rounded-xl border border-border bg-card hover:bg-muted text-foreground px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer"
                   >
                     <span>View Batch Page</span>

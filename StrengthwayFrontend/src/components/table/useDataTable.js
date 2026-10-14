@@ -3,7 +3,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 export function useDataTable({
   data = [],
   columns = [],
-  pageSize = 5,
+  pageSize = 7,
   dateField,
   filterKey,
   searchFields = [],
@@ -20,13 +20,21 @@ export function useDataTable({
   sortOrder: controlledSortOrder,
   onSort: controlledOnSort,
   filterDropdown,
+  currentPage: controlledCurrentPage,
+  onPageChange: controlledOnPageChange,
 }) {
   const [internalSearch, setInternalSearch] = useState("");
   const [internalFilter, setInternalFilter] = useState("All");
   const [internalSortBy, setInternalSortBy] = useState(defaultSortBy);
   const [internalSortOrder, setInternalSortOrder] = useState(defaultSortOrder);
   const [internalDateRange, setInternalDateRange] = useState({ startDate: "", endDate: "" });
-  const [currentPage, setCurrentPage] = useState(1);
+  const [internalCurrentPage, setInternalCurrentPage] = useState(1);
+
+  const currentPage = controlledCurrentPage !== undefined ? controlledCurrentPage : internalCurrentPage;
+  const setCurrentPage = (page) => {
+    if (controlledOnPageChange) controlledOnPageChange(page);
+    else setInternalCurrentPage(page);
+  };
 
   // Auto reset to page 1 when data length changes
   const prevLenRef = useRef(data.length);

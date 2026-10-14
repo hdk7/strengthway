@@ -260,4 +260,56 @@ describe("Session Notes Module Suite (Multi-Trainer, 30-Day Window, RBAC)", () =
     expect(t2.status).toBe("Submitted");
     expect(t2.note.followUpRequired).toBe(true);
   });
+
+  test("Trainer 1 querying notes for batch only receives their own notes", async () => {
+    const res = await request(app)
+      .get(`/api/v1/session-notes?batchId=${testBatchId}`)
+      .set("Authorization", `Bearer ${trainer1Token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    // Should ONLY contain trainer 1 notes
+    expect(res.body.data.length).toBeGreaterThan(0);
+    res.body.data.forEach((note) => {
+      expect(note.trainerId).toBe(testTrainerId1);
+    });
+  });
+
+  test("Trainer 1 cannot access Trainer 2 notes by passing trainerId query param", async () => {
+    const res = await request(app)
+      .get(`/api/v1/session-notes?batchId=${testBatchId}&trainerId=${testTrainerId2}`)
+      .set("Authorization", `Bearer ${trainer1Token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    // Backend strictly enforces authenticated trainer ID, ignoring the requested trainerId
+    res.body.data.forEach((note) => {
+      expect(note.trainerId).toBe(testTrainerId1);
+    });
+  });
+
+  test("Trainer 1 cannot access Trainer 2 note by note ID (403 Forbidden)", async () => {
+    // Find trainer 2 note
+    const t2Note = await SessionNote.findOne({ sessionId: testSessionId, trainerId: testTrainerId2 });
+    expect(t2Note).toBeDefined();
+
+    const res = await request(app)
+      .get(`/api/v1/session-notes/${t2Note.id}`)
+      .set("Authorization", `Bearer ${trainer1Token}`);
+
+    expect(res.status).toBe(403);
+    expect(res.body.message).toMatch(/only view their own/i);
+  });
+
+  test("Admin can view notes from all trainers for the batch", async () => {
+    const res = await request(app)
+      .get(`/api/v1/session-notes?batchId=${testBatchId}`)
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    const trainerIds = res.body.data.map((n) => n.trainerId);
+    expect(trainerIds).toContain(testTrainerId1);
+    expect(trainerIds).toContain(testTrainerId2);
+  });
 });

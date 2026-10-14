@@ -9,13 +9,12 @@ async function getAll(req, res, next) {
     const { sessionId, batchId, trainerId, date } = req.query;
     let targetTrainerId = trainerId;
 
-    // If logged-in user is a trainer and NO batchId or sessionId was specified,
-    // default to only their own notes for global listing.
+    // Enforce backend security: If logged-in user is a trainer,
+    // filter notes strictly using the authenticated trainer's ID.
+    // Ensure trainers cannot access another trainer's notes through API requests
+    // or by changing URL parameters.
     if (req.user && req.user.role === "trainer") {
-      const loggedInTrainerId = req.user.trainerId || req.user.id;
-      if (!batchId && !sessionId && !targetTrainerId) {
-        targetTrainerId = loggedInTrainerId;
-      }
+      targetTrainerId = req.user.trainerId || req.user.id;
     }
 
     const notes = await sessionNoteService.getSessionNotes({
@@ -34,21 +33,15 @@ async function getById(req, res, next) {
   try {
     const note = await sessionNoteService.getNoteById(req.params.id);
 
-    // If logged-in user is a trainer, ensure they can view their own note
-    // or notes for classes in batches/sessions they are assigned to
+    // Enforce backend security: If logged-in user is a trainer,
+    // ensure they can ONLY EVER view their own note!
+    // Cannot access another trainer's notes even if assigned to the same class/batch.
     if (req.user && req.user.role === "trainer") {
       const loggedInTrainerId = req.user.trainerId || req.user.id;
       if (note.trainerId !== loggedInTrainerId) {
-        const isAssigned = await sessionNoteService.isTrainerAssignedToSessionOrBatch(
-          loggedInTrainerId,
-          note.sessionId,
-          note.batchId
+        throw new ForbiddenError(
+          "Access denied. Trainers can only view their own session notes."
         );
-        if (!isAssigned) {
-          throw new ForbiddenError(
-            "Access denied. Trainers can only view notes for their assigned batches and classes."
-          );
-        }
       }
     }
 

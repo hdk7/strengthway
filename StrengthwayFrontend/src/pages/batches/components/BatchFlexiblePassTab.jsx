@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { useState, useEffect, useMemo } from "react";
 import { CheckCircle2, ShieldAlert, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -6,6 +5,12 @@ import {
   createFlexibleBatchAssignment,
   getBatchCapacityCheck,
 } from "@/lib/batchesService";
+import {
+  SelectField,
+  InputField,
+  TextareaField,
+  CheckboxField,
+} from "@/components/form";
 
 const DAYS_OF_WEEK = [
   "Monday",
@@ -163,29 +168,25 @@ export default function BatchFlexiblePassTab({
       </div>
 
       {/* Target Batch Select */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-foreground">
-          Target Batch <span className="text-destructive">*</span>
-        </label>
-        <select
-          value={flexTargetBatchId}
-          onChange={(e) => setFlexTargetBatchId(e.target.value)}
-          required
-          className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground focus:border-primary focus:outline-none"
-        >
-          <option value="">Select target batch...</option>
-          {allBatches
+      <SelectField
+        label="Target Batch"
+        required
+        value={flexTargetBatchId}
+        onChange={(e) => setFlexTargetBatchId(e.target.value)}
+        options={[
+          { value: "", label: "Select target batch..." },
+          ...allBatches
             .filter((b) => b.id !== (currentBatch?.id || effectiveMember?.batchId))
             .map((b) => {
               const isInactive = b.status === "Inactive";
-              return (
-                <option key={b.id} value={b.id} disabled={isInactive}>
-                  {b.name} ({b.timingLabel}) • {b.daysPattern} {isInactive ? "[INACTIVE]" : ""}
-                </option>
-              );
-            })}
-        </select>
-      </div>
+              return {
+                value: b.id,
+                disabled: isInactive,
+                label: `${b.name} (${b.timingLabel}) • ${b.daysPattern} ${isInactive ? "[INACTIVE]" : ""}`,
+              };
+            }),
+        ]}
+      />
 
       {/* Target Batch Inactive Warning */}
       {selectedFlexBatch?.status === "Inactive" && (
@@ -237,49 +238,33 @@ export default function BatchFlexiblePassTab({
 
       {/* Date Window */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground">
-            Start Date <span className="text-destructive">*</span>
-          </label>
-          <input
-            type="date"
-            value={flexStartDate}
-            onChange={(e) => setFlexStartDate(e.target.value)}
-            required
-            className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:border-primary focus:outline-none"
-          />
-        </div>
+        <InputField
+          label="Start Date"
+          type="date"
+          required
+          value={flexStartDate}
+          onChange={(e) => setFlexStartDate(e.target.value)}
+        />
 
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-foreground">
-            End Date (Optional)
-          </label>
-          <input
-            type="date"
-            value={isOngoingPass ? "" : flexEndDate}
-            disabled={isOngoingPass}
-            onChange={(e) => setFlexEndDate(e.target.value)}
-            className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:border-primary focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
-          />
-        </div>
+        <InputField
+          label="End Date (Optional)"
+          type="date"
+          value={isOngoingPass ? "" : flexEndDate}
+          disabled={isOngoingPass}
+          onChange={(e) => setFlexEndDate(e.target.value)}
+        />
       </div>
 
       {/* Ongoing Weekly Pass Toggle */}
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="ongoingPassToggle"
-          checked={isOngoingPass}
-          onChange={(e) => {
-            setIsOngoingPass(e.target.checked);
-            if (e.target.checked) setFlexEndDate("");
-          }}
-          className="rounded border-border text-primary focus:ring-primary h-4 w-4 cursor-pointer"
-        />
-        <label htmlFor="ongoingPassToggle" className="text-xs text-foreground font-medium cursor-pointer select-none">
-          Ongoing Weekly Pass (no fixed end date)
-        </label>
-      </div>
+      <CheckboxField
+        id="ongoingPassToggle"
+        checked={isOngoingPass}
+        onChange={(e) => {
+          setIsOngoingPass(e.target.checked);
+          if (e.target.checked) setFlexEndDate("");
+        }}
+        label="Ongoing Weekly Pass (no fixed end date)"
+      />
 
       {/* Live Capacity Indicator */}
       {isLoadingFlexCapacity && (
@@ -319,19 +304,15 @@ export default function BatchFlexiblePassTab({
       )}
 
       {/* Reason Field */}
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold text-slate-800 dark:text-foreground">
-          Flex Pass Reason & Notes <span className="text-rose-500">*</span>
-        </label>
-        <textarea
-          value={flexReason}
-          onChange={(e) => setFlexReason(e.target.value)}
-          placeholder="e.g., Attending Wednesday Evening strength session due to morning conflict..."
-          rows={2}
-          required
-          className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 p-3 text-xs text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:border-blue-600 focus:bg-white dark:focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-100 resize-none"
-        />
-      </div>
+      <TextareaField
+        label="Flex Pass Reason & Notes"
+        required
+        rows={2}
+        resize="vertical"
+        value={flexReason}
+        onChange={(e) => setFlexReason(e.target.value)}
+        placeholder="e.g., Attending Wednesday Evening strength session due to morning conflict..."
+      />
 
       {/* Footer Buttons */}
       <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-border/60">
@@ -345,7 +326,12 @@ export default function BatchFlexiblePassTab({
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || !flexTargetBatchId || flexSelectedDays.length === 0 || selectedFlexBatch?.status === "Inactive"}
+          disabled={
+            isSubmitting ||
+            !flexTargetBatchId ||
+            flexSelectedDays.length === 0 ||
+            selectedFlexBatch?.status === "Inactive"
+          }
           className="inline-flex items-center gap-2 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting && <Loader2 size={14} className="animate-spin" />}

@@ -1,5 +1,5 @@
 import { Phone, Mail, FileCheck, UserCheck, Loader2, RotateCcw } from "lucide-react";
-import { isAdmin } from "@/auth/currentUser";
+import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 
 export default function MemberTableRow({
   member,
@@ -32,7 +32,7 @@ export default function MemberTableRow({
           {member.photo ? (
             <button
               type="button"
-              onClick={() => onNavigate(`/admin/trainers-members/members/${member.id}`)}
+              onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
               title="View full member profile"
               className="shrink-0 cursor-pointer focus:outline-none"
             >
@@ -45,7 +45,7 @@ export default function MemberTableRow({
           ) : (
             <button
               type="button"
-              onClick={() => onNavigate(`/admin/trainers-members/members/${member.id}`)}
+              onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
               title="View full member profile"
               className="grid h-8 w-8 sm:h-8.5 sm:w-8.5 shrink-0 place-items-center rounded-full bg-accent/15 text-accent font-bold text-xs border border-accent/20 hover:scale-105 transition-all cursor-pointer focus:outline-none"
             >
@@ -55,7 +55,7 @@ export default function MemberTableRow({
           <div>
             <button
               type="button"
-              onClick={() => onNavigate(`/admin/trainers-members/members/${member.id}`)}
+              onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
               className="font-bold text-xs sm:text-sm text-foreground hover:text-accent hover:underline text-left cursor-pointer transition-colors"
             >
               {fullName}
@@ -163,7 +163,7 @@ export default function MemberTableRow({
             {isAdmin() && (
               <button
                 type="button"
-                onClick={() => onNavigate(`/admin/trainers-members/members/${member.id}`)}
+                onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
                 title="View profile and record contact details"
                 className="inline-flex items-center gap-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-2 py-0.5 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer hover:scale-105 active:scale-95"
               >

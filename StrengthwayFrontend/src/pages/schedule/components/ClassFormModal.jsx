@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { Dumbbell, X, Plus, Trash2, Check, Loader2 } from "lucide-react";
-import { InputField } from "@/components/form";
+import { Dumbbell, Plus, Trash2 } from "lucide-react";
+import { InputField, TextareaField } from "@/components/form";
+import {
+  FormModal,
+  FormModalHeader,
+  FormModalBody,
+  FormModalFooter,
+} from "@/components/ui/FormModal";
 
 /**
  * Reusable Class Form Modal.
@@ -52,8 +57,6 @@ export function ClassFormModal({
     }
     setErrors({});
   }, [initialData, isOpen]);
-
-  if (!isOpen || typeof document === "undefined") return null;
 
   const handleAddWorkout = () => {
     setFormData((prev) => ({
@@ -117,43 +120,17 @@ export function ClassFormModal({
     });
   };
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-3 sm:p-6 bg-slate-900/30 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150 overflow-y-auto"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="w-full max-w-xl flex flex-col bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-2xl shadow-2xl relative my-auto animate-in zoom-in-95 duration-150 overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-border px-6 py-4.5 bg-white dark:bg-card shrink-0">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary">
-              <Dumbbell size={19} />
-            </span>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-foreground">
-                {initialData ? "Edit Reusable Class" : "Create Reusable Class"}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-muted-foreground">
-                Define reusable workout curriculum independent of batches and coaches.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground cursor-pointer transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
+  return (
+    <FormModal isOpen={isOpen} onClose={onClose} size="xl">
+      <FormModalHeader
+        icon={Dumbbell}
+        title={initialData ? "Edit Reusable Class" : "Create Reusable Class"}
+        subtitle="Define reusable workout curriculum independent of batches and coaches."
+        onClose={onClose}
+      />
 
-        {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 max-h-[75vh]">
+      <form id="class-program-form" onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+        <FormModalBody className="space-y-5">
           {/* Field 1: Class Program Name */}
           <InputField
             label="Class Program Name"
@@ -170,52 +147,32 @@ export function ClassFormModal({
           />
 
           {/* Field 2: Beginner Workouts */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-800 dark:text-foreground">
-                Beginner Workouts
-              </label>
-              <span className="text-[11px] font-medium text-slate-400 dark:text-muted-foreground">
-                Leave empty for "Not specified"
-              </span>
-            </div>
-            <textarea
-              rows={4}
-              value={formData.beginnerWorkouts}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, beginnerWorkouts: e.target.value }))
-              }
-              placeholder="e.g. 1 min Skipping; 1 min Elbow Plank; 10 Goblet Squats; 30s Ape Hops; × 3 sets"
-              className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-blue-700 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all resize-y"
-            />
-            <p className="text-[11px] text-slate-500 dark:text-muted-foreground">
-              Prescriptions, regression movements, sets, and rep ranges suitable for beginners.
-            </p>
-          </div>
+          <TextareaField
+            label="Beginner Workouts"
+            hint='Leave empty for "Not specified"'
+            rows={4}
+            resize="vertical"
+            value={formData.beginnerWorkouts}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, beginnerWorkouts: e.target.value }))
+            }
+            placeholder="e.g. 1 min Skipping; 1 min Elbow Plank; 10 Goblet Squats; 30s Ape Hops; × 3 sets"
+            helperText="Prescriptions, regression movements, sets, and rep ranges suitable for beginners."
+          />
 
           {/* Field 3: Intermediate Workouts */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-slate-800 dark:text-foreground">
-                Intermediate Workouts
-              </label>
-              <span className="text-[11px] font-medium text-slate-400 dark:text-muted-foreground">
-                Leave empty for "Not specified"
-              </span>
-            </div>
-            <textarea
-              rows={4}
-              value={formData.intermediateWorkouts}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, intermediateWorkouts: e.target.value }))
-              }
-              placeholder="e.g. Push: Push ups 5–10 × 3; Dips 4–10 × 3; Legs: GB Squats 8–10 × 3; Pull: Hori Pulls 6–10 × 3"
-              className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-blue-700 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all resize-y"
-            />
-            <p className="text-[11px] text-slate-500 dark:text-muted-foreground">
-              Main lifts, progressive loading parameters, compound volume, and accessory movements.
-            </p>
-          </div>
+          <TextareaField
+            label="Intermediate Workouts"
+            hint='Leave empty for "Not specified"'
+            rows={4}
+            resize="vertical"
+            value={formData.intermediateWorkouts}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, intermediateWorkouts: e.target.value }))
+            }
+            placeholder="e.g. Push: Push ups 5–10 × 3; Dips 4–10 × 3; Legs: GB Squats 8–10 × 3; Pull: Hori Pulls 6–10 × 3"
+            helperText="Main lifts, progressive loading parameters, compound volume, and accessory movements."
+          />
 
           {/* Dynamically Added Custom Workouts */}
           {formData.workouts.map((workout, index) => (
@@ -241,32 +198,22 @@ export function ClassFormModal({
               </div>
 
               {/* Subject textfield */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-800 dark:text-foreground">
-                  Subject / Focus
-                </label>
-                <input
-                  type="text"
-                  value={workout.subject}
-                  onChange={(e) => handleUpdateWorkout(index, "subject", e.target.value)}
-                  placeholder="e.g. Core Finisher, Strength Block, or Agility Drills"
-                  className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-3.5 py-2.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-blue-700 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all"
-                />
-              </div>
+              <InputField
+                label="Subject / Focus"
+                value={workout.subject}
+                onChange={(e) => handleUpdateWorkout(index, "subject", e.target.value)}
+                placeholder="e.g. Core Finisher, Strength Block, or Agility Drills"
+              />
 
               {/* Message textarea field */}
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-800 dark:text-foreground">
-                  Coaching Message & Prescriptions
-                </label>
-                <textarea
-                  rows={4}
-                  value={workout.message}
-                  onChange={(e) => handleUpdateWorkout(index, "message", e.target.value)}
-                  placeholder="Movement cues, prescribed sets, repetitions, and intensity..."
-                  className="w-full rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card p-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-blue-700 dark:focus:border-primary focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-primary/20 transition-all resize-y"
-                />
-              </div>
+              <TextareaField
+                label="Coaching Message & Prescriptions"
+                rows={4}
+                resize="vertical"
+                value={workout.message}
+                onChange={(e) => handleUpdateWorkout(index, "message", e.target.value)}
+                placeholder="Movement cues, prescribed sets, repetitions, and intensity..."
+              />
             </div>
           ))}
 
@@ -279,38 +226,15 @@ export function ClassFormModal({
             <Plus size={15} />
             <span>Add Workouts</span>
           </button>
+        </FormModalBody>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-border">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted cursor-pointer transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-700 dark:bg-primary px-5 py-2.5 text-xs sm:text-sm font-semibold text-white dark:text-primary-foreground hover:bg-blue-800 dark:hover:bg-primary/90 shadow-md cursor-pointer transition-all active:scale-95 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>Saving Class…</span>
-                </>
-              ) : (
-                <>
-                  <Check size={16} />
-                  <span>{initialData ? "Save Changes" : "Create Class"}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          submitText={initialData ? "Save Changes" : "Create Class"}
+          isSubmitting={isSubmitting}
+        />
+      </form>
+    </FormModal>
   );
 }

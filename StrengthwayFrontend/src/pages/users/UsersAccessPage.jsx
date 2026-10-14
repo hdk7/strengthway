@@ -34,12 +34,14 @@ import {
 import { getTrainers } from "@/lib/trainersService";
 import { getMembers } from "@/lib/membersService";
 import { getCurrentUser } from "@/auth/currentUser";
+import { DataTable } from "@/components/table";
 import {
   FormModal,
   FormModalHeader,
   FormModalBody,
   FormModalFooter,
 } from "@/components/ui/FormModal";
+import { InputField, SelectField } from "@/components/form";
 
 // ── Role Styling Definitions ──────────────────────────────────────────────────
 const ROLE_CONFIG = {
@@ -181,6 +183,174 @@ export default function UsersAccessPage() {
       toast.error(err?.message || "Failed to delete user account.");
     }
   };
+
+  const columns = useMemo(() => [
+    {
+      header: "User / Identity",
+      accessorKey: "name",
+      cell: (user) => {
+        const isCurrent = user._id === currentUser?.id || user.email === currentUser?.email;
+        const initials = (user.name || "U")
+          .split(" ")
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase();
+
+        return (
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-xs text-foreground shrink-0 shadow-xs">
+              {initials}
+            </div>
+            <div>
+              <div className="font-bold text-foreground flex items-center gap-1.5">
+                <span>{user.name}</span>
+                {isCurrent && (
+                  <span className="rounded-full bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 text-[10px] font-semibold text-blue-500">
+                    You
+                  </span>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                <Mail size={12} className="opacity-70" />
+                <span>{user.email}</span>
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: "System Role",
+      accessorKey: "role",
+      cell: (user) => {
+        const roleCfg = ROLE_CONFIG[user.role] || ROLE_CONFIG.member;
+        const RoleIcon = roleCfg.icon;
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${roleCfg.badgeBg}`}
+          >
+            <RoleIcon size={12} />
+            <span>{roleCfg.label}</span>
+          </span>
+        );
+      },
+    },
+    {
+      header: "Linked Profile",
+      cell: (user) => {
+        const trainerId = user.trainerId || (user.role === "trainer" ? user.linkedEntityId : null);
+        const memberId = user.memberId || (user.role === "member" ? user.linkedEntityId : null);
+
+        if (user.role === "trainer" && trainerId) {
+          return (
+            <Link
+              to={`/admin/trainers-members/trainers/${trainerId}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+            >
+              <span>Coach #{trainerId}</span>
+              <ExternalLink size={12} />
+            </Link>
+          );
+        }
+
+        if (user.role === "member" && memberId) {
+          return (
+            <Link
+              to={`/admin/trainers-members/members/${memberId}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2.5 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/15 transition-colors"
+            >
+              <span>Athlete #{memberId}</span>
+              <ExternalLink size={12} />
+            </Link>
+          );
+        }
+
+        return (
+          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <span>System Authority</span>
+          </span>
+        );
+      },
+    },
+    {
+      header: "Status",
+      align: "center",
+      cell: (user) => {
+        const isCurrent = user._id === currentUser?.id || user.email === currentUser?.email;
+        return (
+          <button
+            type="button"
+            onClick={() => handleToggleStatus(user)}
+            disabled={isCurrent}
+            title={
+              isCurrent
+                ? "Cannot deactivate your own account"
+                : user.isActive !== false
+                ? "Click to Deactivate Account"
+                : "Click to Activate Account"
+            }
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer ${
+              user.isActive !== false
+                ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
+                : "bg-destructive/15 border border-destructive/30 text-destructive hover:bg-destructive/25"
+            } ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                user.isActive !== false ? "bg-emerald-500 animate-pulse" : "bg-destructive"
+              }`}
+            />
+            <span>{user.isActive !== false ? "Active" : "Deactivated"}</span>
+          </button>
+        );
+      },
+    },
+    {
+      header: "Created",
+      cell: (user) => (
+        <span className="text-xs text-muted-foreground">
+          {user.createdAt
+            ? new Date(user.createdAt).toLocaleDateString("en-IN", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "Initial Provision"}
+        </span>
+      ),
+    },
+    {
+      header: "Actions",
+      align: "right",
+      cell: (user) => {
+        const isCurrent = user._id === currentUser?.id || user.email === currentUser?.email;
+        return (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              type="button"
+              onClick={() => setResetPasswordTarget(user)}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-2xs"
+              title="Reset User Password"
+            >
+              <KeyRound size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(user)}
+              disabled={isCurrent}
+              className={`inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border bg-background text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-colors shadow-2xs ${
+                isCurrent ? "opacity-40 cursor-not-allowed" : ""
+              }`}
+              title={isCurrent ? "Cannot delete self" : "Delete Account"}
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
+        );
+      },
+    },
+  ], [currentUser]);
 
   return (
     <div className="space-y-8 pb-16 no-scrollbar">
@@ -366,186 +536,21 @@ export default function UsersAccessPage() {
       </div>
 
       {/* ── Users Table ────────────────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-border bg-card shadow-xs overflow-hidden">
-        {isLoading ? (
-          <div className="py-20 text-center text-muted-foreground">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent" />
-            <p className="mt-3 text-sm">Loading user directory...</p>
-          </div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="py-16 text-center space-y-3">
-            <UserX size={44} className="mx-auto text-muted-foreground/40" />
-            <h3 className="text-base font-bold text-foreground">No accounts found</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              {searchQuery || roleFilter !== "all" || statusFilter !== "all"
-                ? "No user accounts match the selected filters or search query."
-                : "No user accounts exist in the system yet. Click 'Provision User Account' to add one."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-muted/40 border-b border-border text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="py-3.5 px-4 sm:px-6">User / Identity</th>
-                  <th className="py-3.5 px-4 sm:px-6">System Role</th>
-                  <th className="py-3.5 px-4 sm:px-6">Linked Profile</th>
-                  <th className="py-3.5 px-4 sm:px-6 text-center">Status</th>
-                  <th className="py-3.5 px-4 sm:px-6">Created</th>
-                  <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {filteredUsers.map((user) => {
-                  const roleCfg = ROLE_CONFIG[user.role] || ROLE_CONFIG.member;
-                  const RoleIcon = roleCfg.icon;
-                  const isCurrent = user._id === currentUser?.id || user.email === currentUser?.email;
-                  const initials = (user.name || "U")
-                    .split(" ")
-                    .map((n) => n[0])
-                    .slice(0, 2)
-                    .join("")
-                    .toUpperCase();
-
-                  return (
-                    <tr
-                      key={user._id || user.id}
-                      className="hover:bg-muted/20 transition-colors group"
-                    >
-                      {/* Identity */}
-                      <td className="py-4 px-4 sm:px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-xs text-foreground shrink-0 shadow-xs">
-                            {initials}
-                          </div>
-                          <div>
-                            <div className="font-bold text-foreground flex items-center gap-1.5">
-                              <span>{user.name}</span>
-                              {isCurrent && (
-                                <span className="rounded-full bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.2 text-[10px] font-semibold text-blue-500">
-                                  You
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                              <Mail size={12} className="opacity-70" />
-                              <span>{user.email}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* System Role */}
-                      <td className="py-4 px-4 sm:px-6">
-                        <div className="inline-flex items-center gap-1.5 rounded-full border border-inherit px-2.5 py-1 text-xs font-bold capitalize shadow-2xs">
-                          <span
-                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${roleCfg.badgeBg}`}
-                          >
-                            <RoleIcon size={12} />
-                            <span>{roleCfg.label}</span>
-                          </span>
-                        </div>
-                      </td>
-
-                      {/* Linked Profile */}
-                      <td className="py-4 px-4 sm:px-6">
-                        {user.role === "trainer" && user.trainerId ? (
-                          <Link
-                            to={`/admin/trainers-members/trainers/${user.trainerId}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/15 transition-colors"
-                          >
-                            <span>Coach #{user.trainerId}</span>
-                            <ExternalLink size={12} />
-                          </Link>
-                        ) : user.role === "member" && user.memberId ? (
-                          <Link
-                            to={`/admin/trainers-members/members/${user.memberId}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2.5 py-1 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/15 transition-colors"
-                          >
-                            <span>Athlete #{user.memberId}</span>
-                            <ExternalLink size={12} />
-                          </Link>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                            <span>System Authority</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* Status Toggle */}
-                      <td className="py-4 px-4 sm:px-6 text-center">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(user)}
-                          disabled={isCurrent}
-                          title={
-                            isCurrent
-                              ? "Cannot deactivate your own account"
-                              : user.isActive !== false
-                              ? "Click to Deactivate Account"
-                              : "Click to Activate Account"
-                          }
-                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer ${
-                            user.isActive !== false
-                              ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
-                              : "bg-destructive/15 border border-destructive/30 text-destructive hover:bg-destructive/25"
-                          } ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}`}
-                        >
-                          <span
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              user.isActive !== false ? "bg-emerald-500 animate-pulse" : "bg-destructive"
-                            }`}
-                          />
-                          <span>{user.isActive !== false ? "Active" : "Deactivated"}</span>
-                        </button>
-                      </td>
-
-                      {/* Created */}
-                      <td className="py-4 px-4 sm:px-6 text-xs text-muted-foreground">
-                        {user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString("en-IN", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })
-                          : "Initial Provision"}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-4 px-4 sm:px-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {/* Reset Password */}
-                          <button
-                            type="button"
-                            onClick={() => setResetPasswordTarget(user)}
-                            className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shadow-2xs"
-                            title="Reset User Password"
-                          >
-                            <KeyRound size={15} />
-                          </button>
-
-                          {/* Delete Account */}
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(user)}
-                            disabled={isCurrent}
-                            className={`inline-flex items-center justify-center h-8 w-8 rounded-lg border border-border bg-background text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-colors shadow-2xs ${
-                              isCurrent ? "opacity-40 cursor-not-allowed" : ""
-                            }`}
-                            title={isCurrent ? "Cannot delete self" : "Delete Account"}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <DataTable
+        columns={columns}
+        data={filteredUsers}
+        pageSize={7}
+        itemLabel="users"
+        loading={isLoading}
+        showToolbar={false}
+        emptyIcon={UserX}
+        emptyTitle="No accounts found"
+        emptyDescription={
+          searchQuery || roleFilter !== "all" || statusFilter !== "all"
+            ? "No user accounts match the selected filters or search query."
+            : "No user accounts exist in the system yet. Click 'Provision User Account' to add one."
+        }
+      />
 
       {/* ── Provision Account Modal ───────────────────────────────────────────── */}
       {isProvisionModalOpen && (
@@ -807,150 +812,98 @@ function ProvisionUserModal({
 
             {/* Step 2: Profile Link (if Trainer or Member) */}
             {role === "trainer" && (
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  Link Existing Trainer Profile <span className="text-destructive">*</span>
-                </label>
-                <select
-                  value={selectedTrainerId}
-                  onChange={(e) => handleTrainerSelect(e.target.value)}
-                  className={`w-full rounded-xl border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                    errors.trainerId ? "border-destructive" : "border-border"
-                  }`}
-                >
-                  <option value="">-- Choose Trainer to Provision --</option>
-                  {trainers.map((t) => {
-                    const isLinked = linkedTrainerIds.has(t.id);
-                    return (
-                      <option key={t.id} value={t.id} disabled={isLinked}>
-                        {t.name} ({t.id}) {isLinked ? "— [Already has Login Account]" : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-                {errors.trainerId && (
-                  <p className="mt-1 text-xs text-destructive">{errors.trainerId}</p>
-                )}
-              </div>
+              <SelectField
+                label="Link Existing Trainer Profile"
+                required
+                value={selectedTrainerId}
+                onChange={(e) => handleTrainerSelect(e.target.value)}
+                error={errors.trainerId}
+                options={[
+                  { value: "", label: "-- Choose Trainer to Provision --" },
+                  ...trainers.map((t) => ({
+                    value: t.id,
+                    label: `${t.name} (${t.id}) ${linkedTrainerIds.has(t.id) ? "— [Already has Login Account]" : ""}`,
+                    disabled: linkedTrainerIds.has(t.id),
+                  })),
+                ]}
+              />
             )}
 
             {role === "member" && (
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  Link Existing Member Profile <span className="text-destructive">*</span>
-                </label>
-                <select
-                  value={selectedMemberId}
-                  onChange={(e) => handleMemberSelect(e.target.value)}
-                  className={`w-full rounded-xl border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                    errors.memberId ? "border-destructive" : "border-border"
-                  }`}
-                >
-                  <option value="">-- Choose Member to Provision --</option>
-                  {members.map((m) => {
+              <SelectField
+                label="Link Existing Member Profile"
+                required
+                value={selectedMemberId}
+                onChange={(e) => handleMemberSelect(e.target.value)}
+                error={errors.memberId}
+                options={[
+                  { value: "", label: "-- Choose Member to Provision --" },
+                  ...members.map((m) => {
                     const memName = `${m.firstName || ""} ${m.lastName || ""}`.trim() || m.name || m.id;
                     const isLinked = linkedMemberIds.has(m.id);
-                    return (
-                      <option key={m.id} value={m.id} disabled={isLinked}>
-                        {memName} ({m.id}) {isLinked ? "— [Already has Login Account]" : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-                {errors.memberId && (
-                  <p className="mt-1 text-xs text-destructive">{errors.memberId}</p>
-                )}
-              </div>
+                    return {
+                      value: m.id,
+                      label: `${memName} (${m.id}) ${isLinked ? "— [Already has Login Account]" : ""}`,
+                      disabled: isLinked,
+                    };
+                  }),
+                ]}
+              />
             )}
 
             {/* Step 3: Account Credentials */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  Full Name <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. John Doe"
-                  className={`w-full rounded-xl border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                    errors.name ? "border-destructive" : "border-border"
-                  }`}
-                />
-                {errors.name && <p className="mt-1 text-xs text-destructive">{errors.name}</p>}
-              </div>
+              <InputField
+                label="Full Name"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. John Doe"
+                error={errors.name}
+              />
 
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  Login Email <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="user@example.com"
-                  className={`w-full rounded-xl border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                    errors.email ? "border-destructive" : "border-border"
-                  }`}
-                />
-                {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email}</p>}
-              </div>
+              <InputField
+                label="Login Email"
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="user@example.com"
+                error={errors.email}
+              />
             </div>
 
             {/* Password Field */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-foreground">
-                  Initial Password <span className="text-destructive">*</span>
-                </label>
+            <InputField
+              label="Initial Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minimum 8 characters"
+              error={errors.password}
+              endAdornment={
                 <button
                   type="button"
                   onClick={handleGeneratePassword}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer px-1 py-0.5"
                 >
                   <Sparkles size={12} />
-                  <span>Generate Password</span>
+                  <span>Generate</span>
                 </button>
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Minimum 8 characters"
-                  className={`w-full rounded-xl border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                    errors.password ? "border-destructive" : "border-border"
-                  }`}
-                />
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-xs text-destructive">{errors.password}</p>
-              )}
-            </div>
+              }
+            />
 
             <div className="rounded-xl bg-muted/40 border border-border p-3 text-[11px] text-muted-foreground leading-relaxed">
               💡 <strong>Direct Record Linking:</strong> Account provisioning binds to existing Trainer or Member records without duplicating gym profiles or history.
             </div>
           </div>
         </FormModalBody>
-        <FormModalFooter>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-border px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting && <RefreshCw size={14} className="animate-spin" />}
-            <span>Provision Account</span>
-          </button>
-        </FormModalFooter>
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          submitText="Provision Account"
+          isSubmitting={isSubmitting}
+        />
       </form>
     </FormModal>
   );
@@ -1012,54 +965,36 @@ function AdminResetPasswordModal({ isOpen, user, onClose, onSuccess }) {
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-foreground">
-                  New Password <span className="text-destructive">*</span>
-                </label>
+            <InputField
+              label="New Password"
+              required
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter or generate new password"
+              error={error}
+              endAdornment={
                 <button
                   type="button"
                   onClick={handleGenerate}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer px-1 py-0.5"
                 >
                   <Sparkles size={12} />
                   <span>Generate</span>
                 </button>
-              </div>
-              <input
-                type="text"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter or generate new password"
-                className={`w-full rounded-xl border bg-background px-3 py-2 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                  error ? "border-destructive" : "border-border"
-                }`}
-              />
-              {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
-            </div>
+              }
+            />
 
             <p className="text-[11px] text-muted-foreground">
               Setting a new password takes effect immediately and invalidates existing cached credentials.
             </p>
           </div>
         </FormModalBody>
-        <FormModalFooter>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 py-2 text-xs font-semibold text-white shadow-sm transition-all cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting && <RefreshCw size={14} className="animate-spin" />}
-            <span>Save New Password</span>
-          </button>
-        </FormModalFooter>
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          submitText="Save New Password"
+          isSubmitting={isSubmitting}
+        />
       </form>
     </FormModal>
   );

@@ -340,7 +340,7 @@ function AdminMembersAttendanceContent() {
 
   // Pagination
   const [dailyPage, setDailyPage] = useState(1);
-  const dailyPageSize = 8;
+  const dailyPageSize = 7;
   useEffect(() => {
     setDailyPage(1);
   }, [searchQuery, statusFilter, selectedBatchId, selectedDate]);
@@ -353,7 +353,7 @@ function AdminMembersAttendanceContent() {
   }, [filteredAttendees, safeDailyPage, dailyPageSize]);
 
   const [matrixPage, setMatrixPage] = useState(1);
-  const matrixPageSize = 10;
+  const matrixPageSize = 7;
   useEffect(() => {
     setMatrixPage(1);
   }, [selectedBatchId, selectedMonth]);
@@ -453,16 +453,17 @@ function AdminMembersAttendanceContent() {
         />
       )}
 
-      <Pagination
-        currentPage={viewMode === "daily" ? safeDailyPage : safeMatrixPage}
-        totalPages={viewMode === "daily" ? totalDailyPages : totalMatrixPages}
-        totalItems={viewMode === "daily" ? filteredAttendees.length : matrixMembers.length}
-        pageSize={viewMode === "daily" ? dailyPageSize : matrixPageSize}
-        onPageChange={(p) => (viewMode === "daily" ? setDailyPage(p) : setMatrixPage(p))}
-        itemLabel="athletes"
-        compact
-        className="shrink-0 mt-auto"
-      />
+      <div className="shrink-0 mt-auto pt-2 border-t border-border/40 bg-background/95 backdrop-blur-xs">
+        <Pagination
+          currentPage={viewMode === "daily" ? safeDailyPage : safeMatrixPage}
+          totalPages={viewMode === "daily" ? totalDailyPages : totalMatrixPages}
+          totalItems={viewMode === "daily" ? filteredAttendees.length : matrixMembers.length}
+          pageSize={viewMode === "daily" ? dailyPageSize : matrixPageSize}
+          onPageChange={(p) => (viewMode === "daily" ? setDailyPage(p) : setMatrixPage(p))}
+          itemLabel="athletes"
+          compact
+        />
+      </div>
 
       <AttendanceDetailModal
         isOpen={Boolean(viewModalData)}

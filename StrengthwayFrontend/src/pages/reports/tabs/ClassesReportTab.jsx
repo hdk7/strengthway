@@ -6,6 +6,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { ClassReportStatsCards } from "./ClassReportStatsCards";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function ClassesReportTab({
   classesReport,
@@ -87,7 +88,7 @@ export function ClassesReportTab({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <Link
-                      to={`/admin/batches/${bp.batchId}`}
+                      to={`${getRoleBasePath()}/batches/${bp.batchId}`}
                       className="font-bold text-foreground hover:text-accent text-base flex items-center gap-1.5"
                     >
                       <span>{bp.batchName}</span>

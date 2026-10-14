@@ -20,11 +20,21 @@ import { AdminMemberRegistrationModal } from "@/pages/trainers-members/members/M
 import { InquiryProfileModal } from "@/pages/inquiries/InquiryProfileModal";
 import { LogInquiryModal } from "@/pages/inquiries/LogInquiryModal";
 import ContactLeadModal from "@/pages/inquiries/ContactLeadModal";
-import { Pagination } from "@/components/table";
+import { DataTable } from "@/components/table";
 import InquiryStatsCards from "./InquiryStatsCards";
 import InquiryTableRow from "./InquiryTableRow";
 
 const STATUS_OPTIONS = ["All", "Inquiry", "Contacted", "Converted", "Archived"];
+
+const INQUIRY_COLUMNS = [
+  { header: "Inquiry ID", width: "w-28" },
+  { header: "Client" },
+  { header: "Gender" },
+  { header: "Contact" },
+  { header: "Subject & Message" },
+  { header: "Received" },
+  { header: "Status", align: "right" },
+];
 
 export default function InquiriesPage() {
   const navigate = useNavigate();
@@ -226,7 +236,7 @@ export default function InquiriesPage() {
   }, [inquiries, statusFilter, searchQuery]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 7;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -317,78 +327,36 @@ export default function InquiriesPage() {
         </div>
       </div>
 
-      {/* Inquiries Table Container */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-        {isLoading ? (
-          <div className="flex-1 min-h-0 p-4 sm:p-6 flex flex-col justify-center">
-            <div className="space-y-3 animate-pulse">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="flex items-center justify-between py-3 px-4 bg-card rounded-2xl border border-border/50">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-muted" />
-                    <div className="space-y-1.5">
-                      <div className="h-4 w-32 bg-muted rounded" />
-                      <div className="h-3 w-20 bg-muted rounded" />
-                    </div>
-                  </div>
-                  <div className="h-4 w-28 bg-muted rounded hidden sm:block" />
-                  <div className="h-4 w-44 bg-muted rounded hidden md:block" />
-                  <div className="h-6 w-16 bg-muted rounded-full" />
-                  <div className="h-7 w-20 bg-muted rounded-lg" />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : filteredInquiries.length === 0 ? (
-          <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-8 text-center bg-card rounded-2xl border border-border/50">
-            <Inbox className="mb-3 h-10 w-10 text-muted-foreground/40" />
-            <h3 className="text-base font-semibold text-foreground">No inquiries found</h3>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground max-w-sm">
-              {searchQuery
-                ? "Try adjusting your search query or filter selection."
-                : "Submissions from your website's inquiry form will appear here automatically."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-                <tr>
-                  <th className="py-2.5 px-4 sm:px-5">Inquiry ID</th>
-                  <th className="py-2.5 px-4 sm:px-5">Client</th>
-                  <th className="py-2.5 px-4 sm:px-5">Gender</th>
-                  <th className="py-2.5 px-4 sm:px-5">Contact</th>
-                  <th className="py-2.5 px-4 sm:px-5">Subject & Message</th>
-                  <th className="py-2.5 px-4 sm:px-5">Received</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs sm:text-sm font-medium">
-                {paginatedInquiries.map((inq) => (
-                  <InquiryTableRow
-                    key={inq.id}
-                    inq={inq}
-                    onNavigate={navigate}
-                    onOpenRegistration={handleOpenRegistration}
-                    onMoveToInquiry={handleMoveToInquiry}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* Pagination Controls */}
-      <Pagination
-        currentPage={safePage}
-        totalPages={totalPages}
-        totalItems={filteredInquiries.length}
+      {/* Standardized Customer Inquiries Data Table */}
+      <DataTable
+        columns={INQUIRY_COLUMNS}
+        data={filteredInquiries}
         pageSize={pageSize}
-        onPageChange={(page) => setCurrentPage(page)}
+        currentPage={safePage}
+        onPageChange={setCurrentPage}
+        totalItems={filteredInquiries.length}
+        totalPages={totalPages}
         itemLabel="inquiries"
-        compact
-        className="shrink-0 mt-auto"
+        loading={isLoading}
+        loadingRowsCount={7}
+        showToolbar={false}
+        emptyIcon={Inbox}
+        emptyTitle="No inquiries found"
+        emptyMessage={
+          searchQuery
+            ? "Try adjusting your search query or filter selection."
+            : "Submissions from your website's inquiry form will appear here automatically."
+        }
+        renderRow={(inq) => (
+          <InquiryTableRow
+            key={inq.id}
+            inq={inq}
+            onNavigate={navigate}
+            onOpenRegistration={handleOpenRegistration}
+            onMoveToInquiry={handleMoveToInquiry}
+          />
+        )}
+        className="flex-1 min-h-0"
       />
 
       {/* --- LOG NEW INQUIRY PROFILE FORM MODAL --- */}

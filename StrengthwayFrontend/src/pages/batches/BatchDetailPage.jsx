@@ -13,7 +13,7 @@ import BatchDetailModals from "./detail/BatchDetailModals";
 import { BatchClassAssignmentModal } from "../schedule/components/BatchClassAssignmentModal";
 import { useBatchDetailData } from "./detail/useBatchDetailData";
 import { useBatchDetailActions } from "./detail/useBatchDetailActions";
-import { isMember } from "@/auth/currentUser";
+import { isMember, isTrainer, getCurrentUser } from "@/auth/currentUser";
 import { hasClassStarted } from "@/lib/batchUtils";
 import { saveSessionNote } from "@/lib/sessionNotesService";
 import { toast } from "sonner";
@@ -168,7 +168,7 @@ export default function BatchDetailPage() {
           The requested batch does not exist or has been removed.
         </p>
         <button
-          onClick={() => navigate(isMember() ? "/admin/dashboard" : "/admin/batches")}
+          onClick={() => navigate(isMember() ? "/member/dashboard" : isTrainer() ? "/trainer/schedule/batches" : "/admin/batches")}
           className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
         >
           <ArrowLeft size={16} /> {isMember() ? "Back to Dashboard" : "Back to Batches"}
@@ -280,7 +280,12 @@ export default function BatchDetailPage() {
               return;
             }
             setSelectedSessionForNotes(session);
-            setSelectedTrainerIdForNotes(trainerId || "");
+            if (isTrainer()) {
+              const currentUser = getCurrentUser() || {};
+              setSelectedTrainerIdForNotes(currentUser.trainerId || currentUser.id || "");
+            } else {
+              setSelectedTrainerIdForNotes(trainerId || "");
+            }
           }}
           onEditMasterItem={async (sessionOrItem, matchingItem) => {
             const isSession =

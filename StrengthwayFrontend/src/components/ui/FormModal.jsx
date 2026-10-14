@@ -84,6 +84,7 @@ export const FormModalHeader = forwardRef(function FormModalHeader(
   {
     title,
     description,
+    subtitle,
     onClose,
     badge,
     icon: Icon,
@@ -94,6 +95,8 @@ export const FormModalHeader = forwardRef(function FormModalHeader(
   },
   ref,
 ) {
+  const displayDesc = description || subtitle;
+
   return (
     <div
       ref={ref}
@@ -123,14 +126,14 @@ export const FormModalHeader = forwardRef(function FormModalHeader(
             )}
             {badge && <div>{badge}</div>}
           </div>
-          {description && (
+          {displayDesc && (
             <DialogPrimitive.Description
               className={cn(
                 "mt-1 text-xs sm:text-sm text-slate-500 dark:text-muted-foreground font-normal leading-relaxed",
                 descClassName,
               )}
             >
-              {description}
+              {displayDesc}
             </DialogPrimitive.Description>
           )}
           {children}
@@ -177,6 +180,8 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
     submitDisabled = false,
     submitVariant = "primary",
     submitIcon: SubmitIcon,
+    submitType,
+    form,
     onClear,
     clearText = "Clear",
     className = "",
@@ -184,6 +189,8 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
   },
   ref,
 ) {
+  const resolvedSubmitType = submitType || (form ? "submit" : onSubmit ? "button" : "submit");
+
   return (
     <div
       ref={ref}
@@ -221,9 +228,10 @@ export const FormModalFooter = forwardRef(function FormModalFooter(
           </button>
         )}
 
-        {onSubmit && (
+        {(onSubmit || form || submitText) && (
           <button
-            type="button"
+            type={resolvedSubmitType}
+            form={form}
             onClick={onSubmit}
             disabled={isSubmitting || submitDisabled}
             className={cn(

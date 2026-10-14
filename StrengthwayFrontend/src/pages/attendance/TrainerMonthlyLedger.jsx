@@ -3,16 +3,11 @@ import { useMemo } from "react";
 import {
   Award,
   Users,
-  Repeat,
   CalendarOff,
   Calendar,
   ShieldCheck,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  IndianRupee,
-  FileText,
-  Sparkles,
 } from "lucide-react";
 import { getTailwindWidth } from "@/lib/tailwindUtils";
 
@@ -23,43 +18,6 @@ export function TrainerMonthlyLedger({
   monthlyLeaves = [],
   onOpenLeaveDrawer,
 }) {
-  // ─── Aggregate KPIs for the Monthly View ──────────────────────────────────
-  const stats = useMemo(() => {
-    const totalConducted = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.conductedCount || 0),
-      0
-    );
-    const totalAthletes = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.totalAttendees || 0),
-      0
-    );
-    const totalLeaveDays = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.leaveDaysCount || 0),
-      0
-    );
-    const totalPaidLeaveDays = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.paidLeaveDays || 0),
-      0
-    );
-    const totalUnpaidLeaveDays = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.unpaidLeaveDays || 0),
-      0
-    );
-    const totalLeaveDeductions = paginatedMonthlySummary.reduce(
-      (acc, curr) => acc + (curr.deductionAmount || 0),
-      0
-    );
-
-    return {
-      totalConducted,
-      totalAthletes,
-      totalLeaveDays,
-      totalPaidLeaveDays,
-      totalUnpaidLeaveDays,
-      totalLeaveDeductions,
-    };
-  }, [paginatedMonthlySummary]);
-
   // Approved and active leave records in the selected month
   const activeMonthlyLeaves = useMemo(() => {
     return (monthlyLeaves || []).filter(
@@ -72,78 +30,7 @@ export function TrainerMonthlyLedger({
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto space-y-4 no-scrollbar pr-1 pb-4">
-      {/* ─── 1. Monthly Executive KPI Cards ──────────────────────────────────── */}
-      <div className="shrink-0 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-        {/* Sessions Delivered */}
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
-              Classes Delivered
-            </span>
-            <Award size={15} className="text-emerald-500" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-foreground">
-              {stats.totalConducted}
-            </span>
-            <span className="text-[10px] text-muted-foreground">sessions</span>
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Across all scheduled shifts
-          </p>
-        </div>
-
-        {/* Leave Days Consumed */}
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
-              Faculty Leave Days
-            </span>
-            <CalendarOff size={15} className="text-primary" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-foreground">
-              {stats.totalLeaveDays}
-            </span>
-            <span className="text-[10px] text-muted-foreground">days</span>
-          </div>
-          <div className="mt-0.5 flex items-center gap-2 text-[10px]">
-            <span className="text-emerald-500 font-semibold">{stats.totalPaidLeaveDays}d paid</span>
-            <span className="text-muted-foreground">•</span>
-            <span className={stats.totalUnpaidLeaveDays > 0 ? "text-rose-500 font-bold" : "text-muted-foreground"}>
-              {stats.totalUnpaidLeaveDays}d unpaid
-            </span>
-          </div>
-        </div>
-
-        {/* Estimated Leave Deductions */}
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider">
-              Payroll Deduction
-            </span>
-            <IndianRupee size={15} className={stats.totalLeaveDeductions > 0 ? "text-rose-500" : "text-emerald-500"} />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span
-              className={`text-xl sm:text-2xl font-black ${
-                stats.totalLeaveDeductions > 0 ? "text-rose-500" : "text-foreground"
-              }`}
-            >
-              {stats.totalLeaveDeductions > 0
-                ? `-₹${stats.totalLeaveDeductions.toLocaleString("en-IN")}`
-                : "₹0"}
-            </span>
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {stats.totalLeaveDeductions > 0
-              ? `Applied @ ₹${deductionPerDay}/unpaid day`
-              : `All within ${monthlyAllowance}d allowance`}
-          </p>
-        </div>
-      </div>
-
-      {/* ─── 2. Faculty Coaching & Leave Ledger Table ────────────────────────── */}
+      {/* ─── Faculty Coaching & Leave Ledger Table ────────────────────────── */}
       <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
           <div>
@@ -161,13 +48,13 @@ export function TrainerMonthlyLedger({
           <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
             <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted-foreground select-none">
               <tr>
-                <th className="py-3 px-4 sm:px-6">Faculty Member</th>
-                <th className="py-3 px-3 sm:px-4">Shift</th>
-                <th className="py-3 px-3 sm:px-4 text-center">Conducted</th>
-                <th className="py-3 px-3 sm:px-4 text-center">Athletes</th>
-                <th className="py-3 px-3 sm:px-4 text-center">Leaves Consumed</th>
-                <th className="py-3 px-3 sm:px-4 text-center">Leave Balance</th>
-                <th className="py-3 px-3 sm:px-4 text-center">Payroll Impact</th>
+                <th className="py-3 px-4 sm:px-6 whitespace-nowrap">Faculty Member</th>
+                <th className="py-3 px-3 sm:px-4 whitespace-nowrap">Shift</th>
+                <th className="py-3 px-3 sm:px-4 text-center whitespace-nowrap">Conducted</th>
+                <th className="py-3 px-3 sm:px-4 text-center whitespace-nowrap">Athletes</th>
+                <th className="py-3 px-3 sm:px-4 text-center whitespace-nowrap">Leaves Consumed</th>
+                <th className="py-3 px-3 sm:px-4 text-center whitespace-nowrap">Leave Balance</th>
+                <th className="py-3 px-3 sm:px-4 text-center whitespace-nowrap">Payroll Impact</th>
               </tr>
             </thead>
             <tbody className="text-xs sm:text-sm font-medium">
@@ -175,7 +62,7 @@ export function TrainerMonthlyLedger({
                 <tr>
                   <td
                     colSpan={7}
-                    className="py-12 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs"
+                    className="py-12 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs whitespace-nowrap"
                   >
                     <div className="max-w-xs mx-auto space-y-2">
                       <Users size={28} className="mx-auto text-muted-foreground/50" />
@@ -202,21 +89,19 @@ export function TrainerMonthlyLedger({
                   return (
                     <tr key={trainer.id} className="group transition-all duration-150 hover:-translate-y-px">
                       {/* Faculty Member */}
-                      <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-sm border border-accent/25 uppercase">
+                      <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                        <div className="flex items-center gap-3 whitespace-nowrap">
+                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent font-bold text-xs border border-accent/25 uppercase">
                             {trainer.name ? trainer.name.charAt(0) : "T"}
                           </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-foreground text-sm">{trainer.name}</span>
-                              <span className="font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-2 py-0.5 rounded-full border border-border/40">
-                                #{trainer.id?.length > 7 ? trainer.id.slice(-6).toUpperCase() : trainer.id}
-                              </span>
-                            </div>
+                          <div className="flex items-center gap-2 whitespace-nowrap">
+                            <span className="font-bold text-foreground text-sm">{trainer.name}</span>
+                            <span className="font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-2 py-0.5 rounded-full border border-border/40">
+                              #{trainer.id?.length > 7 ? trainer.id.slice(-6).toUpperCase() : trainer.id}
+                            </span>
                             {trainer.specialization && (
-                              <span className="text-[11px] text-muted-foreground block mt-0.5 font-normal">
-                                {trainer.specialization}
+                              <span className="text-[11px] text-muted-foreground font-normal">
+                                • {trainer.specialization}
                               </span>
                             )}
                           </div>
@@ -225,7 +110,7 @@ export function TrainerMonthlyLedger({
 
                       {/* Shift */}
                       <td className="bg-card py-3.5 px-3 sm:px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-3 py-1 text-xs font-semibold text-accent">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-3 py-1 text-xs font-semibold text-accent whitespace-nowrap">
                           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                           {trainer.shift || "General Shift"}
                         </span>
@@ -233,50 +118,46 @@ export function TrainerMonthlyLedger({
 
                       {/* Classes Conducted */}
                       <td className="bg-card py-3.5 px-3 sm:px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
-                        <div className="inline-flex flex-col items-center">
-                          <span className="font-mono font-bold text-base text-emerald-600 dark:text-emerald-400">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                          <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
                             {conductedCount}
                           </span>
-                          <span className="text-[10px] text-muted-foreground block">sessions</span>
+                          <span className="text-[11px] text-muted-foreground">sessions</span>
                         </div>
                       </td>
 
                       {/* Athletes Reached */}
                       <td className="bg-card py-3.5 px-3 sm:px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
-                        <div className="inline-flex flex-col items-center">
-                          <span className="font-mono font-bold text-base text-amber-600 dark:text-amber-400">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                          <span className="font-mono font-bold text-sm text-amber-600 dark:text-amber-400">
                             {totalAttendees}
                           </span>
-                          <span className="text-[10px] text-muted-foreground block">athletes</span>
+                          <span className="text-[11px] text-muted-foreground">athletes</span>
                         </div>
                       </td>
 
                       {/* Leaves Consumed */}
                       <td className="bg-card py-3.5 px-3 sm:px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
                         {leaveDaysCount === 0 ? (
-                          <span className="font-mono text-xs text-muted-foreground font-semibold">
+                          <span className="font-mono text-xs text-muted-foreground font-semibold whitespace-nowrap">
                             0 Days
                           </span>
                         ) : unpaidLeaveDays === 0 ? (
-                          <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                              <CheckCircle2 size={11} />
-                              <span>{leaveDaysCount}d Paid</span>
-                            </span>
-                          </div>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                            <CheckCircle2 size={11} />
+                            <span>{leaveDaysCount}d Paid</span>
+                          </span>
                         ) : (
-                          <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-xs font-bold text-rose-500">
-                              <AlertTriangle size={11} />
-                              <span>{leaveDaysCount}d ({unpaidLeaveDays}d unpaid)</span>
-                            </span>
-                          </div>
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-xs font-bold text-rose-500 whitespace-nowrap">
+                            <AlertTriangle size={11} />
+                            <span>{leaveDaysCount}d ({unpaidLeaveDays}d unpaid)</span>
+                          </span>
                         )}
                       </td>
 
                       {/* Leave Balance */}
                       <td className="bg-card py-3.5 px-3 sm:px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
-                        <div className="inline-flex flex-col items-center gap-1 min-w-24">
+                        <div className="inline-flex items-center gap-2 whitespace-nowrap">
                           <span
                             className={`text-xs font-bold ${
                               remainingBalance > 0
@@ -285,11 +166,11 @@ export function TrainerMonthlyLedger({
                             }`}
                           >
                             {remainingBalance > 0
-                              ? `${remainingBalance}d of ${monthlyAllowance}d left`
+                              ? `${remainingBalance}d left`
                               : "Exhausted"}
                           </span>
                           {/* Mini Progress Bar */}
-                          <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden shrink-0">
                             <div
                               className={`h-full rounded-full transition-all duration-300 ${
                                 remainingBalance === 0
@@ -306,16 +187,16 @@ export function TrainerMonthlyLedger({
                       {/* Payroll Impact */}
                       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
                         {deductionAmount > 0 ? (
-                          <div className="inline-flex flex-col items-center">
+                          <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
                             <span className="font-mono font-bold text-xs text-rose-500">
                               -₹{deductionAmount.toLocaleString("en-IN")}
                             </span>
-                            <span className="text-[9px] text-muted-foreground">
-                              {unpaidLeaveDays}d unpaid deduction
+                            <span className="text-[10px] text-muted-foreground">
+                              ({unpaidLeaveDays}d unpaid)
                             </span>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             Full Stipend
                           </span>
                         )}
@@ -329,7 +210,7 @@ export function TrainerMonthlyLedger({
         </div>
       </div>
 
-      {/* ─── 3. Faculty Leave Breakdown & Policy Audit ─────────────────────────── */}
+      {/* ─── Faculty Leave Breakdown & Policy Audit ─────────────────────────── */}
       <div className="rounded-3xl border border-border/80 bg-card p-6 sm:p-7 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
           <div className="flex items-center gap-2">
@@ -343,7 +224,7 @@ export function TrainerMonthlyLedger({
               </p>
             </div>
           </div>
-          <span className="text-xs font-mono text-muted-foreground">
+          <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">
             {activeMonthlyLeaves.length} Approved Application{activeMonthlyLeaves.length === 1 ? "" : "s"}
           </span>
         </div>
@@ -353,13 +234,13 @@ export function TrainerMonthlyLedger({
             <table className="w-full text-left border-separate [border-spacing:0_8px]">
               <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
                 <tr>
-                  <th className="py-2.5 px-4">Leave Window</th>
-                  <th className="py-2.5 px-4">Faculty Coach</th>
-                  <th className="py-2.5 px-4 text-center">Duration</th>
-                  <th className="py-2.5 px-4">Policy Compliance</th>
-                  <th className="py-2.5 px-4">Reason / Notes</th>
-                  <th className="py-2.5 px-4 text-center">Allowance Status</th>
-                  <th className="py-2.5 px-4 text-right">Status</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Leave Window</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Faculty Coach</th>
+                  <th className="py-2.5 px-4 text-center whitespace-nowrap">Duration</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Policy Compliance</th>
+                  <th className="py-2.5 px-4 whitespace-nowrap">Reason / Notes</th>
+                  <th className="py-2.5 px-4 text-center whitespace-nowrap">Allowance Status</th>
+                  <th className="py-2.5 px-4 text-right whitespace-nowrap">Status</th>
                 </tr>
               </thead>
               <tbody className="text-xs font-medium">
@@ -371,23 +252,27 @@ export function TrainerMonthlyLedger({
                     <tr key={leave.id} className="group transition-all duration-150 hover:-translate-y-px">
                       {/* Window */}
                       <td className="bg-card py-3 px-4 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 font-bold text-foreground">
-                          <Calendar size={13} className="text-primary shrink-0" />
-                          <span>
-                            {leave.leaveStartDate} → {leave.leaveEndDate}
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 font-bold text-foreground">
+                            <Calendar size={13} className="text-primary shrink-0" />
+                            <span>
+                              {leave.leaveStartDate} → {leave.leaveEndDate}
+                            </span>
+                          </div>
+                          <span className="font-mono text-[10px] text-muted-foreground">
+                            • ID: {leave.id}
                           </span>
                         </div>
-                        <span className="font-mono text-[10px] text-muted-foreground block mt-0.5">
-                          ID: {leave.id}
-                        </span>
                       </td>
 
                       {/* Coach */}
-                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors font-bold text-foreground">
-                        <div>{leave.trainerName}</div>
-                        <span className="font-mono text-[10px] text-muted-foreground font-normal">
-                          #{leave.trainerId}
-                        </span>
+                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors font-bold text-foreground whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <span>{leave.trainerName}</span>
+                          <span className="font-mono text-[10px] text-muted-foreground font-normal">
+                            #{leave.trainerId}
+                          </span>
+                        </div>
                       </td>
 
                       {/* Duration */}
@@ -395,56 +280,60 @@ export function TrainerMonthlyLedger({
                         <span className="font-mono font-bold text-sm text-foreground">
                           {leave.totalDays}
                         </span>
-                        <span className="text-[10px] text-muted-foreground block">
+                        <span className="text-[10px] text-muted-foreground ml-1">
                           day{leave.totalDays === 1 ? "" : "s"}
                         </span>
                       </td>
 
                       {/* Policy Compliance */}
                       <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                        {isCompliant ? (
-                          <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                            <ShieldCheck size={11} />
-                            <span>{leave.actualNoticeDays}d Notice (Req: {leave.requiredNoticeDays}d)</span>
-                          </div>
-                        ) : isExempt ? (
-                          <div className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-500">
-                            <AlertTriangle size={11} />
-                            <span>Override Authorized</span>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
-                            <AlertTriangle size={11} />
-                            <span>Insufficient Notice</span>
-                          </div>
-                        )}
-                        {leave.tierLabel && (
-                          <span className="text-[10px] text-muted-foreground block mt-0.5">
-                            Tier: {leave.tierLabel}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          {isCompliant ? (
+                            <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                              <ShieldCheck size={11} />
+                              <span>{leave.actualNoticeDays}d Notice (Req: {leave.requiredNoticeDays}d)</span>
+                            </div>
+                          ) : isExempt ? (
+                            <div className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-500">
+                              <AlertTriangle size={11} />
+                              <span>Override Authorized</span>
+                            </div>
+                          ) : (
+                            <div className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
+                              <AlertTriangle size={11} />
+                              <span>Insufficient Notice</span>
+                            </div>
+                          )}
+                          {leave.tierLabel && (
+                            <span className="text-[10px] text-muted-foreground">
+                              • Tier: {leave.tierLabel}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Reason */}
-                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-muted-foreground max-w-xs truncate">
-                        <span className="text-foreground font-medium block truncate">
-                          {leave.reason || "Personal leave"}
-                        </span>
-                        {leave.overrideReason && (
-                          <span className="text-[10px] text-amber-500 block truncate">
-                            Override: {leave.overrideReason}
+                      <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-muted-foreground max-w-xs whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap truncate">
+                          <span className="text-foreground font-medium truncate">
+                            {leave.reason || "Personal leave"}
                           </span>
-                        )}
+                          {leave.overrideReason && (
+                            <span className="text-[10px] text-amber-500 shrink-0">
+                              (Override: {leave.overrideReason})
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Allowance Classification */}
                       <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
                         {leave.totalDays <= monthlyAllowance ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
                             Paid Allowance
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500 whitespace-nowrap">
                             Partial Unpaid
                           </span>
                         )}
@@ -453,7 +342,7 @@ export function TrainerMonthlyLedger({
                       {/* Status */}
                       <td className="bg-card py-3 px-4 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ${
                             leave.status === "APPROVED"
                               ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                               : "bg-amber-500/15 text-amber-500 border border-amber-500/30"
@@ -470,7 +359,7 @@ export function TrainerMonthlyLedger({
             </table>
           </div>
         ) : (
-          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground whitespace-nowrap">
             No faculty leaves recorded in {formattedSelectedMonth}. All classes were delivered with full staff presence.
           </div>
         )}

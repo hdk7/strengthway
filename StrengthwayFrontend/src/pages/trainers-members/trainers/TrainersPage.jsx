@@ -191,7 +191,7 @@ export default function TrainersPage() {
           { label: "Male", value: "Male" },
           { label: "Female", value: "Female" },
         ]}
-        pageSize={5}
+        pageSize={7}
         itemLabel="trainers"
         emptyTitle="No trainers found"
         emptyMessage="Try adjusting your search query or filters."

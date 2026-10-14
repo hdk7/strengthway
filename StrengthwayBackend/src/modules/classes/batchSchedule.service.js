@@ -249,12 +249,18 @@ class BatchScheduleService {
         throw new NotFoundError(`Target session "${targetSessionId}" not found in batch "${batchId}".`);
       }
 
-      // Protection: Cannot swap past completed sessions or sessions with attendance
+      // Protection: Cannot swap past completed sessions, in-progress sessions, or sessions with attendance
       if (sourceSession.status === SESSION_STATUS.COMPLETED || sourceSession.attendedCount > 0) {
         throw new BadRequestError(`Cannot swap session on ${sourceSession.sessionDate}: class is already completed.`);
       }
       if (targetSession.status === SESSION_STATUS.COMPLETED || targetSession.attendedCount > 0) {
         throw new BadRequestError(`Cannot swap session on ${targetSession.sessionDate}: class is already completed.`);
+      }
+      if (sourceSession.status === SESSION_STATUS.IN_PROGRESS) {
+        throw new BadRequestError(`Cannot swap session on ${sourceSession.sessionDate}: class is currently in progress.`);
+      }
+      if (targetSession.status === SESSION_STATUS.IN_PROGRESS) {
+        throw new BadRequestError(`Cannot swap session on ${targetSession.sessionDate}: class is currently in progress.`);
       }
 
       // Capture before-swap details for history

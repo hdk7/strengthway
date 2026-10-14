@@ -20,7 +20,7 @@ import {
   checkTrainerScheduleAccess,
   getEffectiveTrainerStatus,
 } from "./trainerAttendanceUtils";
-import { isAdmin } from "@/auth/currentUser";
+import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 
 export function TrainerDailyCheckInTable({
   searchQuery,
@@ -86,9 +86,9 @@ export function TrainerDailyCheckInTable({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs flex flex-col">
+    <div className="flex-1 min-h-0 flex flex-col gap-2.5">
       {/* Action Toolbar & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 sm:p-3 border-b border-border/70 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border border-border/80 bg-card shadow-xs shrink-0">
         <div className="flex items-center gap-2 flex-1 max-w-sm">
           <div className="relative w-full">
             <Search
@@ -192,17 +192,17 @@ export function TrainerDailyCheckInTable({
           <p className="mt-2 text-xs font-semibold">Loading daily faculty roster…</p>
         </div>
       ) : filteredTrainers.length > 0 ? (
-        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar flex flex-col">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-card border-b border-border/80 text-[10px] uppercase tracking-wider text-muted-foreground shadow-xs">
-              <tr>
-                <th className="px-4 py-2.5 font-bold">Faculty Coach</th>
-                <th className="px-4 py-2.5 font-bold">Assigned Schedule / Timings</th>
-                <th className="px-4 py-2.5 font-bold">Check-In / Out Time</th>
-                <th className="px-4 py-2.5 font-bold">Status</th>
+        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar flex flex-col pr-1">
+          <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
+            <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
+              <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                <th className="py-3 px-4 sm:px-6 whitespace-nowrap">Faculty Coach</th>
+                <th className="py-3 px-4 sm:px-6 whitespace-nowrap">Assigned Schedule / Timings</th>
+                <th className="py-3 px-4 sm:px-6 whitespace-nowrap">Check-In / Out Time</th>
+                <th className="py-3 px-4 sm:px-6 whitespace-nowrap">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40 font-medium">
+            <tbody className="text-xs sm:text-sm font-medium whitespace-nowrap">
               {paginatedTrainers.map((trainer) => {
                 const record = dailyRecordsMap[trainer.id];
                 const hasCheckedIn = Boolean(record?.checkInTime);
@@ -224,73 +224,76 @@ export function TrainerDailyCheckInTable({
                 return (
                   <tr
                     key={trainer.id}
-                    className="hover:bg-muted/20 transition-colors"
+                    className="group transition-all duration-150 hover:-translate-y-px whitespace-nowrap"
                   >
                     {/* Faculty Coach Info */}
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                      <div className="flex items-center gap-2.5 whitespace-nowrap">
                         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent font-bold text-xs uppercase">
                           {trainer.name?.[0] || "T"}
                         </div>
-                        <div className="min-w-0">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
                           <Link
-                            to={`/admin/trainers-members/trainers/${trainer.id}`}
-                            className="font-bold text-foreground hover:text-accent transition-colors block truncate"
+                            to={`${getRoleBasePath()}/trainers-members/trainers/${trainer.id}`}
+                            className="font-bold text-foreground hover:text-accent transition-colors truncate whitespace-nowrap"
                           >
                             {trainer.name}
                           </Link>
-                          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
-                            <span>ID: {trainer.id}</span>
-                          </div>
+                          <span className="text-[10px] text-muted-foreground font-mono whitespace-nowrap">
+                            (ID: {trainer.id})
+                          </span>
                         </div>
                       </div>
                     </td>
 
                     {/* Assigned Batches */}
-                    <td className="px-4 py-2.5">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {assignedBatchObjects.length > 0 ? (
-                        <div className="flex items-center gap-1 flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
                           {assignedBatchObjects.map((b) => (
                             <span
                               key={b.id}
-                              className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 bg-muted/60 text-[9px] font-mono text-muted-foreground border border-border/50"
+                              className="inline-flex items-center gap-1 rounded px-2 py-0.5 bg-muted/60 text-[10px] font-mono text-muted-foreground border border-border/50 whitespace-nowrap shrink-0"
                             >
-                              <Layers size={8} />
+                              <Layers size={9} />
                               <span>{b.name}</span>
                             </span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[10px] text-muted-foreground italic">No batches assigned</span>
+                        <span className="text-[10px] text-muted-foreground italic whitespace-nowrap">No batches assigned</span>
                       )}
                     </td>
 
                     {/* Check-In / Out Timestamps */}
-                    <td className="px-4 py-2.5 whitespace-nowrap">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {hasCheckedIn ? (
-                        <div className="font-mono text-xs flex flex-col gap-0.5">
-                          <span className="text-emerald-500 font-semibold flex items-center gap-1 text-[11px]">
+                        <div className="font-mono text-xs flex items-center gap-2 whitespace-nowrap">
+                          <span className="text-emerald-500 font-semibold flex items-center gap-1 text-[11px] whitespace-nowrap">
                             <LogIn size={11} className="shrink-0" />
                             <span>In: {record.checkInTime}</span>
                           </span>
                           {hasCheckedOut && (
-                            <span className="text-blue-400 font-semibold flex items-center gap-1 text-[11px]">
-                              <LogOut size={11} className="shrink-0" />
-                              <span>Out: {record.checkOutTime}</span>
-                            </span>
+                            <>
+                              <span className="text-muted-foreground/60">•</span>
+                              <span className="text-blue-400 font-semibold flex items-center gap-1 text-[11px] whitespace-nowrap">
+                                <LogOut size={11} className="shrink-0" />
+                                <span>Out: {record.checkOutTime}</span>
+                              </span>
+                            </>
                           )}
                         </div>
                       ) : effectiveStatus === "ABSENT" ? (
-                        <span className="text-rose-400/80 font-mono text-[11px]">
+                        <span className="text-rose-400/80 font-mono text-[11px] whitespace-nowrap">
                           Absent (No Check-In)
                         </span>
                       ) : (
-                        <span className="text-muted-foreground font-mono text-[11px]">—</span>
+                        <span className="text-muted-foreground font-mono text-[11px] whitespace-nowrap">—</span>
                       )}
                     </td>
 
                     {/* Status Badge */}
-                    <td className="px-4 py-2.5 whitespace-nowrap">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {renderStatusBadge(effectiveStatus)}
                     </td>
                   </tr>

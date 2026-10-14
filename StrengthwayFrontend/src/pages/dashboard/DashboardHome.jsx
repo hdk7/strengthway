@@ -134,7 +134,7 @@ export default function DashboardHome() {
           value: myRecord.status || "Active",
           change: myRecord.planName || "Member Profile",
           icon: UserCheck,
-          path: `/admin/trainers-members/members/${currentUser?.memberId || myRecord.id || "MEM-2001"}`,
+          path: `/member/trainers-members/members/${currentUser?.memberId || myRecord.id || "MEM-2001"}`,
           badge: "Enrolled",
           description:
             "Personal biometric attendance, body vitals, and plan dossier",
@@ -144,7 +144,7 @@ export default function DashboardHome() {
           value: myBatch?.name || "Strength Slot",
           change: myBatch?.timingLabel || myBatch?.timing || "Morning MWF",
           icon: CalendarDays,
-          path: "/admin/schedule/batches",
+          path: "/member/schedule/batches",
           badge: myBatch?.daysLabel || "Assigned",
           description:
             "Assigned training batch slot, timetable, and curriculum classes",
@@ -154,7 +154,7 @@ export default function DashboardHome() {
           value: "Biometric",
           change: "Punch logs & daily schedule tracking",
           icon: ClipboardCheck,
-          path: "/admin/attendance/members",
+          path: "/member/attendance/members",
           badge: "Active",
           description:
             "Live punch status, monthly presence ledger, and timetable calendar",
@@ -169,7 +169,7 @@ export default function DashboardHome() {
           value: totalMembers.toLocaleString(),
           change: `${activeMembers} active athletes under coaching`,
           icon: Users,
-          path: "/admin/trainers-members/members",
+          path: "/trainer/trainers-members/members",
           badge: "Assigned",
           description:
             "Gym athletes enrolled in your assigned training batches",
@@ -179,7 +179,7 @@ export default function DashboardHome() {
           value: batches.length.toLocaleString(),
           change: "Scheduled coaching slots",
           icon: CalendarDays,
-          path: "/admin/schedule/batches",
+          path: "/trainer/schedule/batches",
           badge: "Active",
           description:
             "Assigned batch schedules, curriculum classes, and athlete roster",
@@ -189,7 +189,7 @@ export default function DashboardHome() {
           value: "Biometric Sync",
           change: "Daily shifts & attendance summary",
           icon: ClipboardCheck,
-          path: "/admin/attendance/trainers",
+          path: "/trainer/attendance/trainers",
           badge: "Faculty",
           description:
             "View shift logs, biometric punches, and submit leave requests",

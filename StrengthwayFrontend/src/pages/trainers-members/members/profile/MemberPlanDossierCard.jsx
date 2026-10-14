@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Award, FileCheck } from "lucide-react";
-import { isTrainer } from "@/auth/currentUser";
+import { isTrainer, getRoleBasePath } from "@/auth/currentUser";
 
 export function MemberPlanDossierCard({
   member,
@@ -129,7 +129,7 @@ export function MemberPlanDossierCard({
             <div className="flex items-center justify-between py-2">
               <span className="text-muted-foreground">Assigned Batch:</span>
               <Link
-                to={`/admin/batches/${member.batchId}`}
+                to={`${getRoleBasePath()}/batches/${member.batchId}`}
                 className="font-bold text-accent hover:underline flex items-center gap-1"
               >
                 <span>{member.batchId}</span>

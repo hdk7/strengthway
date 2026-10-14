@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Dumbbell, Plus, AlertCircle, RefreshCw, Trash2, X, Check, CalendarPlus } from "lucide-react";
+import { Dumbbell, Plus, AlertCircle, RefreshCw, Trash2, X, Check, CalendarPlus, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getClasses,
@@ -15,6 +15,7 @@ import { BatchClassAssignmentModal } from "./components/BatchClassAssignmentModa
 import { ClassMonthlyCalendarView } from "./components/ClassMonthlyCalendarView";
 import { ClassSessionDetailModal } from "./components/ClassSessionDetailModal";
 import { ShuffleClassModal } from "./components/ShuffleClassModal";
+import { DataTable } from "@/components/table";
 import Pagination from "@/components/table/Pagination";
 import { isAdmin } from "@/auth/currentUser";
 
@@ -26,6 +27,8 @@ export default function MasterClassSchedulePage() {
 
   // Active perspective: "library" | "month"
   const [activeView, setActiveView] = useState("library");
+  // View mode within library: "table" | "grid"
+  const [viewMode, setViewMode] = useState("table");
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -181,8 +184,151 @@ export default function MasterClassSchedulePage() {
     };
   }, [classes]);
 
-  // Pagination State (classes library - fixed 6 per page, no per-page selector)
-  const PAGE_SIZE = 6;
+  // Standardized Table Columns for Master Classes
+  const classColumns = useMemo(
+    () => [
+      ...(isAdmin()
+        ? [
+            {
+              header: "Select",
+              className: "w-12 text-center",
+              cell: (cls) => {
+                const isSelected = selectedClassIds.includes(cls.id);
+                return (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleSelect(cls.id);
+                    }}
+                    className={`mx-auto flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border transition-all cursor-pointer select-none ${
+                      isSelected
+                        ? "bg-accent border-accent text-accent-foreground"
+                        : "border-border bg-background hover:border-accent"
+                    }`}
+                    title={isSelected ? "Deselect class" : "Select class"}
+                  >
+                    {isSelected && <Check size={12} strokeWidth={3} />}
+                  </button>
+                );
+              },
+            },
+          ]
+        : []),
+      {
+        header: "Class Program",
+        className: "min-w-[200px]",
+        cell: (cls) => (
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent font-bold text-xs border border-accent/20 shadow-2xs">
+              <Dumbbell size={16} />
+            </span>
+            <div className="min-w-0">
+              <span className="font-bold text-foreground text-xs sm:text-sm truncate block">
+                {cls.name}
+              </span>
+              <span className="inline-flex items-center font-mono text-[10px] font-semibold bg-muted/70 text-muted-foreground px-1.5 py-0.5 rounded border border-border/50 mt-0.5">
+                #{cls.id}
+              </span>
+            </div>
+          </div>
+        ),
+      },
+      {
+        header: "Beginner Workouts",
+        className: "max-w-xs",
+        cell: (cls) => {
+          const hasBeg = cls.beginnerWorkouts && cls.beginnerWorkouts.trim() !== "Not specified";
+          return hasBeg ? (
+            <div className="flex items-start gap-1.5 text-xs text-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
+              <span className="truncate max-w-[260px]" title={cls.beginnerWorkouts}>
+                {cls.beginnerWorkouts}
+              </span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">Not specified</span>
+          );
+        },
+      },
+      {
+        header: "Intermediate Workouts",
+        className: "max-w-xs",
+        cell: (cls) => {
+          const hasInt = cls.intermediateWorkouts && cls.intermediateWorkouts.trim() !== "Not specified";
+          return hasInt ? (
+            <div className="flex items-start gap-1.5 text-xs text-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
+              <span className="truncate max-w-[260px]" title={cls.intermediateWorkouts}>
+                {cls.intermediateWorkouts}
+              </span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground italic">Not specified</span>
+          );
+        },
+      },
+      {
+        header: "Status",
+        className: "whitespace-nowrap",
+        cell: (cls) => (
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold shadow-2xs border ${
+              cls.status === "ACTIVE"
+                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                : "bg-muted text-muted-foreground border-border/60"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                cls.status === "ACTIVE" ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
+              }`}
+            />
+            <span>{cls.status}</span>
+          </span>
+        ),
+      },
+      ...(isAdmin()
+        ? [
+            {
+              header: "Actions",
+              align: "right",
+              className: "whitespace-nowrap",
+              cell: (cls) => (
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleOpenEdit(cls);
+                    }}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 border border-transparent hover:border-primary/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    title="Edit class"
+                  >
+                    <Edit3 size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingClass(cls);
+                    }}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                    title="Delete class"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ),
+            },
+          ]
+        : []),
+    ],
+    [selectedClassIds, handleToggleSelect, handleOpenEdit]
+  );
+
+  // Pagination State (classes library - standardized 7 rows per page)
+  const PAGE_SIZE = 7;
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
@@ -208,6 +354,8 @@ export default function MasterClassSchedulePage() {
       <ClassHeaderStats
         activeView={activeView}
         setActiveView={setActiveView}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
         onOpenCreate={handleOpenCreate}
         stats={stats}
         searchQuery={searchQuery}
@@ -223,7 +371,7 @@ export default function MasterClassSchedulePage() {
 
       {/* Multi-Dimensional Perspectives */}
       {activeView === "month" ? (
-        <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <ClassMonthlyCalendarView
             batches={batches}
             onOpenSessionDetail={(session) => setInspectingSession(session)}
@@ -287,7 +435,7 @@ export default function MasterClassSchedulePage() {
               </button>
             )}
           </div>
-        ) : (
+        ) : viewMode === "grid" ? (
           <div className="flex-1 min-h-0 flex flex-col justify-between">
             <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
@@ -317,6 +465,22 @@ export default function MasterClassSchedulePage() {
               </div>
             )}
           </div>
+        ) : (
+          <DataTable
+            columns={classColumns}
+            data={filteredClasses}
+            keyField="id"
+            pageSize={7}
+            currentPage={safePage}
+            onPageChange={setCurrentPage}
+            totalItems={filteredClasses.length}
+            totalPages={totalPages}
+            showToolbar={false}
+            itemLabel="classes"
+            loading={loading}
+            loadingRowsCount={7}
+            className="flex-1 min-h-0"
+          />
         )
       )}
 

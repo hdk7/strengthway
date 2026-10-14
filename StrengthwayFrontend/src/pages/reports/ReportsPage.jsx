@@ -222,7 +222,7 @@ export default function ReportsPage() {
 
   // ─── Pagination States per Tab ──────────────────────────────────────────────
   const [batchesPage, setBatchesPage] = useState(1);
-  const batchesPageSize = 8;
+  const batchesPageSize = 7;
   useEffect(() => {
     setBatchesPage(1);
   }, [batchSearch, selectedBatchFilter, occupancyThreshold, selectedMonth]);
@@ -234,7 +234,7 @@ export default function ReportsPage() {
   }, [filteredBatches, safeBatchesPage, batchesPageSize]);
 
   const [membersPage, setMembersPage] = useState(1);
-  const membersPageSize = 8;
+  const membersPageSize = 7;
   useEffect(() => {
     setMembersPage(1);
   }, [memberSearch, memberStatusFilter, memberBatchFilter, selectedMonth]);
@@ -246,7 +246,7 @@ export default function ReportsPage() {
   }, [filteredMembers, safeMembersPage, membersPageSize]);
 
   const [trainersPage, setTrainersPage] = useState(1);
-  const trainersPageSize = 8;
+  const trainersPageSize = 7;
   useEffect(() => {
     setTrainersPage(1);
   }, [trainerSearch, trainerShiftFilter, selectedMonth]);
@@ -258,7 +258,7 @@ export default function ReportsPage() {
   }, [filteredTrainers, safeTrainersPage, trainersPageSize]);
 
   const [classesPage, setClassesPage] = useState(1);
-  const classesPageSize = 8;
+  const classesPageSize = 7;
   useEffect(() => {
     setClassesPage(1);
   }, [classSearch, classBatchFilter, selectedMonth]);

@@ -14,7 +14,7 @@ import {
   ArrowRightLeft,
   Clock,
 } from "lucide-react";
-import { isAdmin } from "@/auth/currentUser";
+import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 import {
   isDateToday,
   isDatePast,
@@ -88,9 +88,9 @@ export function MemberDailyCheckInTable({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs flex flex-col">
+    <div className="flex-1 min-h-0 flex flex-col gap-2.5">
       {/* Action Toolbar & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 sm:p-3 border-b border-border/70 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border border-border/80 bg-card shadow-xs shrink-0">
         <div className="flex items-center gap-2 flex-1 max-w-sm">
           <div className="relative w-full">
             <Search
@@ -192,17 +192,17 @@ export function MemberDailyCheckInTable({
           <p className="mt-2 text-xs font-semibold">Loading daily session roster…</p>
         </div>
       ) : filteredAttendees.length > 0 ? (
-        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar flex flex-col">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-card border-b border-border/80 text-[10px] uppercase tracking-wider text-muted-foreground shadow-xs">
-              <tr>
-                <th className="px-4 py-2.5 font-bold">Athlete</th>
-                <th className="px-4 py-2.5 font-bold">Check-In / Out Time</th>
-                <th className="px-4 py-2.5 font-bold">Status</th>
-                <th className="px-4 py-2.5 font-bold text-center min-w-40">Action</th>
+        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar flex flex-col pr-1">
+          <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
+            <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
+              <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <th className="py-3 px-4 sm:px-6">Athlete</th>
+                <th className="py-3 px-4 sm:px-6">Check-In / Out Time</th>
+                <th className="py-3 px-4 sm:px-6">Status</th>
+                <th className="py-3 px-4 sm:px-6 text-center min-w-40">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border/40 font-medium">
+            <tbody className="text-xs sm:text-sm font-medium">
               {paginatedAttendees.map((attendee) => {
                 const record = dailyRecordsMap[attendee.memberId];
                 const hasCheckedIn = Boolean(record?.checkInTime);
@@ -216,12 +216,12 @@ export function MemberDailyCheckInTable({
                 return (
                   <tr
                     key={attendee.memberId}
-                    className={`hover:bg-muted/20 transition-colors ${
-                      attendee.isFlexOut ? "opacity-60 bg-muted/10" : ""
+                    className={`group transition-all duration-150 hover:-translate-y-px ${
+                      attendee.isFlexOut ? "opacity-60" : ""
                     }`}
                   >
                     {/* Athlete Info */}
-                    <td className="px-4 py-2.5">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
                       <div className="flex items-center gap-2.5">
                         <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent font-bold text-xs uppercase">
                           {attendee.name?.[0] || "A"}
@@ -229,7 +229,7 @@ export function MemberDailyCheckInTable({
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Link
-                              to={`/admin/trainers-members/members/${attendee.memberId}`}
+                              to={`${getRoleBasePath()}/trainers-members/members/${attendee.memberId}`}
                               className="font-bold text-foreground hover:text-accent transition-colors block truncate"
                             >
                               {attendee.name}
@@ -256,7 +256,7 @@ export function MemberDailyCheckInTable({
                     </td>
 
                     {/* Check-In / Out Timestamps */}
-                    <td className="px-4 py-2.5 whitespace-nowrap">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {hasCheckedIn ? (
                         <div className="font-mono text-xs flex flex-col gap-0.5">
                           <span className="text-emerald-500 font-semibold flex items-center gap-1 text-[11px]">
@@ -280,12 +280,12 @@ export function MemberDailyCheckInTable({
                     </td>
 
                     {/* Status Badge */}
-                    <td className="px-4 py-2.5 whitespace-nowrap">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {renderStatusBadge(effectiveStatus, hasCheckedOut)}
                     </td>
 
                     {/* Action Column: Retain ONLY Check In and Check Out, governed by schedule */}
-                    <td className="px-4 py-2.5 text-center">
+                    <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center">
                       {attendee.isFlexOut ? (
                         <span className="text-xs font-semibold text-muted-foreground italic">
                           Handled at target batch

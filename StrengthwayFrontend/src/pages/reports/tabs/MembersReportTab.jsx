@@ -9,6 +9,7 @@ import {
   Check,
 } from "lucide-react";
 import { getTailwindWidth } from "@/lib/tailwindUtils";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function MembersReportTab({
   membersReport,
@@ -174,7 +175,7 @@ export function MembersReportTab({
                           </div>
                           <div>
                             <Link
-                              to={`/admin/members/${m.memberId}`}
+                              to={`${getRoleBasePath()}/trainers-members/members/${m.memberId}`}
                               className="font-bold text-foreground hover:text-accent flex items-center gap-1.5"
                             >
                               <span>{m.name}</span>

@@ -1,6 +1,10 @@
-import { createPortal } from "react-dom";
-import { X, Dumbbell } from "lucide-react";
 import { InputField, TextareaField } from "@/components/form";
+import {
+  FormModal,
+  FormModalHeader,
+  FormModalBody,
+  FormModalFooter,
+} from "@/components/ui/FormModal";
 
 export default function EditMasterClassItemModal({
   isOpen,
@@ -9,7 +13,7 @@ export default function EditMasterClassItemModal({
   setEditingMasterItem,
   onSave,
 }) {
-  if (!isOpen || !editingMasterItem || typeof document === "undefined") {
+  if (!editingMasterItem) {
     return null;
   }
 
@@ -32,48 +36,25 @@ export default function EditMasterClassItemModal({
         : editingMasterItem.intermediateWorkouts
       : "";
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150"
-      role="dialog"
-      aria-modal="true"
-    >
-      <div
-        className="w-full max-w-lg rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 relative max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-border pb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 dark:bg-primary/15 text-blue-700 dark:text-primary text-xs font-black">
-              {editingMasterItem.classNumber || 1}
-            </span>
-            <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-foreground flex items-center gap-2">
-                <span>Edit Scheduled Class</span>
-                {editingMasterItem.classId && (
-                  <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
-                    {editingMasterItem.classId}
-                  </span>
-                )}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-muted-foreground">
-                Class #{String(editingMasterItem.classNumber || 1).padStart(2, "0")}{" "}
-                {editingMasterItem.weekNumber ? `• Week ${editingMasterItem.weekNumber}` : ""}{" "}
-                {editingMasterItem.dayOfWeek ? `• ${editingMasterItem.dayOfWeek}` : ""}{" "}
-                {editingMasterItem.displayDate ? `• ${editingMasterItem.displayDate}` : ""}
-              </p>
-            </div>
+  return (
+    <FormModal isOpen={isOpen} onClose={onClose} size="lg">
+      <FormModalHeader
+        title={
+          <div className="flex items-center gap-2">
+            <span>Edit Scheduled Class</span>
+            {editingMasterItem.classId && (
+              <span className="font-mono text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
+                {editingMasterItem.classId}
+              </span>
+            )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground cursor-pointer transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
+        }
+        subtitle={`Class #${String(editingMasterItem.classNumber || 1).padStart(2, "0")} ${editingMasterItem.weekNumber ? `• Week ${editingMasterItem.weekNumber}` : ""} ${editingMasterItem.dayOfWeek ? `• ${editingMasterItem.dayOfWeek}` : ""} ${editingMasterItem.displayDate ? `• ${editingMasterItem.displayDate}` : ""}`}
+        onClose={onClose}
+      />
 
-        <form onSubmit={onSave} className="space-y-4 text-sm">
+      <form id="edit-master-class-form" onSubmit={onSave} className="flex flex-col flex-1 min-h-0">
+        <FormModalBody className="space-y-4">
           {/* Class Program Name */}
           <InputField
             label="Class Program Name"
@@ -92,6 +73,7 @@ export default function EditMasterClassItemModal({
           {/* Beginner Workout Content */}
           <TextareaField
             rows={3}
+            resize="vertical"
             label="Beginner Workout Content"
             placeholder="e.g. 5 Push ups; 5 GB Squats; 5 Pulls; 5 Deadlift; × 5 sets"
             value={beginnerWorkouts}
@@ -106,6 +88,7 @@ export default function EditMasterClassItemModal({
           {/* Intermediate Workout Content */}
           <TextareaField
             rows={4}
+            resize="vertical"
             label="Intermediate Workout Content"
             placeholder="e.g. Push: Push ups 5–10 × 3; Dips 4–10 × 3; OH Press 6–10 × 3..."
             value={intermediateWorkouts}
@@ -116,25 +99,14 @@ export default function EditMasterClassItemModal({
               })
             }
           />
+        </FormModalBody>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-border">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2 text-xs font-bold cursor-pointer shadow-md transition-all active:scale-95"
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>,
-    document.body,
+        <FormModalFooter
+          onCancel={onClose}
+          cancelText="Cancel"
+          submitText="Save Changes"
+        />
+      </form>
+    </FormModal>
   );
 }

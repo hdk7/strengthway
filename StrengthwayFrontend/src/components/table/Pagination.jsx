@@ -8,7 +8,7 @@ const Pagination = ({
   currentPage = 1,
   totalPages = 1,
   totalItems,
-  pageSize = 5,
+  pageSize = 7,
   pageSizeOptions,
   onPageSizeChange,
   onPageChange,

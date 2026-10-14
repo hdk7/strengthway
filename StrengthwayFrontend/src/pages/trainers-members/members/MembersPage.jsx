@@ -13,10 +13,20 @@ import { toast } from "sonner";
 import { AdminMemberRegistrationModal } from "./MembersRegistration";
 import { getMembers, toggleMemberStatus } from "@/lib/membersService";
 import { createInquiry } from "@/lib/inquiriesService";
-import { Pagination } from "@/components/table";
+import { DataTable } from "@/components/table";
 import { isAdmin } from "@/auth/currentUser";
 import MemberMetricsRow from "./MemberMetricsRow";
 import MemberTableRow from "./MemberTableRow";
+
+const MEMBER_COLUMNS = [
+  { header: "Member ID", width: "w-28" },
+  { header: "Member" },
+  { header: "Contact" },
+  { header: "Physical Stats" },
+  { header: "Emergency Contact" },
+  { header: "Medical Doc" },
+  { header: "Status", align: "center" },
+];
 
 export default function MembersPage() {
   const navigate = useNavigate();
@@ -26,7 +36,7 @@ export default function MembersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 7;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedInquiryForConfirm, setSelectedInquiryForConfirm] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
@@ -288,89 +298,58 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Members Table */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-        <div className="overflow-x-auto overflow-y-auto no-scrollbar flex-1 min-h-0 flex flex-col pr-1">
-          <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-            <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
-              <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                <th className="py-2.5 px-4 sm:px-5">Member ID</th>
-                <th className="py-2.5 px-4 sm:px-5">Member</th>
-                <th className="py-2.5 px-4 sm:px-5">Contact</th>
-                <th className="py-2.5 px-4 sm:px-5">Physical Stats</th>
-                <th className="py-2.5 px-4 sm:px-5">Emergency Contact</th>
-                <th className="py-2.5 px-4 sm:px-5">Medical Doc</th>
-                <th className="py-2.5 px-4 sm:px-5 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs sm:text-sm">
-              {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center bg-card rounded-2xl border border-border/50 shadow-xs">
-                    <Loader2 size={24} className="animate-spin text-muted-foreground mx-auto" />
-                    <p className="mt-2 text-xs text-muted-foreground">Loading members…</p>
-                  </td>
-                </tr>
-              ) : paginatedMembers.length > 0 ? (
-                paginatedMembers.map((member) => (
-                  <MemberTableRow
-                    key={member.id}
-                    member={member}
-                    onNavigate={navigate}
-                    onOpenConfirmModal={handleOpenConfirmModal}
-                    onToggleStatus={handleToggleStatus}
-                    togglingId={togglingId}
-                    onMoveToInquiry={handleMoveToInquiry}
-                  />
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs">
-                    <div className="flex flex-col items-center justify-center">
-                      <Users size={36} className="text-muted-foreground/40 mb-2" />
-                      <p className="text-sm font-semibold text-foreground">No members found</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {searchQuery
-                           ? "Try adjusting your search query or filters."
-                          : statusFilter === "Archived"
-                            ? "There are no soft-deleted members in the archive."
-                            : statusFilter === "Lead" || statusFilter === "Inquiry"
-                              ? "No pending inquiries found."
-                              : "Get started by adding your first gym member."}
-                      </p>
-                      {!searchQuery &&
-                        statusFilter !== "Archived" &&
-                        statusFilter !== "Lead" &&
-                        statusFilter !== "Inquiry" && (
-                          <button
-                            type="button"
-                            onClick={handleOpenAddModal}
-                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-background shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
-                          >
-                            <UserPlus size={15} />
-                            <span>Add Member</span>
-                          </button>
-                        )}
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <Pagination
-          currentPage={safePage}
-          totalPages={totalPages}
-          totalItems={filteredMembers.length}
-          pageSize={pageSize}
-          onPageChange={(page) => setCurrentPage(page)}
-          itemLabel="members"
-          compact
-          className="shrink-0 mt-auto"
-        />
-      </div>
+      {/* Standardized Members Data Table */}
+      <DataTable
+        columns={MEMBER_COLUMNS}
+        data={filteredMembers}
+        pageSize={pageSize}
+        currentPage={safePage}
+        onPageChange={setCurrentPage}
+        totalItems={filteredMembers.length}
+        totalPages={totalPages}
+        itemLabel="members"
+        loading={loading}
+        loadingRowsCount={7}
+        showToolbar={false}
+        emptyIcon={Users}
+        emptyTitle="No members found"
+        emptyMessage={
+          searchQuery
+            ? "Try adjusting your search query or filters."
+            : statusFilter === "Archived"
+              ? "There are no soft-deleted members in the archive."
+              : statusFilter === "Lead" || statusFilter === "Inquiry"
+                ? "No pending inquiries found."
+                : "Get started by adding your first gym member."
+        }
+        emptyAction={
+          !searchQuery &&
+          statusFilter !== "Archived" &&
+          statusFilter !== "Lead" &&
+          statusFilter !== "Inquiry" ? (
+            <button
+              type="button"
+              onClick={handleOpenAddModal}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-semibold text-background shadow-xs hover:bg-primary/90 transition-all cursor-pointer"
+            >
+              <UserPlus size={15} />
+              <span>Add Member</span>
+            </button>
+          ) : null
+        }
+        renderRow={(member) => (
+          <MemberTableRow
+            key={member.id}
+            member={member}
+            onNavigate={navigate}
+            onOpenConfirmModal={handleOpenConfirmModal}
+            onToggleStatus={handleToggleStatus}
+            togglingId={togglingId}
+            onMoveToInquiry={handleMoveToInquiry}
+          />
+        )}
+        className="flex-1 min-h-0"
+      />
 
       {/* --- ADD NEW MEMBER MODAL --- */}
       <AdminMemberRegistrationModal

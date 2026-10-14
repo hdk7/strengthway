@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { assignClassesToBatch, getClasses } from "@/lib/classProgramService";
 import { getBatches } from "@/lib/batchesService";
+import { DataTable } from "@/components/table";
 
 /**
  * Calculates sequential batch dates matching the batch operational days pattern.
@@ -207,6 +208,74 @@ export function BatchClassAssignmentModal({
     if (!activeBatch || orderedClasses.length === 0) return [];
     return calculateBatchDates(activeBatch, startDate, orderedClasses.length);
   }, [activeBatch, startDate, orderedClasses.length]);
+
+  const previewTableData = useMemo(() => {
+    return previewDates.map((slot, index) => ({
+      id: `${slot.date}-${index}`,
+      seq: index + 1,
+      date: slot.date,
+      dayOfWeek: slot.dayOfWeek,
+      mappedClass: orderedClasses[index] || null,
+    }));
+  }, [previewDates, orderedClasses]);
+
+  const previewTableColumns = useMemo(
+    () => [
+      {
+        header: "Seq",
+        accessor: "seq",
+        className: "w-16 font-mono font-bold text-muted-foreground",
+        cell: (row) => `#${row.seq}`,
+      },
+      {
+        header: "Date",
+        accessor: "date",
+        className: "font-semibold whitespace-nowrap text-foreground",
+      },
+      {
+        header: "Day of Week",
+        accessor: "dayOfWeek",
+        cell: (row) => (
+          <span className="rounded-md bg-primary/10 text-primary font-bold px-2 py-0.5 text-[11px]">
+            {row.dayOfWeek}
+          </span>
+        ),
+      },
+      {
+        header: "Assigned Class Program",
+        cell: (row) => (
+          <span className="font-bold text-foreground whitespace-nowrap">
+            {row.mappedClass?.name || "Unassigned"}
+          </span>
+        ),
+      },
+      {
+        header: "Workouts Plan",
+        className: "max-w-sm",
+        cell: (row) => {
+          const mc = row.mappedClass;
+          if (!mc) return <span className="text-muted-foreground text-xs">—</span>;
+          return (
+            <div className="space-y-0.5">
+              {mc.beginnerWorkouts && mc.beginnerWorkouts !== "Not specified" && (
+                <div className="text-[11px] truncate">
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Beg: </span>
+                  {mc.beginnerWorkouts}
+                </div>
+              )}
+              {mc.intermediateWorkouts && mc.intermediateWorkouts !== "Not specified" && (
+                <div className="text-[11px] truncate">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">Int: </span>
+                  {mc.intermediateWorkouts}
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   const reorderClassQueue = (sourceIdx, targetIdx) => {
     if (
@@ -650,72 +719,27 @@ export function BatchClassAssignmentModal({
 
           {/* Section 3: Real-Time Date & Day Mapping Preview Table */}
           {previewDates.length > 0 && (
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-primary flex items-center gap-2">
                   <Sparkles size={15} />
                   <span>3. Date-wise & Day-wise Calendar Mapping Preview</span>
                 </h3>
-                <span className="text-[11px] text-slate-400 dark:text-muted-foreground">
+                <span className="text-[11px] text-muted-foreground">
                   Exact session slots that will be created
                 </span>
               </div>
 
-              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-border">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 dark:bg-muted/50 border-b border-slate-200 dark:border-border text-slate-700 dark:text-foreground font-bold">
-                    <tr>
-                      <th className="py-2.5 px-3 w-12">Seq</th>
-                      <th className="py-2.5 px-3">Date</th>
-                      <th className="py-2.5 px-3">Day of Week</th>
-                      <th className="py-2.5 px-3">Assigned Class Program</th>
-                      <th className="py-2.5 px-3">Workouts Plan</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-border/60">
-                    {previewDates.map((slot, index) => {
-                      const mappedClass = orderedClasses[index];
-                      return (
-                        <tr
-                          key={`${slot.date}-${index}`}
-                          className="hover:bg-slate-50/50 dark:hover:bg-muted/30 transition-colors"
-                        >
-                          <td className="py-2.5 px-3 font-mono font-bold text-slate-500">
-                            #{index + 1}
-                          </td>
-                          <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-foreground whitespace-nowrap">
-                            {slot.date}
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className="rounded-md bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary font-bold px-2 py-0.5 text-[11px]">
-                              {slot.dayOfWeek}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-foreground whitespace-nowrap">
-                            {mappedClass?.name || "Unassigned"}
-                          </td>
-                          <td className="py-2.5 px-3 text-slate-500 dark:text-muted-foreground max-w-sm">
-                            <div className="space-y-0.5">
-                              {mappedClass?.beginnerWorkouts && mappedClass.beginnerWorkouts !== "Not specified" && (
-                                <div className="text-[11px] truncate">
-                                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Beg: </span>
-                                  {mappedClass.beginnerWorkouts}
-                                </div>
-                              )}
-                              {mappedClass?.intermediateWorkouts && mappedClass.intermediateWorkouts !== "Not specified" && (
-                                <div className="text-[11px] truncate">
-                                  <span className="font-semibold text-blue-600 dark:text-blue-400">Int: </span>
-                                  {mappedClass.intermediateWorkouts}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <DataTable
+                columns={previewTableColumns}
+                data={previewTableData}
+                keyField="id"
+                pageSize={7}
+                showToolbar={false}
+                searchable={false}
+                itemLabel="session slots"
+                className="shadow-2xs"
+              />
             </div>
           )}
         </div>

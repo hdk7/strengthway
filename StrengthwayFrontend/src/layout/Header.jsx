@@ -25,7 +25,7 @@ const iconBtnClass =
 
 export default function Header({ onToggle, sidebarVisible }) {
   const { theme, toggleTheme } = useTheme();
-  const [currentUser] = useState(getCurrentUser);
+  const currentUser = getCurrentUser();
   const [searchQuery, setSearchQuery] = useState("");
   const isDark = theme === "dark";
 
@@ -140,12 +140,15 @@ export default function Header({ onToggle, sidebarVisible }) {
         </button>
 
         {/* Brand */}
-        <div className="flex items-center gap-2 min-w-0">
+        <Link
+          to={currentUser?.role === "trainer" ? "/trainer/dashboard" : currentUser?.role === "member" ? "/member/dashboard" : "/admin/dashboard"}
+          className="flex items-center gap-2 min-w-0 hover:opacity-90 transition-opacity"
+        >
           <img src={logo} alt="TheStrengthWay" className="w-8 h-8 object-contain shrink-0" />
           <span className="hidden sm:inline text-sm font-bold text-foreground whitespace-nowrap overflow-hidden text-ellipsis">
             TheStrengthWay
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Spacer to push controls to the right */}

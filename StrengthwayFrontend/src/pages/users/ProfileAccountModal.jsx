@@ -25,6 +25,7 @@ import {
   FormModalBody,
   FormModalFooter,
 } from "@/components/ui/FormModal";
+import { InputField } from "@/components/form";
 
 /**
  * ProfileAccountModal
@@ -248,26 +249,24 @@ export default function ProfileAccountModal({
                 </button>
               </div>
 
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={resetPassword}
-                  onChange={(e) => setResetPassword(e.target.value)}
-                  placeholder="Enter new password (min 6 chars)"
-                  className={`flex-1 rounded-xl border bg-background px-3 py-2 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
-                    resetError ? "border-destructive" : "border-border"
-                  }`}
-                />
+              <div className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <InputField
+                    value={resetPassword}
+                    onChange={(e) => setResetPassword(e.target.value)}
+                    placeholder="Enter new password (min 6 chars)"
+                    error={resetError}
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={isResetting || !resetPassword}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1d4ed8] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-xs transition-all cursor-pointer disabled:opacity-50 shrink-0 min-h-[42px]"
                 >
                   {isResetting && <RefreshCw size={13} className="animate-spin" />}
                   <span>Save Password</span>
                 </button>
               </div>
-              {resetError && <p className="text-xs text-destructive">{resetError}</p>}
             </form>
           </div>
         ) : (
@@ -283,80 +282,54 @@ export default function ProfileAccountModal({
               </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1.5">
-                Full Name <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Full Name"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all"
-              />
-            </div>
+            <InputField
+              label="Full Name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full Name"
+            />
 
-            <div>
-              <label className="block text-xs font-bold text-foreground mb-1.5">
-                Login Email <span className="text-destructive">*</span>
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@example.com"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all"
-              />
-            </div>
+            <InputField
+              label="Login Email"
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@example.com"
+            />
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-foreground">
-                  Initial Password <span className="text-destructive">*</span>
-                </label>
+            <InputField
+              label="Initial Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minimum 8 characters"
+              endAdornment={
                 <button
                   type="button"
                   onClick={() => handleGeneratePassword(setPassword)}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer px-1 py-0.5"
                 >
                   <Sparkles size={12} />
-                  <span>Generate Password</span>
+                  <span>Generate</span>
                 </button>
-              </div>
-              <input
-                type="text"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 8 characters"
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all"
-              />
-            </div>
+              }
+            />
 
             {error && <p className="text-xs text-destructive">{error}</p>}
           </form>
         )}
       </FormModalBody>
 
-      <FormModalFooter>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-xl border border-border px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-        >
-          Close
-        </button>
-        {!account && (
-          <button
-            type="submit"
-            form="create-account-form"
-            disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting && <RefreshCw size={14} className="animate-spin" />}
-            <span>Create Login Account</span>
-          </button>
-        )}
-      </FormModalFooter>
+      <FormModalFooter
+        onCancel={onClose}
+        cancelText={account ? "Close" : "Cancel"}
+        submitText={account ? undefined : "Create Login Account"}
+        form={account ? undefined : "create-account-form"}
+        submitType="submit"
+        isSubmitting={isSubmitting}
+      />
     </FormModal>
   );
 }

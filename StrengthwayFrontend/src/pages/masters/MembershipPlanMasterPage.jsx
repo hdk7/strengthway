@@ -16,12 +16,23 @@ import {
   toggleMembershipPlanStatus,
 } from "@/lib/membershipPlans";
 import { getMembers } from "@/lib/membersService";
-import { Pagination } from "@/components/table";
+import { DataTable, Pagination } from "@/components/table";
 import { MembershipPlanModal } from "./components/MembershipPlanModal";
 import { MembershipPlanCard } from "./components/MembershipPlanCard";
 import { MembershipPlanTableRow } from "./components/MembershipPlanTableRow";
 import { MembershipPlanStats } from "./components/MembershipPlanStats";
 import { MembershipPlanToolbar } from "./components/MembershipPlanToolbar";
+
+const MEMBERSHIP_PLAN_COLUMNS = [
+  { header: "Plan ID", width: "w-28" },
+  { header: "Plan Name" },
+  { header: "Duration" },
+  { header: "Price & Billing" },
+  { header: "Benefits", align: "center" },
+  { header: "Enrolled Athletes", align: "center" },
+  { header: "Status", align: "center" },
+  { header: "Actions", align: "right" },
+];
 
 const EMPTY_PLAN_FORM = {
   name: "",
@@ -416,54 +427,48 @@ export default function MembershipPlanMasterPage() {
               ))}
             </div>
           ) : (
-        /* --- TABLE VIEW WITH SEPARATED ROWS & INDEPENDENT SCROLL --- */
-        <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-                <tr>
-                  <th className="py-2.5 px-4 sm:px-5">Plan ID</th>
-                  <th className="py-2.5 px-4 sm:px-5">Plan Name</th>
-                  <th className="py-2.5 px-4 sm:px-5">Duration</th>
-                  <th className="py-2.5 px-4 sm:px-5">Price & Billing</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Benefits</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Enrolled Athletes</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Status</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm font-medium">
-                {paginatedPlans.map((plan) => (
-                  <MembershipPlanTableRow
-                    key={plan.id}
-                    plan={plan}
-                    enrolled={enrolledCountByPlan[plan.id] || 0}
-                    onToggleStatus={handleToggleStatus}
-                    onRestore={handleRestore}
-                    onPermanentDelete={handlePermanentDelete}
-                    onEdit={handleOpenEdit}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        /* --- STANDARDIZED DATA TABLE VIEW --- */
+        <DataTable
+          columns={MEMBERSHIP_PLAN_COLUMNS}
+          data={filteredPlans}
+          pageSize={7}
+          currentPage={safePage}
+          onPageChange={setPage}
+          totalItems={filteredPlans.length}
+          totalPages={Math.max(1, Math.ceil(filteredPlans.length / 7))}
+          itemLabel="plans"
+          showToolbar={false}
+          renderRow={(plan) => (
+            <MembershipPlanTableRow
+              key={plan.id}
+              plan={plan}
+              enrolled={enrolledCountByPlan[plan.id] || 0}
+              onToggleStatus={handleToggleStatus}
+              onRestore={handleRestore}
+              onPermanentDelete={handlePermanentDelete}
+              onEdit={handleOpenEdit}
+              onDelete={handleDelete}
+            />
+          )}
+          className="flex-1 min-h-0"
+        />
       )}
         </div>
       </div>
 
-      {/* Pinned Bottom Pagination */}
-      <Pagination
-        currentPage={safePage}
-        totalPages={totalPages}
-        onPageChange={setPage}
-        totalItems={filteredPlans.length}
-        pageSize={pageSize}
-        itemName="plans"
-        compact
-        className="shrink-0 mt-auto"
-      />
+      {/* Pinned Bottom Pagination (Grid Mode Only) */}
+      {viewMode === "grid" && (
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalItems={filteredPlans.length}
+          pageSize={pageSize}
+          itemName="plans"
+          compact
+          className="shrink-0 mt-auto"
+        />
+      )}
 
       {/* Create / Edit Plan Modal */}
       <MembershipPlanModal

@@ -9,6 +9,7 @@ import {
 
 import { MonthPicker } from "@/components/ui/MonthPicker";
 import { getTailwindWidth } from "@/lib/tailwindUtils";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function TrainerMonthlyCoachingPanel({
   id,
@@ -76,7 +77,7 @@ export function TrainerMonthlyCoachingPanel({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <Link
-                        to={`/admin/batches/${b.id}`}
+                        to={`${getRoleBasePath()}/batches/${b.id}`}
                         className="font-bold text-sm text-foreground hover:text-accent transition-colors flex items-center gap-1 truncate"
                       >
                         <span className="truncate">{b.name}</span>

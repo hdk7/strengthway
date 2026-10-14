@@ -240,7 +240,7 @@ export default function PortfolioMasterPage() {
   };
 
   return (
-    <div className="flex-1 min-h-0 h-full flex flex-col gap-2">
+    <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5">
       {/* KPI Stats */}
       <PortfolioStats stats={stats} />
 
@@ -267,7 +267,7 @@ export default function PortfolioMasterPage() {
       </div>
 
       {/* Active Tab Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto pr-0.5 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto pr-0.5 space-y-3">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center p-16 text-muted-foreground">
             <RefreshCw size={28} className="animate-spin text-primary mb-2" />

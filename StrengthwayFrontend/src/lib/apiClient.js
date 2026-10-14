@@ -30,27 +30,31 @@ export class ApiError extends Error {
 
 // ── Token helpers ──────────────────────────────────────────────────────────────
 
-/** Read the stored JWT. Returns null if none is present. */
+/** Read the stored JWT from the current tab's sessionStorage. Returns null if none is present. */
 export function getAuthToken() {
   try {
-    return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    return sessionStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
   } catch {
     return null;
   }
 }
 
-/** Persist a new JWT to localStorage. */
+/** Persist a new JWT to the current tab's sessionStorage. */
 export function setAuthToken(token) {
   try {
-    localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    sessionStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
+    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
   } catch {
     // Ignore quota / private-browsing errors
   }
 }
 
-/** Remove the JWT (called on logout or 401). */
+/** Remove the JWT from the current tab (called on logout or 401). */
 export function clearAuthToken() {
   try {
+    sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    sessionStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+    sessionStorage.removeItem("strengthway_user_permissions");
     localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
   } catch {
@@ -100,8 +104,8 @@ async function request(method, path, body, options = {}) {
   if (response.status === 401) {
     clearAuthToken();
     // Only redirect if we are inside a browser and not already on the login page
-    if (typeof window !== "undefined" && !window.location.pathname.includes("/admin/login")) {
-      window.location.href = "/admin/login";
+    if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+      window.location.href = "/login";
     }
     throw new ApiError("Session expired. Please sign in again.", 401, null);
   }

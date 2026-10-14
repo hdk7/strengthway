@@ -6,7 +6,7 @@ import {
   Calendar,
   Sparkles,
 } from "lucide-react";
-import { isAdmin } from "@/auth/currentUser";
+import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 import { MemberAttendanceCalendar } from "./MemberAttendanceCalendar";
 import { MemberBatchHistoryTable } from "./MemberBatchHistoryTable";
 
@@ -67,7 +67,7 @@ export function MemberBatchManagementCard({
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <Link
-                    to={`/admin/batches/${primaryBatchDetails.id}`}
+                    to={`${getRoleBasePath()}/batches/${primaryBatchDetails.id}`}
                     className="text-base font-bold text-foreground hover:text-accent transition-colors block"
                   >
                     {primaryBatchDetails.name}
@@ -147,7 +147,7 @@ export function MemberBatchManagementCard({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <Link
-                      to={`/admin/batches/${pass.targetBatchId}`}
+                      to={`${getRoleBasePath()}/batches/${pass.targetBatchId}`}
                       className="text-xs font-bold text-foreground hover:text-amber-500 transition-colors block"
                     >
                       {pass.targetBatchName || pass.targetBatchId}

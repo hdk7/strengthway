@@ -9,7 +9,7 @@ import {
   ShieldCheck,
   KeyRound,
 } from "lucide-react";
-import { isAdmin, isMember } from "@/auth/currentUser";
+import { isAdmin, isMember, isTrainer } from "@/auth/currentUser";
 
 export function MemberProfileHeader({
   member,
@@ -106,7 +106,7 @@ export function MemberProfileHeader({
           {memberUser ? (
             <button
               type="button"
-              onClick={() => navigate("/admin/dashboard")}
+              onClick={() => navigate("/member/dashboard")}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
             >
               <ArrowLeft size={16} />
@@ -115,7 +115,7 @@ export function MemberProfileHeader({
           ) : (
             <button
               type="button"
-              onClick={() => navigate("/admin/trainers-members/members")}
+              onClick={() => navigate(isTrainer() ? "/trainer/trainers-members/members" : "/admin/trainers-members/members")}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
             >
               <ArrowLeft size={16} />

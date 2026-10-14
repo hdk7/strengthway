@@ -153,6 +153,18 @@ export function MonthPicker({
 
   return (
     <div ref={containerRef} className={`relative inline-flex items-center ${className}`}>
+      {/* Hidden native input for accessibility and test automation */}
+      <input
+        type="month"
+        aria-label="Select month and year"
+        value={currentYM}
+        onChange={(e) => {
+          if (e.target.value) onChange(e.target.value);
+        }}
+        className="sr-only"
+        tabIndex={-1}
+      />
+
       {/* Control Bar Strip */}
       <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-xs transition-all">
         {/* Step Backward Button */}
@@ -172,19 +184,19 @@ export function MonthPicker({
           onClick={() => setIsOpen((prev) => !prev)}
           className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold font-mono transition-colors cursor-pointer select-none ${
             isOpen
-              ? "bg-primary/10 text-primary"
+              ? "bg-accent/15 text-accent"
               : "text-foreground hover:bg-muted/80"
           }`}
           title="Click to open month calendar picker"
           aria-expanded={isOpen}
           aria-haspopup="dialog"
         >
-          <Calendar size={13} className="text-primary shrink-0" />
+          <Calendar size={13} className="text-accent shrink-0" />
           <span>{formatYearMonth(currentYM, compact)}</span>
           <ChevronDown
             size={12}
             className={`text-muted-foreground transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-primary" : ""
+              isOpen ? "rotate-180 text-accent" : ""
             }`}
           />
         </button>
@@ -200,15 +212,19 @@ export function MonthPicker({
           <ChevronRight size={15} />
         </button>
 
-        {/* Quick Current Month Button (if not already on current month) */}
-        {showTodayButton && !isCurrentMonthActive && (
+        {/* Quick Current Month Button */}
+        {showTodayButton && (
           <button
             type="button"
             onClick={handleJumpToCurrent}
-            className="hidden sm:inline-flex items-center gap-1 ml-0.5 rounded-lg border border-border/80 bg-background hover:bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-2xs"
+            className={`hidden sm:inline-flex items-center gap-1 ml-0.5 rounded-lg border px-2 py-1 text-[11px] font-semibold transition-all cursor-pointer shadow-2xs ${
+              isCurrentMonthActive
+                ? "border-accent/40 bg-accent/10 text-accent font-bold"
+                : "border-border/80 bg-background hover:bg-muted text-muted-foreground hover:text-foreground"
+            }`}
             title="Jump to Current Month"
           >
-            <RotateCcw size={10} className="text-primary" />
+            <RotateCcw size={10} className={isCurrentMonthActive ? "text-accent" : "text-muted-foreground"} />
             <span>Today</span>
           </button>
         )}
@@ -238,9 +254,20 @@ export function MonthPicker({
               <ChevronLeft size={16} />
             </button>
 
-            <span className="text-sm font-extrabold text-foreground font-display tracking-tight">
-              {viewYear}
-            </span>
+            <div className="flex items-center gap-1">
+              <select
+                value={viewYear}
+                onChange={(e) => setViewYear(Number(e.target.value))}
+                className="bg-card border border-border/80 rounded-lg px-2 py-0.5 text-xs font-extrabold text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-accent hover:bg-muted/50 transition-colors"
+                aria-label="Select Year"
+              >
+                {Array.from({ length: 21 }, (_, i) => 2020 + i).map((y) => (
+                  <option key={y} value={y} className="bg-card text-foreground">
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <button
               type="button"
@@ -267,15 +294,15 @@ export function MonthPicker({
                   onClick={() => handleSelectMonth(index)}
                   className={`relative flex items-center justify-center rounded-xl py-2 px-2 text-xs font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? "bg-primary text-background font-bold shadow-xs scale-[1.02]"
+                      ? "bg-primary text-primary-foreground font-black shadow-xs scale-[1.02]"
                       : isCurrentCalendarMonth
-                        ? "border border-primary/50 text-foreground bg-primary/5 hover:bg-primary/15"
+                        ? "border border-accent/50 text-accent bg-accent/5 hover:bg-accent/15"
                         : "text-foreground hover:bg-muted hover:text-foreground"
                   }`}
                 >
                   <span>{name}</span>
                   {isCurrentCalendarMonth && !isSelected && (
-                    <span className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />
+                    <span className="absolute bottom-1 h-1 w-1 rounded-full bg-accent" />
                   )}
                 </button>
               );

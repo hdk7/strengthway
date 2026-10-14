@@ -391,12 +391,8 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
       return true;
     });
 
-    if (selectedWeekFilter !== "all") {
-      filtered = filtered.filter((s) => s.weekNumber === Number(selectedWeekFilter));
-    }
-
     return filtered.sort((a, b) => a.classNumber - b.classNumber);
-  }, [currentBatchSessions, sessionsTab, selectedWeekFilter]);
+  }, [currentBatchSessions, sessionsTab]);
 
   return {
     batch,

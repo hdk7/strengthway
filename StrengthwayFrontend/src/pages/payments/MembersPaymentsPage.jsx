@@ -18,7 +18,7 @@ import {
   Award,
 } from "lucide-react";
 import { getMembers } from "@/lib/membersService";
-import { Pagination } from "@/components/table";
+import { DataTable } from "@/components/table";
 import { isMember } from "@/auth/currentUser";
 
 const PAYMENT_METHODS = ["ALL", "UPI", "Card", "Net Banking", "Cash"];
@@ -111,17 +111,108 @@ export default function MembersPaymentsPage() {
 
   // Viewport Pagination State
   const [page, setPage] = useState(1);
-  const pageSize = 5;
+  const pageSize = 7;
   useEffect(() => {
     setPage(1);
   }, [searchQuery, selectedMethod, selectedStatus]);
 
   const totalPages = Math.max(1, Math.ceil(filteredPayments.length / pageSize));
   const safePage = Math.max(1, Math.min(page, totalPages));
-  const paginatedPayments = useMemo(() => {
-    const start = (safePage - 1) * pageSize;
-    return filteredPayments.slice(start, start + pageSize);
-  }, [filteredPayments, safePage, pageSize]);
+
+  const columns = useMemo(() => [
+    {
+      header: userIsMember ? "Athlete Account" : "Member & ID",
+      accessorKey: "name",
+      cell: (p) => (
+        <div>
+          <div className="font-bold text-foreground text-xs">{p.name}</div>
+          <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+            #{p.memberId} • {p.phone}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Batch Container",
+      accessorKey: "batchName",
+      className: "font-medium text-foreground",
+    },
+    {
+      header: "Plan & Duration",
+      cell: (p) => (
+        <div>
+          <span className="font-semibold text-foreground block">{p.planName}</span>
+          <span className="text-[10px] text-muted-foreground">
+            {p.durationMonths} Month{p.durationMonths > 1 ? "s" : ""}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: "Amount Paid",
+      align: "center",
+      cell: (p) => (
+        <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
+          ₹{p.amount.toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      header: "Method",
+      align: "center",
+      cell: (p) => (
+        <span className="inline-flex items-center rounded-lg bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground border border-border/70">
+          {p.method}
+        </span>
+      ),
+    },
+    {
+      header: "Payment Date",
+      cell: (p) => (
+        <div className="text-muted-foreground font-mono text-[11px]">
+          <div>{p.paymentDate}</div>
+          <div className="text-[9px] text-muted-foreground/70 truncate max-w-[120px]">
+            Ref: {p.txId}
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Status",
+      align: "center",
+      cell: (p) => (
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
+            p.status === "Paid"
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+              : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+          }`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              p.status === "Paid" ? "bg-emerald-500" : "bg-amber-500"
+            }`}
+          />
+          {p.status}
+        </span>
+      ),
+    },
+    {
+      header: "Receipt",
+      align: "center",
+      cell: (p) => (
+        <button
+          type="button"
+          onClick={() => setReceiptRecord(p)}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-bold text-accent hover:bg-accent/20 transition-colors cursor-pointer"
+          title="View Official Receipt"
+        >
+          <Receipt size={13} />
+          <span>Receipt</span>
+        </button>
+      ),
+    },
+  ], [userIsMember]);
 
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col gap-2.5">
@@ -295,119 +386,23 @@ export default function MembersPaymentsPage() {
         </div>
       </div>
 
-      {/* ─── Flexible Viewport Table Card with Separated Rows ────────────────── */}
-      <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between">
-        <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-          <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-            <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none">
-              <tr>
-                <th className="py-2.5 px-4">{userIsMember ? "Athlete Account" : "Member & ID"}</th>
-                <th className="py-2.5 px-4">Batch Container</th>
-                <th className="py-2.5 px-4">Plan & Duration</th>
-                <th className="py-2.5 px-4 text-center">Amount Paid</th>
-                <th className="py-2.5 px-4 text-center">Method</th>
-                <th className="py-2.5 px-4">Payment Date</th>
-                <th className="py-2.5 px-4 text-center">Status</th>
-                <th className="py-2.5 px-4 text-center">Receipt</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 size={16} className="animate-spin text-accent" />
-                      <span className="font-semibold text-xs">Loading payment transactions...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : paginatedPayments.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-16 text-center text-muted-foreground bg-card rounded-2xl border border-border/50 shadow-xs">
-                    <div className="max-w-sm mx-auto space-y-1">
-                      <CreditCard size={32} className="mx-auto text-muted-foreground/40" />
-                      <p className="font-bold text-foreground text-sm">No payment records found</p>
-                      <p className="text-xs">Try adjusting your filters or search keywords.</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                paginatedPayments.map((p) => (
-                  <tr key={p.id} className="group transition-all duration-150 hover:-translate-y-px">
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors">
-                      <div className="font-bold text-foreground text-xs">{p.name}</div>
-                      <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                        #{p.memberId} • {p.phone}
-                      </div>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors font-medium text-foreground">
-                      {p.batchName}
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
-                      <span className="font-semibold text-foreground block">{p.planName}</span>
-                      <span className="text-[10px] text-muted-foreground">
-                        {p.durationMonths} Month{p.durationMonths > 1 ? "s" : ""}
-                      </span>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-                      ₹{p.amount.toLocaleString("en-IN")}
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-                      <span className="inline-flex items-center rounded-lg bg-muted px-2 py-0.5 text-[10px] font-semibold text-foreground border border-border/70">
-                        {p.method}
-                      </span>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-muted-foreground font-mono text-[11px]">
-                      <div>{p.paymentDate}</div>
-                      <div className="text-[9px] text-muted-foreground/70 truncate max-w-[120px]">
-                        Ref: {p.txId}
-                      </div>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold border ${
-                          p.status === "Paid"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                        }`}
-                      >
-                        <span
-                          className={`h-1.5 w-1.5 rounded-full ${
-                            p.status === "Paid" ? "bg-emerald-500" : "bg-amber-500"
-                          }`}
-                        />
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="bg-card py-3 px-4 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-                      <button
-                        type="button"
-                        onClick={() => setReceiptRecord(p)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-bold text-accent hover:bg-accent/20 transition-colors cursor-pointer"
-                        title="View Official Receipt"
-                      >
-                        <Receipt size={13} />
-                        <span>Receipt</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ─── Fixed / Sticky Bottom Viewport Pagination ──────────────────────── */}
-      <Pagination
+      {/* ─── Standardized Members Payments Table ────────────────────────── */}
+      <DataTable
+        columns={columns}
+        data={filteredPayments}
+        pageSize={pageSize}
         currentPage={safePage}
-        totalPages={totalPages}
         onPageChange={setPage}
         totalItems={filteredPayments.length}
-        pageSize={pageSize}
-        itemName="payments"
-        compact
-        className="shrink-0 mt-auto"
+        totalPages={totalPages}
+        itemLabel="payments"
+        loading={isLoading}
+        loadingRowsCount={7}
+        showToolbar={false}
+        emptyIcon={CreditCard}
+        emptyTitle="No payment records found"
+        emptyMessage="Try adjusting your filters or search keywords."
+        className="flex-1 min-h-0"
       />
 
       {/* ─── Official Receipt Modal ─────────────────────────────────────────── */}

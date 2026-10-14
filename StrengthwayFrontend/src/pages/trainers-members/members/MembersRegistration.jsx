@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { useState, useRef, useEffect } from "react";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { FormModal } from "@/components/ui/FormModal";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -414,68 +414,54 @@ export function AdminMemberRegistrationModal({
   };
 
   return (
-    <DialogPrimitive.Root
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) {
-          handleClose();
-        }
-      }}
+    <FormModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      size="xl"
     >
-      <DialogPrimitive.Portal>
-        {/* Overlay backdrop */}
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200" />
+      {/* Header */}
+      <RegistrationHeader
+        isEditingActiveMember={isEditingActiveMember}
+        isConfirmingLead={isConfirmingLead}
+        activeLead={activeLead}
+        handleClose={handleClose}
+      />
 
-        {/* Modal Window */}
-        <DialogPrimitive.Content
-          aria-describedby="admin-member-registration-desc"
-          className="no-scrollbar fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-3xl max-h-[92vh] -translate-x-1/2 -translate-y-1/2 flex flex-col rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card text-foreground shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 focus:outline-none"
-        >
-          {/* Header */}
-          <RegistrationHeader
-            isEditingActiveMember={isEditingActiveMember}
-            isConfirmingLead={isConfirmingLead}
-            activeLead={activeLead}
-            handleClose={handleClose}
-          />
+      {/* Form scrollable body */}
+      <MemberRegistrationUnifiedForm
+        isConfirmingLead={isConfirmingLead}
+        isEditingActiveMember={isEditingActiveMember}
+        activeLead={activeLead}
+        form={form}
+        setForm={setForm}
+        handleChange={handleChange}
+        handleBlur={handleBlur}
+        errors={errors}
+        batches={batches}
+        selectedBatch={selectedBatch}
+        availablePlans={availablePlans}
+        chosenPlan={chosenPlan}
+        paymentForm={paymentForm}
+        setPaymentForm={setPaymentForm}
+        handleSubmit={handleSubmit}
+        handleRemoveDoc={handleRemoveDoc}
+        handleDocUpload={handleDocUpload}
+        docInputRef={docInputRef}
+        photoInputRef={photoInputRef}
+        handlePhotoFileChange={handlePhotoFileChange}
+        handleRemovePhoto={handleRemovePhoto}
+      />
 
-          {/* Form scrollable body */}
-          <MemberRegistrationUnifiedForm
-            isConfirmingLead={isConfirmingLead}
-            isEditingActiveMember={isEditingActiveMember}
-            activeLead={activeLead}
-            form={form}
-            setForm={setForm}
-            handleChange={handleChange}
-            handleBlur={handleBlur}
-            errors={errors}
-            batches={batches}
-            selectedBatch={selectedBatch}
-            availablePlans={availablePlans}
-            chosenPlan={chosenPlan}
-            paymentForm={paymentForm}
-            setPaymentForm={setPaymentForm}
-            handleSubmit={handleSubmit}
-            handleRemoveDoc={handleRemoveDoc}
-            handleDocUpload={handleDocUpload}
-            docInputRef={docInputRef}
-            photoInputRef={photoInputRef}
-            handlePhotoFileChange={handlePhotoFileChange}
-            handleRemovePhoto={handleRemovePhoto}
-          />
-
-          {/* Footer Actions */}
-          <RegistrationFooter
-            memberToEdit={memberToEdit}
-            handleClose={handleClose}
-            isEditingActiveMember={isEditingActiveMember}
-            isSubmitting={isSubmitting}
-            handleCompleteRegistration={handleSubmit}
-            isConfirmingLead={isConfirmingLead}
-          />
-        </DialogPrimitive.Content>
-      </DialogPrimitive.Portal>
-    </DialogPrimitive.Root>
+      {/* Footer Actions */}
+      <RegistrationFooter
+        memberToEdit={memberToEdit}
+        handleClose={handleClose}
+        isEditingActiveMember={isEditingActiveMember}
+        isSubmitting={isSubmitting}
+        handleCompleteRegistration={handleSubmit}
+        isConfirmingLead={isConfirmingLead}
+      />
+    </FormModal>
   );
 }
 

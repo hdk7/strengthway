@@ -203,7 +203,7 @@ export default function TrainerProfilePage() {
         </p>
         <button
           type="button"
-          onClick={() => navigate(isTrainer() ? "/admin/dashboard" : "/admin/trainers-members/trainers")}
+          onClick={() => navigate(isTrainer() ? "/trainer/dashboard" : "/admin/trainers-members/trainers")}
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
@@ -248,7 +248,7 @@ export default function TrainerProfilePage() {
           {isTrainer() ? (
             <button
               type="button"
-              onClick={() => navigate("/admin/dashboard")}
+              onClick={() => navigate("/trainer/dashboard")}
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
             >
               <ArrowLeft size={16} />

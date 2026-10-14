@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Dumbbell,
   Move,
@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/portfolioMedia";
 import { PortfolioToolbar } from "../components";
-import Pagination from "@/components/table/Pagination";
 
 const ICON_MAP = {
   Dumbbell,
@@ -59,34 +58,10 @@ export function TrainingSessionsTab({
     [items]
   );
 
-  // Pagination for Programs (1 row of 4 cards on desktop)
-  const [programPage, setProgramPage] = useState(1);
-  const PROGRAM_PAGE_SIZE = 4;
-  useEffect(() => {
-    setProgramPage(1);
-    setClipPage(1);
-  }, [searchQuery]);
-  const totalProgramPages = Math.max(1, Math.ceil(programs.length / PROGRAM_PAGE_SIZE));
-  const safeProgramPage = Math.max(1, Math.min(programPage, totalProgramPages));
-  const paginatedPrograms = useMemo(() => {
-    const start = (safeProgramPage - 1) * PROGRAM_PAGE_SIZE;
-    return programs.slice(start, start + PROGRAM_PAGE_SIZE);
-  }, [programs, safeProgramPage]);
-
-  // Pagination for Clips (1 row of 4 reels on desktop)
-  const [clipPage, setClipPage] = useState(1);
-  const CLIP_PAGE_SIZE = 4;
-  const totalClipPages = Math.max(1, Math.ceil(clips.length / CLIP_PAGE_SIZE));
-  const safeClipPage = Math.max(1, Math.min(clipPage, totalClipPages));
-  const paginatedClips = useMemo(() => {
-    const start = (safeClipPage - 1) * CLIP_PAGE_SIZE;
-    return clips.slice(start, start + CLIP_PAGE_SIZE);
-  }, [clips, safeClipPage]);
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* ── Segment A: Training Programs (Cards) ── */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1 border-b border-border/70 shrink-0">
           <div className="flex items-center gap-2">
             <Dumbbell className="h-4 w-4 text-primary shrink-0" />
@@ -121,9 +96,9 @@ export function TrainingSessionsTab({
             <p className="text-xs text-muted-foreground">No program cards found.</p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="space-y-1.5">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {paginatedPrograms.map((s) => {
+          <div className="overflow-y-auto max-h-[218px] pr-1">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              {programs.map((s) => {
                 const IconComp = ICON_MAP[s.icon] || Dumbbell;
                 return (
                   <div
@@ -166,84 +141,60 @@ export function TrainingSessionsTab({
                 );
               })}
             </div>
-            {programs.length > 0 && (
-              <Pagination
-                currentPage={safeProgramPage}
-                totalPages={totalProgramPages}
-                totalItems={programs.length}
-                pageSize={PROGRAM_PAGE_SIZE}
-                onPageChange={setProgramPage}
-                itemLabel="programs"
-                compact
-              />
-            )}
           </div>
         ) : (
-          <div className="space-y-1.5">
-            <div className="overflow-x-auto rounded-xl border border-border bg-card">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
-                  <tr>
-                    <th className="py-1.5 px-3">Icon & Title</th>
-                    <th className="py-1.5 px-3">Overview</th>
-                    <th className="py-1.5 px-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {paginatedPrograms.map((s) => {
-                    const IconComp = ICON_MAP[s.icon] || Dumbbell;
-                    return (
-                      <tr key={s.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="py-1.5 px-3 font-semibold text-foreground flex items-center gap-2">
-                          <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                            <IconComp size={13} />
-                          </div>
-                          <span className="truncate">{s.title}</span>
-                        </td>
-                        <td className="py-1.5 px-3 text-muted-foreground max-w-sm truncate text-[11px]">
-                          {s.subtitle || "—"}
-                        </td>
-                        <td className="py-1.5 px-3 text-right">
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => onEdit(s)}
-                              className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                            >
-                              <Pencil size={12} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => onDelete(s)}
-                              className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {programs.length > 0 && (
-              <Pagination
-                currentPage={safeProgramPage}
-                totalPages={totalProgramPages}
-                totalItems={programs.length}
-                pageSize={PROGRAM_PAGE_SIZE}
-                onPageChange={setProgramPage}
-                itemLabel="programs"
-                compact
-              />
-            )}
+          <div className="overflow-x-auto overflow-y-auto max-h-[220px] rounded-xl border border-border bg-card pr-1">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border sticky top-0 bg-card z-10">
+                <tr>
+                  <th className="py-1.5 px-3">Icon & Title</th>
+                  <th className="py-1.5 px-3">Overview</th>
+                  <th className="py-1.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {programs.map((s) => {
+                  const IconComp = ICON_MAP[s.icon] || Dumbbell;
+                  return (
+                    <tr key={s.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-1.5 px-3 font-semibold text-foreground flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-md bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <IconComp size={13} />
+                        </div>
+                        <span className="truncate">{s.title}</span>
+                      </td>
+                      <td className="py-1.5 px-3 text-muted-foreground max-w-sm truncate text-[11px]">
+                        {s.subtitle || "—"}
+                      </td>
+                      <td className="py-1.5 px-3 text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => onEdit(s)}
+                            className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                          >
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(s)}
+                            className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
       {/* ── Segment B: Vertical Video Clips (9:16 Reels) ── */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center justify-between gap-2 pb-1 border-b border-border/70 shrink-0">
           <div className="flex items-center gap-2">
             <Video className="h-4 w-4 text-primary shrink-0" />
@@ -277,12 +228,12 @@ export function TrainingSessionsTab({
             </button>
           </div>
         ) : (
-          <div className="space-y-1.5">
-            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {paginatedClips.map((clip) => (
+          <div className="overflow-y-auto max-h-[425px] pr-1">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {clips.map((clip) => (
                 <div
                   key={clip.id}
-                  className="group relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between transition-all hover:border-primary/40 hover:shadow-sm h-[172px]"
+                  className="group relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between transition-all hover:border-primary/40 hover:shadow-sm h-[200px]"
                 >
                   {/* 9:16 Reel Player / Poster with constrained height */}
                   <div className="relative flex-1 min-h-0 w-full bg-black/90 overflow-hidden flex items-center justify-center">
@@ -334,7 +285,7 @@ export function TrainingSessionsTab({
                   </div>
 
                   {/* Footer caption */}
-                  <div className="px-2.5 py-1 border-t border-border bg-card shrink-0 flex items-center justify-between">
+                  <div className="px-2.5 py-1.5 border-t border-border bg-card shrink-0 flex items-center justify-between">
                     <h4 className="text-xs font-bold text-foreground truncate">{clip.title}</h4>
                     {clip.subtitle && (
                       <p className="text-[10px] text-muted-foreground truncate ml-2 max-w-[45%] text-right">{clip.subtitle}</p>
@@ -343,18 +294,6 @@ export function TrainingSessionsTab({
                 </div>
               ))}
             </div>
-
-            {clips.length > 0 && (
-              <Pagination
-                currentPage={safeClipPage}
-                totalPages={totalClipPages}
-                totalItems={clips.length}
-                pageSize={CLIP_PAGE_SIZE}
-                onPageChange={setClipPage}
-                itemLabel="video reels"
-                compact
-              />
-            )}
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { FileSpreadsheet, Download, Edit3, Eye, Lock } from "lucide-react";
-import { isAdmin } from "@/auth/currentUser";
+import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 import {
   DAY_NAMES,
   isDateToday,
@@ -57,9 +57,9 @@ export function MemberMonthlyMatrixTable({
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar">
             <table className="w-full text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-card border-b border-border/80 text-[10px] uppercase tracking-wider text-muted-foreground shadow-xs">
+              <thead className="sticky top-0 z-20 bg-background/95 backdrop-blur-xs border-b border-border/80 text-[11px] font-bold uppercase tracking-wider text-muted-foreground select-none">
                 <tr>
-                  <th className="sticky left-0 z-20 bg-card px-3 py-2 font-bold border-r border-border/60 min-w-40">
+                  <th className="sticky left-0 z-30 bg-background/95 backdrop-blur-xs px-3.5 py-2.5 font-bold border-r border-border/60 min-w-44 text-foreground">
                     Athlete
                   </th>
                   {(() => {
@@ -120,11 +120,11 @@ export function MemberMonthlyMatrixTable({
                   const memberMatrix = matrixData.matrix[mem.id] || {};
 
                   return (
-                    <tr key={mem.id} className="hover:bg-muted/20 transition-colors">
+                    <tr key={mem.id} className="hover:bg-muted/40 transition-colors group">
                       {/* Sticky Member Name */}
-                      <td className="sticky left-0 z-10 bg-card px-3 py-2 font-bold text-foreground border-r border-border/60 truncate max-w-40">
+                      <td className="sticky left-0 z-10 bg-card px-3.5 py-2.5 font-bold text-foreground border-r border-border/60 truncate max-w-44 shadow-xs">
                         <Link
-                          to={`/admin/trainers-members/members/${mem.id}`}
+                          to={`${getRoleBasePath()}/trainers-members/members/${mem.id}`}
                           className="hover:text-accent transition-colors truncate block"
                         >
                           {mem.name}

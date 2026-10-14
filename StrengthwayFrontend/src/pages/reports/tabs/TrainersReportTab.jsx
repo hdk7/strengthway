@@ -5,6 +5,7 @@ import {
   RefreshCw,
   ExternalLink,
 } from "lucide-react";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function TrainersReportTab({
   trainersReport,
@@ -158,7 +159,7 @@ export function TrainersReportTab({
                         </div>
                         <div>
                           <Link
-                            to={`/admin/trainers/${t.trainerId}`}
+                            to={`${getRoleBasePath()}/trainers-members/trainers/${t.trainerId}`}
                             className="font-bold text-foreground hover:text-accent flex items-center gap-1.5"
                           >
                             <span>{t.name}</span>

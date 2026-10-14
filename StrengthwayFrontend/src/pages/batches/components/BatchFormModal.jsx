@@ -164,18 +164,6 @@ export function BatchFormModal({
             </div>
           )}
 
-          <SelectField
-            label="Floor Operational Status"
-            value={form.status}
-            onChange={(e) => setForm({ ...form, status: e.target.value })}
-            size="sm"
-            options={[
-              { value: "Active", label: "Active" },
-              { value: "Full", label: "Full" },
-              { value: "Inactive", label: "Inactive" },
-            ]}
-          />
-
           <TextareaField
             rows={2}
             label="Description & Notes"

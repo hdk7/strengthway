@@ -50,6 +50,29 @@ import gymLogo from "@/assets/gym_logo.png";
   }
 })();
 
+// ── One-time session isolation migration: move legacy token to sessionStorage ───
+// Ensures each tab operates on its own isolated session and prevents cross-tab role bleed.
+(function migrateToTabIsolatedSession() {
+  try {
+    const tokenKey = "tsw-token";
+    const userKey = "tsw-user";
+    const legacyToken = localStorage.getItem(tokenKey);
+    const legacyUser = localStorage.getItem(userKey);
+
+    if (legacyToken && !sessionStorage.getItem(tokenKey)) {
+      sessionStorage.setItem(tokenKey, legacyToken);
+      if (legacyUser) sessionStorage.setItem(userKey, legacyUser);
+    }
+
+    // Purge auth keys from localStorage so other tabs never inherit or overwrite them
+    if (legacyToken) localStorage.removeItem(tokenKey);
+    if (legacyUser) localStorage.removeItem(userKey);
+    localStorage.removeItem("strengthway_user_permissions");
+  } catch {
+    // Ignore in restricted environments
+  }
+})();
+
 
 // Enforce gym logo as favicon
 if (typeof document !== "undefined") {

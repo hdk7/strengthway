@@ -16,12 +16,23 @@ import { toast } from "sonner";
 import { getBatches, createBatch, updateBatch, deleteBatch } from "@/lib/batchesService";
 import { getMembers } from "@/lib/membersService";
 import { getTrainers } from "@/lib/trainersService";
-import { Pagination } from "@/components/table";
+import { DataTable, Pagination } from "@/components/table";
 import { BatchFormModal } from "./components/BatchFormModal";
 import { BatchDeleteModal } from "./components/BatchDeleteModal";
 import { BatchGridCard } from "./components/BatchGridCard";
 import { BatchTableRow } from "./components/BatchTableRow";
-import { isAdmin, isMember } from "@/auth/currentUser";
+import { isAdmin, isMember, isTrainer } from "@/auth/currentUser";
+
+const BATCH_COLUMNS = [
+  { header: "Batch ID", width: "w-28" },
+  { header: "Batch Name" },
+  { header: "Timing" },
+  { header: "Days" },
+  { header: "Max Pax", align: "center" },
+  { header: "Enrolled", align: "center" },
+  { header: "Status", align: "center" },
+  { header: "Actions", align: "right" },
+];
 
 export function BatchListPage() {
   const navigate = useNavigate();
@@ -94,7 +105,7 @@ export function BatchListPage() {
       setBatches(synchronized);
 
       if (isMember() && synchronized.length > 0) {
-        navigate(`/admin/batches/${synchronized[0].id}`, { replace: true });
+        navigate(`/member/batches/${synchronized[0].id}`, { replace: true });
         return;
       }
     } catch (err) {
@@ -252,7 +263,7 @@ export function BatchListPage() {
             You are not currently enrolled in any gym batch. Please contact the front desk or your coach to get assigned to a batch slot.
           </p>
           <button
-            onClick={() => navigate("/admin/dashboard")}
+            onClick={() => navigate(isMember() ? "/member/dashboard" : isTrainer() ? "/trainer/dashboard" : "/admin/dashboard")}
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
           >
             Back to Dashboard
@@ -439,13 +450,11 @@ export function BatchListPage() {
                 <BatchGridCard
                   key={b.id}
                   batch={b}
-                  onView={(batchId) =>
-                    navigate(
-                      window.location.pathname.startsWith("/admin/schedule")
-                        ? `/admin/schedule/batches/${batchId}`
-                        : `/admin/batches/${batchId}`
-                    )
-                  }
+                  onView={(batchId) => {
+                    const isSchedule = window.location.pathname.includes("/schedule");
+                    const prefix = isTrainer() ? "/trainer" : isMember() ? "/member" : "/admin";
+                    navigate(isSchedule ? `${prefix}/schedule/batches/${batchId}` : `${prefix}/batches/${batchId}`);
+                  }}
                   onEdit={handleOpenEdit}
                   onDelete={handleDeleteBatch}
                 />
@@ -453,53 +462,49 @@ export function BatchListPage() {
             </div>
           </div>
         ) : (
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
-            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
-              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground select-none">
-                <tr>
-                  <th className="py-2.5 px-4 sm:px-5">Batch ID</th>
-                  <th className="py-2.5 px-4 sm:px-5">Batch Name</th>
-                  <th className="py-2.5 px-4 sm:px-5">Timing</th>
-                  <th className="py-2.5 px-4 sm:px-5">Days</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Max Pax</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Enrolled</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-center">Status</th>
-                  <th className="py-2.5 px-4 sm:px-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-xs sm:text-sm font-medium">
-                {paginatedBatches.map((b) => (
-                  <BatchTableRow
-                    key={b.id}
-                    batch={b}
-                    onView={(batchId) =>
-                      navigate(
-                        window.location.pathname.startsWith("/admin/schedule")
-                          ? `/admin/schedule/batches/${batchId}`
-                          : `/admin/batches/${batchId}`
-                      )
-                    }
-                    onEdit={handleOpenEdit}
-                    onDelete={handleDeleteBatch}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={BATCH_COLUMNS}
+            data={filteredBatches}
+            pageSize={7}
+            currentPage={safePage}
+            onPageChange={setCurrentPage}
+            totalItems={filteredBatches.length}
+            totalPages={Math.max(1, Math.ceil(filteredBatches.length / 7))}
+            itemLabel="batches"
+            loading={isLoading}
+            loadingRowsCount={7}
+            showToolbar={false}
+            renderRow={(b) => (
+              <BatchTableRow
+                key={b.id}
+                batch={b}
+                onView={(batchId) => {
+                  const isSchedule = window.location.pathname.includes("/schedule");
+                  const prefix = isTrainer() ? "/trainer" : isMember() ? "/member" : "/admin";
+                  navigate(isSchedule ? `${prefix}/schedule/batches/${batchId}` : `${prefix}/batches/${batchId}`);
+                }}
+                onEdit={handleOpenEdit}
+                onDelete={handleDeleteBatch}
+              />
+            )}
+            className="flex-1 min-h-0"
+          />
         )}
       </div>
 
-      {/* Pinned Bottom Pagination */}
-      <Pagination
-        currentPage={safePage}
-        totalPages={totalPages}
-        totalItems={filteredBatches.length}
-        pageSize={pageSize}
-        onPageChange={(p) => setCurrentPage(p)}
-        itemLabel="batches"
-        compact
-        className="shrink-0 mt-auto"
-      />
+      {/* Pinned Bottom Pagination (Grid Mode Only) */}
+      {viewMode === "grid" && (
+        <Pagination
+          currentPage={safePage}
+          totalPages={totalPages}
+          totalItems={filteredBatches.length}
+          pageSize={pageSize}
+          onPageChange={(p) => setCurrentPage(p)}
+          itemLabel="batches"
+          compact
+          className="shrink-0 mt-auto"
+        />
+      )}
 
       {/* --- CREATE / EDIT BATCH MODAL --- */}
       <BatchFormModal

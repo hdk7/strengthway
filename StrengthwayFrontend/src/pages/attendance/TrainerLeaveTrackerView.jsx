@@ -128,7 +128,7 @@ export function TrainerLeaveTrackerView({
 
   // Viewport Pagination State
   const [page, setPage] = useState(1);
-  const pageSize = 8;
+  const pageSize = 7;
   useEffect(() => {
     setPage(1);
   }, [searchQuery, statusFilter, selectedTrainerFilter, complianceFilter, selectedMonth]);
@@ -336,57 +336,57 @@ export function TrainerLeaveTrackerView({
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead className="sticky top-0 z-10 bg-muted/60 backdrop-blur-xs text-[11px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border select-none">
-                <tr>
-                  <th className="py-2.5 px-3">Request ID</th>
-                  <th className="py-2.5 px-3">Faculty Coach</th>
-                  <th className="py-2.5 px-3">Leave Period</th>
-                  <th className="py-2.5 px-3">Duration</th>
-                  <th className="py-2.5 px-3">Advance Notice Compliance</th>
-                  <th className="py-2.5 px-3">Reason</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
-                  <th className="py-2.5 px-3 text-right">Actions</th>
+          <div className="overflow-x-auto overflow-y-auto flex-1 min-h-0 no-scrollbar pr-1">
+            <table className="w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px]">
+              <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
+                <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  <th className="py-3 px-4 sm:px-5 whitespace-nowrap">Request ID</th>
+                  <th className="py-3 px-4 sm:px-5 whitespace-nowrap">Faculty Coach</th>
+                  <th className="py-3 px-4 sm:px-5 whitespace-nowrap">Leave Period</th>
+                  <th className="py-3 px-4 sm:px-5 whitespace-nowrap">Duration</th>
+                  <th className="py-3 px-4 sm:px-5 whitespace-nowrap">Advance Notice Compliance</th>
+                  <th className="py-3 px-4 sm:px-5 whitespace-nowrap">Reason</th>
+                  <th className="py-3 px-4 sm:px-5 text-center whitespace-nowrap">Status</th>
+                  <th className="py-3 px-4 sm:px-5 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border/60 font-medium">
+              <tbody className="text-xs sm:text-sm font-medium">
                 {paginatedLeaves.map((leave) => {
                   return (
                     <tr
                       key={leave.id}
-                      className="hover:bg-muted/30 transition-colors group"
+                      className="group transition-all duration-150 hover:-translate-y-px"
                     >
                       {/* 1. Request ID & Date */}
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="font-mono font-bold text-accent block">
-                          {leave.id}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          Filed: {leave.submittedOn || "—"}
-                        </span>
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <span className="font-mono font-bold text-accent">
+                            {leave.id}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            • Filed: {leave.submittedOn || "—"}
+                          </span>
+                        </div>
                       </td>
 
                       {/* 2. Faculty Coach */}
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
                           <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-[10px] shrink-0">
                             <User size={12} />
                           </span>
-                          <div>
-                            <span className="font-bold text-foreground block">
-                              {leave.trainerName}
-                            </span>
-                            <span className="font-mono text-[10px] text-muted-foreground">
-                              {leave.trainerId}
-                            </span>
-                          </div>
+                          <span className="font-bold text-foreground">
+                            {leave.trainerName}
+                          </span>
+                          <span className="font-mono text-[10px] text-muted-foreground font-normal">
+                            #{leave.trainerId}
+                          </span>
                         </div>
                       </td>
 
                       {/* 3. Leave Period */}
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1 font-bold text-foreground">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                        <div className="flex items-center gap-1 font-bold text-foreground whitespace-nowrap">
                           <Calendar size={12} className="text-primary shrink-0" />
                           <span>{leave.leaveStartDate}</span>
                           <span className="text-muted-foreground font-normal">→</span>
@@ -395,15 +395,15 @@ export function TrainerLeaveTrackerView({
                       </td>
 
                       {/* 4. Duration */}
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded-full font-bold text-[11px] bg-muted border border-border">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                        <span className="px-2 py-0.5 rounded-full font-bold text-[11px] bg-muted border border-border whitespace-nowrap">
                           {leave.totalDays} Day{leave.totalDays > 1 ? "s" : ""}
                         </span>
                       </td>
 
                       {/* 5. Policy Notice Compliance */}
-                      <td className="py-2.5 px-3">
-                        <div className="flex flex-col gap-0.5">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
+                        <div className="flex items-center gap-2 whitespace-nowrap">
                           {leave.isNoticeCompliant ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
                               <CheckCircle2 size={12} />
@@ -415,21 +415,23 @@ export function TrainerLeaveTrackerView({
                               <span>Override ({leave.actualNoticeDays}d / {leave.requiredNoticeDays}d req)</span>
                             </span>
                           )}
-                          <span className="text-[10px] text-muted-foreground truncate max-w-xs block">
-                            {leave.tierLabel || "Standard notice rule"}
-                          </span>
+                          {leave.tierLabel && (
+                            <span className="text-[10px] text-muted-foreground">
+                              • {leave.tierLabel}
+                            </span>
+                          )}
                         </div>
                       </td>
 
                       {/* 6. Reason */}
-                      <td className="py-2.5 px-3 max-w-50">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors max-w-xs whitespace-nowrap">
                         <span className="truncate block text-muted-foreground" title={leave.reason}>
                           {leave.reason || "—"}
                         </span>
                       </td>
 
                       {/* 7. Status Pill */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
                         {leave.status === "APPROVED" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
                             <ShieldCheck size={11} />
@@ -453,7 +455,7 @@ export function TrainerLeaveTrackerView({
                       </td>
 
                       {/* 8. Actions */}
-                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                      <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
                           {leave.status === "PENDING" && (
                             <>

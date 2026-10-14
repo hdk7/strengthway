@@ -8,6 +8,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { MonthPicker } from "@/components/ui/MonthPicker";
+import { getRoleBasePath } from "@/auth/currentUser";
 
 export function MemberAttendanceToolbar({
   selectedBatchId,
@@ -59,7 +60,7 @@ export function MemberAttendanceToolbar({
 
         {currentBatch && (
           <Link
-            to={`/admin/batches/${currentBatch.id}`}
+            to={`${getRoleBasePath()}/batches/${currentBatch.id}`}
             className="text-xs font-semibold text-accent hover:underline flex items-center gap-1 shrink-0 ml-1"
           >
             <span>Batch Details</span>

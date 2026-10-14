@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   Image as ImageIcon,
   Eye,
@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/portfolioMedia";
 import { PortfolioToolbar } from "../components";
-import Pagination from "@/components/table/Pagination";
 
 export function PhotosTab({
   items = [],
@@ -38,20 +37,6 @@ export function PhotosTab({
     [items]
   );
 
-  // Pagination for Photos
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 4;
-  const totalPages = Math.max(1, Math.ceil(photos.length / PAGE_SIZE));
-  const safePage = Math.max(1, Math.min(page, totalPages));
-  const paginatedPhotos = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return photos.slice(start, start + PAGE_SIZE);
-  }, [photos, safePage]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery]);
-
   const handleMove = (index, direction) => {
     if (!onReorder) return;
     const targetIndex = direction === "left" ? index - 1 : index + 1;
@@ -70,7 +55,7 @@ export function PhotosTab({
   };
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {/* Header & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1.5 border-b border-border/70 shrink-0">
         <div>
@@ -118,9 +103,9 @@ export function PhotosTab({
           </button>
         </div>
       ) : viewMode === "grid" ? (
-        <div className="space-y-2">
-          <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4">
-            {paginatedPhotos.map((p) => {
+        <div className="overflow-y-auto max-h-[445px] pr-1">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+            {photos.map((p) => {
               const photoIndex = photos.findIndex((item) => item.id === p.id);
               return (
                 <div
@@ -228,113 +213,89 @@ export function PhotosTab({
               );
             })}
           </div>
-          {photos.length > 0 && (
-            <Pagination
-              currentPage={safePage}
-              totalPages={totalPages}
-              totalItems={photos.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-              itemLabel="photos"
-              compact
-            />
-          )}
         </div>
       ) : (
         /* Table View */
-        <div className="space-y-2">
-          <div className="overflow-x-auto rounded-xl border border-border bg-card">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
-                <tr>
-                  <th className="py-2 px-3">Thumbnail</th>
-                  <th className="py-2 px-3">Caption / Alt Text</th>
-                  <th className="py-2 px-3">Carousel Order</th>
-                  <th className="py-2 px-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {paginatedPhotos.map((p) => {
-                  const photoIndex = photos.findIndex((item) => item.id === p.id);
-                  return (
-                    <tr key={p.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-1.5 px-3">
+        <div className="overflow-x-auto overflow-y-auto max-h-[445px] rounded-xl border border-border bg-card pr-1">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border sticky top-0 bg-card z-10">
+              <tr>
+                <th className="py-2 px-3">Thumbnail</th>
+                <th className="py-2 px-3">Caption / Alt Text</th>
+                <th className="py-2 px-3">Carousel Order</th>
+                <th className="py-2 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {photos.map((p) => {
+                const photoIndex = photos.findIndex((item) => item.id === p.id);
+                return (
+                  <tr key={p.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="py-1.5 px-3">
+                      <div
+                        onClick={() => p.mediaUrl && onPreview(p)}
+                        className="h-10 w-8 rounded-md overflow-hidden border border-border bg-black/40 flex items-center justify-center relative cursor-pointer group shrink-0"
+                        title={p.mediaUrl ? "Click to view photo" : ""}
+                      >
+                        {p.mediaUrl ? (
+                          <img
+                            src={resolveMediaUrl(p.mediaUrl)}
+                            alt={p.title || ""}
+                            className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              const fallback = e.currentTarget.parentElement?.querySelector(".fallback-icon");
+                              if (fallback) fallback.style.display = "flex";
+                            }}
+                          />
+                        ) : null}
                         <div
-                          onClick={() => p.mediaUrl && onPreview(p)}
-                          className="h-10 w-8 rounded-md overflow-hidden border border-border bg-black/40 flex items-center justify-center relative cursor-pointer group shrink-0"
-                          title={p.mediaUrl ? "Click to view photo" : ""}
+                          className="fallback-icon items-center justify-center text-muted-foreground"
+                          style={{ display: p.mediaUrl ? "none" : "flex" }}
                         >
-                          {p.mediaUrl ? (
-                            <img
-                              src={resolveMediaUrl(p.mediaUrl)}
-                              alt={p.title || ""}
-                              className="h-full w-full object-cover transition-transform group-hover:scale-110"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                                const fallback = e.currentTarget.parentElement?.querySelector(".fallback-icon");
-                                if (fallback) fallback.style.display = "flex";
-                              }}
-                            />
-                          ) : null}
-                          <div
-                            className="fallback-icon items-center justify-center text-muted-foreground"
-                            style={{ display: p.mediaUrl ? "none" : "flex" }}
-                          >
-                            <ImageIcon size={12} />
-                          </div>
+                          <ImageIcon size={12} />
                         </div>
-                      </td>
-                      <td className="py-1.5 px-3 font-semibold text-foreground max-w-sm truncate text-[11px]">
-                        {p.title}
-                      </td>
-                      <td className="py-1.5 px-3 text-muted-foreground font-mono text-[11px]">#{photoIndex + 1}</td>
-                      <td className="py-1.5 px-3 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          {p.mediaUrl && (
-                            <button
-                              type="button"
-                              onClick={() => onPreview(p)}
-                              className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                              title="Zoom"
-                            >
-                              <Eye size={12} />
-                            </button>
-                          )}
+                      </div>
+                    </td>
+                    <td className="py-1.5 px-3 font-semibold text-foreground max-w-sm truncate text-[11px]">
+                      {p.title}
+                    </td>
+                    <td className="py-1.5 px-3 text-muted-foreground font-mono text-[11px]">#{photoIndex + 1}</td>
+                    <td className="py-1.5 px-3 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        {p.mediaUrl && (
                           <button
                             type="button"
-                            onClick={() => onEdit(p)}
+                            onClick={() => onPreview(p)}
                             className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                            title="Edit"
+                            title="Zoom"
                           >
-                            <Pencil size={12} />
+                            <Eye size={12} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => onDelete(p)}
-                            className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
-                            title="Delete"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {photos.length > 0 && (
-            <Pagination
-              currentPage={safePage}
-              totalPages={totalPages}
-              totalItems={photos.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-              itemLabel="photos"
-              compact
-            />
-          )}
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => onEdit(p)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                          title="Edit"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(p)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

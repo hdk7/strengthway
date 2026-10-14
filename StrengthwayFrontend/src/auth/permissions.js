@@ -8,14 +8,14 @@ const PERMISSIONS_STORAGE_KEY = "strengthway_user_permissions";
 let inMemoryPermissions = null;
 
 /**
- * Retrieves the stored permissions object from cache or localStorage
+ * Retrieves the stored permissions object from cache or sessionStorage
  */
 export function getStoredPermissions() {
   if (inMemoryPermissions) return inMemoryPermissions;
   if (typeof window === "undefined") return {};
 
   try {
-    const raw = localStorage.getItem(PERMISSIONS_STORAGE_KEY);
+    const raw = sessionStorage.getItem(PERMISSIONS_STORAGE_KEY);
     if (raw) {
       inMemoryPermissions = JSON.parse(raw);
       return inMemoryPermissions;
@@ -27,13 +27,29 @@ export function getStoredPermissions() {
 }
 
 /**
- * Stores permissions in cache and localStorage
+ * Stores permissions in cache and sessionStorage
  */
 export function setStoredPermissions(perms) {
   inMemoryPermissions = perms || {};
   if (typeof window !== "undefined") {
     try {
-      localStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(inMemoryPermissions));
+      sessionStorage.setItem(PERMISSIONS_STORAGE_KEY, JSON.stringify(inMemoryPermissions));
+      localStorage.removeItem(PERMISSIONS_STORAGE_KEY);
+    } catch {
+      // fallback
+    }
+  }
+}
+
+/**
+ * Clears stored permissions from cache and sessionStorage
+ */
+export function clearStoredPermissions() {
+  inMemoryPermissions = null;
+  if (typeof window !== "undefined") {
+    try {
+      sessionStorage.removeItem(PERMISSIONS_STORAGE_KEY);
+      localStorage.removeItem(PERMISSIONS_STORAGE_KEY);
     } catch {
       // fallback
     }

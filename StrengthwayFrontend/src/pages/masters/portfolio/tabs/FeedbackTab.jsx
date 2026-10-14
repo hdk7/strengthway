@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import {
   MessageSquareQuote,
   Video,
@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/portfolioMedia";
 import { PortfolioToolbar } from "../components";
-import Pagination from "@/components/table/Pagination";
 
 export function FeedbackTab({
   items = [],
@@ -44,35 +43,10 @@ export function FeedbackTab({
     [items]
   );
 
-  // Pagination for Quotes (1 row of 3 cards on desktop)
-  const [quotePage, setQuotePage] = useState(1);
-  const QUOTE_PAGE_SIZE = 3;
-  const totalQuotePages = Math.max(1, Math.ceil(quotes.length / QUOTE_PAGE_SIZE));
-  const safeQuotePage = Math.max(1, Math.min(quotePage, totalQuotePages));
-  const paginatedQuotes = useMemo(() => {
-    const start = (safeQuotePage - 1) * QUOTE_PAGE_SIZE;
-    return quotes.slice(start, start + QUOTE_PAGE_SIZE);
-  }, [quotes, safeQuotePage]);
-
-  // Pagination for Videos (1 row of 4 reels on desktop)
-  const [videoPage, setVideoPage] = useState(1);
-  const VIDEO_PAGE_SIZE = 4;
-  const totalVideoPages = Math.max(1, Math.ceil(videos.length / VIDEO_PAGE_SIZE));
-  const safeVideoPage = Math.max(1, Math.min(videoPage, totalVideoPages));
-  const paginatedVideos = useMemo(() => {
-    const start = (safeVideoPage - 1) * VIDEO_PAGE_SIZE;
-    return videos.slice(start, start + VIDEO_PAGE_SIZE);
-  }, [videos, safeVideoPage]);
-
-  useEffect(() => {
-    setQuotePage(1);
-    setVideoPage(1);
-  }, [searchQuery]);
-
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* ── Segment A: Member Testimonial Quotes ── */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-1 border-b border-border/70 shrink-0">
           <div className="flex items-center gap-2">
             <MessageSquareQuote className="h-4 w-4 text-primary shrink-0" />
@@ -106,12 +80,12 @@ export function FeedbackTab({
             <p className="text-xs text-muted-foreground">No written reviews added yet.</p>
           </div>
         ) : viewMode === "grid" ? (
-          <div className="space-y-1.5">
-            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-              {paginatedQuotes.map((q) => (
+          <div className="overflow-y-auto max-h-[235px] pr-1">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {quotes.map((q) => (
                 <div
                   key={q.id}
-                  className="group relative rounded-xl border border-border bg-card p-2.5 transition-all hover:border-primary/40 hover:shadow-xs flex flex-col justify-between h-[96px]"
+                  className="group relative rounded-xl border border-border bg-card p-3 transition-all hover:border-primary/40 hover:shadow-xs flex flex-col justify-between h-[104px]"
                 >
                   <div>
                     <p className="text-xs leading-snug text-foreground italic line-clamp-2">
@@ -119,7 +93,7 @@ export function FeedbackTab({
                     </p>
                   </div>
 
-                  <div className="mt-1 pt-1 border-t border-border flex items-center justify-between">
+                  <div className="mt-1 pt-1.5 border-t border-border flex items-center justify-between">
                     <div className="font-semibold text-xs text-foreground truncate max-w-[65%]">
                       {q.authorName || q.title}
                     </div>
@@ -146,76 +120,52 @@ export function FeedbackTab({
                 </div>
               ))}
             </div>
-            {quotes.length > 0 && (
-              <Pagination
-                currentPage={safeQuotePage}
-                totalPages={totalQuotePages}
-                totalItems={quotes.length}
-                pageSize={QUOTE_PAGE_SIZE}
-                onPageChange={setQuotePage}
-                itemLabel="reviews"
-                compact
-              />
-            )}
           </div>
         ) : (
-          <div className="space-y-1.5">
-            <div className="overflow-x-auto rounded-xl border border-border bg-card">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border">
-                  <tr>
-                    <th className="py-1.5 px-3">Member Name</th>
-                    <th className="py-1.5 px-3">Quote Snippet</th>
-                    <th className="py-1.5 px-3 text-right">Actions</th>
+          <div className="overflow-x-auto overflow-y-auto max-h-[235px] rounded-xl border border-border bg-card pr-1">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] tracking-wider border-b border-border sticky top-0 bg-card z-10">
+                <tr>
+                  <th className="py-1.5 px-3">Member Name</th>
+                  <th className="py-1.5 px-3">Quote Snippet</th>
+                  <th className="py-1.5 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {quotes.map((q) => (
+                  <tr key={q.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="py-1.5 px-3 font-semibold text-foreground truncate max-w-[160px]">{q.title}</td>
+                    <td className="py-1.5 px-3 text-muted-foreground max-w-md truncate text-[11px]">
+                      {q.tag || q.subtitle || "—"}
+                    </td>
+                    <td className="py-1.5 px-3 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onEdit(q)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(q)}
+                          className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {paginatedQuotes.map((q) => (
-                    <tr key={q.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-1.5 px-3 font-semibold text-foreground truncate max-w-[160px]">{q.title}</td>
-                      <td className="py-1.5 px-3 text-muted-foreground max-w-md truncate text-[11px]">
-                        {q.tag || q.subtitle || "—"}
-                      </td>
-                      <td className="py-1.5 px-3 text-right">
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => onEdit(q)}
-                            className="p-1 rounded-md text-muted-foreground hover:text-foreground cursor-pointer"
-                          >
-                            <Pencil size={12} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDelete(q)}
-                            className="p-1 rounded-md text-muted-foreground hover:text-destructive cursor-pointer"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {quotes.length > 0 && (
-              <Pagination
-                currentPage={safeQuotePage}
-                totalPages={totalQuotePages}
-                totalItems={quotes.length}
-                pageSize={QUOTE_PAGE_SIZE}
-                onPageChange={setQuotePage}
-                itemLabel="reviews"
-                compact
-              />
-            )}
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
       {/* ── Segment B: Transformation Video Reels (9:16) ── */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center justify-between gap-2 pb-1 border-b border-border/70 shrink-0">
           <div className="flex items-center gap-2">
             <Video className="h-4 w-4 text-primary shrink-0" />
@@ -249,12 +199,12 @@ export function FeedbackTab({
             </button>
           </div>
         ) : (
-          <div className="space-y-1.5">
-            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {paginatedVideos.map((vid) => (
+          <div className="overflow-y-auto max-h-[425px] pr-1">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {videos.map((vid) => (
                 <div
                   key={vid.id}
-                  className="group relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between transition-all hover:border-primary/40 hover:shadow-sm h-[172px]"
+                  className="group relative overflow-hidden rounded-xl border border-border bg-card flex flex-col justify-between transition-all hover:border-primary/40 hover:shadow-sm h-[200px]"
                 >
                   {/* 9:16 Reel Player / Poster with constrained height */}
                   <div className="relative flex-1 min-h-0 w-full bg-black/90 overflow-hidden flex items-center justify-center">
@@ -286,7 +236,7 @@ export function FeedbackTab({
                   </div>
 
                   {/* Footer caption & actions */}
-                  <div className="px-2.5 py-1 border-t border-border bg-card shrink-0 flex items-center justify-between">
+                  <div className="px-2.5 py-1.5 border-t border-border bg-card shrink-0 flex items-center justify-between">
                     <div className="min-w-0">
                       <h4 className="text-xs font-bold text-foreground truncate">{vid.title}</h4>
                       {vid.subtitle && (
@@ -315,18 +265,6 @@ export function FeedbackTab({
                 </div>
               ))}
             </div>
-
-            {videos.length > 0 && (
-              <Pagination
-                currentPage={safeVideoPage}
-                totalPages={totalVideoPages}
-                totalItems={videos.length}
-                pageSize={VIDEO_PAGE_SIZE}
-                onPageChange={setVideoPage}
-                itemLabel="video reels"
-                compact
-              />
-            )}
           </div>
         )}
       </div>

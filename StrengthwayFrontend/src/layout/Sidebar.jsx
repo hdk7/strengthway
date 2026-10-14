@@ -141,14 +141,14 @@ function getNavConfigForUser(user) {
 
   if (role === "trainer") {
     const rawTrainerNav = [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/trainer/dashboard" },
       {
         id: "trainers-members",
         label: "Trainers & Members",
         icon: Users,
         children: [
-          { id: "member-list", label: "Assigned Members", path: "/admin/trainers-members/members" },
-          { id: "trainer-list", label: "My Profile", path: `/admin/trainers-members/trainers/${trainerId}` },
+          { id: "member-list", label: "Assigned Members", path: "/trainer/trainers-members/members" },
+          { id: "trainer-list", label: "My Profile", path: `/trainer/trainers-members/trainers/${trainerId}` },
         ],
       },
       {
@@ -156,8 +156,8 @@ function getNavConfigForUser(user) {
         label: "Schedule",
         icon: CalendarDays,
         children: [
-          { id: "batch-schedule", label: "Assigned Batches", path: "/admin/schedule/batches" },
-          { id: "master-class-schedule", label: "Class Schedule", path: "/admin/schedule/master-class" },
+          { id: "batch-schedule", label: "Assigned Batches", path: "/trainer/schedule/batches" },
+          { id: "master-class-schedule", label: "Class Schedule", path: "/trainer/schedule/master-class" },
         ],
       },
       {
@@ -165,8 +165,8 @@ function getNavConfigForUser(user) {
         label: "Attendance",
         icon: ClipboardCheck,
         children: [
-          { id: "members-attendance", label: "Members Attendance", path: "/admin/attendance/members" },
-          { id: "trainers-attendance", label: "My Attendance", path: "/admin/attendance/trainers" },
+          { id: "members-attendance", label: "Members Attendance", path: "/trainer/attendance/members" },
+          { id: "trainers-attendance", label: "My Attendance", path: "/trainer/attendance/trainers" },
         ],
       },
       {
@@ -174,42 +174,42 @@ function getNavConfigForUser(user) {
         label: "Payments",
         icon: Wallet,
         children: [
-          { id: "trainers", label: "My Payouts", path: "/admin/payments/trainers" },
+          { id: "trainers", label: "My Payouts", path: "/trainer/payments/trainers" },
         ],
       },
-      { id: "reports", label: "My Reports", icon: BarChart3, path: "/admin/reports" },
+      { id: "reports", label: "My Reports", icon: BarChart3, path: "/trainer/reports" },
     ];
     return filterNavByPermissions(rawTrainerNav);
   }
 
   if (role === "member") {
     const rawMemberNav = [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
+      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/member/dashboard" },
       {
         id: "my-profile",
         label: "My Profile",
         icon: Users,
-        path: `/admin/trainers-members/members/${memberId}`,
+        path: `/member/trainers-members/members/${memberId}`,
       },
       {
         id: "schedule",
         label: "My Batch Schedule",
         icon: CalendarDays,
-        path: "/admin/schedule/batches",
+        path: "/member/schedule/batches",
       },
       {
         id: "attendance",
         label: "My Attendance",
         icon: ClipboardCheck,
-        path: "/admin/attendance/members",
+        path: "/member/attendance/members",
       },
       {
         id: "payments",
         label: "My Receipts",
         icon: Wallet,
-        path: "/admin/payments/members",
+        path: "/member/payments/members",
       },
-      { id: "reports", label: "My Reports", icon: BarChart3, path: "/admin/reports" },
+      { id: "reports", label: "My Reports", icon: BarChart3, path: "/member/reports" },
     ];
     return filterNavByPermissions(rawMemberNav);
   }
@@ -223,32 +223,24 @@ function findNavItemByPath(pathname, items = navConfig) {
       top.path === pathname ||
       (top.path && pathname.startsWith(`${top.path}/`)) ||
       (top.id === "schedule" &&
-        (pathname === "/admin/batches" ||
-          pathname.startsWith("/admin/batches/") ||
-          pathname === "/admin/schedule/batches" ||
-          pathname.startsWith("/admin/schedule/batches/")))
+        (pathname.includes("/batches") || pathname.includes("/schedule/batches")))
     ) {
       return { top, child: undefined };
     }
     const child = top.children?.find(
       (c) =>
         c.path === pathname ||
-        pathname.startsWith(`${c.path}/`) ||
-        (c.id === "batch-schedule" &&
-          (pathname === "/admin/batches" ||
-            pathname.startsWith("/admin/batches/") ||
-            pathname === "/admin/schedule/batches" ||
-            pathname.startsWith("/admin/schedule/batches/"))) ||
+        (c.path && pathname.startsWith(`${c.path}/`)) ||
+        (c.id === "batch-schedule" && pathname.includes("/batches")) ||
         (c.id === "master-class-schedule" &&
-          (pathname === "/admin/masters/schedule" ||
-            pathname === "/admin/schedule/master-class" ||
-            pathname.startsWith("/admin/schedule/master-class/") ||
-            pathname === "/admin/schedule/classes" ||
-            pathname === "/admin/schedule/class" ||
-            pathname === "/admin/schedule/class-schedule" ||
-            pathname === "/admin/schedule/sessions")) ||
+          (pathname.includes("/schedule/master-class") ||
+            pathname.includes("/schedule/classes") ||
+            pathname.includes("/schedule/class") ||
+            pathname.includes("/schedule/class-schedule") ||
+            pathname.includes("/schedule/sessions") ||
+            pathname.includes("/masters/schedule"))) ||
         (c.id === "attendance-policy" &&
-          (pathname === "/admin/masters/holiday" || pathname === "/admin/schedule/holidays")),
+          (pathname.includes("/masters/holiday") || pathname.includes("/schedule/holidays"))),
     );
     if (child) return { top, child };
   }
@@ -264,28 +256,22 @@ function isSubmoduleActive(child, currentPath) {
     return true;
   }
   if (child.id === "batch-schedule") {
-    return (
-      currentPath === "/admin/batches" ||
-      currentPath.startsWith("/admin/batches/") ||
-      currentPath === "/admin/schedule/batches" ||
-      currentPath.startsWith("/admin/schedule/batches/")
-    );
+    return currentPath.includes("/batches");
   }
   if (child.id === "master-class-schedule") {
     return (
-      currentPath === "/admin/schedule/master-class" ||
-      currentPath.startsWith("/admin/schedule/master-class/") ||
-      currentPath === "/admin/schedule/classes" ||
-      currentPath === "/admin/schedule/class" ||
-      currentPath === "/admin/schedule/class-schedule" ||
-      currentPath === "/admin/schedule/sessions" ||
-      currentPath === "/admin/masters/schedule"
+      currentPath.includes("/schedule/master-class") ||
+      currentPath.includes("/schedule/classes") ||
+      currentPath.includes("/schedule/class") ||
+      currentPath.includes("/schedule/class-schedule") ||
+      currentPath.includes("/schedule/sessions") ||
+      currentPath.includes("/masters/schedule")
     );
   }
   if (child.id === "attendance-policy") {
     return (
-      currentPath === "/admin/masters/holiday" ||
-      currentPath === "/admin/schedule/holidays"
+      currentPath.includes("/masters/holiday") ||
+      currentPath.includes("/schedule/holidays")
     );
   }
   return false;
@@ -305,10 +291,7 @@ function SidebarNavItem({
   if (item.path) {
     const isCustomActive =
       item.id === "schedule" &&
-      (currentPath === "/admin/batches" ||
-        currentPath.startsWith("/admin/batches/") ||
-        currentPath === "/admin/schedule/batches" ||
-        currentPath.startsWith("/admin/schedule/batches/"));
+      (currentPath.includes("/batches") || currentPath.includes("/schedule/batches"));
 
     return (
       <NavLink
@@ -498,11 +481,11 @@ export default function Sidebar({
 
   const confirmLogout = () => {
     setShowLogoutConfirm(false);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
-    sessionStorage.clear();
+    sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+    sessionStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+    sessionStorage.removeItem("strengthway_user_permissions");
     onMobileClose?.();
-    navigate("/admin/login", { replace: true });
+    navigate("/login", { replace: true });
   };
 
   return (
