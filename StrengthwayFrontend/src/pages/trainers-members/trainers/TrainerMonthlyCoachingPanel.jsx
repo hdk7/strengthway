@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { Link } from "react-router-dom";
 import {
   ExternalLink,
@@ -9,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { MonthPicker } from "@/components/ui/MonthPicker";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function TrainerMonthlyCoachingPanel({
   id,
@@ -118,8 +118,7 @@ export function TrainerMonthlyCoachingPanel({
                             : pct >= 70
                             ? "bg-amber-500"
                             : "bg-emerald-500"
-                        }`}
-                        style={{ width: `${pct}%` }}
+                        } ${getTailwindWidth(pct)}`}
                       />
                     </div>
                   </div>

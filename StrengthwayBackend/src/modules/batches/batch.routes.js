@@ -4,7 +4,7 @@ const router = require("express").Router();
 const ctrl = require("./batch.controller");
 const { validate } = require("../../middleware/validate.middleware");
 const { authenticate } = require("../../middleware/auth.middleware");
-const { requireAdmin } = require("../../middleware/role.middleware");
+const { requireAdmin, requireTrainer } = require("../../middleware/role.middleware");
 const { scopeBatchQuery, scopeBatchDoc, scopeMemberDoc } = require("../../middleware/scope.middleware");
 const {
   createBatchSchema,
@@ -23,7 +23,8 @@ const {
 router.get("/coach-shifts", authenticate, ctrl.getCoachShifts);
 router.patch("/coach-shifts/toggle", authenticate, requireAdmin, validate(toggleCoachSlotSchema), ctrl.toggleCoachShift);
 
-router.get("/classes", authenticate, ctrl.getAllClasses);
+// Class catalogue list: Admin & Trainer only (Members restricted)
+router.get("/classes", authenticate, requireTrainer, ctrl.getAllClasses);
 router.put("/classes/:classId", authenticate, requireAdmin, validate(updateClassSchema), ctrl.updateClass);
 router.delete("/classes/:classId", authenticate, requireAdmin, ctrl.deleteClass);
 

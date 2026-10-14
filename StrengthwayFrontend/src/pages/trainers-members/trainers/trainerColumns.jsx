@@ -65,6 +65,8 @@ export function getTrainerColumns({ onNavigate }) {
       ),
     },
     {
+      key: "contact",
+      accessorKey: "phone",
       header: "Contact",
       cell: (trainer) => (
         <div className="text-xs sm:text-sm space-y-0.5">

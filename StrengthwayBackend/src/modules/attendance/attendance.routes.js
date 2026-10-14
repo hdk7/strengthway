@@ -5,6 +5,7 @@ const ctrl = require("./attendance.controller");
 const { validate } = require("../../middleware/validate.middleware");
 const { authenticate } = require("../../middleware/auth.middleware");
 const { requireAdmin } = require("../../middleware/role.middleware");
+const { requirePermission } = require("../../middleware/permission.middleware");
 const { scopeBatchDoc, scopeMemberDoc } = require("../../middleware/scope.middleware");
 const {
   markAttendanceSchema,
@@ -12,22 +13,49 @@ const {
   createTrainerLogSchema,
 } = require("./attendance.schema");
 
-// ─── Attendance Core Endpoints (Admin only - biometrics / manual override) ────
-router.post("/mark", authenticate, requireAdmin, validate(markAttendanceSchema), ctrl.markAttendance);
-router.post("/bulk-mark", authenticate, requireAdmin, validate(bulkMarkAttendanceSchema), ctrl.bulkMarkAttendance);
+// ─── Attendance Core Endpoints ───────────────────────────────────────────────
+// Attendance Marking: Restricted strictly to Admin (Trainers cannot mark or edit attendance)
+router.post(
+  "/mark",
+  authenticate,
+  requireAdmin,
+  validate(markAttendanceSchema),
+  ctrl.markAttendance
+);
+router.post(
+  "/bulk-mark",
+  authenticate,
+  requireAdmin,
+  validate(bulkMarkAttendanceSchema),
+  ctrl.bulkMarkAttendance
+);
 
 // ─── Attendance Query Endpoints ───────────────────────────────────────────────
 // Grid: Scoped to Admin, assigned Trainer, or enrolled Member
-router.get("/batch/:batchId", authenticate, (req, res, next) => {
-  req.params.id = req.params.batchId;
-  next();
-}, scopeBatchDoc, ctrl.getBatchAttendanceGrid);
+router.get(
+  "/batch/:batchId",
+  authenticate,
+  requirePermission("attendance", "view", "view_own"),
+  (req, res, next) => {
+    req.params.id = req.params.batchId;
+    next();
+  },
+  scopeBatchDoc,
+  ctrl.getBatchAttendanceGrid
+);
 
 // Member attendance: Scoped to Admin, assigned Trainer, or Member's own profile
-router.get("/member/:memberId", authenticate, (req, res, next) => {
-  req.params.id = req.params.memberId;
-  next();
-}, scopeMemberDoc, ctrl.getMemberAttendance);
+router.get(
+  "/member/:memberId",
+  authenticate,
+  requirePermission("attendance", "view", "view_own"),
+  (req, res, next) => {
+    req.params.id = req.params.memberId;
+    next();
+  },
+  scopeMemberDoc,
+  ctrl.getMemberAttendance
+);
 
 // Attendance query: Scoped in controller (Admin all; Trainer assigned; Member self)
 router.get("/", authenticate, ctrl.getAttendanceRecords);

@@ -1,5 +1,6 @@
 import { Clock, ArrowRight, Edit3, Trash2 } from "lucide-react";
 import { isAdmin } from "@/auth/currentUser";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function BatchGridCard({
   batch: b,
@@ -53,8 +54,7 @@ export function BatchGridCard({
             <div
               className={`h-full rounded-full transition-all duration-500 ${
                 pct >= 90 ? "bg-red-500" : pct >= 75 ? "bg-amber-500" : "bg-emerald-500"
-              }`}
-              style={{ width: `${pct}%` }}
+              } ${getTailwindWidth(pct)}`}
             />
           </div>
           <p className="text-[11px] text-muted-foreground">

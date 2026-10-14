@@ -131,14 +131,23 @@ function BmiCalculator() {
         {/* Gauge Content */}
         <div className="relative z-10 flex flex-col items-center text-center">
           <div className="relative grid h-48 w-48 sm:h-56 sm:w-56 place-items-center rounded-full border border-white/20 bg-black/70 backdrop-blur-md shadow-2xl">
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `conic-gradient(var(--color-white), var(--color-zinc-500) ${pct}%, transparent 0)`,
-                mask: "radial-gradient(farthest-side, transparent 62%, black 63%)",
-                WebkitMask: "radial-gradient(farthest-side, transparent 62%, black 63%)",
-              }}
-            />
+            <svg className="absolute inset-0 h-full w-full -rotate-90 p-1" viewBox="0 0 100 100">
+              <circle
+                className="stroke-white/15 fill-none stroke-[6]"
+                cx="50"
+                cy="50"
+                r="44"
+              />
+              <circle
+                className="stroke-white fill-none stroke-[6] transition-all duration-500 ease-out"
+                strokeDasharray={276.46}
+                strokeDashoffset={276.46 - (276.46 * Math.max(0, Math.min(100, pct))) / 100}
+                strokeLinecap="round"
+                cx="50"
+                cy="50"
+                r="44"
+              />
+            </svg>
             <div className="relative text-center">
               <div className="font-display text-5xl font-bold text-white tracking-tight drop-shadow-md">
                 {bmi}

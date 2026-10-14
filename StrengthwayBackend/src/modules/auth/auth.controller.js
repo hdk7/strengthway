@@ -10,7 +10,7 @@ const { success, created } = require("../../shared/response");
  */
 async function register(req, res, next) {
   try {
-    const result = await authService.register(req.body);
+    const result = await authService.register(req.body, req.user);
     return created(res, result, "Account created successfully.");
   } catch (err) {
     next(err);
@@ -132,6 +132,36 @@ async function deleteUser(req, res, next) {
   }
 }
 
+/**
+ * PATCH /api/v1/auth/users/:id/reset-password
+ * Resets user password by an administrator.
+ * Protected — Admin only.
+ */
+async function adminResetPassword(req, res, next) {
+  try {
+    const { password } = req.body;
+    const result = await authService.adminResetPassword(req.params.id, password);
+    return success(res, result, "Password updated successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/v1/auth/users/check/:type/:id
+ * Checks whether a Trainer or Member profile already has an account.
+ * Protected — Admin only.
+ */
+async function checkProfileAccount(req, res, next) {
+  try {
+    const { type, id } = req.params;
+    const result = await authService.checkProfileAccount(type, id);
+    return success(res, result, "Profile account status retrieved.");
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -142,4 +172,6 @@ module.exports = {
   getAllUsers,
   toggleUserStatus,
   deleteUser,
+  adminResetPassword,
+  checkProfileAccount,
 };

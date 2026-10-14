@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { FileSpreadsheet, Download, Edit3, Eye, Lock } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 import {
   DAY_NAMES,
   isDateToday,
@@ -199,6 +200,18 @@ export function MemberMonthlyMatrixTable({
                         // 3. Future dates (isFuture): Disable editing; not accessible through View option; remain disabled.
                         const handleCellClick = () => {
                           if (isToday) {
+                            if (!isAdmin()) {
+                              if (att) {
+                                onOpenViewModal?.(
+                                  { memberId: mem.id, name: mem.name, isFlexIn: mem.isFlexIn },
+                                  { ...att, date: dateStr, memberId: mem.id, memberName: mem.name },
+                                  dateStr
+                                );
+                              } else {
+                                toast.info("Trainers have read-only attendance access. Attendance is marked via biometric scan or gym admin.");
+                              }
+                              return;
+                            }
                             const schedule = checkBatchScheduleAccess(dateStr, currentBatch);
                             if (!schedule.isAllowed && !att?.checkInTime) {
                               toast.error(schedule.reason);
@@ -224,7 +237,11 @@ export function MemberMonthlyMatrixTable({
                             key={dayNum}
                             title={
                               isToday
-                                ? `${title} (Today — Click to Check In/Out)`
+                                ? isAdmin()
+                                  ? `${title} (Today — Click to Check In/Out)`
+                                  : att
+                                  ? `${title} (Today — Click to View Record)`
+                                  : `${title} (Today • Read-Only Access)`
                                 : isFuture
                                 ? `${dateStr}: Future scheduled date (Locked)`
                                 : isPast && att
@@ -234,7 +251,9 @@ export function MemberMonthlyMatrixTable({
                             onClick={handleCellClick}
                             className={`px-1 py-1 text-center border-r border-border/40 font-mono transition-all select-none ${
                               isToday
-                                ? "bg-accent/5 ring-1 ring-inset ring-accent/30 cursor-pointer hover:bg-accent/20"
+                                ? isAdmin() || att
+                                  ? "bg-accent/5 ring-1 ring-inset ring-accent/30 cursor-pointer hover:bg-accent/20"
+                                  : "bg-accent/5 ring-1 ring-inset ring-accent/20 cursor-default"
                                 : isPast && att
                                 ? "cursor-pointer hover:bg-muted/30"
                                 : isFuture

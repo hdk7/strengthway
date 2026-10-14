@@ -14,10 +14,12 @@ import {
   Database,
   Settings,
   CalendarDays,
+  ShieldCheck,
 } from "lucide-react";
 import { STORAGE_KEYS } from "@/config/storageKeys";
 
 import { getCurrentUser } from "@/auth/currentUser";
+import { can } from "@/auth/permissions";
 
 const navConfig = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -85,8 +87,48 @@ const navConfig = [
       { id: "payment-fee", label: "Payment Fee Master", path: "/admin/masters/payment-fee" },
     ],
   },
+  { id: "users", label: "Users & Access", icon: ShieldCheck, path: "/admin/users" },
   { id: "settings", label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
+
+function filterNavByPermissions(items) {
+  return items
+    .map((item) => {
+      // Direct module permission check
+      if (item.id === "dashboard" && !can("dashboard", "view")) return null;
+      if (item.id === "inquiries" && !can("inquiries", "view")) return null;
+      if (item.id === "reports" && !can("reports", "view")) return null;
+      if (item.id === "users" && !can("settings", "view")) return null;
+      if (item.id === "settings" && !can("settings", "view")) return null;
+      if (item.id === "my-profile" && !can("members", "view") && !can("members", "view_own")) return null;
+      if (item.id === "schedule" && !item.children && !can("batches", "view") && !can("batches", "view_assigned")) return null;
+      if (item.id === "attendance" && !item.children && !can("attendance", "view") && !can("attendance", "view_own")) return null;
+      if (item.id === "payments" && !item.children && !can("payments", "view") && !can("payments", "view_own")) return null;
+
+      if (item.children) {
+        const filteredChildren = item.children.filter((child) => {
+          if (child.id === "member-list") return can("members", "view") || can("members", "view_assigned");
+          if (child.id === "trainer-list") return can("trainers", "view") || true;
+          if (child.id === "batch-schedule") return can("batches", "view") || can("batches", "view_assigned");
+          if (child.id === "master-class-schedule") return can("classes", "view");
+          if (child.id === "members-attendance") return can("attendance", "view") || can("attendance", "view_own");
+          if (child.id === "trainers-attendance") return can("attendance", "view") || can("attendance", "view_own");
+          if (child.id === "members") return can("payments", "view") || can("payments", "view_own");
+          if (child.id === "trainers") return can("payments", "view") || can("payments", "view_own");
+          if (child.id === "membership-plan" || child.id === "attendance-policy" || child.id === "payment-fee") {
+            return can("masters", "view");
+          }
+          return true;
+        });
+
+        if (filteredChildren.length === 0) return null;
+        return { ...item, children: filteredChildren };
+      }
+
+      return item;
+    })
+    .filter(Boolean);
+}
 
 function getNavConfigForUser(user) {
   const role = user?.role || "admin";
@@ -98,7 +140,7 @@ function getNavConfigForUser(user) {
   }
 
   if (role === "trainer") {
-    return [
+    const rawTrainerNav = [
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
       {
         id: "trainers-members",
@@ -137,10 +179,11 @@ function getNavConfigForUser(user) {
       },
       { id: "reports", label: "My Reports", icon: BarChart3, path: "/admin/reports" },
     ];
+    return filterNavByPermissions(rawTrainerNav);
   }
 
   if (role === "member") {
-    return [
+    const rawMemberNav = [
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
       {
         id: "my-profile",
@@ -168,6 +211,7 @@ function getNavConfigForUser(user) {
       },
       { id: "reports", label: "My Reports", icon: BarChart3, path: "/admin/reports" },
     ];
+    return filterNavByPermissions(rawMemberNav);
   }
 
   return navConfig;

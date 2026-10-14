@@ -17,6 +17,7 @@ import { getMemberById } from "@/lib/membersService";
 import { getBatches } from "@/lib/batchesService";
 import { useMemberProfileTracking } from "@/pages/trainers-members/members/profile/useMemberProfileTracking";
 import { MemberAttendanceCalendar } from "@/pages/trainers-members/members/profile/MemberAttendanceCalendar";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function MemberPersonalAttendanceView() {
   const currentUser = getCurrentUser();
@@ -132,8 +133,9 @@ export function MemberPersonalAttendanceView() {
           </div>
           <div className="mt-3 w-full bg-muted rounded-full h-1.5 overflow-hidden">
             <div
-              className="bg-primary h-1.5 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min(100, attendanceSummary.attendancePercentage)}%` }}
+              className={`bg-primary h-1.5 rounded-full transition-all duration-300 ${getTailwindWidth(
+                attendanceSummary.attendancePercentage
+              )}`}
             />
           </div>
         </div>

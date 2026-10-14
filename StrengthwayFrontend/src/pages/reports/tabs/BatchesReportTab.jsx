@@ -6,6 +6,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { BatchReportStatsCards } from "./BatchReportStatsCards";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function BatchesReportTab({
   batchesReport,
@@ -167,8 +168,7 @@ export function BatchesReportTab({
                             <div
                               className={`h-full rounded-full ${
                                 occ >= 90 ? "bg-destructive" : occ >= 75 ? "bg-amber-500" : "bg-emerald-500"
-                              }`}
-                              style={{ width: `${Math.min(100, occ)}%` }}
+                              } ${getTailwindWidth(occ)}`}
                             />
                           </div>
                         </div>

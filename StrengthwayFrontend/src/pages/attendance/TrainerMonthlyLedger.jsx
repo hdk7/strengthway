@@ -14,6 +14,7 @@ import {
   FileText,
   Sparkles,
 } from "lucide-react";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function TrainerMonthlyLedger({
   formattedSelectedMonth,
@@ -296,10 +297,7 @@ export function TrainerMonthlyLedger({
                                   : remainingBalance === 1
                                   ? "bg-amber-500"
                                   : "bg-emerald-500"
-                              }`}
-                              style={{
-                                width: `${Math.min(100, (paidLeaveDays / monthlyAllowance) * 100)}%`,
-                              }}
+                              } ${getTailwindWidth((paidLeaveDays / monthlyAllowance) * 100)}`}
                             />
                           </div>
                         </div>

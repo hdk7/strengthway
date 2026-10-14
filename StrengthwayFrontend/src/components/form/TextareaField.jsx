@@ -40,6 +40,13 @@ const TextareaField = forwardRef(function TextareaField(
 
   const currentLength = typeof value === "string" ? value.length : 0;
 
+  const resizeStyles = {
+    none: "resize-none",
+    vertical: "resize-y",
+    horizontal: "resize-x",
+    both: "resize",
+  }[resize] || "resize-none";
+
   return (
     <div className={`flex flex-col text-left ${className}`}>
       {label && (
@@ -67,10 +74,9 @@ const TextareaField = forwardRef(function TextareaField(
           placeholder={placeholder}
           disabled={disabled}
           readOnly={readOnly}
-          style={{ resize }}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className={`w-full border bg-slate-50/90 dark:bg-muted/40 text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground/50 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-muted/20 disabled:hover:border-slate-200/90 ${sizeStyles} ${stateStyles} ${textareaClassName}`}
+          className={`w-full border bg-slate-50/90 dark:bg-muted/40 text-slate-900 dark:text-foreground placeholder:text-slate-400 dark:placeholder:text-muted-foreground/50 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-muted/20 disabled:hover:border-slate-200/90 ${resizeStyles} ${sizeStyles} ${stateStyles} ${textareaClassName}`}
           {...props}
         />
       </div>

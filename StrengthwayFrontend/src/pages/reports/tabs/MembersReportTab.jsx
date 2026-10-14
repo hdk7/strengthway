@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   Check,
 } from "lucide-react";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function MembersReportTab({
   membersReport,
@@ -230,8 +231,7 @@ export function MembersReportTab({
                                 : m.attendanceRate >= 60
                                 ? "bg-amber-500"
                                 : "bg-destructive"
-                              }`}
-                              style={{ width: `${m.attendanceRate}%` }}
+                              } ${getTailwindWidth(m.attendanceRate)}`}
                             />
                           </div>
                         </div>

@@ -10,6 +10,7 @@ const { JWT_SECRET } = require("../../config/env");
 const SessionNote = require("./sessionNote.model");
 const Session = require("./session.model");
 const Batch = require("../batches/batch.model");
+const User = require("../auth/user.model");
 
 describe("Session Notes Module Suite (Multi-Trainer, 30-Day Window, RBAC)", () => {
   const ts = Date.now().toString().slice(-4);
@@ -20,32 +21,70 @@ describe("Session Notes Module Suite (Multi-Trainer, 30-Day Window, RBAC)", () =
   const testTrainerId2 = "TRN-102";
   const otherTrainerId = "TRN-999";
 
-  const adminToken = jwt.sign(
-    { id: "USR-ADMIN-1", role: "admin", name: "Super Admin", email: "admin@test.com" },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  const trainer1Token = jwt.sign(
-    { id: "USR-TRN-1", role: "trainer", trainerId: testTrainerId1, name: "Dolliee Ellens", email: "trainer1@test.com" },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  const trainer2Token = jwt.sign(
-    { id: "USR-TRN-2", role: "trainer", trainerId: testTrainerId2, name: "Ashwin Kumar", email: "trainer2@test.com" },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
-
-  const memberToken = jwt.sign(
-    { id: "USR-MEM-1", role: "member", memberId: "MEM-2001", name: "Gym Member", email: "member@test.com" },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+  let adminToken;
+  let trainer1Token;
+  let trainer2Token;
+  let memberToken;
+  let createdUserIds = [];
 
   beforeAll(async () => {
     await connectDB();
+
+    // Create test users in database so authenticate middleware succeeds
+    const adminUser = await User.create({
+      name: "Super Admin",
+      email: `admin-${ts}@test.com`,
+      passwordHash: "dummyhash",
+      role: "admin",
+      isActive: true,
+    });
+    const trainer1User = await User.create({
+      name: "Dolliee Ellens",
+      email: `trainer1-${ts}@test.com`,
+      passwordHash: "dummyhash",
+      role: "trainer",
+      trainerId: testTrainerId1,
+      isActive: true,
+    });
+    const trainer2User = await User.create({
+      name: "Ashwin Kumar",
+      email: `trainer2-${ts}@test.com`,
+      passwordHash: "dummyhash",
+      role: "trainer",
+      trainerId: testTrainerId2,
+      isActive: true,
+    });
+    const memberUser = await User.create({
+      name: "Gym Member",
+      email: `member-${ts}@test.com`,
+      passwordHash: "dummyhash",
+      role: "member",
+      memberId: "MEM-2001",
+      isActive: true,
+    });
+
+    createdUserIds = [adminUser._id, trainer1User._id, trainer2User._id, memberUser._id];
+
+    adminToken = jwt.sign(
+      { id: adminUser._id.toString(), role: "admin", name: adminUser.name, email: adminUser.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    trainer1Token = jwt.sign(
+      { id: trainer1User._id.toString(), role: "trainer", trainerId: testTrainerId1, name: trainer1User.name, email: trainer1User.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    trainer2Token = jwt.sign(
+      { id: trainer2User._id.toString(), role: "trainer", trainerId: testTrainerId2, name: trainer2User.name, email: trainer2User.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    memberToken = jwt.sign(
+      { id: memberUser._id.toString(), role: "member", memberId: "MEM-2001", name: memberUser.name, email: memberUser.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
     // Create test batch with 2 assigned trainers
     await Batch.create({
@@ -54,6 +93,8 @@ describe("Session Notes Module Suite (Multi-Trainer, 30-Day Window, RBAC)", () =
       shortName: "TSB",
       trainerIds: [testTrainerId1, testTrainerId2],
       daysPattern: "Mon, Wed, Fri",
+      startTime: "06:00 AM",
+      endTime: "07:00 AM",
       timingLabel: "06:00 AM - 07:00 AM",
       currentPax: 15,
       maxPax: 25,
@@ -101,6 +142,9 @@ describe("Session Notes Module Suite (Multi-Trainer, 30-Day Window, RBAC)", () =
     await Batch.deleteOne({ id: testBatchId });
     await Session.deleteMany({ id: { $in: [testSessionId, testOldSessionId] } });
     await SessionNote.deleteMany({ sessionId: { $in: [testSessionId, testOldSessionId] } });
+    if (createdUserIds.length > 0) {
+      await User.deleteMany({ _id: { $in: createdUserIds } });
+    }
     await disconnectDB();
   });
 

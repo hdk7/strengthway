@@ -205,6 +205,7 @@ export default function BatchClassesTab({
               const isActive = sessionsTab === tab.id;
               return (
                 <button
+                  id={`sessions-subtab-${tab.id.toLowerCase()}`}
                   key={tab.id}
                   type="button"
                   onClick={() => setSessionsTab(tab.id)}
@@ -324,6 +325,7 @@ export default function BatchClassesTab({
                   session.status === "TODAY" ||
                   session.sessionDate === new Date().toISOString().slice(0, 10);
                 const canComplete = hasClassStarted(session);
+                const isEligibleForNotes = (isCompleted || canComplete) && !isCancelled;
 
                 // Matching curriculum item
                 const matchingItem = masterClassItems.find(
@@ -338,20 +340,16 @@ export default function BatchClassesTab({
 
                 const allAssignedCoaches = getSessionAssignedTrainers(session, batch, trainers);
 
-                // If user is a trainer, strictly isolate coaches to only themselves
-                const assignedCoaches = userIsTrainer
-                  ? (allAssignedCoaches.filter((c) => c.id === myTrainerId).length > 0
-                      ? allAssignedCoaches.filter((c) => c.id === myTrainerId)
-                      : [{ id: myTrainerId || "TRN-CURRENT", name: currentUser.name || "My Coach Notes", role: "Trainer" }])
-                  : allAssignedCoaches;
+                // Keep one card per scheduled class showing all assigned coaches
+                const assignedCoaches = allAssignedCoaches.length > 0
+                  ? allAssignedCoaches
+                  : (session.coachId
+                      ? [{ id: session.coachId, name: session.coachName || session.coachId, role: "Faculty Coach" }]
+                      : [{ id: myTrainerId || "TRN-101", name: currentUser.name || "Assigned Coach", role: "Faculty Coach" }]);
 
-                const notesForThisSession = (sessionNotes || []).filter((n) => {
-                  if (n.sessionId !== session.id) return false;
-                  if (userIsTrainer) {
-                    return n.trainerId === myTrainerId;
-                  }
-                  return true;
-                });
+                const notesForThisSession = (sessionNotes || []).filter(
+                  (n) => n.sessionId === session.id
+                );
 
                 const submittedNotesForSession = notesForThisSession.filter(
                   (n) => n.sessionSummary && n.sessionSummary.trim().length > 0
@@ -436,9 +434,11 @@ export default function BatchClassesTab({
                         <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <User size={12} className="text-primary" />
-                            <span>{userIsTrainer ? "My Session Status:" : `Assigned ${assignedCoaches.length > 1 ? "Coaches" : "Coach"}:`}</span>
+                            <span>
+                              Assigned {assignedCoaches.length > 1 ? "Coaches" : "Coach"}:
+                            </span>
                           </span>
-                          {!userIsTrainer && (
+                          {(isEligibleForNotes || submittedCount > 0) && (
                             <span className="text-[10px] text-muted-foreground/80 font-mono">
                               {submittedCount}/{assignedCoaches.length} notes
                             </span>
@@ -449,51 +449,80 @@ export default function BatchClassesTab({
                           {visibleCoaches.map((coach) => {
                             const coachNote = notesForThisSession.find((n) => n.trainerId === coach.id);
                             const isSubmitted = !!(coachNote && coachNote.sessionSummary?.trim());
-                            return (
-                              <button
-                                key={coach.id}
-                                type="button"
-                                onClick={() => onOpenNotes(session, coach.id)}
-                                className={`group/trainer inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] transition-all cursor-pointer ${
-                                  isSubmitted
-                                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
-                                    : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
-                                }`}
-                                title={`${coach.name} • ${isSubmitted ? "Notes Submitted" : "Notes Pending"}. Click to view or edit notes.`}
-                              >
-                                <span className="font-semibold truncate max-w-[100px]">{coach.name}</span>
-                                <span
-                                  className={`inline-flex items-center gap-0.5 rounded px-1 py-0.2 text-[9px] font-bold uppercase tracking-wider ${
+                            const isMyCoach = userIsTrainer && coach.id === myTrainerId;
+
+                            if (isEligibleForNotes || isSubmitted) {
+                              return (
+                                <button
+                                  key={coach.id}
+                                  type="button"
+                                  onClick={() => onOpenNotes(session, coach.id)}
+                                  className={`group/trainer inline-flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] transition-all cursor-pointer ${
                                     isSubmitted
-                                      ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
-                                      : "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20"
+                                      : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
                                   }`}
+                                  title={
+                                    isSubmitted
+                                      ? `${coach.name}${isMyCoach ? " (You)" : ""} • Notes Submitted. Click to view notes.`
+                                      : `${coach.name}${isMyCoach ? " (You)" : ""} • Notes Pending. Click to view or edit notes.`
+                                  }
                                 >
-                                  {isSubmitted ? (
-                                    <>
-                                      <CheckCircle2 size={9} />
-                                      <span>Submitted</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Clock size={9} />
-                                      <span>Notes Pending</span>
-                                    </>
-                                  )}
-                                </span>
-                              </button>
+                                  <span className="font-semibold truncate max-w-[110px]">
+                                    {coach.name}{isMyCoach ? " (You)" : ""}
+                                  </span>
+                                  <span
+                                    className={`inline-flex items-center gap-0.5 rounded px-1 py-0.2 text-[9px] font-bold uppercase tracking-wider ${
+                                      isSubmitted
+                                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                                        : "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                                    }`}
+                                  >
+                                    {isSubmitted ? (
+                                      <>
+                                        <CheckCircle2 size={9} />
+                                        <span>Submitted</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Clock size={9} />
+                                        <span>Notes Pending</span>
+                                      </>
+                                    )}
+                                  </span>
+                                </button>
+                              );
+                            }
+
+                            return (
+                              <span
+                                key={coach.id}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-2 py-1 text-[11px] text-muted-foreground"
+                                title={`Assigned Faculty: ${coach.name}`}
+                              >
+                                <span className="font-semibold truncate max-w-[130px]">{coach.name}</span>
+                              </span>
                             );
                           })}
 
                           {hasMoreCoaches && (
-                            <button
-                              type="button"
-                              onClick={() => onOpenNotes(session, "")}
-                              className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-card/80 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-                              title="View all assigned coaches"
-                            >
-                              <span>+{assignedCoaches.length - 2} More</span>
-                            </button>
+                            (isEligibleForNotes || submittedCount > 0) ? (
+                              <button
+                                type="button"
+                                onClick={() => onOpenNotes(session, "")}
+                                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-card/80 px-2 py-1 text-[10px] font-bold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                                title="View all assigned coaches"
+                              >
+                                <span>+{assignedCoaches.length - 2} More</span>
+                              </button>
+                            ) : (
+                              <span
+                                className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-card/80 px-2 py-1 text-[10px] font-bold text-muted-foreground"
+                                title="Additional assigned coaches"
+                              >
+                                <span>+{assignedCoaches.length - 2} More</span>
+                              </span>
+                            )
                           )}
                         </div>
                       </div>
@@ -529,7 +558,7 @@ export default function BatchClassesTab({
                             ))}
                           </div>
                         </div>
-                      ) : session.notes ? (
+                      ) : (isToday || isCompleted) && session.notes ? (
                         <div className="rounded-xl bg-primary/5 border border-primary/20 p-2 text-xs text-foreground flex items-start gap-1.5">
                           <FileText size={13} className="text-primary shrink-0 mt-0.5" />
                           <span className="line-clamp-2 italic text-[11px]">
@@ -542,32 +571,35 @@ export default function BatchClassesTab({
                     {/* Footer Actions */}
                     <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        {isMember() ? (
-                          submittedNotesForSession.length > 0 || session.notes ? (
+                        {/* Coach Notes Button: strictly hidden for upcoming/future classes unless notes already submitted */}
+                        {(isEligibleForNotes || submittedCount > 0) && (
+                          isMember() ? (
+                            (submittedNotesForSession.length > 0 || session.notes) ? (
+                              <button
+                                type="button"
+                                onClick={() => onOpenNotes(session, "")}
+                                className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
+                                title="View Coach Notes"
+                              >
+                                <FileText size={11} />
+                                <span>Coach Note</span>
+                              </button>
+                            ) : null
+                          ) : (
                             <button
                               type="button"
-                              onClick={() => onOpenNotes(session, "")}
+                              onClick={() => onOpenNotes(session, userIsTrainer ? myTrainerId : "")}
                               className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-                              title="View Coach Notes"
+                              title="View / Edit Coach Notes"
                             >
                               <FileText size={11} />
-                              <span>Coach Note</span>
+                              <span>
+                                {userIsTrainer
+                                  ? (submittedCount > 0 ? "My Notes" : "Add Note")
+                                  : (submittedCount > 0 ? `Notes (${submittedCount}/${assignedCoaches.length})` : "Add Notes")}
+                              </span>
                             </button>
-                          ) : null
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onOpenNotes(session, userIsTrainer ? myTrainerId : "")}
-                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer transition-colors"
-                            title="View / Edit Coach Notes"
-                          >
-                            <FileText size={11} />
-                            <span>
-                              {userIsTrainer
-                                ? (submittedCount > 0 ? "My Notes" : "Add Note")
-                                : (submittedCount > 0 ? `Notes (${submittedCount}/${assignedCoaches.length})` : "Add Notes")}
-                            </span>
-                          </button>
+                          )
                         )}
 
                         {isAdmin() && (

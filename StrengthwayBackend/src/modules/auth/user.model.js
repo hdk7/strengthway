@@ -1,9 +1,14 @@
 "use strict";
 
 /**
- * Admin User model.
- * Stores gym admin credentials. Passwords are stored as bcrypt hashes.
- * A default admin is created by the auth seed / register endpoint in dev.
+ * User Identity Model
+ * ===================
+ * Stores authentication credentials for the three supported system roles:
+ * - admin:   System Administrator with full facility management authority
+ * - trainer: Faculty Coach linked to a Trainer profile via trainerId
+ * - member:  Gym Athlete linked to a Member profile via memberId
+ *
+ * Passwords are saved as bcrypt hashes.
  */
 
 const mongoose = require("mongoose");
@@ -31,8 +36,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: Object.values(USER_ROLES),
-      default: USER_ROLES.ADMIN,
+      enum: [USER_ROLES.ADMIN, USER_ROLES.TRAINER, USER_ROLES.MEMBER],
+      default: USER_ROLES.MEMBER,
       index: true,
     },
     trainerId: {
@@ -50,6 +55,7 @@ const userSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
     lastLoginAt: {
       type: Date,

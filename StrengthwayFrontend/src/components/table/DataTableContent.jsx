@@ -32,27 +32,33 @@ export default function DataTableContent({
         <table className={`w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px] ${tableClassName}`}>
           <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
             <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              {columns.map((col) => (
-                <th
-                  key={col.key || col.accessorKey}
-                  className={`${headerPadding} ${getAlignmentClass(col.align)} ${col.width || ""}`}
-                >
-                  {col.header}
-                </th>
-              ))}
+              {columns.map((col, cIdx) => {
+                const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
+                return (
+                  <th
+                    key={`sk-th-${colKey}-${cIdx}`}
+                    className={`${headerPadding} ${getAlignmentClass(col.align)} ${col.width || ""}`}
+                  >
+                    {col.header}
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody className="text-xs sm:text-sm">
             {Array.from({ length: loadingRowsCount }).map((_, rIdx) => (
               <tr key={`skeleton-${rIdx}`} className="animate-pulse">
-                {columns.map((col, cIdx) => (
-                  <td
-                    key={`sk-${col.key || col.accessorKey}-${rIdx}`}
-                    className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs`}
-                  >
-                    <div className="h-4 bg-muted rounded-md w-3/4" />
-                  </td>
-                ))}
+                {columns.map((col, cIdx) => {
+                  const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
+                  return (
+                    <td
+                      key={`sk-td-${colKey}-${cIdx}-${rIdx}`}
+                      className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs`}
+                    >
+                      <div className="h-4 bg-muted rounded-md w-3/4" />
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -97,11 +103,11 @@ export default function DataTableContent({
       <table className={`w-full text-left border-separate [border-spacing:0_8px] sm:[border-spacing:0_10px] ${tableClassName}`}>
         <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur-xs select-none">
           <tr className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {columns.map((col) => {
-              const colKey = col.key || col.accessorKey;
+            {columns.map((col, cIdx) => {
+              const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
               return (
                 <th
-                  key={colKey}
+                  key={`th-${colKey}-${cIdx}`}
                   className={`${headerPadding} ${getAlignmentClass(col.align)} ${
                     col.width || ""
                   } ${col.headerClassName || ""}`}
@@ -114,7 +120,7 @@ export default function DataTableContent({
         </thead>
         <tbody className={`${compact ? "text-xs sm:text-sm" : "text-sm"}`}>
           {paginatedData.map((row, rowIdx) => {
-            const rowKey = row[keyField] || `row-${rowIdx}`;
+            const rowKey = row[keyField] || row.id || row._id || `row-${rowIdx}`;
 
             return (
               <tr
@@ -124,7 +130,8 @@ export default function DataTableContent({
                   onRowClick ? "cursor-pointer" : ""
                 }`}
               >
-                {columns.map((col) => {
+                {columns.map((col, cIdx) => {
+                  const colKey = col.key || col.accessorKey || col.id || (typeof col.header === "string" ? col.header : "") || `col-${cIdx}`;
                   const cellContent = col.cell
                     ? col.cell(row, rowIdx)
                     : col.accessorKey
@@ -133,7 +140,7 @@ export default function DataTableContent({
 
                   return (
                     <td
-                      key={`cell-${col.key || col.accessorKey}-${rowKey}`}
+                      key={`cell-${colKey}-${cIdx}-${rowKey}`}
                       className={`bg-card ${cellPadding} align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 first:shadow-[-2px_2px_4px_rgba(0,0,0,0.02)] last:rounded-r-2xl last:border-r last:border-border/50 last:shadow-[2px_2px_4px_rgba(0,0,0,0.02)] shadow-xs group-hover:bg-muted/40 transition-colors ${getAlignmentClass(
                         col.align
                       )} ${col.className || ""}`}

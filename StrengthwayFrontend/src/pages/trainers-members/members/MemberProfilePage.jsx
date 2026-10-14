@@ -13,6 +13,9 @@ import {
 } from "@/lib/membersService";
 import { getBatches } from "@/lib/batchesService";
 import { createInquiry } from "@/lib/inquiriesService";
+import { checkProfileAccount } from "@/lib/usersService";
+import { isMember } from "@/auth/currentUser";
+import ProfileAccountModal from "@/pages/users/ProfileAccountModal";
 import BatchTransferModal from "@/pages/batches/components/BatchTransferModal";
 import ContactLeadModal from "@/pages/inquiries/ContactLeadModal";
 import InquiryContactRecordCard from "@/pages/inquiries/InquiryContactRecordCard";
@@ -41,6 +44,19 @@ export default function MemberProfilePage() {
   const [allBatches, setAllBatches] = useState([]);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [transferModalTab, setTransferModalTab] = useState("transfer");
+  const [accountInfo, setAccountInfo] = useState({ hasAccount: false, user: null });
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  const loadAccountStatus = () => {
+    if (!id) return;
+    checkProfileAccount("member", id)
+      .then((res) => setAccountInfo(res || { hasAccount: false, user: null }))
+      .catch(() => setAccountInfo({ hasAccount: false, user: null }));
+  };
+
+  useEffect(() => {
+    loadAccountStatus();
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -294,11 +310,11 @@ export default function MemberProfilePage() {
         </p>
         <button
           type="button"
-          onClick={() => navigate("/admin/trainers-members/members")}
+          onClick={() => navigate(isMember() ? "/admin/dashboard" : "/admin/trainers-members/members")}
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
-          <span>Back to Members Directory</span>
+          <span>{isMember() ? "Back to Dashboard" : "Back to Members Directory"}</span>
         </button>
       </div>
     );
@@ -331,6 +347,8 @@ export default function MemberProfilePage() {
         handleSoftDelete={handleSoftDelete}
         setIsEditModalOpen={setIsEditModalOpen}
         handleMoveToInquiry={handleMoveToInquiry}
+        accountInfo={accountInfo}
+        onOpenAccountModal={() => setIsAccountModalOpen(true)}
       />
 
       {/* Inbound Inquiry Contact Interaction Record */}
@@ -428,6 +446,20 @@ export default function MemberProfilePage() {
         leadPhone={member?.mobile}
         leadEmail={member?.email}
       />
+
+      {/* User Login Account Provision / Management Modal */}
+      {isAccountModalOpen && (
+        <ProfileAccountModal
+          isOpen={isAccountModalOpen}
+          onClose={() => setIsAccountModalOpen(false)}
+          onSuccess={() => {
+            loadAccountStatus();
+          }}
+          type="member"
+          profile={member}
+          existingAccount={accountInfo.user}
+        />
+      )}
     </div>
   );
 }

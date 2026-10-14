@@ -22,9 +22,9 @@ const DEFAULT_USERS = [
     memberId: null,
   },
   {
-    name: "StrengthWay Admin (Demo)",
+    name: "StrengthWay Admin",
     email: "admin@thestrengthway.com",
-    password: "Admin@12345",
+    password: "Admin@2026",
     role: "admin",
     trainerId: null,
     memberId: null,
@@ -38,8 +38,24 @@ const DEFAULT_USERS = [
     memberId: null,
   },
   {
+    name: "Dolliee Ellens (Trainer Demo)",
+    email: "trainer@thestrengthway.com",
+    password: "Trainer@2026",
+    role: "trainer",
+    trainerId: "TRN-101",
+    memberId: null,
+  },
+  {
     name: "Arun Varma (Member Demo)",
     email: "member@strengthway.com",
+    password: "Member@2026",
+    role: "member",
+    trainerId: null,
+    memberId: "MEM-2001",
+  },
+  {
+    name: "Arun Varma (Member Demo)",
+    email: "member@thestrengthway.com",
     password: "Member@2026",
     role: "member",
     trainerId: null,
@@ -80,6 +96,15 @@ async function seedAdmin(options = {}) {
     if (!silent) {
       console.log(`[Seed:User] ✓ User account created: ${userData.email} (${userData.role})`);
     }
+  }
+
+  // Ensure default RBAC permissions are configured
+  try {
+    const permissionService = require("../modules/permissions/permission.service");
+    await permissionService.ensureDefaults();
+    if (!silent) console.log("[Seed:Permissions] ✓ Default RBAC role permissions verified.");
+  } catch (permErr) {
+    if (!silent) console.warn("[Seed:Permissions] Notice:", permErr.message);
   }
 
   return { seeded, skipped };

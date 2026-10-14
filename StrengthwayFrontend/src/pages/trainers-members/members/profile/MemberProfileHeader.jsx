@@ -6,6 +6,8 @@ import {
   Edit3,
   PhoneCall,
   Archive,
+  ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 import { isAdmin, isMember } from "@/auth/currentUser";
 
@@ -21,6 +23,8 @@ export function MemberProfileHeader({
   handleSoftDelete,
   setIsEditModalOpen,
   handleMoveToInquiry,
+  accountInfo = null,
+  onOpenAccountModal = null,
 }) {
   const isLeadOrInquiry =
     !isDeleted && (member.status === "Lead" || member.status === "Inquiry");
@@ -75,6 +79,23 @@ export function MemberProfileHeader({
                     Contacted
                   </span>
                 ) : null}
+
+                {/* Login Account Badge */}
+                {accountInfo?.hasAccount && onOpenAccountModal && (
+                  <button
+                    type="button"
+                    onClick={onOpenAccountModal}
+                    title="Click to manage login account"
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-bold transition-all cursor-pointer ${
+                      accountInfo.user?.isActive !== false
+                        ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
+                        : "bg-destructive/15 border border-destructive/30 text-destructive hover:bg-destructive/25"
+                    }`}
+                  >
+                    <ShieldCheck size={13} />
+                    <span>Login: {accountInfo.user?.isActive !== false ? "Active" : "Deactivated"}</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -180,6 +201,21 @@ export function MemberProfileHeader({
               <span>Archive (Soft Delete)</span>
             </button>
           ))}
+
+          {adminUser && onOpenAccountModal && (
+            <button
+              type="button"
+              onClick={onOpenAccountModal}
+              className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99] ${
+                accountInfo?.hasAccount
+                  ? "border border-border bg-card hover:bg-muted text-foreground"
+                  : "border border-sky-500/40 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400"
+              }`}
+            >
+              {accountInfo?.hasAccount ? <ShieldCheck size={16} /> : <KeyRound size={16} />}
+              <span>{accountInfo?.hasAccount ? "Manage Login Account" : "Create Login Account"}</span>
+            </button>
+          )}
 
           {adminUser && (
             <button

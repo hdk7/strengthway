@@ -16,6 +16,7 @@ import {
 import { getTrainers } from "@/lib/trainersService";
 import { getAllTrainerLogs } from "@/lib/attendanceService";
 import { Pagination } from "@/components/table";
+import { isTrainer } from "@/auth/currentUser";
 
 const SHIFT_OPTIONS = [
   "ALL",
@@ -33,6 +34,8 @@ export default function TrainersPaymentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedShift, setSelectedShift] = useState("ALL");
   const [selectedStatus, setSelectedStatus] = useState("ALL");
+
+  const userIsTrainer = isTrainer();
 
   const loadData = async () => {
     setIsLoading(true);
@@ -181,78 +184,148 @@ export default function TrainersPaymentsPage() {
       <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-2.5">
         <div>
           <div className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground font-mono">
-            Faculty Operations • Payroll & Incentives
+            {userIsTrainer ? "Faculty Portal • Compensation & Hours" : "Faculty Operations • Payroll & Incentives"}
           </div>
           <h1 className="font-display text-xl sm:text-2xl font-black text-foreground tracking-tight mt-0.5">
-            Trainer Payouts & Faculty Stipends
+            {userIsTrainer ? "My Payouts & Faculty Stipend Ledger" : "Trainer Payouts & Faculty Stipends"}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Monthly compensation ledger, floor hours remuneration, and disbursement status.
+            {userIsTrainer
+              ? "Audit your monthly coaching remuneration, conducted sessions, floor hours, and payout disbursement status."
+              : "Monthly compensation ledger, floor hours remuneration, and disbursement status."}
           </p>
         </div>
       </div>
 
       {/* ─── KPI Cards ──────────────────────────────────────────────────────── */}
       <div className="shrink-0 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">
-              Payroll Outflow
-            </span>
-            <IndianRupee size={16} className="text-emerald-500" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-            ₹{kpis.totalLiability.toLocaleString("en-IN")}
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Cumulative monthly stipends
-          </p>
-        </div>
+        {userIsTrainer ? (
+          <>
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Net Remuneration
+                </span>
+                <IndianRupee size={16} className="text-emerald-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
+                ₹{kpis.totalLiability.toLocaleString("en-IN")}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Monthly stipend after deductions
+              </p>
+            </div>
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">
-              Disbursed Coaches
-            </span>
-            <CheckCircle2 size={16} className="text-emerald-500" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
-            {kpis.disbursedCount}
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Accounts settled
-          </p>
-        </div>
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Conducted Sessions
+                </span>
+                <CheckCircle2 size={16} className="text-emerald-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
+                {filteredPayouts[0]?.totalConducted || 0}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Classes conducted this cycle
+              </p>
+            </div>
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">
-              Pending Approval
-            </span>
-            <AlertCircle size={16} className="text-amber-500" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-black text-amber-500">
-            {kpis.pendingCount}
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Awaiting sign-off
-          </p>
-        </div>
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Floor Hours
+                </span>
+                <Clock size={16} className="text-accent" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
+                {filteredPayouts[0]?.totalHours || 0} hrs
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Verified training floor time
+              </p>
+            </div>
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">
-              Avg Coach Payout
-            </span>
-            <Award size={16} className="text-accent" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-            ₹{kpis.avgPayout.toLocaleString("en-IN")}
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Average monthly stipend
-          </p>
-        </div>
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Disbursement Status
+                </span>
+                <Award size={16} className="text-emerald-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
+                {filteredPayouts[0]?.status || "Disbursed"}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                {filteredPayouts[0]?.leaveDeduction > 0
+                  ? `-₹${filteredPayouts[0].leaveDeduction.toLocaleString("en-IN")} leave deduction`
+                  : "Zero unexcused leaves"}
+              </p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Payroll Outflow
+                </span>
+                <IndianRupee size={16} className="text-emerald-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
+                ₹{kpis.totalLiability.toLocaleString("en-IN")}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Cumulative monthly stipends
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Disbursed Coaches
+                </span>
+                <CheckCircle2 size={16} className="text-emerald-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
+                {kpis.disbursedCount}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Accounts settled
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Pending Approval
+                </span>
+                <AlertCircle size={16} className="text-amber-500" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-amber-500">
+                {kpis.pendingCount}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Awaiting sign-off
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-[11px] font-semibold uppercase tracking-wider">
+                  Avg Coach Payout
+                </span>
+                <Award size={16} className="text-accent" />
+              </div>
+              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
+                ₹{kpis.avgPayout.toLocaleString("en-IN")}
+              </div>
+              <p className="mt-0.5 text-[10px] text-muted-foreground">
+                Average monthly stipend
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ─── Filter & Search Bar ────────────────────────────────────────────── */}

@@ -40,8 +40,8 @@ const registerSchema = yup.object().shape({
     .min(8, "Password must be at least 8 characters."),
   role: yup
     .string()
-    .oneOf(Object.values(USER_ROLES))
-    .default(USER_ROLES.ADMIN),
+    .oneOf([USER_ROLES.ADMIN, USER_ROLES.TRAINER, USER_ROLES.MEMBER], "Role must be admin, trainer, or member.")
+    .default(USER_ROLES.MEMBER),
   trainerId: yup.string().trim().nullable(),
   memberId: yup.string().trim().nullable(),
 });

@@ -28,7 +28,7 @@ import {
   checkBatchScheduleAccess,
   calculateDailyKpis,
 } from "./memberAttendanceUtils";
-import { isMember } from "@/auth/currentUser";
+import { isMember, isAdmin } from "@/auth/currentUser";
 import { MemberPersonalAttendanceView } from "./MemberPersonalAttendanceView";
 import { stepMonth, getCurrentYearMonth } from "@/components/ui/MonthPicker";
 
@@ -36,7 +36,10 @@ export default function MembersAttendancePage() {
   if (isMember()) {
     return <MemberPersonalAttendanceView />;
   }
+  return <AdminMembersAttendanceContent />;
+}
 
+function AdminMembersAttendanceContent() {
   const [viewMode, setViewMode] = useState("daily"); // "daily" | "matrix"
   const [selectedDate, setSelectedDate] = useState(() => getTodayDateString());
   const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
@@ -277,6 +280,10 @@ export default function MembersAttendancePage() {
   };
 
   const handleOpenEditModal = (attendee, record, date) => {
+    if (!isAdmin()) {
+      toast.info("Trainers have read-only attendance access.");
+      return;
+    }
     const effectiveDate = date || selectedDate;
     if (!isDateToday(effectiveDate)) return toast.error("Editing attendance is permitted only for the current day.");
     const attendeeBatch = (attendee?.batchId && batches.find((b) => b.id === attendee.batchId)) || currentBatch;
@@ -286,6 +293,10 @@ export default function MembersAttendancePage() {
   };
 
   const handleSaveEditModal = async (payload) => {
+    if (!isAdmin()) {
+      toast.error("Only administrators are permitted to edit attendance records.");
+      return;
+    }
     setIsSubmittingEdit(true);
     try {
       const result = await markAttendance({ ...payload, batchId: selectedBatchId, markedBy: "Admin Faculty" });

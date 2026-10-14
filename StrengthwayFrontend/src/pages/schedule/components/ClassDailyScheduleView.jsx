@@ -13,8 +13,13 @@ import {
   RefreshCw,
   Layers,
   AlertCircle,
+  FileText,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { getClassCalendar } from "@/lib/classProgramService";
+import { getDailyAdminSessionNotes } from "@/lib/sessionNotesService";
 import { isAdmin } from "@/auth/currentUser";
 
 export function ClassDailyScheduleView({
@@ -28,6 +33,8 @@ export function ClassDailyScheduleView({
   );
   const [selectedBatchId, setSelectedBatchId] = useState("ALL");
   const [sessions, setSessions] = useState([]);
+  const [dailyNotesMap, setDailyNotesMap] = useState(new Map());
+  const [expandedNoteSessionId, setExpandedNoteSessionId] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const loadDailySessions = useCallback(async () => {
@@ -36,13 +43,31 @@ export function ClassDailyScheduleView({
       const params = { date: selectedDate };
       if (selectedBatchId !== "ALL") params.batchId = selectedBatchId;
 
-      const data = await getClassCalendar(params);
+      const calendarPromise = getClassCalendar(params);
+      const notesPromise = isAdmin()
+        ? getDailyAdminSessionNotes({ date: selectedDate, batchId: selectedBatchId })
+        : Promise.resolve({ data: [] });
+
+      const [data, notesRes] = await Promise.all([calendarPromise, notesPromise]);
+
       const sessionList = Array.isArray(data?.data)
         ? data.data
         : Array.isArray(data)
           ? data
           : [];
       setSessions(sessionList);
+
+      const dailyNotesList = Array.isArray(notesRes?.data)
+        ? notesRes.data
+        : Array.isArray(notesRes)
+          ? notesRes
+          : [];
+
+      const notesMap = new Map();
+      dailyNotesList.forEach((item) => {
+        if (item.sessionId) notesMap.set(item.sessionId, item);
+      });
+      setDailyNotesMap(notesMap);
     } catch (err) {
       console.error("Failed to load daily sessions:", err);
     } finally {
@@ -276,6 +301,102 @@ export function ClassDailyScheduleView({
                     </div>
                   )}
                 </div>
+
+                {/* Admin Faculty Session Notes (Ongoing & Completed Classes) */}
+                {isAdmin() && (() => {
+                  const sessionNotesData = dailyNotesMap.get(s.id);
+                  if (sessionNotesData && sessionNotesData.assignedTrainers?.length > 0) {
+                    const assignedTrainers = sessionNotesData.assignedTrainers;
+                    const submittedCount = assignedTrainers.filter((t) => t.status === "Submitted").length;
+
+                    return (
+                      <div className="pt-2 border-t border-slate-100 dark:border-border/60 space-y-2">
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="flex items-center gap-1.5 text-slate-700 dark:text-foreground">
+                            <FileText size={13} className="text-indigo-600 dark:text-primary" />
+                            <span>Faculty Debrief Notes</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-slate-500 dark:text-muted-foreground">
+                            {submittedCount}/{assignedTrainers.length} Submitted
+                          </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          {assignedTrainers.map((coach) => {
+                            const isSubmitted = coach.status === "Submitted";
+                            const hasText = coach.note?.sessionSummary && coach.note.sessionSummary.trim().length > 0;
+
+                            return (
+                              <div
+                                key={coach.trainerId}
+                                className={`rounded-xl border p-2.5 text-xs transition-all ${
+                                  isSubmitted
+                                    ? "border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/40 dark:bg-emerald-950/20 text-foreground"
+                                    : "border-amber-200/80 dark:border-amber-900/30 bg-amber-50/40 dark:bg-amber-950/15 text-slate-700 dark:text-muted-foreground"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-bold text-slate-900 dark:text-foreground truncate max-w-[140px]">
+                                    {coach.trainerName}
+                                  </span>
+                                  <span
+                                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${
+                                      isSubmitted
+                                        ? "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300"
+                                        : "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300"
+                                    }`}
+                                  >
+                                    {isSubmitted ? (
+                                      <>
+                                        <CheckCircle2 size={10} />
+                                        <span>Submitted</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Clock size={10} />
+                                        <span>Notes Pending</span>
+                                      </>
+                                    )}
+                                  </span>
+                                </div>
+
+                                {isSubmitted && hasText ? (
+                                  <div className="mt-1.5 text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-sans bg-white/70 dark:bg-black/20 p-2 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                                    <p className="line-clamp-3 italic">
+                                      &ldquo;{coach.note.sessionSummary}&rdquo;
+                                    </p>
+                                    {coach.note.submittedAt && (
+                                      <p className="mt-1 text-[10px] text-slate-400 dark:text-muted-foreground">
+                                        Logged {new Date(coach.note.submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : !isSubmitted ? (
+                                  <p className="mt-1 text-[11px] text-amber-700/80 dark:text-amber-300/80 italic">
+                                    Coach hasn&apos;t submitted session debrief yet.
+                                  </p>
+                                ) : null}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  if (s.status !== "CANCELLED") {
+                    return (
+                      <div className="pt-2 border-t border-slate-100 dark:border-border/60">
+                        <div className="rounded-xl border border-slate-200/60 dark:border-border/60 bg-slate-50/50 dark:bg-muted/20 px-2.5 py-1.5 text-[11px] text-slate-500 dark:text-muted-foreground flex items-center gap-1.5">
+                          <Clock size={12} className="shrink-0 text-slate-400" />
+                          <span>Session notes unlock once class session begins.</span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })()}
               </div>
 
               {/* Card Footer Actions */}

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 import BatchDetailHeader from "./detail/BatchDetailHeader";
@@ -14,17 +14,26 @@ import { BatchClassAssignmentModal } from "../schedule/components/BatchClassAssi
 import { useBatchDetailData } from "./detail/useBatchDetailData";
 import { useBatchDetailActions } from "./detail/useBatchDetailActions";
 import { isMember } from "@/auth/currentUser";
+import { hasClassStarted } from "@/lib/batchUtils";
 import { saveSessionNote } from "@/lib/sessionNotesService";
 import { toast } from "sonner";
 
 export default function BatchDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState(() => (isMember() ? "classes" : "overview")); // "overview" | "trainers" | "members" | "classes"
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "overview"); // "overview" | "trainers" | "members" | "classes"
+
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && ["overview", "trainers", "members", "classes"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
   const [memberSearch, setMemberSearch] = useState("");
   const [trainerSearch, setTrainerSearch] = useState("");
-  const [sessionsTab, setSessionsTab] = useState("Upcoming");
+  const [sessionsTab, setSessionsTab] = useState(() => searchParams.get("sessionTab") || "All");
   const [selectedWeekFilter, setSelectedWeekFilter] = useState("all");
   const [isAssignClassesOpen, setIsAssignClassesOpen] = useState(false);
 
@@ -246,7 +255,7 @@ export default function BatchDetailPage() {
         />
       )}
 
-      {activeTab === "classes" && (
+      {activeTab === "classes" && !isMember() && (
         <BatchClassesTab
           batch={batch}
           masterSchedule={masterSchedule}
@@ -261,6 +270,15 @@ export default function BatchDetailPage() {
           sessionNotes={sessionNotes}
           trainers={allTrainers.length > 0 ? allTrainers : trainers}
           onOpenNotes={(session, trainerId) => {
+            const canComplete = hasClassStarted(session);
+            const isCompleted = session?.status === "COMPLETED";
+            const isEligible = (isCompleted || canComplete) && session?.status !== "CANCELLED";
+            const hasExistingNotes = (sessionNotes || []).some(
+              (n) => n.sessionId === session?.id && n.sessionSummary && n.sessionSummary.trim().length > 0
+            );
+            if (!isEligible && !hasExistingNotes) {
+              return;
+            }
             setSelectedSessionForNotes(session);
             setSelectedTrainerIdForNotes(trainerId || "");
           }}

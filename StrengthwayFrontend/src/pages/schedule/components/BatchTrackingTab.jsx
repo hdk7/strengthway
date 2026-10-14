@@ -1,5 +1,6 @@
 import { Boxes, Users, ArrowUpRight, Plus } from "lucide-react";
 import { hasClassStarted } from "@/lib/batchUtils";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export function BatchTrackingTab({
   viewingBatchTracking,
@@ -101,8 +102,9 @@ export function BatchTrackingTab({
                 </div>
                 <div className="w-full bg-muted border border-border/50 rounded-full h-2.5 overflow-hidden">
                   <div
-                    className="bg-primary h-full transition-all duration-300 rounded-full"
-                    style={{ width: `${batchTrack.percentComplete}%` }}
+                    className={`bg-primary h-full transition-all duration-300 rounded-full ${getTailwindWidth(
+                      batchTrack.percentComplete
+                    )}`}
                   />
                 </div>
                 <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground flex-wrap">

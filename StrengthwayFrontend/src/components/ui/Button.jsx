@@ -90,19 +90,18 @@ const Button = React.forwardRef(
     },
     ref,
   ) => {
-    const Comp = asChild ? Slot : "button";
     return (
-      <Comp
-        type={asChild ? undefined : type}
+      <button
+        type={type}
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         {...props}
       >
-        {loading && !asChild && <Spinner />}
+        {loading && <Spinner />}
         {children}
-      </Comp>
+      </button>
     );
   },
 );

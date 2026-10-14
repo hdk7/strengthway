@@ -57,6 +57,12 @@ router.get("/users", authenticate, requireAdmin, ctrl.getAllUsers);
 // PATCH /api/v1/auth/users/:id/status — Toggle active status
 router.patch("/users/:id/status", authenticate, requireAdmin, ctrl.toggleUserStatus);
 
+// PATCH /api/v1/auth/users/:id/reset-password — Admin reset password
+router.patch("/users/:id/reset-password", authenticate, requireAdmin, ctrl.adminResetPassword);
+
+// GET /api/v1/auth/users/check/:type/:id — Check if trainer or member profile has an account
+router.get("/users/check/:type/:id", authenticate, requireAdmin, ctrl.checkProfileAccount);
+
 // DELETE /api/v1/auth/users/:id — Delete user account
 router.delete("/users/:id", authenticate, requireAdmin, ctrl.deleteUser);
 

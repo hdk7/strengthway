@@ -342,14 +342,14 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
     currentBatchSessions.forEach((s) => {
       if (s.status === "CANCELLED") {
         cancelled++;
-      } else if (s.status === "COMPLETED") {
-        completed++;
       } else if (
         s.status === "TODAY" ||
         s.sessionDate === todayLocal ||
         s.sessionDate === todayUtc
       ) {
         todayCount++;
+      } else if (s.status === "COMPLETED" || (s.sessionDate && s.sessionDate < todayLocal)) {
+        completed++;
       } else {
         upcoming++;
       }
@@ -369,15 +369,24 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
     const [todayLocal, todayUtc] = getTodayStrings();
 
     let filtered = currentBatchSessions.filter((s) => {
+      if (sessionsTab === "All") return true;
       if (sessionsTab === "Cancelled") return s.status === "CANCELLED";
-      if (sessionsTab === "Completed") return s.status === "COMPLETED";
+      if (sessionsTab === "Completed") {
+        return s.status !== "CANCELLED" && (s.status === "COMPLETED" || (s.sessionDate && s.sessionDate < todayLocal));
+      }
       if (sessionsTab === "Today") {
         if (s.status === "CANCELLED") return false;
         return s.status === "TODAY" || s.sessionDate === todayLocal || s.sessionDate === todayUtc;
       }
       if (sessionsTab === "Upcoming") {
-        if (s.status === "CANCELLED" || s.status === "COMPLETED") return false;
-        return s.sessionDate !== todayLocal && s.sessionDate !== todayUtc && s.status !== "TODAY";
+        if (s.status === "CANCELLED") return false;
+        return (
+          s.sessionDate !== todayLocal &&
+          s.sessionDate !== todayUtc &&
+          s.status !== "TODAY" &&
+          s.status !== "COMPLETED" &&
+          (!s.sessionDate || s.sessionDate > todayLocal)
+        );
       }
       return true;
     });

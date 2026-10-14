@@ -87,7 +87,7 @@ export function LoginForm({ onSuccess }) {
         type="email"
         name="email"
         autoComplete="username"
-        placeholder="you@thestrengthway.com"
+        placeholder="admin@strengthway.com"
         value={form.email}
         onChange={handleChange("email")}
         onBlur={handleBlur("email")}
@@ -176,10 +176,16 @@ export default function LoginPage() {
     };
   }, []);
 
-  const handleSuccess = (session) => {
+  const handleSuccess = async (session) => {
     if (session?.token) {
       localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, session.token);
       localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(session.user));
+      try {
+        const { refreshUserPermissions } = await import("@/auth/permissions");
+        await refreshUserPermissions();
+      } catch {
+        // fallback
+      }
     }
     navigate("/admin/dashboard");
   };
@@ -299,11 +305,10 @@ export default function LoginPage() {
         <div className="w-full max-w-md mx-auto my-auto py-2 sm:py-4">
           <div className="text-left mb-4 sm:mb-6">
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground tracking-tight">
-              Admin sign in
+              Sign in to StrengthWay
             </h2>
             <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Enter your authorized administrator credentials to manage gym operations, members, and
-              trainers.
+              Enter your authorized credentials to access your Administrator, Faculty Coach, or Athlete Member dashboard.
             </p>
           </div>
 

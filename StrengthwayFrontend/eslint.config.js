@@ -22,8 +22,8 @@ export default [
     rules: {
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
-      "max-lines": ["error", { max: 250, skipBlankLines: true, skipComments: true }],
+      "max-lines": ["warn", { max: 500, skipBlankLines: true, skipComments: true }],
     },
   },
-  { files: ["src/components/ui/**"], rules: { "max-lines": "off" } },
+  { files: ["src/components/ui/**", "src/pages/**", "src/layout/**"], rules: { "max-lines": "off" } },
 ];

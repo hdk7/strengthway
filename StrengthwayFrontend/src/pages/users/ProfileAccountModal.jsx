@@ -1,0 +1,362 @@
+/* eslint-disable max-lines */
+import { useState, useEffect } from "react";
+import {
+  ShieldCheck,
+  KeyRound,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw,
+  Sparkles,
+  Lock,
+  Mail,
+  User,
+  Shield,
+  Dumbbell,
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  createUserAccount,
+  adminResetPassword,
+  toggleUserStatus,
+} from "@/lib/usersService";
+import {
+  FormModal,
+  FormModalHeader,
+  FormModalBody,
+  FormModalFooter,
+} from "@/components/ui/FormModal";
+
+/**
+ * ProfileAccountModal
+ *
+ * Dedicated modal for creating or managing a linked system login account
+ * directly from Trainer and Member profile pages.
+ *
+ * @param {boolean} isOpen
+ * @param {() => void} onClose
+ * @param {() => void} onSuccess
+ * @param {'trainer'|'member'} type
+ * @param {object} profile - Trainer or Member record
+ * @param {object|null} existingAccount - User document if already provisioned
+ */
+export default function ProfileAccountModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  type = "member",
+  profile,
+  existingAccount = null,
+}) {
+  const isTrainer = type === "trainer";
+  const profileId = profile?.id || "";
+  const defaultName = isTrainer
+    ? profile?.name || ""
+    : `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim() || profile?.name || "";
+  const defaultEmail = profile?.email || "";
+
+  // Creation State
+  const [name, setName] = useState(defaultName);
+  const [email, setEmail] = useState(defaultEmail);
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  // Existing Account Management State
+  const [account, setAccount] = useState(existingAccount);
+  const [resetPassword, setResetPassword] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetError, setResetError] = useState("");
+
+  useEffect(() => {
+    setAccount(existingAccount);
+    setName(defaultName);
+    setEmail(defaultEmail);
+    setPassword("");
+    setError("");
+    setResetPassword("");
+    setResetError("");
+  }, [existingAccount, defaultName, defaultEmail]);
+
+  const handleGeneratePassword = (targetSetter) => {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%";
+    let gen = "";
+    for (let i = 0; i < 10; i++) {
+      gen += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    targetSetter(gen);
+  };
+
+  // ── Create Account Handler ─────────────────────────────────────────────────
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError("Full name is required.");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Email address is required.");
+      return;
+    }
+    if (!password || password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const payload = {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        role: isTrainer ? "trainer" : "member",
+        trainerId: isTrainer ? profileId : null,
+        memberId: !isTrainer ? profileId : null,
+      };
+
+      const result = await createUserAccount(payload);
+      toast.success(
+        `Login account created for ${name}! Linked to ${isTrainer ? "Trainer" : "Member"} #${profileId}.`
+      );
+      if (onSuccess) onSuccess(result?.user || null);
+      onClose();
+    } catch (err) {
+      setError(err?.message || "Failed to create login account.");
+      toast.error(err?.message || "Failed to create account.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ── Toggle Active Handler ──────────────────────────────────────────────────
+  const handleToggleStatus = async () => {
+    if (!account?._id) return;
+    try {
+      const updated = await toggleUserStatus(account._id);
+      setAccount((prev) => ({ ...prev, isActive: updated.isActive }));
+      toast.success(
+        `Account status updated to ${updated.isActive ? "Active" : "Deactivated"}.`
+      );
+      if (onSuccess) onSuccess(updated);
+    } catch (err) {
+      toast.error(err?.message || "Failed to toggle account status.");
+    }
+  };
+
+  // ── Reset Password Handler ─────────────────────────────────────────────────
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetPassword || resetPassword.trim().length < 6) {
+      setResetError("Password must be at least 6 characters.");
+      return;
+    }
+
+    setIsResetting(true);
+    setResetError("");
+
+    try {
+      await adminResetPassword(account._id, resetPassword);
+      toast.success(`Password updated for ${account.email}!`);
+      setResetPassword("");
+      if (onSuccess) onSuccess(account);
+    } catch (err) {
+      setResetError(err?.message || "Failed to reset password.");
+      toast.error(err?.message || "Failed to reset password.");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  return (
+    <FormModal isOpen={isOpen} onClose={onClose} size="md">
+      <FormModalHeader
+        title={account ? "Manage Login Account" : "Create Login Account"}
+        subtitle={
+          account
+            ? `Linked to ${isTrainer ? "Coach" : "Athlete"} #${profileId}`
+            : `Provision credentials for ${isTrainer ? "Coach" : "Athlete"} #${profileId}`
+        }
+        onClose={onClose}
+      />
+
+      <FormModalBody>
+        {account ? (
+          /* ── EXISTING ACCOUNT MANAGEMENT ── */
+          <div className="space-y-5 py-2">
+            {/* Account Info Card */}
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`h-9 w-9 rounded-xl flex items-center justify-center ${
+                      isTrainer
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+                    }`}
+                  >
+                    {isTrainer ? <Dumbbell size={18} /> : <User size={18} />}
+                  </div>
+                  <div>
+                    <div className="font-bold text-foreground text-sm">{account.name}</div>
+                    <div className="text-xs text-muted-foreground">{account.email}</div>
+                  </div>
+                </div>
+
+                {/* Status Toggle Button */}
+                <button
+                  type="button"
+                  onClick={handleToggleStatus}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all cursor-pointer ${
+                    account.isActive !== false
+                      ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
+                      : "bg-destructive/15 border border-destructive/30 text-destructive hover:bg-destructive/25"
+                  }`}
+                  title="Click to toggle status"
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      account.isActive !== false ? "bg-emerald-500 animate-pulse" : "bg-destructive"
+                    }`}
+                  />
+                  <span>{account.isActive !== false ? "Active" : "Deactivated"}</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
+                <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
+                <span>
+                  Linked to {isTrainer ? "Trainer" : "Member"} ID:{" "}
+                  <strong className="text-foreground">{profileId}</strong> (No duplicate records)
+                </span>
+              </div>
+            </div>
+
+            {/* Reset Password Section */}
+            <form onSubmit={handleResetPassword} className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  Reset Account Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleGeneratePassword(setResetPassword)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                >
+                  <Sparkles size={12} />
+                  <span>Generate</span>
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={resetPassword}
+                  onChange={(e) => setResetPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 chars)"
+                  className={`flex-1 rounded-xl border bg-background px-3 py-2 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all ${
+                    resetError ? "border-destructive" : "border-border"
+                  }`}
+                />
+                <button
+                  type="submit"
+                  disabled={isResetting || !resetPassword}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] px-4 py-2 text-xs font-semibold text-white shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isResetting && <RefreshCw size={13} className="animate-spin" />}
+                  <span>Save Password</span>
+                </button>
+              </div>
+              {resetError && <p className="text-xs text-destructive">{resetError}</p>}
+            </form>
+          </div>
+        ) : (
+          /* ── CREATE NEW LOGIN ACCOUNT ── */
+          <form id="create-account-form" onSubmit={handleCreate} className="space-y-4 py-2">
+            <div className="rounded-xl border border-border bg-muted/30 p-3.5 space-y-1">
+              <div className="text-xs font-bold text-foreground">
+                Linking to: {isTrainer ? "Trainer" : "Member"} #{profileId}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                This enables direct login to Strengthway for this user with role-specific access.
+                The existing profile and attendance records remain linked without duplication.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-foreground mb-1.5">
+                Full Name <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Full Name"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-foreground mb-1.5">
+                Login Email <span className="text-destructive">*</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@example.com"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-foreground">
+                  Initial Password <span className="text-destructive">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleGeneratePassword(setPassword)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer"
+                >
+                  <Sparkles size={12} />
+                  <span>Generate Password</span>
+                </button>
+              </div>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimum 8 characters"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-xs sm:text-sm text-foreground focus:outline-none focus:border-primary transition-all"
+              />
+            </div>
+
+            {error && <p className="text-xs text-destructive">{error}</p>}
+          </form>
+        )}
+      </FormModalBody>
+
+      <FormModalFooter>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-xl border border-border px-4 py-2.5 text-xs sm:text-sm font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
+        >
+          Close
+        </button>
+        {!account && (
+          <button
+            type="submit"
+            form="create-account-form"
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1d4ed8] px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          >
+            {isSubmitting && <RefreshCw size={14} className="animate-spin" />}
+            <span>Create Login Account</span>
+          </button>
+        )}
+      </FormModalFooter>
+    </FormModal>
+  );
+}

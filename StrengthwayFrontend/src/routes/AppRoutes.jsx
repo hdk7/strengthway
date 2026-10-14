@@ -32,6 +32,7 @@ import MembershipPlanMasterPage from "@/pages/masters/MembershipPlanMasterPage";
 import AttendancePolicyMasterPage from "@/pages/masters/AttendancePolicyMasterPage";
 import PaymentFeeMasterPage from "@/pages/masters/PaymentFeeMasterPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
+import UsersAccessPage from "@/pages/users/UsersAccessPage";
 
 import MasterClassSchedulePage from "@/pages/schedule/MasterClassSchedulePage";
 
@@ -44,7 +45,8 @@ export function AppRoutes() {
       <Route path="/trainers" element={<Navigate to="/#trainers" replace />} />
       <Route path="/trainers/:id" element={<PublicTrainerProfilePage />} />
 
-      {/* Admin auth */}
+      {/* Auth routes */}
+      <Route path="/login" element={<Navigate to="/admin/login" replace />} />
       <Route path="/admin/login" element={<LoginPage />} />
 
       {/* Standalone admin error pages */}
@@ -109,6 +111,7 @@ export function AppRoutes() {
           <Route path="masters/attendance-policy" element={<AttendancePolicyMasterPage />} />
           <Route path="masters/holiday" element={<Navigate to="/admin/masters/attendance-policy" replace />} />
           <Route path="masters/payment-fee" element={<PaymentFeeMasterPage />} />
+          <Route path="users" element={<UsersAccessPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
 

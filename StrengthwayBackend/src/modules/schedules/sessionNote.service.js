@@ -66,6 +66,29 @@ class SessionNoteService {
   }
 
   /**
+   * Helper to verify if a trainer is assigned to a session or its parent batch.
+   */
+  async isTrainerAssignedToSessionOrBatch(trainerId, sessionId, batchId) {
+    if (!trainerId) return false;
+    let targetBatchId = batchId;
+
+    if (sessionId) {
+      const session = await Session.findOne({ id: sessionId }).lean();
+      if (session && session.coachId === trainerId) return true;
+      if (session && !targetBatchId) targetBatchId = session.batchId;
+    }
+
+    if (targetBatchId) {
+      const batch = await Batch.findOne({ id: targetBatchId }).lean();
+      if (Array.isArray(batch?.trainerIds) && batch.trainerIds.includes(trainerId)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
    * Requirement 5: In Admin page, display notes for today's ongoing and completed classes.
    * Excludes upcoming classes and cancelled classes.
    *
@@ -210,21 +233,23 @@ class SessionNoteService {
       throw new ForbiddenError("Only trainers and admins can add or edit session notes.");
     }
 
+    // 4. Strict Check: Notes only allowed for past completed and today's ongoing classes (NOT for future classes)
+    const isCompleted = session.status === "COMPLETED";
+    const isFutureDate = session.sessionDate > todayLocal;
+    const isFutureTimeToday = session.sessionDate === todayLocal && !hasClassStarted(session, now);
+
+    if (!isCompleted && (isFutureDate || isFutureTimeToday)) {
+      throw new BadRequestError(
+        "Cannot submit session notes for future or upcoming classes before they start. Notes are only allowed for past completed classes and today's ongoing classes."
+      );
+    }
+
     if (isTrainer) {
       // Check trainerId match
       const loggedInTrainerId = currentUser.trainerId || currentUser.id;
       if (loggedInTrainerId !== trainerId) {
         throw new ForbiddenError(
           "Access denied. Trainers cannot add or edit notes for classes assigned to other trainers."
-        );
-      }
-
-      // Check if session has started
-      const isFutureDate = session.sessionDate > todayLocal;
-      const isFutureTimeToday = session.sessionDate === todayLocal && !hasClassStarted(session, now);
-      if (isFutureDate || isFutureTimeToday) {
-        throw new BadRequestError(
-          "Cannot submit session notes for future upcoming classes before they start."
         );
       }
 

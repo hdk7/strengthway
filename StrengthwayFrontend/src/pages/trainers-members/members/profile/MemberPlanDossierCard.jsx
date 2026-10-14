@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { Award, FileCheck } from "lucide-react";
+import { isTrainer } from "@/auth/currentUser";
 
 export function MemberPlanDossierCard({
   member,
   planDetails,
   isDeleted,
 }) {
+  const userIsTrainer = isTrainer();
+
   return (
     <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-sm space-y-5">
       <div className="flex items-center justify-between border-b border-border/60 pb-3.5">
@@ -37,7 +40,7 @@ export function MemberPlanDossierCard({
           </div>
 
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 space-y-3">
-            <div className="grid grid-cols-3 gap-2 pb-2.5 border-b border-border/40 text-center">
+            <div className={`grid ${userIsTrainer ? "grid-cols-2" : "grid-cols-3"} gap-2 pb-2.5 border-b border-border/40 text-center`}>
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
                   Duration
@@ -46,14 +49,16 @@ export function MemberPlanDossierCard({
                   {planDetails.durationMonths} Month{planDetails.durationMonths > 1 ? "s" : ""}
                 </span>
               </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
-                  Fee
-                </span>
-                <span className="text-xs font-bold text-accent font-mono">
-                  {planDetails.formattedPrice}
-                </span>
-              </div>
+              {!userIsTrainer && (
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
+                    Fee
+                  </span>
+                  <span className="text-xs font-bold text-accent font-mono">
+                    {planDetails.formattedPrice || (planDetails.price ? `₹${Number(planDetails.price).toLocaleString("en-IN")}` : "—")}
+                  </span>
+                </div>
+              )}
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground block">
                   Expires
@@ -72,7 +77,7 @@ export function MemberPlanDossierCard({
                 </span>
               </div>
 
-              {member.paymentDetails && (
+              {!userIsTrainer && member.paymentDetails && (
                 <>
                   <div className="flex items-center justify-between text-muted-foreground pt-1.5 border-t border-border/40">
                     <span>Payment Method:</span>

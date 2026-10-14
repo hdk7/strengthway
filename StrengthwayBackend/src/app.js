@@ -91,6 +91,7 @@ const reportsRoutes      = require("./modules/reports/reports.routes");
 const uploadRoutes       = require("./modules/uploads/upload.routes");
 const classRoutes        = require("./modules/classes/class.routes");
 const sessionNoteRoutes  = require("./modules/schedules/sessionNote.routes");
+const permissionRoutes   = require("./modules/permissions/permission.routes");
 
 app.use("/api/v1/auth",           authRoutes);
 app.use("/api/v1/members",        memberRoutes);
@@ -107,8 +108,7 @@ app.use("/api/v1/attendance",     attendanceRoutes);
 app.use("/api/v1/trainer-leaves", trainerLeaveRoutes);
 app.use("/api/v1/reports",        reportsRoutes);
 app.use("/api/v1/uploads",        uploadRoutes);
-
-
+app.use("/api/v1/permissions",    permissionRoutes);
 
 // ── 404 handler (must come AFTER all valid routes) ────────────────────────────
 app.use(notFoundMiddleware);

@@ -9,9 +9,13 @@ async function getAll(req, res, next) {
     const { sessionId, batchId, trainerId, date } = req.query;
     let targetTrainerId = trainerId;
 
-    // Strict privacy: If logged-in user is a trainer, only return their own notes
+    // If logged-in user is a trainer and NO batchId or sessionId was specified,
+    // default to only their own notes for global listing.
     if (req.user && req.user.role === "trainer") {
-      targetTrainerId = req.user.trainerId || req.user.id;
+      const loggedInTrainerId = req.user.trainerId || req.user.id;
+      if (!batchId && !sessionId && !targetTrainerId) {
+        targetTrainerId = loggedInTrainerId;
+      }
     }
 
     const notes = await sessionNoteService.getSessionNotes({
@@ -30,13 +34,21 @@ async function getById(req, res, next) {
   try {
     const note = await sessionNoteService.getNoteById(req.params.id);
 
-    // Strict privacy: If logged-in user is a trainer, ensure they can only view their own note
+    // If logged-in user is a trainer, ensure they can view their own note
+    // or notes for classes in batches/sessions they are assigned to
     if (req.user && req.user.role === "trainer") {
       const loggedInTrainerId = req.user.trainerId || req.user.id;
       if (note.trainerId !== loggedInTrainerId) {
-        throw new ForbiddenError(
-          "Access denied. Trainers can only view their own session notes."
+        const isAssigned = await sessionNoteService.isTrainerAssignedToSessionOrBatch(
+          loggedInTrainerId,
+          note.sessionId,
+          note.batchId
         );
+        if (!isAssigned) {
+          throw new ForbiddenError(
+            "Access denied. Trainers can only view notes for their assigned batches and classes."
+          );
+        }
       }
     }
 

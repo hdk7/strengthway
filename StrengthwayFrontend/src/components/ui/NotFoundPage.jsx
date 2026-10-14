@@ -41,9 +41,12 @@ export class ErrorBoundary extends Component {
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Button onClick={() => this.setState({ error: null })}>Try again</Button>
-            <Button variant="outline" asChild>
-              <a href="/">Go home</a>
-            </Button>
+            <a
+              href="/"
+              className="inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              Go home
+            </a>
           </div>
         </div>
       </div>
@@ -303,9 +306,12 @@ export default function NotFoundPage() {
           never existed.
         </p>
         <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-200 mt-8">
-          <Button asChild>
-            <Link to="/">Back to home</Link>
-          </Button>
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-lg bg-primary text-primary-foreground px-5 py-2.5 text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm"
+          >
+            Back to home
+          </Link>
         </div>
       </div>
     </div>

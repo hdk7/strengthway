@@ -10,8 +10,16 @@ import {
   FileText,
 } from "lucide-react";
 import { isMember, isAdmin, isTrainer, getCurrentUser } from "@/auth/currentUser";
+import { hasClassStarted } from "@/lib/batchUtils";
 
-export default function SessionNotesModal({
+export default function SessionNotesModal(props) {
+  if (!props.selectedSessionForNotes || typeof document === "undefined") {
+    return null;
+  }
+  return <SessionNotesModalDialog {...props} />;
+}
+
+function SessionNotesModalDialog({
   selectedSessionForNotes,
   onClose,
   batch,
@@ -20,11 +28,7 @@ export default function SessionNotesModal({
   onSaveTrainerNote,
   initialTrainerId,
 }) {
-  if (!selectedSessionForNotes || typeof document === "undefined") {
-    return null;
-  }
-
-  const currentUser = getCurrentUser() || {};
+  const currentUser = useMemo(() => getCurrentUser() || {}, []);
   const isReadOnlyMember = isMember();
   const userIsAdmin = isAdmin();
   const userIsTrainer = isTrainer();
@@ -32,30 +36,16 @@ export default function SessionNotesModal({
 
   // ─── 1. Determine Assigned Trainers for this Class Session ─────────────────
   const assignedTrainers = useMemo(() => {
-    // If logged in as trainer: strictly isolate to only themselves
-    if (userIsTrainer) {
-      const match = trainers.find((t) => t.id === myTrainerId);
-      const name =
-        currentUser.name ||
-        match?.name ||
-        `${match?.firstName || ""} ${match?.lastName || ""}`.trim() ||
-        (selectedSessionForNotes?.coachId === myTrainerId ? selectedSessionForNotes.coachName : "My Coach Notes");
-      return [
-        {
-          id: myTrainerId || selectedSessionForNotes?.coachId || "TRN-CURRENT",
-          name,
-          role: match?.role || "Faculty Coach",
-        },
-      ];
-    }
-
-    // For Admin / Members: gather all assigned coaches
     const ids = new Set();
     if (Array.isArray(batch?.trainerIds)) {
       batch.trainerIds.forEach((tid) => tid && ids.add(tid));
     }
     if (selectedSessionForNotes?.coachId) {
       ids.add(selectedSessionForNotes.coachId);
+    }
+    // Also include logged-in trainer if assigned to session
+    if (userIsTrainer && myTrainerId) {
+      ids.add(myTrainerId);
     }
 
     const trainerMap = new Map();
@@ -78,8 +68,8 @@ export default function SessionNotesModal({
 
     if (list.length === 0) {
       list.push({
-        id: selectedSessionForNotes?.coachId || "TRN-101",
-        name: selectedSessionForNotes?.coachName || "Assigned Coach",
+        id: selectedSessionForNotes?.coachId || myTrainerId || "TRN-101",
+        name: selectedSessionForNotes?.coachName || currentUser.name || "Assigned Coach",
         role: "Faculty Coach",
       });
     }
@@ -89,21 +79,23 @@ export default function SessionNotesModal({
 
   // ─── 2. Active Selected Trainer Tab ─────────────────────────────────────────
   const [activeTrainerId, setActiveTrainerId] = useState(() => {
-    if (userIsTrainer) {
-      return myTrainerId || assignedTrainers[0]?.id || "";
-    }
     if (initialTrainerId && assignedTrainers.some((t) => t.id === initialTrainerId)) {
       return initialTrainerId;
+    }
+    if (userIsTrainer && assignedTrainers.some((t) => t.id === myTrainerId)) {
+      return myTrainerId;
     }
     return assignedTrainers[0]?.id || "";
   });
 
   // Sync if assigned trainers change
   useEffect(() => {
-    if (userIsTrainer) {
-      setActiveTrainerId(myTrainerId || assignedTrainers[0]?.id || "");
-    } else if (!assignedTrainers.some((t) => t.id === activeTrainerId)) {
-      setActiveTrainerId(assignedTrainers[0]?.id || "");
+    if (!assignedTrainers.some((t) => t.id === activeTrainerId)) {
+      if (userIsTrainer && assignedTrainers.some((t) => t.id === myTrainerId)) {
+        setActiveTrainerId(myTrainerId);
+      } else {
+        setActiveTrainerId(assignedTrainers[0]?.id || "");
+      }
     }
   }, [assignedTrainers, activeTrainerId, userIsTrainer, myTrainerId]);
 
@@ -127,7 +119,15 @@ export default function SessionNotesModal({
     }
   }, [activeNote, activeTrainerId]);
 
-  // ─── 4. 30-Day Deadline & Permission Checks ─────────────────────────────────
+  // ─── 4. Eligibility: Strictly for past completed classes or today's ongoing classes (NOT future classes) ─────
+  const isEligibleForNotes = useMemo(() => {
+    if (!selectedSessionForNotes) return false;
+    if (selectedSessionForNotes.status === "CANCELLED") return false;
+    if (selectedSessionForNotes.status === "COMPLETED") return true;
+    return hasClassStarted(selectedSessionForNotes);
+  }, [selectedSessionForNotes]);
+
+  // ─── 5. 30-Day Deadline & Permission Checks ─────────────────────────────────
   const daysSinceSession = useMemo(() => {
     const rawDate = selectedSessionForNotes?.sessionDate;
     if (!rawDate) return 0;
@@ -143,6 +143,7 @@ export default function SessionNotesModal({
 
   const canEditCurrentTrainerNote = useMemo(() => {
     if (isReadOnlyMember) return false;
+    if (!isEligibleForNotes) return false; // Strictly disallowed for future or upcoming classes!
     if (userIsAdmin) return true;
     if (userIsTrainer) {
       if (myTrainerId && activeTrainerId && myTrainerId !== activeTrainerId) return false;
@@ -150,13 +151,16 @@ export default function SessionNotesModal({
       return true;
     }
     return false;
-  }, [isReadOnlyMember, userIsAdmin, userIsTrainer, myTrainerId, activeTrainerId, isExpired30Days]);
+  }, [isReadOnlyMember, isEligibleForNotes, userIsAdmin, userIsTrainer, myTrainerId, activeTrainerId, isExpired30Days]);
 
   const activeTrainerObj = assignedTrainers.find((t) => t.id === activeTrainerId) || assignedTrainers[0];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!canEditCurrentTrainerNote) return;
+    if (!canEditCurrentTrainerNote || !isEligibleForNotes) {
+      alert("Session notes are only allowed for past completed classes and today's ongoing classes.");
+      return;
+    }
     if (!sessionNotesText.trim()) {
       alert("Session note content is required.");
       return;
@@ -180,6 +184,16 @@ export default function SessionNotesModal({
       setIsSubmitting(false);
     }
   };
+
+  const hasSubmittedNotes = useMemo(() => {
+    return (sessionNotes || []).some(
+      (n) => n.sessionId === selectedSessionForNotes?.id && n.sessionSummary && n.sessionSummary.trim().length > 0
+    );
+  }, [sessionNotes, selectedSessionForNotes?.id]);
+
+  if (!isEligibleForNotes && !hasSubmittedNotes) {
+    return null;
+  }
 
   return createPortal(
     <div
@@ -220,8 +234,8 @@ export default function SessionNotesModal({
           </button>
         </div>
 
-        {/* Multi-Trainer Navigation Strip (Only visible to Admin if multiple trainers exist) */}
-        {userIsAdmin && assignedTrainers.length > 1 && (
+        {/* Multi-Trainer Navigation Strip (Visible whenever multiple trainers are assigned) */}
+        {assignedTrainers.length > 1 && (
           <div className="border-b border-border/70 bg-card px-5 sm:px-6 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
             <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground shrink-0 mr-1 flex items-center gap-1">
               <User size={13} />
@@ -233,6 +247,7 @@ export default function SessionNotesModal({
                 (n) => n.sessionId === selectedSessionForNotes.id && n.trainerId === t.id && n.status === "SUBMITTED"
               );
               const isSelected = activeTrainerId === t.id;
+              const isMyTab = userIsTrainer && t.id === myTrainerId;
 
               return (
                 <button
@@ -245,7 +260,7 @@ export default function SessionNotesModal({
                       : "border border-border/80 bg-background/80 text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}
                 >
-                  <span>{t.name}</span>
+                  <span>{t.name}{isMyTab ? " (You)" : ""}</span>
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase ${
                       hasNote
@@ -273,7 +288,20 @@ export default function SessionNotesModal({
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
           {/* Status & Deadline Notices */}
-          {userIsTrainer && isExpired30Days && (
+          {!isEligibleForNotes && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3 text-xs text-amber-200">
+              <Clock size={16} className="text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-amber-400">Upcoming / Future Class</p>
+                <p className="text-amber-200/80 mt-0.5">
+                  Session notes are strictly allowed for past completed classes and today&apos;s ongoing classes once the session begins.
+                  Notes will unlock once this class starts on {selectedSessionForNotes.displayDate || selectedSessionForNotes.sessionDate}.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {userIsTrainer && isEligibleForNotes && isExpired30Days && (
             <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3 text-xs text-amber-200">
               <Lock size={16} className="text-amber-400 shrink-0 mt-0.5" />
               <div>
@@ -286,7 +314,7 @@ export default function SessionNotesModal({
             </div>
           )}
 
-          {userIsAdmin && isExpired30Days && (
+          {userIsAdmin && isEligibleForNotes && isExpired30Days && (
             <div className="rounded-2xl border border-primary/30 bg-primary/10 p-3 flex items-center gap-2 text-xs text-foreground">
               <Clock size={15} className="text-primary shrink-0" />
               <span>
@@ -297,12 +325,19 @@ export default function SessionNotesModal({
 
           {/* Note Status Banner */}
           <div className="flex items-center justify-between p-3.5 rounded-2xl border border-border/80 bg-background/50 text-xs">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold text-foreground">
-                {userIsTrainer ? "My Notes" : `Coach: ${activeTrainerObj?.name}`}
+                {userIsTrainer && activeTrainerId === myTrainerId
+                  ? "My Notes"
+                  : `Coach: ${activeTrainerObj?.name}`}
               </span>
               <span className="text-muted-foreground">•</span>
               <span className="font-mono text-muted-foreground">{activeTrainerId}</span>
+              {userIsTrainer && activeTrainerId !== myTrainerId && (
+                <span className="text-[10px] font-semibold text-muted-foreground bg-muted border border-border/70 px-2 py-0.5 rounded-md">
+                  Read-Only • Another Coach&apos;s Note
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -310,6 +345,11 @@ export default function SessionNotesModal({
                 <span className="inline-flex items-center gap-1 font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
                   <CheckCircle2 size={13} />
                   <span>Submitted</span>
+                </span>
+              ) : !isEligibleForNotes ? (
+                <span className="inline-flex items-center gap-1 font-bold text-muted-foreground bg-muted border border-border/60 px-2.5 py-1 rounded-lg">
+                  <Clock size={13} />
+                  <span>Upcoming (Locked)</span>
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-lg">
@@ -340,7 +380,7 @@ export default function SessionNotesModal({
                 />
               ) : (
                 <div className="min-h-[120px] rounded-2xl border border-border/80 bg-background/60 p-4 text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                  {sessionNotesText || "No session notes recorded."}
+                  {sessionNotesText || (!isEligibleForNotes ? "Session notes are not available for future upcoming classes. Notes will unlock once this class starts." : userIsTrainer && activeTrainerId !== myTrainerId ? `No session notes recorded yet by Coach ${activeTrainerObj?.name || activeTrainerId}.` : "No session notes recorded.")}
                 </div>
               )}
             </div>
@@ -364,7 +404,9 @@ export default function SessionNotesModal({
         {/* Modal Footer */}
         <div className="p-4 sm:p-5 border-t border-border bg-background/50 flex items-center justify-between gap-3">
           <div className="text-[11px] text-muted-foreground">
-            {canEditCurrentTrainerNote ? (
+            {!isEligibleForNotes ? (
+              <span className="text-amber-400 font-semibold">Locked (Upcoming class)</span>
+            ) : canEditCurrentTrainerNote ? (
               <span>Saving as <strong className="text-foreground">{currentUser.name || "User"}</strong></span>
             ) : (
               <span>Read-only view</span>

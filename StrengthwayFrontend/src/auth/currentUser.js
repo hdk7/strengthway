@@ -10,31 +10,28 @@ const FALLBACK_ADMIN = {
 };
 
 /**
- * Normalizes any role string into one of: 'admin' | 'trainer' | 'member' | 'staff'
+ * Normalizes any role string into one of the 3 supported system roles: 'admin' | 'trainer' | 'member'
  */
 export function normalizeRole(roleStr) {
   if (!roleStr) return "admin";
   const r = String(roleStr).trim().toLowerCase();
   if (r.includes("admin")) return "admin";
   if (r.includes("trainer") || r.includes("coach")) return "trainer";
-  if (r.includes("member")) return "member";
-  if (r.includes("staff")) return "staff";
-  return "admin";
+  if (r.includes("member") || r.includes("athlete")) return "member";
+  return "member";
 }
 
 /**
- * Formats a normalized role into a capitalized display label.
+ * Formats a normalized role into a display label.
  */
 export function formatDisplayRole(role) {
   switch (role) {
     case "admin":
       return "Administrator";
     case "trainer":
-      return "Trainer";
+      return "Faculty Coach";
     case "member":
-      return "Member";
-    case "staff":
-      return "Staff";
+      return "Gym Athlete";
     default:
       return "Administrator";
   }

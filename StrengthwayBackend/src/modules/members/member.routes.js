@@ -5,6 +5,7 @@ const ctrl = require("./member.controller");
 const { validate } = require("../../middleware/validate.middleware");
 const { authenticate } = require("../../middleware/auth.middleware");
 const { requireAdmin } = require("../../middleware/role.middleware");
+const { requirePermission } = require("../../middleware/permission.middleware");
 const { scopeMemberQuery, scopeMemberDoc } = require("../../middleware/scope.middleware");
 const {
   createMemberSchema,
@@ -14,18 +15,53 @@ const {
 
 // ── Collection routes ────────────────────────────────────────────────────────
 // GET /api/v1/members — Admin sees all; Trainer sees assigned members; Member sees self
-router.get("/", authenticate, scopeMemberQuery, ctrl.getAll);
-// POST /api/v1/members — Admin only
-router.post("/", authenticate, requireAdmin, validate(createMemberSchema), ctrl.create);
+router.get(
+  "/",
+  authenticate,
+  requirePermission("members", "view", "view_assigned", "view_own"),
+  scopeMemberQuery,
+  ctrl.getAll
+);
+// POST /api/v1/members — Requires members:create
+router.post(
+  "/",
+  authenticate,
+  requirePermission("members", "create"),
+  validate(createMemberSchema),
+  ctrl.create
+);
 
 // ── Document routes ──────────────────────────────────────────────────────────
 // GET /api/v1/members/:id — Scoped to Admin, assigned Trainer, or Member's own profile
-router.get("/:id", authenticate, scopeMemberDoc, ctrl.getById);
-router.get("/:id/month-tracking", authenticate, scopeMemberDoc, ctrl.getMonthTracking);
+router.get(
+  "/:id",
+  authenticate,
+  requirePermission("members", "view", "view_assigned", "view_own"),
+  scopeMemberDoc,
+  ctrl.getById
+);
+router.get(
+  "/:id/month-tracking",
+  authenticate,
+  requirePermission("members", "view", "view_assigned", "view_own"),
+  scopeMemberDoc,
+  ctrl.getMonthTracking
+);
 
-// Write/Delete operations — Admin only
-router.put("/:id", authenticate, requireAdmin, validate(updateMemberSchema), ctrl.update);
-router.delete("/:id", authenticate, requireAdmin, ctrl.permanentDelete);
+// Write/Delete operations
+router.put(
+  "/:id",
+  authenticate,
+  requirePermission("members", "edit"),
+  validate(updateMemberSchema),
+  ctrl.update
+);
+router.delete(
+  "/:id",
+  authenticate,
+  requirePermission("members", "delete"),
+  ctrl.permanentDelete
+);
 
 // ── Action routes (Admin only) ───────────────────────────────────────────────
 router.patch("/:id/soft-delete", authenticate, requireAdmin, ctrl.softDelete);

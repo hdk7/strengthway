@@ -6,6 +6,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { isMember } from "@/auth/currentUser";
+import { getTailwindWidth } from "@/lib/tailwindUtils";
 
 export default function BatchOverviewTab({
   monthTracking,
@@ -172,13 +173,9 @@ export default function BatchOverviewTab({
               </div>
               <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
                 <div
-                  className="h-full bg-emerald-400 rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      monthTracking?.summary?.overallAttendanceRate ?? 0
-                    )}%`,
-                  }}
+                  className={`h-full bg-emerald-400 rounded-full transition-all ${getTailwindWidth(
+                    monthTracking?.summary?.overallAttendanceRate ?? 0
+                  )}`}
                 />
               </div>
             </div>

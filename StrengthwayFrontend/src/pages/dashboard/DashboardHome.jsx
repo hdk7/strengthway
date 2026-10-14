@@ -13,7 +13,12 @@ import {
 import { getMembers } from "@/lib/membersService";
 import { getTrainers } from "@/lib/trainersService";
 import { getBatches } from "@/lib/batchesService";
-import { getCurrentUser, isAdmin, isTrainer, isMember } from "@/auth/currentUser";
+import {
+  getCurrentUser,
+  isAdmin,
+  isTrainer,
+  isMember,
+} from "@/auth/currentUser";
 
 export default function DashboardHome() {
   const currentUser = getCurrentUser();
@@ -74,7 +79,8 @@ export default function DashboardHome() {
         setBatches(batchesData || []);
       })
       .catch((e) => {
-        if (!cancelled) setError(e?.message || "Failed to load dashboard data.");
+        if (!cancelled)
+          setError(e?.message || "Failed to load dashboard data.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -86,14 +92,17 @@ export default function DashboardHome() {
   }, []);
 
   // Admin calculations
-  const nonDeletedMembers = useMemo(() => members.filter((m) => !m.isDeleted), [members]);
+  const nonDeletedMembers = useMemo(
+    () => members.filter((m) => !m.isDeleted),
+    [members],
+  );
   const totalMembers = nonDeletedMembers.length;
   const activeMembers = useMemo(
     () =>
       nonDeletedMembers.filter(
-        (m) => m.status === "Active" || (!m.status && m.status !== "Inactive")
+        (m) => m.status === "Active" || (!m.status && m.status !== "Inactive"),
       ).length,
-    [nonDeletedMembers]
+    [nonDeletedMembers],
   );
   const inactiveMembers = totalMembers - activeMembers;
   const memberActiveRate =
@@ -102,17 +111,23 @@ export default function DashboardHome() {
   const totalTrainers = trainers.length;
   const activeTrainers = useMemo(
     () => trainers.filter((t) => t.status === "Active").length,
-    [trainers]
+    [trainers],
   );
   const inactiveTrainers = totalTrainers - activeTrainers;
   const trainerActiveRate =
-    totalTrainers > 0 ? Math.round((activeTrainers / totalTrainers) * 100) : 100;
+    totalTrainers > 0
+      ? Math.round((activeTrainers / totalTrainers) * 100)
+      : 100;
 
   // Role-Specific Stats Configuration
   const stats = useMemo(() => {
     if (isMember()) {
       const myRecord = members[0] || {};
-      const myBatch = batches.find((b) => b.id === myRecord.batchId || b.id === myRecord.schedule?.batchId) || batches[0];
+      const myBatch =
+        batches.find(
+          (b) =>
+            b.id === myRecord.batchId || b.id === myRecord.schedule?.batchId,
+        ) || batches[0];
       return [
         {
           title: "My Profile",
@@ -121,7 +136,8 @@ export default function DashboardHome() {
           icon: UserCheck,
           path: `/admin/trainers-members/members/${currentUser.memberId || myRecord.id || "MEM-2001"}`,
           badge: "Enrolled",
-          description: "Personal biometric attendance, body vitals, and plan dossier",
+          description:
+            "Personal biometric attendance, body vitals, and plan dossier",
         },
         {
           title: "My Batch",
@@ -130,7 +146,8 @@ export default function DashboardHome() {
           icon: CalendarDays,
           path: "/admin/schedule/batches",
           badge: myBatch?.daysLabel || "Assigned",
-          description: "Assigned training batch slot, timetable, and curriculum classes",
+          description:
+            "Assigned training batch slot, timetable, and curriculum classes",
         },
         {
           title: "My Attendance",
@@ -139,7 +156,8 @@ export default function DashboardHome() {
           icon: ClipboardCheck,
           path: "/admin/attendance/members",
           badge: "Active",
-          description: "Live punch status, monthly presence ledger, and timetable calendar",
+          description:
+            "Live punch status, monthly presence ledger, and timetable calendar",
         },
       ];
     }
@@ -153,7 +171,8 @@ export default function DashboardHome() {
           icon: Users,
           path: "/admin/trainers-members/members",
           badge: "Assigned",
-          description: "Gym athletes enrolled in your assigned training batches",
+          description:
+            "Gym athletes enrolled in your assigned training batches",
         },
         {
           title: "My Batches",
@@ -162,7 +181,8 @@ export default function DashboardHome() {
           icon: CalendarDays,
           path: "/admin/schedule/batches",
           badge: "Active",
-          description: "Assigned batch schedules, curriculum classes, and athlete roster",
+          description:
+            "Assigned batch schedules, curriculum classes, and athlete roster",
         },
         {
           title: "My Attendance",
@@ -171,7 +191,8 @@ export default function DashboardHome() {
           icon: ClipboardCheck,
           path: "/admin/attendance/trainers",
           badge: "Faculty",
-          description: "View shift logs, biometric punches, and submit leave requests",
+          description:
+            "View shift logs, biometric punches, and submit leave requests",
         },
       ];
     }
@@ -185,7 +206,8 @@ export default function DashboardHome() {
         icon: Users,
         path: "/admin/trainers-members/members",
         badge: `${memberActiveRate}% Active`,
-        description: "Registered gym athletes, active memberships, and fitness records",
+        description:
+          "Registered gym athletes, active memberships, and fitness records",
       },
       {
         title: "Total Trainers",
@@ -194,7 +216,8 @@ export default function DashboardHome() {
         icon: Dumbbell,
         path: "/admin/trainers-members/trainers",
         badge: `${trainerActiveRate}% Active`,
-        description: "Certified coaches, coaching specialties, and roster status",
+        description:
+          "Certified coaches, coaching specialties, and roster status",
       },
       {
         title: "Operating Batches",
@@ -203,10 +226,24 @@ export default function DashboardHome() {
         icon: CalendarDays,
         path: "/admin/schedule/batches",
         badge: "Configured",
-        description: "Gym schedules, capacity occupancy, and master class curriculum",
+        description:
+          "Gym schedules, capacity occupancy, and master class curriculum",
       },
     ];
-  }, [members, batches, trainers, totalMembers, activeMembers, inactiveMembers, memberActiveRate, totalTrainers, activeTrainers, inactiveTrainers, trainerActiveRate, currentUser]);
+  }, [
+    members,
+    batches,
+    trainers,
+    totalMembers,
+    activeMembers,
+    inactiveMembers,
+    memberActiveRate,
+    totalTrainers,
+    activeTrainers,
+    inactiveTrainers,
+    trainerActiveRate,
+    currentUser,
+  ]);
 
   const greetingRole = currentUser?.displayRole || "Administrator";
 
@@ -218,9 +255,12 @@ export default function DashboardHome() {
           Welcome back, {currentUser?.name || "StrengthWay"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {isAdmin() && "Live overview of registered athletes, faculty roster, and facility operations."}
-          {isTrainer() && "Live overview of your assigned athletes, coaching batches, and training curriculum."}
-          {isMember() && "Live overview of your athlete profile, batch schedule, and biometric attendance."}
+          {isAdmin() &&
+            "Live overview of registered athletes, faculty roster, and facility operations."}
+          {isTrainer() &&
+            "Live overview of your assigned athletes, coaching batches, and training curriculum."}
+          {isMember() &&
+            "Live overview of your athlete profile, batch schedule, and biometric attendance."}
         </p>
       </div>
 
@@ -259,7 +299,10 @@ export default function DashboardHome() {
 
               <div className="mt-4 flex items-baseline justify-between gap-2">
                 {loading ? (
-                  <Loader2 size={28} className="animate-spin text-muted-foreground" />
+                  <Loader2
+                    size={28}
+                    className="animate-spin text-muted-foreground"
+                  />
                 ) : (
                   <span className="text-3xl font-extrabold font-display tracking-tight text-foreground">
                     {stat.value}
@@ -270,7 +313,9 @@ export default function DashboardHome() {
                 </span>
               </div>
 
-              <p className="mt-2 text-xs font-medium text-foreground/80">{stat.change}</p>
+              <p className="mt-2 text-xs font-medium text-foreground/80">
+                {stat.change}
+              </p>
 
               <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
                 <span className="line-clamp-1">{stat.description}</span>

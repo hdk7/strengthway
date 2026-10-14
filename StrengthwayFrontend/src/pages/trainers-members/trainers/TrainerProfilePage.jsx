@@ -8,6 +8,8 @@ import {
   ExternalLink,
   AlertCircle,
   Quote,
+  ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -17,6 +19,8 @@ import {
   deleteTrainer,
   getTrainerMonthTracking,
 } from "@/lib/trainersService";
+import { checkProfileAccount } from "@/lib/usersService";
+import ProfileAccountModal from "@/pages/users/ProfileAccountModal";
 import { getBatches } from "@/lib/batchesService";
 import { TrainerModal } from "./TrainerModal";
 import { TrainerProfileView } from "./TrainerProfileView";
@@ -35,6 +39,19 @@ export default function TrainerProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [assignedBatches, setAssignedBatches] = useState([]);
+  const [accountInfo, setAccountInfo] = useState({ hasAccount: false, user: null });
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  const loadAccountStatus = useCallback(() => {
+    if (!id) return;
+    checkProfileAccount("trainer", id)
+      .then((res) => setAccountInfo(res || { hasAccount: false, user: null }))
+      .catch(() => setAccountInfo({ hasAccount: false, user: null }));
+  }, [id]);
+
+  useEffect(() => {
+    loadAccountStatus();
+  }, [loadAccountStatus]);
 
   // Phase 6: Monthly Coaching & Class Conduction State
   const [selectedMonth, setSelectedMonth] = useState(() => getCurrentYearMonth());
@@ -186,11 +203,11 @@ export default function TrainerProfilePage() {
         </p>
         <button
           type="button"
-          onClick={() => navigate("/admin/trainers-members/trainers")}
+          onClick={() => navigate(isTrainer() ? "/admin/dashboard" : "/admin/trainers-members/trainers")}
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
-          <span>Back to Trainers Directory</span>
+          <span>{isTrainer() ? "Back to Dashboard" : "Back to Trainers Directory"}</span>
         </button>
       </div>
     );
@@ -201,11 +218,28 @@ export default function TrainerProfilePage() {
       {/* Top Header & Admin Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-dashed border-border/70 pb-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground font-display">
-            Profile
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground font-display">
+              {trainer.name}
+            </h1>
+            {accountInfo?.hasAccount && isAdmin() && (
+              <button
+                type="button"
+                onClick={() => setIsAccountModalOpen(true)}
+                title="Click to manage login account"
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-bold transition-all cursor-pointer ${
+                  accountInfo.user?.isActive !== false
+                    ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25"
+                    : "bg-destructive/15 border border-destructive/30 text-destructive hover:bg-destructive/25"
+                }`}
+              >
+                <ShieldCheck size={13} />
+                <span>Login: {accountInfo.user?.isActive !== false ? "Active" : "Deactivated"}</span>
+              </button>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            View all your profile details here.
+            Faculty Coach ID: {trainer.id} • {trainer.specialization || "Strength Specialist"}
           </p>
         </div>
 
@@ -243,6 +277,19 @@ export default function TrainerProfilePage() {
 
           {isAdmin() && (
             <>
+              <button
+                type="button"
+                onClick={() => setIsAccountModalOpen(true)}
+                className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer active:scale-[0.99] ${
+                  accountInfo?.hasAccount
+                    ? "border border-border bg-card hover:bg-muted text-foreground"
+                    : "border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                }`}
+              >
+                {accountInfo?.hasAccount ? <ShieldCheck size={16} /> : <KeyRound size={16} />}
+                <span>{accountInfo?.hasAccount ? "Manage Login Account" : "Create Login Account"}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(true)}
@@ -294,6 +341,20 @@ export default function TrainerProfilePage() {
         onSuccess={handleSaveEdit}
         trainerToEdit={trainer}
       />
+
+      {/* User Login Account Provision / Management Modal */}
+      {isAccountModalOpen && (
+        <ProfileAccountModal
+          isOpen={isAccountModalOpen}
+          onClose={() => setIsAccountModalOpen(false)}
+          onSuccess={() => {
+            loadAccountStatus();
+          }}
+          type="trainer"
+          profile={trainer}
+          existingAccount={accountInfo.user}
+        />
+      )}
     </div>
   );
 }

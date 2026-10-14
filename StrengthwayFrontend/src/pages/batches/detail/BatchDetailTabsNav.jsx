@@ -28,23 +28,6 @@ export default function BatchDetailTabsNav({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-2 sm:pb-0">
       <div className="flex overflow-x-auto no-scrollbar gap-1">
-        {/* If Member, prioritize Scheduled Classes first */}
-        {isMember() && (
-          <button
-            onClick={() => setActiveTab("classes")}
-            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 cursor-pointer ${
-              activeTab === "classes"
-                ? "border-primary text-foreground font-bold"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Calendar size={16} className={activeTab === "classes" ? "text-primary" : ""} />
-            <span>Scheduled Classes</span>
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
-              {currentBatchSessions.length}
-            </span>
-          </button>
-        )}
 
         <button
           onClick={() => setActiveTab("overview")}
@@ -93,6 +76,7 @@ export default function BatchDetailTabsNav({
 
         {!isMember() && (
           <button
+            id="tab-scheduled-classes"
             onClick={() => setActiveTab("classes")}
             className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 cursor-pointer ${
               activeTab === "classes"

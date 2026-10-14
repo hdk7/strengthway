@@ -4,6 +4,30 @@ const memberService = require("./member.service");
 const { success, created, paginated } = require("../../shared/response");
 const { parsePaginationParams, buildPaginationResult } = require("../../shared/pagination");
 
+/**
+ * Strips sensitive financial information for non-billing roles (e.g. Trainers).
+ * Trainers can view member fitness profiles, schedule, and attendance, but not payment amounts or transaction receipts.
+ */
+function sanitizeMemberForRole(memberDoc, role) {
+  if (!memberDoc) return memberDoc;
+  const m = typeof memberDoc.toObject === "function" ? memberDoc.toObject() : { ...memberDoc };
+  if (role === "trainer") {
+    delete m.paymentAmount;
+    delete m.paymentMethod;
+    delete m.paymentDate;
+    delete m.paymentNotes;
+    delete m.transactionId;
+    delete m.paymentDetails;
+    delete m.paymentPlanId;
+    if (m.membershipPlan && typeof m.membershipPlan === "object") {
+      m.membershipPlan = { ...m.membershipPlan };
+      delete m.membershipPlan.price;
+      delete m.membershipPlan.formattedPrice;
+    }
+  }
+  return m;
+}
+
 async function getAll(req, res, next) {
   try {
     const { page, pageSize, skip } = parsePaginationParams(req.query);
@@ -19,10 +43,15 @@ async function getAll(req, res, next) {
       scopedMemberIds: req.scopedMemberIds ?? null,
     });
 
+    const userRole = req.user?.role;
+    const sanitizedData = userRole === "trainer"
+      ? data.map((m) => sanitizeMemberForRole(m, userRole))
+      : data;
+
     return paginated(
       res,
       {
-        data,
+        data: sanitizedData,
         ...buildPaginationResult(total, page, pageSize),
       },
       "Members retrieved successfully."
@@ -35,7 +64,8 @@ async function getAll(req, res, next) {
 async function getById(req, res, next) {
   try {
     const member = await memberService.getById(req.params.id);
-    return success(res, member, "Member retrieved successfully.");
+    const sanitizedMember = sanitizeMemberForRole(member, req.user?.role);
+    return success(res, sanitizedMember, "Member retrieved successfully.");
   } catch (err) {
     next(err);
   }
@@ -108,6 +138,9 @@ async function getMonthTracking(req, res, next) {
   try {
     const { month } = req.query;
     const tracking = await memberService.getMemberMonthTracking(req.params.id, month);
+    if (tracking?.member) {
+      tracking.member = sanitizeMemberForRole(tracking.member, req.user?.role);
+    }
     return success(res, tracking, "Member month tracking retrieved successfully.");
   } catch (err) {
     next(err);
