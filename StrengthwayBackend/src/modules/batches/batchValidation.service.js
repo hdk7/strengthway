@@ -100,6 +100,7 @@ class BatchValidationService {
    */
   async validateFlexibleAssignment({
     memberId,
+    sourceBatchId,
     targetBatchId,
     selectedDays = [],
     startDate,
@@ -118,6 +119,13 @@ class BatchValidationService {
     if (member.isDeleted || member.status !== MEMBER_STATUS.ACTIVE) {
       throw new BadRequestError(
         `Cannot assign flexible pass to member "${memberId}" with status "${member.status || "Inactive"}". Reactivate member first.`
+      );
+    }
+
+    // Verify sourceBatchId if explicitly provided
+    if (sourceBatchId && member.batchId && member.batchId !== sourceBatchId) {
+      throw new BadRequestError(
+        `Selected source batch "${sourceBatchId}" does not match member's current home batch "${member.batchId}".`
       );
     }
 
@@ -148,12 +156,14 @@ class BatchValidationService {
       );
     }
 
-    // 4. Selected days check
-    if (!Array.isArray(selectedDays) || selectedDays.length === 0) {
-      throw new BadRequestError("At least one attendance day must be selected for flexible assignment.");
-    }
+    // 4. Selected days check - if empty, default to target batch operating days
+    let effectiveSelectedDays = Array.isArray(selectedDays) && selectedDays.length > 0
+      ? selectedDays
+      : (Array.isArray(targetBatch.daysList) && targetBatch.daysList.length > 0
+          ? targetBatch.daysList
+          : VALID_DAYS);
 
-    const invalidDayFormat = selectedDays.filter((d) => !VALID_DAYS.includes(d));
+    const invalidDayFormat = effectiveSelectedDays.filter((d) => !VALID_DAYS.includes(d));
     if (invalidDayFormat.length > 0) {
       throw new BadRequestError(
         `Invalid day names provided: [${invalidDayFormat.join(", ")}]. Must be full weekday names (e.g., "Monday").`
@@ -161,9 +171,11 @@ class BatchValidationService {
     }
 
     // Applicable operating days match
-    const batchOperatingDays = Array.isArray(targetBatch.daysList) ? targetBatch.daysList : [];
-    const nonOperatingDays = selectedDays.filter((d) => !batchOperatingDays.includes(d));
-    if (nonOperatingDays.length > 0) {
+    const batchOperatingDays = Array.isArray(targetBatch.daysList) && targetBatch.daysList.length > 0
+      ? targetBatch.daysList
+      : VALID_DAYS;
+    const nonOperatingDays = effectiveSelectedDays.filter((d) => !batchOperatingDays.includes(d));
+    if (nonOperatingDays.length > 0 && Array.isArray(targetBatch.daysList) && targetBatch.daysList.length > 0) {
       throw new BadRequestError(
         `Selected day(s) [${nonOperatingDays.join(", ")}] are not operating days for batch "${targetBatch.name}" (${batchOperatingDays.join(", ")}).`
       );
@@ -186,17 +198,20 @@ class BatchValidationService {
     }
 
     // 6. Double booking / Schedule conflict check
-    // Check if member already has an active flex assignment covering overlapping days & dates
+    // Check if member already has an active or scheduled flex assignment covering overlapping days & dates
     const existingFlexList = await BatchAssignment.find({
       memberId,
-      status: ASSIGNMENT_STATUS.ACTIVE,
+      status: { $in: [ASSIGNMENT_STATUS.ACTIVE, ASSIGNMENT_STATUS.SCHEDULED] },
       assignmentType: ASSIGNMENT_TYPE.TEMPORARY_FLEX,
       startDate: { $lte: endDate || "2099-12-31" },
       $or: [{ endDate: null }, { endDate: { $gte: startDate } }],
     }).lean();
 
     for (const flex of existingFlexList) {
-      const overlappingDays = selectedDays.filter((d) => flex.selectedDays.includes(d));
+      const flexDays = Array.isArray(flex.selectedDays) && flex.selectedDays.length > 0
+        ? flex.selectedDays
+        : VALID_DAYS;
+      const overlappingDays = effectiveSelectedDays.filter((d) => flexDays.includes(d));
       if (overlappingDays.length > 0 && flex.targetBatchId !== targetBatchId) {
         throw new ConflictError(
           `Member already has an active flexible pass for "${flex.targetBatchName}" on [${overlappingDays.join(", ")}] from ${flex.startDate} to ${flex.endDate || "ongoing"}.`
@@ -208,10 +223,10 @@ class BatchValidationService {
     const primaryPax = Array.isArray(targetBatch.memberIds) ? targetBatch.memberIds.length : 0;
     const maxPax = Number(targetBatch.maxPax) || 25;
 
-    for (const day of selectedDays) {
+    for (const day of effectiveSelectedDays) {
       const flexCountOnDay = await BatchAssignment.countDocuments({
         targetBatchId,
-        status: ASSIGNMENT_STATUS.ACTIVE,
+        status: { $in: [ASSIGNMENT_STATUS.ACTIVE, ASSIGNMENT_STATUS.SCHEDULED] },
         assignmentType: ASSIGNMENT_TYPE.TEMPORARY_FLEX,
         selectedDays: day,
         startDate: { $lte: endDate || "2099-12-31" },
@@ -232,7 +247,7 @@ class BatchValidationService {
       member,
       targetBatch,
       currentBatch,
-      selectedDays,
+      selectedDays: effectiveSelectedDays,
       startDate,
       endDate: endDate || null,
       reason: reason || "Temporary flexible attendance",

@@ -6,6 +6,7 @@ import {
   Users,
   Plus,
   CalendarRange,
+  ArrowRightLeft,
   Trash2,
   RotateCcw,
   Phone,
@@ -128,23 +129,35 @@ export default function BatchMembersTab({
         ),
       },
       {
-        header: "Flex Status",
+        header: "Flex / Attendance Status",
         className: "whitespace-nowrap",
-        cell: (mem) =>
-          mem.isFlexOutActive ? (
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-400 border border-amber-500/25 shadow-2xs"
-              title={mem.flexOutDetails?.map((f) => f.targetBatchName).join(", ")}
-            >
-              <CalendarRange size={12} className="text-amber-400 shrink-0" />
-              <span>Flex-Out ({mem.flexOutDetails?.[0]?.targetBatchName || "Active"})</span>
+        cell: (mem) => {
+          if (mem.isFlexOutActive) {
+            const firstFlex = mem.flexOutDetails?.[0];
+            return (
+              <div className="flex flex-col gap-0.5">
+                <span
+                  className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-500 border border-amber-500/25 shadow-2xs"
+                  title={`Temporarily flexed to ${firstFlex?.targetBatchName || "target batch"} until ${firstFlex?.endDate || ""}`}
+                >
+                  <CalendarRange size={12} className="text-amber-500 shrink-0" />
+                  <span>Flex-Out: {firstFlex?.targetBatchName || "Target Batch"}</span>
+                </span>
+                {firstFlex?.endDate && (
+                  <span className="text-[10px] text-muted-foreground font-mono pl-1">
+                    Until {firstFlex.endDate}
+                  </span>
+                )}
+              </div>
+            );
+          }
+          return (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-500 border border-emerald-500/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span>Active in Home Batch</span>
             </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-muted-foreground border border-border/50">
-              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
-              <span>Primary Only</span>
-            </span>
-          ),
+          );
+        },
       },
       {
         header: "Status",
@@ -161,27 +174,47 @@ export default function BatchMembersTab({
         align: "right",
         className: "whitespace-nowrap",
         cell: (mem) => (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-end gap-1.5">
             {isAdmin() && (
-              <button
-                type="button"
-                onClick={() =>
-                  onRemoveMember(
-                    mem.id,
-                    `${mem.firstName} ${mem.lastName || ""}`
-                  )
-                }
-                className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                title="Remove member from batch"
-              >
-                <Trash2 size={15} />
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => onOpenTransfer(mem, "flex")}
+                  className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-xs font-semibold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  title="Grant temporary flex pass"
+                >
+                  <CalendarRange size={12} />
+                  <span>Flex</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onOpenTransfer(mem, "transfer")}
+                  className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  title="Permanent transfer to another batch"
+                >
+                  <ArrowRightLeft size={12} />
+                  <span>Transfer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onRemoveMember(
+                      mem.id,
+                      `${mem.firstName} ${mem.lastName || ""}`
+                    )
+                  }
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  title="Remove member from batch"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </>
             )}
           </div>
         ),
       },
     ],
-    [navigate, onRemoveMember]
+    [navigate, onRemoveMember, onOpenTransfer]
   );
 
   // ─── 2. Declarative Columns for Inbound Flexible Attendees ─────────────────

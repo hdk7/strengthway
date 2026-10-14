@@ -9,6 +9,7 @@ import BatchOverviewTab from "./detail/BatchOverviewTab";
 import BatchTrainersTab from "./detail/BatchTrainersTab";
 import BatchMembersTab from "./detail/BatchMembersTab";
 import BatchClassesTab from "./detail/BatchClassesTab";
+import BatchAuditLogsTab from "./detail/BatchAuditLogsTab";
 import BatchDetailModals from "./detail/BatchDetailModals";
 import { BatchClassAssignmentModal } from "../schedule/components/BatchClassAssignmentModal";
 import { useBatchDetailData } from "./detail/useBatchDetailData";
@@ -27,7 +28,7 @@ export default function BatchDetailPage() {
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam && ["overview", "trainers", "members", "classes"].includes(tabParam)) {
+    if (tabParam && ["overview", "trainers", "members", "classes", "audit"].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -337,6 +338,10 @@ export default function BatchDetailPage() {
           onOpenAddClasses={() => setIsAssignClassesOpen(true)}
           onRefresh={loadBatchData}
         />
+      )}
+
+      {activeTab === "audit" && !isMember() && (
+        <BatchAuditLogsTab batch={batch} />
       )}
 
       <BatchDetailModals

@@ -74,6 +74,7 @@ const updateClassSchema = yup.object().shape({
 
 const permanentTransferSchema = yup.object().shape({
   memberId: yup.string().trim().required("Member ID is required."),
+  sourceBatchId: yup.string().trim().nullable(),
   targetBatchId: yup.string().trim().required("Target Batch ID is required."),
   effectiveDate: yup
     .string()
@@ -86,12 +87,12 @@ const permanentTransferSchema = yup.object().shape({
 
 const flexibleAssignmentSchema = yup.object().shape({
   memberId: yup.string().trim().required("Member ID is required."),
+  sourceBatchId: yup.string().trim().nullable(),
   targetBatchId: yup.string().trim().required("Target Batch ID is required."),
   selectedDays: yup
     .array()
     .of(yup.string().trim())
-    .min(1, "At least one day must be selected.")
-    .required("Selected attendance days are required."),
+    .nullable(),
   startDate: yup.string().trim().required("Start date is required (YYYY-MM-DD)."),
   endDate: yup.string().trim().nullable(),
   reason: yup.string().trim().required("Reason for flexible assignment is required.").min(3),

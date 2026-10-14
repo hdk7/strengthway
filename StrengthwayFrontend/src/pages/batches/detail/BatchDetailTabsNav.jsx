@@ -6,6 +6,7 @@ import {
   Search,
   ArrowRightLeft,
   Plus,
+  History,
 } from "lucide-react";
 import { isMember, isAdmin } from "@/auth/currentUser";
 
@@ -89,6 +90,21 @@ export default function BatchDetailTabsNav({
             <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
               {currentBatchSessions.length}
             </span>
+          </button>
+        )}
+
+        {!isMember() && (
+          <button
+            id="tab-audit-logs"
+            onClick={() => setActiveTab("audit")}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-colors border-b-2 cursor-pointer ${
+              activeTab === "audit"
+                ? "border-primary text-foreground font-bold"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <History size={16} className={activeTab === "audit" ? "text-primary" : ""} />
+            <span>Audit History</span>
           </button>
         )}
       </div>

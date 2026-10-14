@@ -64,6 +64,7 @@ export default function BatchPermanentTransferTab({
       setIsSubmitting(true);
       await executeBatchTransfer({
         memberId: effectiveMember.id,
+        sourceBatchId: currentBatch?.id || effectiveMember.batchId || "",
         targetBatchId: transferTargetBatchId,
         effectiveDate: transferEffectiveDate,
         reason: transferReason.trim(),

@@ -102,6 +102,7 @@ const scheduleSchema = new mongoose.Schema(
 const batchHistorySchema = new mongoose.Schema(
   {
     assignmentId: { type: String, trim: true },
+    transactionId: { type: String, trim: true, default: "" },
     type: {
       type: String,
       enum: Object.values(ASSIGNMENT_TYPE),
@@ -110,12 +111,18 @@ const batchHistorySchema = new mongoose.Schema(
     batchId: { type: String, trim: true },
     batchName: { type: String, trim: true },
     batchTiming: { type: String, trim: true },
+    sourceBatchId: { type: String, trim: true, default: "" },
+    sourceBatchName: { type: String, trim: true, default: "" },
+    targetBatchId: { type: String, trim: true, default: "" },
+    targetBatchName: { type: String, trim: true, default: "" },
     selectedDays: { type: [String], default: [] },
     startDate: { type: String, default: "" },
     endDate: { type: String, default: null },
     reason: { type: String, trim: true, default: "" },
     transferredAt: { type: Date, default: Date.now },
     transferredBy: { type: String, trim: true, default: "Admin" },
+    rejoinedAt: { type: Date, default: null },
+    rejoinReason: { type: String, trim: true, default: "" },
     status: { type: String, default: "COMPLETED" },
   },
   { _id: false },
@@ -124,6 +131,9 @@ const batchHistorySchema = new mongoose.Schema(
 const activeFlexAssignmentSchema = new mongoose.Schema(
   {
     assignmentId: { type: String, trim: true },
+    transactionId: { type: String, trim: true, default: "" },
+    sourceBatchId: { type: String, trim: true, default: "" },
+    sourceBatchName: { type: String, trim: true, default: "" },
     targetBatchId: { type: String, trim: true },
     targetBatchName: { type: String, trim: true },
     targetBatchTiming: { type: String, trim: true },

@@ -106,6 +106,7 @@ const ID_PREFIXES = Object.freeze({
   SCHEDULE_HISTORY: "SCH-HIST",
   SESSION_NOTE:     "SNOTE",
   PORTFOLIO:        "PTF",
+  BATCH_AUDIT:      "BAUD",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -185,10 +186,30 @@ const ASSIGNMENT_TYPE = Object.freeze({
 });
 
 const ASSIGNMENT_STATUS = Object.freeze({
+  SCHEDULED: "SCHEDULED",
   ACTIVE:    "ACTIVE",
   COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
   REVOKED:   "REVOKED",
   EXPIRED:   "EXPIRED",
+});
+
+// ─── Batch Audit Actions & Roles ──────────────────────────────────────────────
+const BATCH_AUDIT_ACTION = Object.freeze({
+  FLEX_INITIATED:     "FLEX_INITIATED",
+  FLEX_OUT_SCHEDULED: "FLEX_OUT_SCHEDULED",
+  FLEX_IN_SCHEDULED:  "FLEX_IN_SCHEDULED",
+  FLEX_ACTIVATED:     "FLEX_ACTIVATED",
+  FLEX_COMPLETED:     "FLEX_COMPLETED",
+  FLEX_CANCELLED:     "FLEX_CANCELLED",
+  MEMBER_REJOINED:    "MEMBER_REJOINED",
+  TRANSFER_OUT:       "TRANSFER_OUT",
+  TRANSFER_IN:        "TRANSFER_IN",
+});
+
+const BATCH_AUDIT_ROLE = Object.freeze({
+  SOURCE: "SOURCE",
+  TARGET: "TARGET",
 });
 
 // ─── Attendance Statuses ──────────────────────────────────────────────────────
@@ -246,6 +267,8 @@ module.exports = {
   HOLIDAY_TYPE,
   ASSIGNMENT_TYPE,
   ASSIGNMENT_STATUS,
+  BATCH_AUDIT_ACTION,
+  BATCH_AUDIT_ROLE,
   ATTENDANCE_STATUS,
   TRAINER_LOG_STATUS,
   TRAINER_LEAVE_STATUS,

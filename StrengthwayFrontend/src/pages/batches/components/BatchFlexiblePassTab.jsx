@@ -130,6 +130,7 @@ export default function BatchFlexiblePassTab({
       setIsSubmitting(true);
       await createFlexibleBatchAssignment({
         memberId: effectiveMember.id,
+        sourceBatchId: currentBatch?.id || effectiveMember.batchId || "",
         targetBatchId: flexTargetBatchId,
         selectedDays: flexSelectedDays,
         startDate: flexStartDate,

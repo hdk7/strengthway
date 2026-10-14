@@ -243,6 +243,27 @@ async function getEffectiveAttendees(req, res, next) {
   }
 }
 
+// ─── Batch Audit Trail & Rejoining Processing ─────────────────────────────────
+async function getBatchAuditLogs(req, res, next) {
+  try {
+    const logs = await batchAssignmentService.getBatchAuditLogs(req.params.id, req.query);
+    return success(res, logs, "Batch audit logs retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function processExpiredFlexAssignments(req, res, next) {
+  try {
+    const result = await batchAssignmentService.processExpiredFlexAssignments(
+      req.body?.referenceDate || req.query?.referenceDate
+    );
+    return success(res, result, "Expired flex assignments processed successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getAll,
   getById,
@@ -267,5 +288,7 @@ module.exports = {
   getMonthTracking,
   getCapacityCheck,
   getEffectiveAttendees,
+  getBatchAuditLogs,
+  processExpiredFlexAssignments,
 };
 

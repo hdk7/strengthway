@@ -183,6 +183,30 @@ function generatePortfolioId(currentMax = 1000) {
   return `${ID_PREFIXES.PORTFOLIO || "PTF"}-${currentMax + 1}`;
 }
 
+// ─── Batch Audit ID ───────────────────────────────────────────────────────────
+/**
+ * Produces format: BAUD-172767-1234
+ * @returns {string}
+ */
+function generateBatchAuditId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.BATCH_AUDIT || "BAUD"}-${ts}-${rand}`;
+}
+
+// ─── Batch Assignment Transaction ID ──────────────────────────────────────────
+/**
+ * Produces format: TXN-FLX-172767-1234 or TXN-TRF-172767-1234
+ * @param {string} type - "FLX" or "TRF"
+ * @returns {string}
+ */
+function generateAssignmentTransactionId(type = "FLX") {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  const prefix = String(type).toUpperCase().slice(0, 3);
+  return `TXN-${prefix}-${ts}-${rand}`;
+}
+
 module.exports = {
   generateMemberId,
   generateTrainerId,
@@ -199,4 +223,6 @@ module.exports = {
   generateScheduleHistoryId,
   generateSessionNoteId,
   generatePortfolioId,
+  generateBatchAuditId,
+  generateAssignmentTransactionId,
 };

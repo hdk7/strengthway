@@ -235,15 +235,15 @@ export function MemberDailyCheckInTable({
                               {attendee.name}
                             </Link>
                             {attendee.isFlexIn && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[9px] font-bold text-amber-400">
-                                <Sparkles size={9} />
-                                <span>Flex-In</span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                                <Sparkles size={10} />
+                                <span>Flex-In (Home: {attendee.flexFromBatchName || "Original"})</span>
                               </span>
                             )}
                             {attendee.isFlexOut && (
-                              <span className="inline-flex items-center gap-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 px-1.5 py-0.2 text-[9px] font-bold text-purple-400">
-                                <ArrowRightLeft size={9} />
-                                <span>Flexed Out</span>
+                              <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/15 border border-purple-500/30 px-2 py-0.5 text-[10px] font-bold text-purple-400">
+                                <ArrowRightLeft size={10} />
+                                <span>Flexed Out (to: {attendee.flexDestination || "Target"})</span>
                               </span>
                             )}
                           </div>

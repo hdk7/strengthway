@@ -101,6 +101,62 @@ class AttendanceService {
       }
     }
 
+    // 2b. Validate Member Batch Assignment and Authorization for data.date
+    const batchAssignmentService = require("../batches/batchAssignment.service");
+    await batchAssignmentService.processExpiredFlexAssignments().catch(() => null);
+
+    const effectiveBatchInfo = await batchAssignmentService.getEffectiveBatchForMemberOnDate(
+      data.memberId,
+      data.date
+    );
+
+    if (!effectiveBatchInfo) {
+      throw new NotFoundError(`Member with ID "${data.memberId}" not found.`);
+    }
+
+    let isFlexAttendance = Boolean(data.isFlexAttendance);
+    let originalPrimaryBatchId = data.originalPrimaryBatchId || "";
+    let assignmentId = data.assignmentId || "";
+
+    if (effectiveBatchInfo.isFlex) {
+      if (data.batchId === effectiveBatchInfo.batchId) {
+        // Attending the target flex batch within the authorized flex period
+        isFlexAttendance = true;
+        originalPrimaryBatchId = effectiveBatchInfo.primaryBatchId;
+        assignmentId = effectiveBatchInfo.flexAssignmentId;
+        await batchAssignmentService.recordFlexAttendanceCount(assignmentId).catch(() => null);
+      } else if (data.batchId === effectiveBatchInfo.primaryBatchId) {
+        throw new BadRequestError(
+          `Attendance restricted: Member is currently on a temporary flex pass to "${effectiveBatchInfo.batchName}" on ${data.date}. Attendance cannot be marked in home batch.`
+        );
+      } else {
+        throw new BadRequestError(
+          `Attendance restricted: Member is not authorized to attend batch "${data.batchId}" on ${data.date}. Authorized flex batch is "${effectiveBatchInfo.batchName}".`
+        );
+      }
+    } else {
+      // Attending primary or transferred batch
+      if (data.batchId !== effectiveBatchInfo.batchId) {
+        throw new BadRequestError(
+          `Attendance restricted: Member "${data.memberId}" is assigned to "${effectiveBatchInfo.batchName || effectiveBatchInfo.batchId}", not "${batch.name}". Attendance not authorized outside assigned batch.`
+        );
+      }
+    }
+
+    // 2c. Prevent duplicate attendance records across batches on the same date
+    const duplicateOtherBatch = await Attendance.findOne({
+      date: data.date,
+      memberId: data.memberId,
+      batchId: { $ne: data.batchId },
+      status: { $in: [ATTENDANCE_STATUS.PRESENT, ATTENDANCE_STATUS.LATE, ATTENDANCE_STATUS.CHECKED_IN, ATTENDANCE_STATUS.CHECKED_OUT] },
+    }).lean();
+
+    if (duplicateOtherBatch && data.status !== ATTENDANCE_STATUS.ABSENT) {
+      throw new BadRequestError(
+        `Duplicate attendance conflict: Member already has active attendance recorded in batch "${duplicateOtherBatch.batchId}" on ${data.date}.`
+      );
+    }
+
     const monthYear = data.date.slice(0, 7);
 
     let memberName = data.memberName;
@@ -168,9 +224,9 @@ class AttendanceService {
           memberId: data.memberId,
           memberName,
           status: effectiveStatus,
-          isFlexAttendance: Boolean(data.isFlexAttendance),
-          originalPrimaryBatchId: data.originalPrimaryBatchId || "",
-          assignmentId: data.assignmentId || "",
+          isFlexAttendance,
+          originalPrimaryBatchId,
+          assignmentId,
           checkInTime: effectiveCheckIn,
           checkOutTime: effectiveCheckOut,
           trainerId: data.trainerId || "",
@@ -239,6 +295,9 @@ class AttendanceService {
       }
     }
 
+    const batchAssignmentService = require("../batches/batchAssignment.service");
+    await batchAssignmentService.processExpiredFlexAssignments().catch(() => null);
+
     const monthYear = date.slice(0, 7);
 
     const operations = [];
@@ -249,6 +308,18 @@ class AttendanceService {
     for (const att of attendees) {
       const memberName = att.memberName || memberMap.get(att.memberId) || att.memberId;
       const id = generateAttendanceId();
+
+      const effectiveInfo = await batchAssignmentService.getEffectiveBatchForMemberOnDate(att.memberId, date);
+      let isFlex = Boolean(att.isFlexAttendance);
+      let origBatchId = att.originalPrimaryBatchId || "";
+      let asgId = att.assignmentId || "";
+
+      if (effectiveInfo?.isFlex && effectiveInfo.batchId === batchId) {
+        isFlex = true;
+        origBatchId = effectiveInfo.primaryBatchId;
+        asgId = effectiveInfo.flexAssignmentId;
+        await batchAssignmentService.recordFlexAttendanceCount(asgId).catch(() => null);
+      }
 
       operations.push({
         updateOne: {
@@ -263,9 +334,9 @@ class AttendanceService {
               memberId: att.memberId,
               memberName,
               status: att.status,
-              isFlexAttendance: Boolean(att.isFlexAttendance),
-              originalPrimaryBatchId: att.originalPrimaryBatchId || "",
-              assignmentId: att.assignmentId || "",
+              isFlexAttendance: isFlex,
+              originalPrimaryBatchId: origBatchId,
+              assignmentId: asgId,
               checkInTime: att.checkInTime || "",
               checkOutTime: att.checkOutTime || "",
               trainerId: trainerId || "",

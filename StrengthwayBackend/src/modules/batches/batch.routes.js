@@ -31,6 +31,7 @@ router.delete("/classes/:classId", authenticate, requireAdmin, ctrl.deleteClass)
 // ─── Batch Assignments & Transfers Literal Routes ─────────────────────────────
 router.post("/assignments/transfer", authenticate, requireAdmin, validate(permanentTransferSchema), ctrl.transferMember);
 router.post("/assignments/flex", authenticate, requireAdmin, validate(flexibleAssignmentSchema), ctrl.createFlexAssignment);
+router.post("/assignments/process-expired-flex", authenticate, ctrl.processExpiredFlexAssignments);
 router.get("/assignments/member/:memberId", authenticate, (req, res, next) => {
   req.params.id = req.params.memberId;
   next();
@@ -55,10 +56,12 @@ router.patch("/:id/unenroll", authenticate, requireAdmin, validate(enrollMemberS
 router.patch("/:id/sync-trainers", authenticate, requireAdmin, validate(syncTrainersSchema), ctrl.syncTrainers);
 router.patch("/:id/toggle-status", authenticate, requireAdmin, ctrl.toggleStatus);
 
-// ─── Month-Wise Tracking & Dynamic Capacity Sub-routes ────────────────────────
+// ─── Month-Wise Tracking, Capacity & Audit Trail Sub-routes ───────────────────
 router.get("/:id/month-tracking", authenticate, scopeBatchDoc, ctrl.getMonthTracking);
 router.get("/:id/capacity-check", authenticate, scopeBatchDoc, ctrl.getCapacityCheck);
 router.get("/:id/effective-attendees", authenticate, scopeBatchDoc, ctrl.getEffectiveAttendees);
+router.get("/:id/audit-logs", authenticate, scopeBatchDoc, ctrl.getBatchAuditLogs);
+router.get("/:id/audit-history", authenticate, scopeBatchDoc, ctrl.getBatchAuditLogs);
 
 // ─── Batch Scheduled Classes Sub-routes ───────────────────────────────────────
 router.get("/:id/classes", authenticate, scopeBatchDoc, ctrl.getClassesByBatch);

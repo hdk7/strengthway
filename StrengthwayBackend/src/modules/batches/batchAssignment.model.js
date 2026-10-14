@@ -12,6 +12,11 @@ const batchAssignmentSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    transactionId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     memberId: {
       type: String,
       required: true,
@@ -33,6 +38,7 @@ const batchAssignmentSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+      index: true,
     },
     sourceBatchName: {
       type: String,
@@ -82,6 +88,28 @@ const batchAssignmentSchema = new mongoose.Schema(
       trim: true,
       default: "Admin",
     },
+    rejoinedAt: {
+      type: Date,
+      default: null,
+    },
+    rejoinReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    isRejoined: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
     metadata: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
@@ -94,6 +122,9 @@ const batchAssignmentSchema = new mongoose.Schema(
 );
 
 batchAssignmentSchema.index({ memberId: 1, status: 1 });
+batchAssignmentSchema.index({ transactionId: 1 });
+batchAssignmentSchema.index({ sourceBatchId: 1, status: 1 });
 batchAssignmentSchema.index({ targetBatchId: 1, status: 1, startDate: 1, endDate: 1 });
+batchAssignmentSchema.index({ memberId: 1, status: 1, startDate: 1, endDate: 1 });
 
 module.exports = mongoose.model("BatchAssignment", batchAssignmentSchema);

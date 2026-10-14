@@ -19,6 +19,8 @@ import {
   getBatchMonthTracking,
   getBatchCapacityCheck,
   getBatchEffectiveAttendees,
+  getBatchAuditLogs,
+  processExpiredFlexAssignments,
 } from "./batchTransferService";
 
 export { SHIFT_SLOTS, resolveDaysDetails };
@@ -30,6 +32,8 @@ export {
   getBatchMonthTracking,
   getBatchCapacityCheck,
   getBatchEffectiveAttendees,
+  getBatchAuditLogs,
+  processExpiredFlexAssignments,
 };
 
 // ── Batches Read ─────────────────────────────────────────────────────────────

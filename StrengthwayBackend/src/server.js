@@ -23,7 +23,27 @@ async function bootstrap() {
     console.warn("[Server] Notice: Seed accounts sync:", seedErr.message);
   }
 
-  // 3. Start listening
+  // 3. Process expired flex assignments on startup (handles downtime & catch-up)
+  const batchAssignmentService = require("./modules/batches/batchAssignment.service");
+  try {
+    const catchupResult = await batchAssignmentService.processExpiredFlexAssignments();
+    if (catchupResult?.totalProcessed > 0) {
+      console.log(
+        `[Server] Flex auto-rejoin catch-up: ${catchupResult.rejoinedCount} rejoined, ${catchupResult.activatedCount} activated.`
+      );
+    }
+  } catch (catchupErr) {
+    console.warn("[Server] Notice: Flex catch-up processing:", catchupErr.message);
+  }
+
+  // Periodic background check every 15 minutes
+  const flexCheckTimer = setInterval(() => {
+    batchAssignmentService.processExpiredFlexAssignments().catch((err) => {
+      console.error("[Server] Flex auto-rejoin periodic check error:", err.message);
+    });
+  }, 15 * 60 * 1000);
+
+  // 4. Start listening
   const server = app.listen(PORT, () => {
     console.log("─────────────────────────────────────────────");
     console.log(`  Strengthway API`);
@@ -33,9 +53,10 @@ async function bootstrap() {
     console.log("─────────────────────────────────────────────");
   });
 
-  // 3. Graceful shutdown — finish in-flight requests before closing
+  // Graceful shutdown — finish in-flight requests before closing
   async function shutdown(signal) {
     console.log(`\n[Server] ${signal} received. Shutting down gracefully…`);
+    clearInterval(flexCheckTimer);
     server.close(async () => {
       await disconnectDB();
       console.log("[Server] Graceful shutdown complete.");
