@@ -95,20 +95,20 @@ export function ClassCard({
       {/* Workouts Details Section */}
       <div className="px-3.5 py-1.5 space-y-2 flex-1">
         {/* Beginner Workouts Block */}
-        <div className="rounded-lg border border-border/70 bg-muted/20 p-2.5 space-y-1">
+        <div className="rounded-lg border border-emerald-500/30 dark:border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/25 p-2.5 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
               Beginner Workouts
             </span>
             {!hasBeginner && (
-              <span className="text-[10px] italic text-muted-foreground">
+              <span className="text-[10px] italic text-emerald-600/60 dark:text-emerald-400/60">
                 Not specified
               </span>
             )}
           </div>
           <p
-            className={`text-xs text-foreground/90 leading-relaxed ${
+            className={`text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal ${
               !isExpanded ? "line-clamp-2" : ""
             }`}
           >
@@ -117,20 +117,20 @@ export function ClassCard({
         </div>
 
         {/* Intermediate Workouts Block */}
-        <div className="rounded-lg border border-border/70 bg-muted/20 p-2.5 space-y-1">
+        <div className="rounded-lg border border-blue-500/30 dark:border-blue-500/40 bg-blue-500/10 dark:bg-blue-950/25 p-2.5 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-accent flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
               Intermediate Workouts
             </span>
             {!hasIntermediate && (
-              <span className="text-[10px] italic text-muted-foreground">
+              <span className="text-[10px] italic text-blue-600/60 dark:text-blue-400/60">
                 Not specified
               </span>
             )}
           </div>
           <p
-            className={`text-xs text-foreground/90 leading-relaxed ${
+            className={`text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal ${
               !isExpanded ? "line-clamp-2" : ""
             }`}
           >
@@ -139,28 +139,66 @@ export function ClassCard({
         </div>
 
         {/* Additional Custom Workouts */}
-        {customWorkouts.map((w, idx) => (
-          <div
-            key={w.id || idx}
-            className="rounded-lg border border-border/70 bg-muted/20 p-2.5 space-y-1"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                {w.subject || `Workout #${idx + 1}`}
-              </span>
+        {customWorkouts.map((w, idx) => {
+          const isIntermediate =
+            w.category === "intermediate" ||
+            w.category === "int" ||
+            (!w.category && (
+              w.subject?.toLowerCase().includes("intermediate") ||
+              w.subject?.toLowerCase().includes("int") ||
+              idx % 2 === 1
+            ));
+
+          return isIntermediate ? (
+            <div
+              key={w.id || idx}
+              className="rounded-lg border border-blue-500/30 dark:border-blue-500/40 bg-blue-500/10 dark:bg-blue-950/25 p-2.5 space-y-1"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
+                  {w.subject || `Intermediate Workout #${idx + 1}`}
+                </span>
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">
+                  Intermediate
+                </span>
+              </div>
+              {w.message && (
+                <p
+                  className={`text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal ${
+                    !isExpanded ? "line-clamp-2" : ""
+                  }`}
+                >
+                  {w.message}
+                </p>
+              )}
             </div>
-            {w.message && (
-              <p
-                className={`text-xs text-foreground/90 leading-relaxed ${
-                  !isExpanded ? "line-clamp-2" : ""
-                }`}
-              >
-                {w.message}
-              </p>
-            )}
-          </div>
-        ))}
+          ) : (
+            <div
+              key={w.id || idx}
+              className="rounded-lg border border-emerald-500/30 dark:border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/25 p-2.5 space-y-1"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+                  {w.subject || `Beginner Workout #${idx + 1}`}
+                </span>
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  Beginner
+                </span>
+              </div>
+              {w.message && (
+                <p
+                  className={`text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal ${
+                    !isExpanded ? "line-clamp-2" : ""
+                  }`}
+                >
+                  {w.message}
+                </p>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Card Footer: Expand toggle */}

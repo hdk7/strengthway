@@ -120,7 +120,7 @@ export function ReportsHeaderNav({
             }`}
           >
             <Award size={17} className={activeTab === "trainers" ? "text-accent" : ""} />
-            <span>Trainer Reports</span>
+            <span>Coach Reports</span>
             {trainersReport?.summary?.totalTrainers ? (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-extrabold text-primary">
                 {trainersReport.summary.totalTrainers} Faculty

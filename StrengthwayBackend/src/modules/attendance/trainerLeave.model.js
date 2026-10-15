@@ -23,6 +23,43 @@ const trainerLeaveSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    leaveType: {
+      type: String,
+      enum: ["REGULAR", "EMERGENCY"],
+      default: "REGULAR",
+      index: true,
+    },
+    requestedStartDate: {
+      type: String, // YYYY-MM-DD
+      required: true,
+      trim: true,
+      index: true,
+    },
+    requestedEndDate: {
+      type: String, // YYYY-MM-DD
+      required: true,
+      trim: true,
+      index: true,
+    },
+    totalRequestedDays: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    approvedStartDate: {
+      type: String, // YYYY-MM-DD
+      default: null,
+      trim: true,
+    },
+    approvedEndDate: {
+      type: String, // YYYY-MM-DD
+      default: null,
+      trim: true,
+    },
+    totalApprovedDays: {
+      type: Number,
+      default: 0,
+    },
     leaveStartDate: {
       type: String, // YYYY-MM-DD
       required: true,
@@ -44,6 +81,10 @@ const trainerLeaveSchema = new mongoose.Schema(
       type: String, // YYYY-MM-DD
       required: true,
       trim: true,
+    },
+    submittedAt: {
+      type: Date,
+      default: Date.now,
     },
     actualNoticeDays: {
       type: Number,
@@ -83,6 +124,12 @@ const trainerLeaveSchema = new mongoose.Schema(
       default: TRAINER_LEAVE_STATUS.PENDING,
       index: true,
     },
+    adminDecision: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "DENIED", "REJECTED", "CANCELLED"],
+      default: "PENDING",
+      index: true,
+    },
     reviewedBy: {
       type: String,
       trim: true,
@@ -97,8 +144,28 @@ const trainerLeaveSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    policyComplianceResult: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+    annualLeaveCalculation: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     affectedBatchIds: {
       type: [String],
+      default: [],
+    },
+    auditLogs: {
+      type: [
+        {
+          action: { type: String, required: true },
+          actor: { type: String, default: "System" },
+          timestamp: { type: Date, default: Date.now },
+          remarks: { type: String, default: "" },
+          details: { type: mongoose.Schema.Types.Mixed, default: {} },
+        },
+      ],
       default: [],
     },
   },

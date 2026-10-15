@@ -34,6 +34,11 @@ const classSchema = new mongoose.Schema(
           type: String,
           default: "",
         },
+        category: {
+          type: String,
+          trim: true,
+          default: "",
+        },
         subject: {
           type: String,
           trim: true,

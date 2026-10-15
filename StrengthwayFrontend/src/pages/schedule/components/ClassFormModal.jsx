@@ -42,6 +42,7 @@ export function ClassFormModal({
         workouts: Array.isArray(initialData.workouts)
           ? initialData.workouts.map((w, idx) => ({
               id: w.id || `w-${idx}-${Date.now()}`,
+              category: w.category || (idx % 2 === 0 ? "beginner" : "intermediate"),
               subject: w.subject || "",
               message: w.message || "",
             }))
@@ -65,6 +66,7 @@ export function ClassFormModal({
         ...prev.workouts,
         {
           id: `w-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          category: prev.workouts.length % 2 === 0 ? "beginner" : "intermediate",
           subject: "",
           message: "",
         },
@@ -113,6 +115,7 @@ export function ClassFormModal({
       workouts: (formData.workouts || [])
         .map((w) => ({
           id: w.id,
+          category: w.category || "beginner",
           subject: w.subject?.trim() || "",
           message: w.message?.trim() || "",
         }))
@@ -175,47 +178,91 @@ export function ClassFormModal({
           />
 
           {/* Dynamically Added Custom Workouts */}
-          {formData.workouts.map((workout, index) => (
-            <div
-              key={workout.id || index}
-              className="rounded-2xl border border-slate-200/90 dark:border-border bg-slate-50/50 dark:bg-muted/20 p-4 space-y-3 relative animate-in fade-in zoom-in-98 duration-150"
-            >
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200/70 dark:border-border/60">
-                <span className="text-xs font-bold text-slate-800 dark:text-foreground flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary text-[10px] font-black">
-                    {index + 1}
-                  </span>
-                  Workout #{index + 1}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveWorkout(index)}
-                  className="rounded-lg p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
-                  title="Remove workout"
-                >
-                  <Trash2 size={14} />
-                </button>
+          {formData.workouts.map((workout, index) => {
+            const isInt = workout.category === "intermediate";
+            return (
+              <div
+                key={workout.id || index}
+                className={`rounded-2xl border p-4 space-y-3 relative animate-in fade-in zoom-in-98 duration-150 transition-colors ${
+                  isInt
+                    ? "border-blue-500/35 dark:border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20"
+                    : "border-emerald-500/35 dark:border-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20"
+                }`}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-border/60">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-xs font-bold text-foreground flex items-center gap-2">
+                      <span
+                        className={`flex h-5 w-5 items-center justify-center rounded-md text-[10px] font-black ${
+                          isInt
+                            ? "bg-blue-500/20 text-blue-700 dark:text-blue-400"
+                            : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        }`}
+                      >
+                        {index + 1}
+                      </span>
+                      Workout #{index + 1}
+                    </span>
+
+                    {/* Level selector */}
+                    <div className="inline-flex rounded-lg border border-border bg-background p-0.5 text-xs font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateWorkout(index, "category", "beginner")}
+                        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] transition-all cursor-pointer font-bold ${
+                          !isInt
+                            ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Beginner
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateWorkout(index, "category", "intermediate")}
+                        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-[11px] transition-all cursor-pointer font-bold ${
+                          isInt
+                            ? "bg-blue-500/20 text-blue-700 dark:text-blue-400 shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                        Intermediate
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveWorkout(index)}
+                    className="rounded-lg p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 cursor-pointer transition-colors"
+                    title="Remove workout"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                {/* Subject textfield */}
+                <InputField
+                  label="Subject / Focus"
+                  value={workout.subject}
+                  onChange={(e) => handleUpdateWorkout(index, "subject", e.target.value)}
+                  placeholder="e.g. Core Finisher, Strength Block, or Agility Drills"
+                />
+
+                {/* Message textarea field */}
+                <TextareaField
+                  label="Coaching Message & Prescriptions"
+                  rows={4}
+                  resize="vertical"
+                  value={workout.message}
+                  onChange={(e) => handleUpdateWorkout(index, "message", e.target.value)}
+                  placeholder="Movement cues, prescribed sets, repetitions, and intensity..."
+                />
               </div>
-
-              {/* Subject textfield */}
-              <InputField
-                label="Subject / Focus"
-                value={workout.subject}
-                onChange={(e) => handleUpdateWorkout(index, "subject", e.target.value)}
-                placeholder="e.g. Core Finisher, Strength Block, or Agility Drills"
-              />
-
-              {/* Message textarea field */}
-              <TextareaField
-                label="Coaching Message & Prescriptions"
-                rows={4}
-                resize="vertical"
-                value={workout.message}
-                onChange={(e) => handleUpdateWorkout(index, "message", e.target.value)}
-                placeholder="Movement cues, prescribed sets, repetitions, and intensity..."
-              />
-            </div>
-          ))}
+            );
+          })}
 
           {/* Add Workouts Button */}
           <button

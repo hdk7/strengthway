@@ -75,11 +75,15 @@ class BatchRepository {
   async syncPaxCount(batchId) {
     const Member = require("../members/member.model");
     const activeMembers = await Member.find(
-      { isDeleted: false, $or: [{ batchId }, { "schedule.batchId": batchId }] },
+      {
+        isDeleted: false,
+        status: { $ne: "Archived" },
+        $or: [{ batchId }, { "schedule.batchId": batchId }],
+      },
       { id: 1 }
     ).lean();
-    const count = activeMembers.length;
-    const memberIds = activeMembers.map((m) => m.id);
+    const memberIds = [...new Set(activeMembers.map((m) => m.id))];
+    const count = memberIds.length;
 
     const batch = await Batch.findOneAndUpdate(
       { id: batchId },

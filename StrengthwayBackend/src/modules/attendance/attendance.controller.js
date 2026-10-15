@@ -76,7 +76,7 @@ async function getAttendanceRecords(req, res, next) {
 async function recordTrainerLog(req, res, next) {
   try {
     const log = await attendanceService.recordTrainerLog(req.body);
-    return created(res, log, "Trainer log recorded successfully.");
+    return created(res, log, "Coach log recorded successfully.");
   } catch (err) {
     next(err);
   }
@@ -85,15 +85,15 @@ async function recordTrainerLog(req, res, next) {
 async function getTrainerLogs(req, res, next) {
   try {
     if (req.user?.role === "member") {
-      throw new ForbiddenError("Access denied. Members do not have access to trainer logs.");
+      throw new ForbiddenError("Access denied. Members do not have access to coach logs.");
     }
     if (req.user?.role === "trainer" && req.user.trainerId !== req.params.trainerId) {
-      throw new ForbiddenError("Access denied. You can only view your own trainer logs.");
+      throw new ForbiddenError("Access denied. You can only view your own coach logs.");
     }
 
     const { month, date } = req.query;
     const logs = await attendanceService.getTrainerLogs(req.params.trainerId, month, date);
-    return success(res, logs, "Trainer logs retrieved successfully.");
+    return success(res, logs, "Coach logs retrieved successfully.");
   } catch (err) {
     next(err);
   }
@@ -104,7 +104,7 @@ const trainerLeavePolicyService = require("./trainerLeavePolicy.service");
 async function getAllTrainerLogs(req, res, next) {
   try {
     if (req.user?.role === "member") {
-      throw new ForbiddenError("Access denied. Members do not have access to trainer logs.");
+      throw new ForbiddenError("Access denied. Members do not have access to coach logs.");
     }
 
     let trainerId = req.query.trainerId;
@@ -114,7 +114,7 @@ async function getAllTrainerLogs(req, res, next) {
 
     const { month, date } = req.query;
     const logs = await attendanceService.getTrainerLogs(trainerId, month, date);
-    return success(res, logs, "Trainer logs retrieved successfully.");
+    return success(res, logs, "Coach logs retrieved successfully.");
   } catch (err) {
     next(err);
   }
@@ -123,7 +123,7 @@ async function getAllTrainerLogs(req, res, next) {
 async function getTrainerLeavePolicy(req, res, next) {
   try {
     const policy = await trainerLeavePolicyService.getPolicy();
-    return success(res, policy, "Trainer leave policy retrieved successfully.");
+    return success(res, policy, "Coach leave policy retrieved successfully.");
   } catch (err) {
     next(err);
   }
@@ -135,7 +135,7 @@ async function saveTrainerLeavePolicy(req, res, next) {
       req.body,
       req.user?.name || req.user?.username || "admin"
     );
-    return success(res, policy, "Trainer leave policy saved successfully.");
+    return success(res, policy, "Coach leave policy saved successfully.");
   } catch (err) {
     next(err);
   }
@@ -143,11 +143,12 @@ async function saveTrainerLeavePolicy(req, res, next) {
 
 async function validateTrainerLeaveNotice(req, res, next) {
   try {
-    const { startDate, endDate, submittedOn } = req.body;
+    const { startDate, endDate, submittedOn, leaveType } = req.body;
     const result = await trainerLeavePolicyService.validateLeaveNotice(
       startDate,
       endDate,
-      submittedOn
+      submittedOn,
+      leaveType
     );
     return success(res, result, "Leave notice validation completed.");
   } catch (err) {

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { getTrainers } from "@/lib/trainersService";
 import { getAllTrainerLogs } from "@/lib/attendanceService";
+import { getTrainerLeaveMonthlySummary } from "@/lib/trainerLeaveService";
 import { DataTable } from "@/components/table";
 import { isTrainer } from "@/auth/currentUser";
 
@@ -30,6 +31,7 @@ const STATUS_OPTIONS = ["ALL", "Disbursed", "Processed", "Pending"];
 export default function TrainersPaymentsPage() {
   const [trainers, setTrainers] = useState([]);
   const [trainerLogs, setTrainerLogs] = useState([]);
+  const [leaveSummary, setLeaveSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedShift, setSelectedShift] = useState("ALL");
@@ -40,16 +42,19 @@ export default function TrainersPaymentsPage() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [trainersData, logsData] = await Promise.all([
+      const [trainersData, logsData, leaveSummaryData] = await Promise.all([
         getTrainers(true),
         getAllTrainerLogs().catch(() => []),
+        getTrainerLeaveMonthlySummary().catch(() => null),
       ]);
       setTrainers(Array.isArray(trainersData) ? trainersData : []);
       setTrainerLogs(Array.isArray(logsData) ? logsData : []);
+      setLeaveSummary(leaveSummaryData);
     } catch (err) {
       console.error("Failed to load trainer payout data:", err);
       setTrainers([]);
       setTrainerLogs([]);
+      setLeaveSummary(null);
     } finally {
       setIsLoading(false);
     }
@@ -74,16 +79,54 @@ export default function TrainersPaymentsPage() {
       );
       const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
 
-      // Leave logs and deduction calculation (status === "LEAVE")
-      const leaveLogs = trainerLogs.filter(
-        (l) => l.trainerId === t.id && l.status === "LEAVE",
+      // Cross-reference with backend leave summary (annual 36-day allowance + LOP model)
+      const tSummary = leaveSummary?.trainersSummary?.find(
+        (s) => s.trainerId === t.id,
       );
-      const uniqueLeaveDates = [...new Set(leaveLogs.map((l) => l.date))];
-      const leaveDaysCount = uniqueLeaveDates.length;
-      const monthlyAllowance = 2; // Standard 2 paid leave days/month
-      const paidLeaveDays = Math.min(leaveDaysCount, monthlyAllowance);
-      const unpaidLeaveDays = Math.max(0, leaveDaysCount - monthlyAllowance);
-      const leaveDeduction = unpaidLeaveDays * 1000;
+
+      let leaveDaysCount = 0;
+      let paidLeaveDays = 0;
+      let unpaidLeaveDays = 0;
+      let leaveDeduction = 0;
+      let annualAllowance = 36;
+      let annualRemainingDays = 36;
+      let annualLopDays = 0;
+
+      if (tSummary) {
+        leaveDaysCount = tSummary.approvedDays;
+        paidLeaveDays = tSummary.paidDays;
+        unpaidLeaveDays = tSummary.unpaidDays; // LOP days
+        leaveDeduction = tSummary.totalDeduction;
+        annualAllowance = tSummary.annualAllowance || 36;
+        annualRemainingDays =
+          tSummary.annualRemainingDays ?? tSummary.remainingBalance ?? 36;
+        annualLopDays = tSummary.annualLopDays ?? 0;
+      } else {
+        // Fallback using local logs with the 36-day annual allowance
+        const currentYear = new Date().getFullYear().toString();
+        const yearLogs = trainerLogs.filter(
+          (l) =>
+            l.trainerId === t.id &&
+            (l.status === "LEAVE" || l.status === "ABSENT") &&
+            l.date?.startsWith(currentYear),
+        );
+        const uniqueYearDates = [...new Set(yearLogs.map((l) => l.date))];
+        const monthLogs = trainerLogs.filter(
+          (l) =>
+            l.trainerId === t.id &&
+            (l.status === "LEAVE" || l.status === "ABSENT"),
+        );
+        const uniqueMonthDates = [...new Set(monthLogs.map((l) => l.date))];
+        leaveDaysCount = uniqueMonthDates.length;
+
+        annualAllowance = 36;
+        const totalYearDaysUsed = uniqueYearDates.length;
+        annualRemainingDays = Math.max(0, annualAllowance - totalYearDaysUsed);
+        annualLopDays = Math.max(0, totalYearDaysUsed - annualAllowance);
+        unpaidLeaveDays = annualLopDays;
+        paidLeaveDays = Math.max(0, leaveDaysCount - unpaidLeaveDays);
+        leaveDeduction = unpaidLeaveDays * 1000;
+      }
 
       // Base stipend based on shift/level
       const baseStipend =
@@ -110,6 +153,9 @@ export default function TrainersPaymentsPage() {
         paidLeaveDays,
         unpaidLeaveDays,
         leaveDeduction,
+        annualAllowance,
+        annualRemainingDays,
+        annualLopDays,
         totalHours,
         baseStipend,
         totalPayout,
@@ -117,7 +163,7 @@ export default function TrainersPaymentsPage() {
         batchCount: Array.isArray(t.batchIds) ? t.batchIds.length : 1,
       };
     });
-  }, [trainers, trainerLogs]);
+  }, [trainers, trainerLogs, leaveSummary]);
 
   // Filtered payouts
   const filteredPayouts = useMemo(() => {
@@ -230,20 +276,33 @@ export default function TrainersPaymentsPage() {
       align: "center",
       cell: (p) => (
         p.leaveDaysCount === 0 ? (
-          <span className="font-mono text-[11px] text-muted-foreground font-semibold">
-            0d Leave
-          </span>
+          <div className="inline-flex flex-col items-center">
+            <span className="font-mono text-[11px] text-muted-foreground font-semibold">
+              0d Leave
+            </span>
+            <span className="text-[9px] text-muted-foreground">
+              {p.annualRemainingDays ?? 36}d allowance left
+            </span>
+          </div>
         ) : p.unpaidLeaveDays === 0 ? (
-          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-            {p.leaveDaysCount}d Paid
-          </span>
+          <div className="inline-flex flex-col items-center">
+            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              {p.leaveDaysCount}d Paid
+            </span>
+            <span className="text-[9px] text-emerald-600 dark:text-emerald-400 mt-0.5">
+              {p.annualRemainingDays ?? 36}d allowance left
+            </span>
+          </div>
         ) : (
           <div className="inline-flex flex-col items-center">
             <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500">
-              {p.leaveDaysCount}d ({p.unpaidLeaveDays}d Unpaid)
+              {p.leaveDaysCount}d ({p.unpaidLeaveDays}d LOP)
             </span>
             <span className="text-[9px] font-bold text-rose-500 mt-0.5">
               -₹{p.leaveDeduction.toLocaleString("en-IN")}
+            </span>
+            <span className="text-[9px] text-rose-400">
+              {p.annualRemainingDays > 0 ? `${p.annualRemainingDays}d allowance left` : "Allowance exhausted"}
             </span>
           </div>
         )
@@ -294,7 +353,7 @@ export default function TrainersPaymentsPage() {
             {userIsTrainer ? "Faculty Portal • Compensation & Hours" : "Faculty Operations • Payroll & Incentives"}
           </div>
           <h1 className="font-display text-xl sm:text-2xl font-black text-foreground tracking-tight mt-0.5">
-            {userIsTrainer ? "My Payouts & Faculty Stipend Ledger" : "Trainer Payouts & Faculty Stipends"}
+            {userIsTrainer ? "My Payouts & Faculty Stipend Ledger" : "Coach Payouts & Faculty Stipends"}
           </h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             {userIsTrainer

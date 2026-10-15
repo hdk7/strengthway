@@ -4,7 +4,7 @@ import { getTrainerPhoto } from "@/lib/trainersService";
 export function getTrainerColumns({ onNavigate }) {
   return [
     {
-      header: "Trainer ID",
+      header: "Coach ID",
       accessorKey: "id",
       cell: (trainer) => (
         <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/70 text-foreground/85 font-mono text-xs font-semibold tracking-tight shadow-2xs">
@@ -13,10 +13,10 @@ export function getTrainerColumns({ onNavigate }) {
       ),
     },
     {
-      header: "Trainer",
+      header: "Coach",
       accessorKey: "name",
       cell: (trainer) => {
-        const initials = (trainer.name || "T")
+        const initials = (trainer.name || "C")
           .split(" ")
           .map((n) => n[0])
           .slice(0, 2)
@@ -29,7 +29,7 @@ export function getTrainerColumns({ onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate(`/admin/trainers-members/trainers/${trainer.id}`)}
-              title="View full Trainer profile"
+              title="View full Coach profile"
               className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-accent/15 text-accent font-bold text-xs sm:text-sm border border-accent/20 hover:scale-105 hover:ring-2 hover:ring-accent/40 transition-all cursor-pointer focus:outline-none grid place-items-center"
             >
               {photo ? (
@@ -59,9 +59,19 @@ export function getTrainerColumns({ onNavigate }) {
       header: "Gender",
       accessorKey: "gender",
       cell: (trainer) => (
-        <span className="inline-flex items-center rounded-full bg-accent/20 border border-accent/30 px-2.5 py-0.5 text-xs font-medium text-foreground">
-          {trainer.gender || "—"}
-        </span>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="inline-flex items-center rounded-full bg-accent/20 border border-accent/30 px-2.5 py-0.5 text-xs font-medium text-foreground">
+            {trainer.gender || "—"}
+          </span>
+          {trainer.bloodGroup && (
+            <span
+              title={`Blood Group: ${trainer.bloodGroup}`}
+              className="inline-flex items-center rounded-full bg-rose-500/15 border border-rose-500/30 px-2 py-0.5 text-xs font-medium text-rose-600 dark:text-rose-400"
+            >
+              {trainer.bloodGroup}
+            </span>
+          )}
+        </div>
       ),
     },
     {

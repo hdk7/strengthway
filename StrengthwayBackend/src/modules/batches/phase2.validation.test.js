@@ -363,6 +363,19 @@ describe("Phase 2: Validation Engine & Transfer Workflow Suite", () => {
         })
       ).rejects.toThrow(/already has an active flexible pass/i);
     });
+
+    test("Rejects flexible assignment if target batch has reached maximum capacity", async () => {
+      await expect(
+        batchValidationService.validateFlexibleAssignment({
+          memberId: member1Id,
+          targetBatchId: fullBatchId,
+          selectedDays: ["Friday"],
+          startDate: "2026-10-01",
+          endDate: "2026-10-31",
+          reason: "Flex into full batch test",
+        })
+      ).rejects.toThrow("This batch has reached its maximum capacity. Please select another batch.");
+    });
   });
 
   // ─── 3. Effective Batch Resolution on Date ──────────────────────────────────
@@ -422,6 +435,40 @@ describe("Phase 2: Validation Engine & Transfer Workflow Suite", () => {
       expect(capacityInfo.effectivePax).toBe(2);
       expect(capacityInfo.spotsRemaining).toBe(23);
       expect(capacityInfo.isFull).toBe(false);
+    });
+
+    test("Dynamically calculates batch capacity and updates upon member enrollment and unenrollment", async () => {
+      const batchService = require("./batch.service");
+
+      // Verify initial state for batch2
+      const initialBatch = await batchService.getById(batch2Id);
+      const initialPax = initialBatch.currentPax;
+
+      // Seed a temporary member
+      const tempMemberId = `MEM-TEST-DYN-${Date.now()}`;
+      await Member.create({
+        id: tempMemberId,
+        firstName: "Dynamic",
+        lastName: "Tester",
+        email: `dynamic.${Date.now()}@strengthway.test`,
+        mobile: "9876543299",
+        gender: "Male",
+        dob: "1995-05-15",
+        status: "Active",
+        batchId: "",
+      });
+
+      // Enroll member
+      await batchService.enrollMember(batch2Id, tempMemberId);
+      const afterEnroll = await batchService.getById(batch2Id);
+      expect(afterEnroll.currentPax).toBe(initialPax + 1);
+
+      // Unenroll member
+      await batchService.unenrollMember(batch2Id, tempMemberId);
+      const afterUnenroll = await batchService.getById(batch2Id);
+      expect(afterUnenroll.currentPax).toBe(initialPax);
+
+      await Member.deleteOne({ id: tempMemberId });
     });
   });
 

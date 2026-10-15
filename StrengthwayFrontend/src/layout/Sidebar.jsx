@@ -26,11 +26,11 @@ const navConfig = [
   { id: "inquiries", label: "Inquiries", icon: Inbox, path: "/admin/inquiries" },
   {
     id: "trainers-members",
-    label: "Trainers & Members",
+    label: "Coaches & Members",
     icon: Users,
     children: [
       { id: "member-list", label: "Members", path: "/admin/trainers-members/members" },
-      { id: "trainer-list", label: "Trainers", path: "/admin/trainers-members/trainers" },
+      { id: "trainer-list", label: "Coaches", path: "/admin/trainers-members/trainers" },
     ],
   },
   {
@@ -54,7 +54,7 @@ const navConfig = [
       { id: "members-attendance", label: "Members Attendance", path: "/admin/attendance/members" },
       {
         id: "trainers-attendance",
-        label: "Trainers Attendance",
+        label: "Coaches Attendance",
         path: "/admin/attendance/trainers",
       },
     ],
@@ -65,7 +65,7 @@ const navConfig = [
     icon: Wallet,
     children: [
       { id: "members", label: "Members Payments", path: "/admin/payments/members" },
-      { id: "trainers", label: "Trainers Payments", path: "/admin/payments/trainers" },
+      { id: "trainers", label: "Coaches Payments", path: "/admin/payments/trainers" },
     ],
   },
   {
@@ -144,7 +144,7 @@ function getNavConfigForUser(user) {
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/trainer/dashboard" },
       {
         id: "trainers-members",
-        label: "Trainers & Members",
+        label: "Coaches & Members",
         icon: Users,
         children: [
           { id: "member-list", label: "Assigned Members", path: "/trainer/trainers-members/members" },
@@ -366,6 +366,16 @@ function SidebarNavItem({
             <li key={child.id}>
               <NavLink
                 to={child.path}
+                onClick={() => {
+                  if (child.id === "master-class-schedule") {
+                    window.__tsw_class_schedule_nav_target = "month";
+                    window.__tsw_class_schedule_nav_time = Date.now();
+                    sessionStorage.setItem("tsw_sidebar_clicked_at", String(Date.now()));
+                    window.dispatchEvent(
+                      new CustomEvent("tsw-nav-class-schedule", { detail: { view: "month" } })
+                    );
+                  }
+                }}
                 className={({ isActive }) => {
                   const isCurrentActive = isActive || isSubmoduleActive(child, currentPath);
                   return `flex items-center justify-between px-3 py-2 pl-9 ml-2.5 border-l-2 text-[13px] no-underline rounded-r-xl transition-all duration-150 ${

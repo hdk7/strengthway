@@ -26,7 +26,7 @@ class BatchService {
     const Trainer = require("../trainers/trainer.model");
 
     const allMembers = await Member.find(
-      { isDeleted: false },
+      { isDeleted: false, status: { $ne: "Archived" } },
       { id: 1, batchId: 1, schedule: 1 }
     ).lean();
     const allTrainers = await Trainer.find(
@@ -39,6 +39,14 @@ class BatchService {
       const activeMembers = allMembers.filter(
         (m) => m.batchId === b.id || m.schedule?.batchId === b.id
       );
+      const uniqueMemberIds = [...new Set(activeMembers.map((m) => m.id))];
+      const memberIds = uniqueMemberIds.length > 0
+        ? uniqueMemberIds
+        : (Array.isArray(b.memberIds) ? b.memberIds : []);
+      const currentPax = uniqueMemberIds.length > 0
+        ? uniqueMemberIds.length
+        : (b.currentPax || memberIds.length);
+
       const rawTrainerIds = Array.isArray(b.trainerIds) ? b.trainerIds : [];
       const trainerIdsFromTrainers = allTrainers
         .filter((t) => Array.isArray(t.batchIds) && t.batchIds.includes(b.id))
@@ -53,8 +61,8 @@ class BatchService {
 
       return {
         ...b,
-        currentPax: activeMembers.length,
-        memberIds: activeMembers.map((m) => m.id),
+        currentPax,
+        memberIds,
         trainerIds: unionTrainerIds,
       };
     });
@@ -71,9 +79,24 @@ class BatchService {
     const batchIdCandidates = [canonicalId, id, id.toUpperCase(), id.toLowerCase()];
 
     const activeMembers = await Member.find(
-      { isDeleted: false, $or: [{ batchId: { $in: batchIdCandidates } }, { "schedule.batchId": { $in: batchIdCandidates } }] },
+      {
+        isDeleted: false,
+        status: { $ne: "Archived" },
+        $or: [
+          { batchId: { $in: batchIdCandidates } },
+          { "schedule.batchId": { $in: batchIdCandidates } },
+        ],
+      },
       { id: 1 }
     ).lean();
+    const uniqueMemberIds = [...new Set(activeMembers.map((m) => m.id))];
+    const memberIds = uniqueMemberIds.length > 0
+      ? uniqueMemberIds
+      : (Array.isArray(batch.memberIds) ? batch.memberIds : []);
+    const currentPax = uniqueMemberIds.length > 0
+      ? uniqueMemberIds.length
+      : (batch.currentPax || memberIds.length);
+
     const allTrainers = await Trainer.find(
       { isDeleted: false },
       { id: 1, name: 1, batchIds: 1 }
@@ -93,8 +116,8 @@ class BatchService {
 
     return {
       ...batch,
-      currentPax: activeMembers.length,
-      memberIds: activeMembers.map((m) => m.id),
+      currentPax,
+      memberIds,
       trainerIds: unionTrainerIds,
     };
   }
@@ -212,11 +235,36 @@ class BatchService {
     if (batch.memberIds && batch.memberIds.includes(memberId)) {
       return batch; // already enrolled
     }
-    if (batch.currentPax >= batch.maxPax) {
+    const Member = require("../members/member.model");
+    const activeMemberCount = await Member.countDocuments({
+      batchId,
+      isDeleted: false,
+      status: { $ne: "Archived" },
+    });
+    const currentPax = Math.max(
+      activeMemberCount,
+      Array.isArray(batch.memberIds) ? batch.memberIds.length : 0,
+      batch.currentPax || 0
+    );
+    const maxPax = Number(batch.maxPax) || 25;
+    if (currentPax >= maxPax) {
       throw new ConflictError(
-        `Batch "${batch.name}" is already at full capacity (${batch.maxPax} members).`
+        "This batch has reached full capacity. This batch has reached its maximum capacity. Please select another batch."
       );
     }
+
+    await Member.findOneAndUpdate(
+      { id: memberId },
+      {
+        $set: {
+          batchId: batch.id,
+          batchName: batch.name,
+          batchTiming: batch.timingLabel,
+          assignedBatch: batch.name,
+          updatedAt: new Date(),
+        },
+      }
+    );
 
     await batchRepository.addMember(batchId, memberId);
     return batchRepository.syncPaxCount(batchId);

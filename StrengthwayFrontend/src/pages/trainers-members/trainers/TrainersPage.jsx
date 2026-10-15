@@ -21,7 +21,7 @@ export default function TrainersPage() {
     setError(null);
     getTrainers()
       .then((data) => setTrainers(Array.isArray(data) ? data : []))
-      .catch((e) => setError(e?.message || "Failed to load trainers."))
+      .catch((e) => setError(e?.message || "Failed to load coaches."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -34,7 +34,7 @@ export default function TrainersPage() {
         if (!cancelled) setTrainers(Array.isArray(data) ? data : []);
       })
       .catch((e) => {
-        if (!cancelled) setError(e?.message || "Failed to load trainers.");
+        if (!cancelled) setError(e?.message || "Failed to load coaches.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -55,9 +55,9 @@ export default function TrainersPage() {
         await syncTrainerBatches(created.id, formData.batchIds).catch(() => null);
       }
       setTrainers((prev) => [created, ...prev]);
-      toast.success(`Trainer ${created.name} added successfully!`);
+      toast.success(`Coach ${created.name} added successfully!`);
     } catch (e) {
-      toast.error(e?.message || "Failed to save trainer record.");
+      toast.error(e?.message || "Failed to save coach record.");
     }
   };
 
@@ -77,7 +77,7 @@ export default function TrainersPage() {
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
-            Trainers
+            Coaches
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Manage your certified fitness instructors, coaches, and staff roster.
@@ -91,7 +91,7 @@ export default function TrainersPage() {
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
           >
             <UserPlus size={16} />
-            <span>Add Trainer</span>
+            <span>Add Coach</span>
           </button>
         )}
       </div>
@@ -115,7 +115,7 @@ export default function TrainersPage() {
         <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Staff
+              Total Coaches
             </span>
             <div className="grid h-7 w-7 place-items-center rounded-lg bg-accent/10 text-accent">
               <Users size={14} />
@@ -136,7 +136,7 @@ export default function TrainersPage() {
         <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Active Now
+              Active Coaches
             </span>
             <div className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
               <UserCheck size={14} />
@@ -150,14 +150,14 @@ export default function TrainersPage() {
                 stats.active
               )}
             </span>
-            <p className="text-[11px] text-muted-foreground">Available for training</p>
+            <p className="text-[11px] text-muted-foreground">Available for coaching</p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Inactive
+              Inactive Coaches
             </span>
             <div className="grid h-7 w-7 place-items-center rounded-lg bg-muted text-muted-foreground">
               <Users size={14} />
@@ -183,8 +183,8 @@ export default function TrainersPage() {
         keyField="id"
         loading={loading}
         searchable
-        searchPlaceholder="Search trainers by name, gender, email, or phone…"
-        searchFields={["name", "gender", "phone", "email", "id"]}
+        searchPlaceholder="Search coaches by name, gender, blood group, email, or phone…"
+        searchFields={["name", "gender", "bloodGroup", "phone", "email", "id"]}
         filterKey="gender"
         filterOptions={[
           { label: "All", value: "All" },
@@ -192,14 +192,14 @@ export default function TrainersPage() {
           { label: "Female", value: "Female" },
         ]}
         pageSize={7}
-        itemLabel="trainers"
-        emptyTitle="No trainers found"
+        itemLabel="coaches"
+        emptyTitle="No coaches found"
         emptyMessage="Try adjusting your search query or filters."
         compact
         className="flex-1 min-h-0"
       />
 
-      {/* Trainer Add/Edit Modal */}
+      {/* Coach Add/Edit Modal */}
       <TrainerModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

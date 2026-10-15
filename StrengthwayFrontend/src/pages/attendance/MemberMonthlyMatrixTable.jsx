@@ -186,7 +186,7 @@ export function MemberMonthlyMatrixTable({
                                   dateStr
                                 );
                               } else {
-                                toast.info("Trainers have read-only attendance access. Attendance is marked via biometric scan or gym admin.");
+                                toast.info("Coaches have read-only attendance access. Attendance is marked via biometric scan or gym admin.");
                               }
                               return;
                             }

@@ -305,6 +305,21 @@ class AttendanceService {
     const members = await Member.find({ id: { $in: memberIds } }).lean();
     const memberMap = new Map(members.map((m) => [m.id, `${m.firstName} ${m.lastName}`.trim()]));
 
+    // If sessionId is provided, resolve session coach (including substitute coach if assigned)
+    let effectiveTrainerId = trainerId || "";
+    let effectiveMarkedBy = markedBy || "Coach";
+    if (sessionId) {
+      const sessionDoc = await Session.findOne({ id: sessionId }).lean();
+      if (sessionDoc?.isSubstituted && sessionDoc?.substituteCoachId) {
+        if (!effectiveTrainerId) {
+          effectiveTrainerId = sessionDoc.substituteCoachId;
+        }
+        if (!markedBy || markedBy === "Coach") {
+          effectiveMarkedBy = `${sessionDoc.substituteCoachName} (Substitute)`;
+        }
+      }
+    }
+
     for (const att of attendees) {
       const memberName = att.memberName || memberMap.get(att.memberId) || att.memberId;
       const id = generateAttendanceId();
@@ -339,8 +354,8 @@ class AttendanceService {
               assignmentId: asgId,
               checkInTime: att.checkInTime || "",
               checkOutTime: att.checkOutTime || "",
-              trainerId: trainerId || "",
-              markedBy,
+              trainerId: effectiveTrainerId,
+              markedBy: effectiveMarkedBy,
               notes: att.notes || "",
             },
           },
@@ -531,6 +546,23 @@ class AttendanceService {
       }
     }
 
+    let effectiveNotes = data.notes !== undefined ? (data.notes || "") : (existing?.notes || "");
+    let effectiveSubId = data.substituteTrainerId || existing?.substituteTrainerId || null;
+
+    // Detect if this log is for a substituted session
+    if (data.sessionId) {
+      const sessionDoc = await Session.findOne({ id: data.sessionId }).lean();
+      if (sessionDoc?.isSubstituted && sessionDoc?.substituteCoachId === data.trainerId) {
+        effectiveSubId = data.trainerId;
+        if (effectiveStatus === "CONDUCTED" || effectiveStatus === "PRESENT") {
+          effectiveStatus = "SUBSTITUTE";
+        }
+        if (!effectiveNotes) {
+          effectiveNotes = `Substitute coaching session for ${sessionDoc.originalCoachName || sessionDoc.coachName || "Primary Coach"} (${sessionDoc.substitutionReason || "Substitution"})`;
+        }
+      }
+    }
+
     return TrainerLog.findOneAndUpdate(
       { date: data.date, trainerId: data.trainerId, batchId: data.batchId },
       {
@@ -543,12 +575,12 @@ class AttendanceService {
           batchId: data.batchId,
           sessionId: data.sessionId || "",
           status: effectiveStatus,
-          substituteTrainerId: data.substituteTrainerId || null,
+          substituteTrainerId: effectiveSubId,
           checkInTime: effectiveCheckIn,
           checkOutTime: effectiveCheckOut,
           durationMinutes,
           attendeesCount: data.attendeesCount !== undefined ? Number(data.attendeesCount) : (existing?.attendeesCount || 0),
-          notes: data.notes || existing?.notes || "",
+          notes: effectiveNotes,
         },
       },
       { returnDocument: "after", upsert: true, runValidators: true, lean: true }

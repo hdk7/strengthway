@@ -3,6 +3,7 @@ import {
   Calendar,
   CreditCard,
   CheckCircle2,
+  Instagram,
 } from "lucide-react";
 import { InputField, SelectField } from "@/components/form";
 import { PAYMENT_METHODS, generateTransactionId } from "@/lib/membershipPlans";
@@ -63,44 +64,15 @@ export function RegistrationStep1({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <InputField
-            id="admin-member-first-name"
-            name="firstName"
-            label="First Name"
+            id="admin-member-full-name"
+            name="fullName"
+            label="Full Name"
             required
-            placeholder="Enter first name"
-            value={form.firstName}
+            placeholder="e.g. Alex Henderson"
+            value={form.fullName !== undefined ? form.fullName : (form.firstName ? `${form.firstName} ${form.lastName || ""}`.trim() : "")}
             onChange={handleChange}
             onBlur={handleBlur}
-            error={errors.firstName}
-          />
-
-          <InputField
-            id="admin-member-last-name"
-            name="lastName"
-            label="Last Name"
-            required
-            placeholder="Enter last name"
-            value={form.lastName}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.lastName}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <InputField
-            id="admin-member-dob"
-            name="dob"
-            type="date"
-            label="Date of Birth"
-            required
-            max={new Date().toISOString().split("T")[0]}
-            value={form.dob}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.dob}
-            startIcon={<Calendar className="h-4 w-4 text-muted-foreground" />}
-            inputClassName="[color-scheme:light] dark:[color-scheme:dark] cursor-pointer"
+            error={errors.fullName || errors.firstName}
           />
 
           <SelectField
@@ -119,9 +91,22 @@ export function RegistrationStep1({
               { value: "Other", label: "Other" },
             ]}
           />
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+          <InputField
+            id="admin-member-dob"
+            name="dob"
+            type="date"
+            label="Date of Birth"
+            required
+            max={new Date().toISOString().split("T")[0]}
+            value={form.dob}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.dob}
+            startIcon={<Calendar className="h-4 w-4 text-muted-foreground" />}
+            inputClassName="[color-scheme:light] dark:[color-scheme:dark] cursor-pointer"
+          />
+
           <InputField
             id="admin-member-mobile"
             name="mobile"
@@ -146,6 +131,18 @@ export function RegistrationStep1({
             onChange={handleChange}
             onBlur={handleBlur}
             error={errors.email}
+          />
+
+          <InputField
+            id="admin-member-instagram"
+            name="instagramProfileId"
+            label="Instagram Profile ID"
+            placeholder="e.g. @alex_strength or alex_strength"
+            value={form.instagramProfileId}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.instagramProfileId}
+            startIcon={<Instagram className="h-4 w-4 text-muted-foreground" />}
           />
         </div>
       </section>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { CheckCircle2, ShieldAlert, Loader2, Check } from "lucide-react";
+import { CheckCircle2, ShieldAlert, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   createFlexibleBatchAssignment,
@@ -12,16 +12,6 @@ import {
   CheckboxField,
 } from "@/components/form";
 
-const DAYS_OF_WEEK = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
 export default function BatchFlexiblePassTab({
   effectiveMember,
   currentBatch,
@@ -30,7 +20,6 @@ export default function BatchFlexiblePassTab({
   onSuccess,
 }) {
   const [flexTargetBatchId, setFlexTargetBatchId] = useState("");
-  const [flexSelectedDays, setFlexSelectedDays] = useState([]);
   const [flexStartDate, setFlexStartDate] = useState(
     () => new Date().toISOString().slice(0, 10)
   );
@@ -50,14 +39,17 @@ export default function BatchFlexiblePassTab({
     return allBatches.find((b) => b.id === flexTargetBatchId);
   }, [allBatches, flexTargetBatchId]);
 
-  // When flex target batch changes, filter out invalid days not in target batch
-  useEffect(() => {
-    if (selectedFlexBatch?.daysList && Array.isArray(selectedFlexBatch.daysList)) {
-      setFlexSelectedDays((prev) =>
-        prev.filter((d) => selectedFlexBatch.daysList.includes(d))
-      );
-    }
-  }, [selectedFlexBatch]);
+  // Check capacity warnings for Flexible Assignment
+  const isFlexBatchFull = useMemo(() => {
+    if (!selectedFlexBatch) return false;
+    const currentPax = selectedFlexBatch.memberIds
+      ? selectedFlexBatch.memberIds.length
+      : selectedFlexBatch.currentPax || 0;
+    const maxPax = selectedFlexBatch.maxPax || 25;
+    if (currentPax >= maxPax) return true;
+    if (flexCapacityInfo && flexCapacityInfo.isFull) return true;
+    return false;
+  }, [selectedFlexBatch, flexCapacityInfo]);
 
   // Real-time capacity check for Flexible Assignment
   useEffect(() => {
@@ -85,12 +77,6 @@ export default function BatchFlexiblePassTab({
     };
   }, [flexTargetBatchId, flexStartDate]);
 
-  const toggleDaySelection = (day) => {
-    setFlexSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
-  };
-
   const handleFlexibleAssignment = async (e) => {
     e.preventDefault();
     if (!effectiveMember || !effectiveMember.id) {
@@ -109,8 +95,8 @@ export default function BatchFlexiblePassTab({
       toast.error("Selected target batch is currently inactive.");
       return;
     }
-    if (!flexSelectedDays || flexSelectedDays.length === 0) {
-      toast.error("Please select at least one attendance day.");
+    if (isFlexBatchFull) {
+      toast.error("This batch has reached its maximum capacity. Please select another batch.");
       return;
     }
     if (!flexStartDate) {
@@ -132,7 +118,7 @@ export default function BatchFlexiblePassTab({
         memberId: effectiveMember.id,
         sourceBatchId: currentBatch?.id || effectiveMember.batchId || "",
         targetBatchId: flexTargetBatchId,
-        selectedDays: flexSelectedDays,
+        selectedDays: selectedFlexBatch?.daysList || [],
         startDate: flexStartDate,
         endDate: isOngoingPass ? null : flexEndDate || null,
         reason: flexReason.trim(),
@@ -142,7 +128,7 @@ export default function BatchFlexiblePassTab({
       toast.success(
         `Assigned flexible pass for ${effectiveMember.firstName || effectiveMember.name || "Member"} to ${
           selectedFlexBatch?.name || "batch"
-        } on [${flexSelectedDays.join(", ")}]!`
+        }!`
       );
       if (onSuccess) onSuccess();
       onClose();
@@ -179,61 +165,28 @@ export default function BatchFlexiblePassTab({
           ...allBatches
             .filter((b) => b.id !== (currentBatch?.id || effectiveMember?.batchId))
             .map((b) => {
+              const pax = b.memberIds ? b.memberIds.length : b.currentPax || 0;
+              const max = b.maxPax || 25;
+              const isFull = pax >= max;
               const isInactive = b.status === "Inactive";
               return {
                 value: b.id,
-                disabled: isInactive,
-                label: `${b.name} (${b.timingLabel}) • ${b.daysPattern} ${isInactive ? "[INACTIVE]" : ""}`,
+                disabled: isFull || isInactive,
+                label: `${b.name} (${b.timingLabel}) — ${pax}/${max} Pax ${isFull ? "[FULL]" : isInactive ? "[INACTIVE]" : `[${max - pax} spots left]`}`,
               };
             }),
         ]}
       />
 
-      {/* Target Batch Inactive Warning */}
+      {/* Target Batch Warning */}
+      {selectedFlexBatch && isFlexBatchFull && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex items-center gap-1.5 font-semibold">
+          <ShieldAlert size={14} /> This batch has reached its maximum capacity. Please select another batch.
+        </div>
+      )}
       {selectedFlexBatch?.status === "Inactive" && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex items-center gap-1.5 font-semibold">
           <ShieldAlert size={14} /> Warning: Target batch is inactive. Flex assignment cannot be created.
-        </div>
-      )}
-
-      {/* Selected Days Checkboxes */}
-      {selectedFlexBatch && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-foreground">
-              Applicable Attendance Days <span className="text-destructive">*</span>
-            </label>
-            <span className="text-[11px] text-muted-foreground">
-              Batch runs on: {selectedFlexBatch.daysList?.join(", ") || selectedFlexBatch.daysPattern}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-            {DAYS_OF_WEEK.map((day) => {
-              const isOperatingDay =
-                selectedFlexBatch.daysList &&
-                selectedFlexBatch.daysList.includes(day);
-              const isChecked = flexSelectedDays.includes(day);
-
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  disabled={!isOperatingDay}
-                  onClick={() => isOperatingDay && toggleDaySelection(day)}
-                  className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold border transition-all cursor-pointer ${
-                    !isOperatingDay
-                      ? "opacity-30 border-dashed border-border bg-muted/30 text-muted-foreground cursor-not-allowed"
-                      : isChecked
-                        ? "border-primary bg-primary/10 text-primary font-bold shadow-xs"
-                        : "border-border bg-card text-foreground hover:bg-muted"
-                  }`}
-                >
-                  <span>{day}</span>
-                  {isChecked && <Check size={14} className="text-primary shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
         </div>
       )}
 
@@ -298,7 +251,7 @@ export default function BatchFlexiblePassTab({
           </div>
           {flexCapacityInfo.isFull && (
             <div className="flex items-center gap-1.5 text-destructive font-semibold pt-1">
-              <ShieldAlert size={14} /> Warning: Target batch is full on this date.
+              <ShieldAlert size={14} /> This batch has reached its maximum capacity. Please select another batch.
             </div>
           )}
         </div>
@@ -330,7 +283,7 @@ export default function BatchFlexiblePassTab({
           disabled={
             isSubmitting ||
             !flexTargetBatchId ||
-            flexSelectedDays.length === 0 ||
+            isFlexBatchFull ||
             selectedFlexBatch?.status === "Inactive"
           }
           className="inline-flex items-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 px-5 sm:px-6 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"

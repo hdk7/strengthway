@@ -11,6 +11,7 @@ import BatchMembersTab from "./detail/BatchMembersTab";
 import BatchClassesTab from "./detail/BatchClassesTab";
 import BatchAuditLogsTab from "./detail/BatchAuditLogsTab";
 import BatchDetailModals from "./detail/BatchDetailModals";
+import SubstituteCoachModal from "./detail/SubstituteCoachModal";
 import { BatchClassAssignmentModal } from "../schedule/components/BatchClassAssignmentModal";
 import { useBatchDetailData } from "./detail/useBatchDetailData";
 import { useBatchDetailActions } from "./detail/useBatchDetailActions";
@@ -52,6 +53,7 @@ export default function BatchDetailPage() {
   const [trainerSearchQuery, setTrainerSearchQuery] = useState("");
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [memberModalSearch, setMemberModalSearch] = useState("");
+  const [substituteModalSession, setSubstituteModalSession] = useState(null);
 
   const {
     batch,
@@ -97,14 +99,14 @@ export default function BatchDetailPage() {
         );
         return [...filtered, updatedNote];
       });
-      toast.success("Trainer session notes saved successfully.");
+      toast.success("Coach session notes saved successfully.");
       setSelectedSessionForNotes(null);
       await loadBatchData();
     } catch (err) {
       toast.error(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to save trainer notes."
+          "Failed to save coach notes."
       );
     }
   };
@@ -336,6 +338,7 @@ export default function BatchDetailPage() {
           onRestoreSession={handleRestoreSession}
           onCreateMasterSchedule={handleCreateMasterScheduleForBatch}
           onOpenAddClasses={() => setIsAssignClassesOpen(true)}
+          onOpenSubstituteModal={(sess) => setSubstituteModalSession(sess)}
           onRefresh={loadBatchData}
         />
       )}
@@ -395,6 +398,23 @@ export default function BatchDetailPage() {
           }
         }}
       />
+
+      {/* Substitute Trainer Assignment & Management Modal */}
+      {!isMember() && (
+        <SubstituteCoachModal
+          isOpen={Boolean(substituteModalSession)}
+          onClose={() => setSubstituteModalSession(null)}
+          batch={batch}
+          session={substituteModalSession}
+          onSuccess={async () => {
+            const targetId = batch?.id || id || "BATCH-01";
+            await Promise.all([
+              loadBatchData(),
+              loadMonthTracking(targetId, selectedMonth),
+            ]);
+          }}
+        />
+      )}
 
       {/* Multi-Class Reusable Assignment Modal */}
       {!isMember() && (

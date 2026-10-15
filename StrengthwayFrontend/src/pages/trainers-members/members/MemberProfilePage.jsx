@@ -93,6 +93,8 @@ export default function MemberProfilePage() {
     try {
       const refreshedMember = await getMemberById(id);
       if (refreshedMember) setMember(refreshedMember);
+      const refreshedBatches = await getBatches();
+      if (Array.isArray(refreshedBatches)) setAllBatches(refreshedBatches);
     } catch {
       // ignore
     }

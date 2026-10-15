@@ -71,8 +71,8 @@ async function upsert(req, res, next) {
       req.user
     );
     const msg = isNew
-      ? "Trainer session note submitted successfully."
-      : "Trainer session note updated successfully.";
+      ? "Coach session note submitted successfully."
+      : "Coach session note updated successfully.";
     return success(res, note, msg, isNew ? 201 : 200);
   } catch (err) {
     next(err);

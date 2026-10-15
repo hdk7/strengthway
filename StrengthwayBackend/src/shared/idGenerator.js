@@ -207,6 +207,28 @@ function generateAssignmentTransactionId(type = "FLX") {
   return `TXN-${prefix}-${ts}-${rand}`;
 }
 
+// ─── Batch Substitute Audit ID ────────────────────────────────────────────────
+/**
+ * Produces format: BSUB-172767-1234
+ * @returns {string}
+ */
+function generateBatchSubstituteAuditId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.BATCH_SUBSTITUTE_AUDIT || "BSUB"}-${ts}-${rand}`;
+}
+
+// ─── Notification ID ──────────────────────────────────────────────────────────
+/**
+ * Produces format: NOTIF-172767-1234
+ * @returns {string}
+ */
+function generateNotificationId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `NOTIF-${ts}-${rand}`;
+}
+
 module.exports = {
   generateMemberId,
   generateTrainerId,
@@ -225,4 +247,6 @@ module.exports = {
   generatePortfolioId,
   generateBatchAuditId,
   generateAssignmentTransactionId,
+  generateBatchSubstituteAuditId,
+  generateNotificationId,
 };

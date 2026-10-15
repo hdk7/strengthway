@@ -430,7 +430,7 @@ export default function UsersAccessPage() {
           <div className="mt-2 text-2xl sm:text-3xl font-black text-foreground font-display">
             {stats.trainers}
           </div>
-          <div className="mt-1 text-xs text-emerald-600/80 dark:text-emerald-400/80">Faculty Trainers</div>
+          <div className="mt-1 text-xs text-emerald-600/80 dark:text-emerald-400/80">Faculty Coaches</div>
         </div>
 
         {/* Members */}
@@ -602,7 +602,7 @@ export default function UsersAccessPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                This removes system login credentials. If this account is linked to a Trainer or Member profile, the underlying gym profile record remains intact.
+                This removes system login credentials. If this account is linked to a Coach or Member profile, the underlying gym profile record remains intact.
               </p>
             </div>
           </FormModalBody>
@@ -699,7 +699,7 @@ function ProvisionUserModal({
     }
 
     if (role === "trainer" && !selectedTrainerId) {
-      errs.trainerId = "Please link a Trainer profile.";
+      errs.trainerId = "Please link a Coach profile.";
     }
     if (role === "member" && !selectedMemberId) {
       errs.memberId = "Please link a Member profile.";
@@ -786,7 +786,7 @@ function ProvisionUserModal({
                 >
                   <Dumbbell size={20} />
                   <span className="text-xs font-bold">Faculty Coach</span>
-                  <span className="text-[10px] opacity-75">Trainer Profile</span>
+                  <span className="text-[10px] opacity-75">Coach Profile</span>
                 </button>
 
                 {/* Admin */}
@@ -813,13 +813,13 @@ function ProvisionUserModal({
             {/* Step 2: Profile Link (if Trainer or Member) */}
             {role === "trainer" && (
               <SelectField
-                label="Link Existing Trainer Profile"
+                label="Link Existing Coach Profile"
                 required
                 value={selectedTrainerId}
                 onChange={(e) => handleTrainerSelect(e.target.value)}
                 error={errors.trainerId}
                 options={[
-                  { value: "", label: "-- Choose Trainer to Provision --" },
+                  { value: "", label: "-- Choose Coach to Provision --" },
                   ...trainers.map((t) => ({
                     value: t.id,
                     label: `${t.name} (${t.id}) ${linkedTrainerIds.has(t.id) ? "— [Already has Login Account]" : ""}`,
@@ -894,7 +894,7 @@ function ProvisionUserModal({
             />
 
             <div className="rounded-xl bg-muted/40 border border-border p-3 text-[11px] text-muted-foreground leading-relaxed">
-              💡 <strong>Direct Record Linking:</strong> Account provisioning binds to existing Trainer or Member records without duplicating gym profiles or history.
+              💡 <strong>Direct Record Linking:</strong> Account provisioning binds to existing Coach or Member records without duplicating gym profiles or history.
             </div>
           </div>
         </FormModalBody>

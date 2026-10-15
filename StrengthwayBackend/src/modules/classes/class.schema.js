@@ -31,6 +31,7 @@ const createClassSchema = yup
       .of(
         yup.object({
           id: yup.string().nullable(),
+          category: yup.string().trim().nullable(),
           subject: yup.string().trim().default(""),
           message: yup.string().trim().default(""),
         })
@@ -38,7 +39,7 @@ const createClassSchema = yup
       .nullable()
       .default([]),
   })
-  .noUnknown("Only Class Program Name, Beginner Workouts, Intermediate Workouts, and Workouts are allowed.");
+  .noUnknown("Only Class Program Name, Beginner Workouts, and Intermediate Workouts are allowed.");
 
 const updateClassSchema = yup
   .object({
@@ -58,6 +59,7 @@ const updateClassSchema = yup
       .of(
         yup.object({
           id: yup.string().nullable(),
+          category: yup.string().trim().nullable(),
           subject: yup.string().trim().default(""),
           message: yup.string().trim().default(""),
         })

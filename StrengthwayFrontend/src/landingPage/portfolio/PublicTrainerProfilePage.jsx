@@ -85,9 +85,9 @@ export default function PublicTrainerProfilePage() {
           <div className="h-16 w-16 rounded-full bg-white/5 border border-white/10 grid place-items-center mx-auto text-muted-foreground">
             <User size={32} />
           </div>
-          <h1 className="text-3xl font-display font-bold text-white">Trainer Not Found</h1>
+          <h1 className="text-3xl font-display font-bold text-white">Coach Not Found</h1>
           <p className="text-sm text-muted-foreground">
-            We couldn't find a trainer profile matching <strong className="text-white">{id}</strong>
+            We couldn't find a coach profile matching <strong className="text-white">{id}</strong>
             .
           </p>
           <button
@@ -96,7 +96,7 @@ export default function PublicTrainerProfilePage() {
             className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-black hover:bg-white/90 transition-all cursor-pointer shadow-lg"
           >
             <ArrowLeft size={16} />
-            <span>Return to All Trainers</span>
+            <span>Return to All Coaches</span>
           </button>
         </main>
         <Footer />
@@ -118,7 +118,7 @@ export default function PublicTrainerProfilePage() {
               className="inline-flex items-center gap-2 text-xs font-semibold text-foreground bg-card hover:bg-muted border border-border rounded-full px-4 py-2 transition-all cursor-pointer shadow-2xs"
             >
               <ArrowLeft size={14} />
-              <span>Back to All Trainers</span>
+              <span>Back to All Coaches</span>
             </button>
           </div>
 
@@ -139,7 +139,7 @@ export default function PublicTrainerProfilePage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h3 className="font-display text-2xl font-bold text-foreground">
-                    Explore Other Trainers
+                    Explore Other Coaches
                   </h3>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     Discover our certified specialists across bodybuilding, calisthenics, and
@@ -151,7 +151,7 @@ export default function PublicTrainerProfilePage() {
                   onClick={handleRedirectToTrainers}
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground self-start cursor-pointer transition-colors"
                 >
-                  <span>View All Trainers</span>
+                  <span>View All Coaches</span>
                   <ArrowRight size={13} />
                 </button>
               </div>

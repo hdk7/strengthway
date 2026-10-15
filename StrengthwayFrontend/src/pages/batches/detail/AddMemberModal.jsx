@@ -1,5 +1,5 @@
 import { createPortal } from "react-dom";
-import { X, Users, Search, Plus, Check } from "lucide-react";
+import { X, Users, Search, Plus, Check, ShieldAlert } from "lucide-react";
 
 export default function AddMemberModal({
   isOpen,
@@ -16,6 +16,8 @@ export default function AddMemberModal({
   if (!isOpen || typeof document === "undefined" || !batch) {
     return null;
   }
+
+  const isBatchFull = currentPax >= capacity || remainingSlots <= 0;
 
   const filteredMembers = (Array.isArray(allMembers) ? allMembers : [])
     .filter((m) => !m.isDeleted)
@@ -51,7 +53,7 @@ export default function AddMemberModal({
                 Add Member to {batch.name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-muted-foreground">
-                Batch Capacity: {currentPax} / {capacity} Pax ({remainingSlots} slots remaining)
+                Batch Capacity: {currentPax} / {capacity} Pax ({Math.max(0, capacity - currentPax)} slots remaining)
               </p>
             </div>
           </div>
@@ -65,6 +67,13 @@ export default function AddMemberModal({
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* Capacity Full Warning Banner */}
+          {isBatchFull && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex items-center gap-1.5 font-semibold">
+              <ShieldAlert size={14} /> This batch has reached its maximum capacity. Please select another batch.
+            </div>
+          )}
+
           {/* Search */}
           <div className="relative">
             <Search
@@ -112,6 +121,13 @@ export default function AddMemberModal({
                       <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40">
                         <Check size={12} />
                         Enrolled
+                      </span>
+                    ) : isBatchFull ? (
+                      <span
+                        title="This batch has reached its maximum capacity. Please select another batch."
+                        className="inline-flex items-center gap-1 rounded-lg bg-slate-200 dark:bg-muted text-slate-400 dark:text-muted-foreground px-3 py-1.5 text-xs font-semibold cursor-not-allowed"
+                      >
+                        Batch Full
                       </span>
                     ) : (
                       <button

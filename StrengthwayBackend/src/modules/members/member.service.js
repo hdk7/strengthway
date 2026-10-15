@@ -117,14 +117,22 @@ class MemberService {
       await resolveMemberBatchAndSchedule(body, null, batchService);
 
     // 7. Member payload
+    const rawFullName = (body.fullName || "").trim();
+    const nameParts = rawFullName ? rawFullName.split(/\s+/) : [];
+    const firstName = (body.firstName || nameParts[0] || "").trim();
+    const lastName = (body.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(" ") : nameParts[0] || "")).trim();
+    const fullName = rawFullName || `${firstName} ${lastName}`.trim();
+
     const newMemberData = {
       id,
-      firstName: body.firstName.trim(),
-      lastName: body.lastName.trim(),
+      fullName,
+      firstName,
+      lastName,
       email: body.email.toLowerCase().trim(),
       mobile: body.mobile.trim(),
       gender: body.gender,
       dob: body.dob,
+      instagramProfileId: (body.instagramProfileId || body.instagram || "").trim(),
       height: stats.heightStr,
       weight: stats.weightStr,
       bloodGroup: body.bloodGroup || "",
@@ -265,6 +273,22 @@ class MemberService {
     updates.emergencyName = emergencyName;
     updates.emergencyPhone = emergencyPhone;
     updates.emergencyRelation = emergencyRelation;
+
+    if (body.instagramProfileId !== undefined || body.instagram !== undefined) {
+      updates.instagramProfileId = (body.instagramProfileId || body.instagram || "").trim();
+    }
+
+    if (body.fullName !== undefined) {
+      const rawFullName = (body.fullName || "").trim();
+      const nameParts = rawFullName ? rawFullName.split(/\s+/) : [];
+      updates.fullName = rawFullName;
+      if (!body.firstName && nameParts[0]) {
+        updates.firstName = nameParts[0];
+      }
+      if (!body.lastName && nameParts.length > 1) {
+        updates.lastName = nameParts.slice(1).join(" ");
+      }
+    }
 
     // Handle batch changes if batchId is being changed
     if (body.batchId !== undefined && body.batchId !== existing.batchId) {

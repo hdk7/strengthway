@@ -107,6 +107,7 @@ const ID_PREFIXES = Object.freeze({
   SESSION_NOTE:     "SNOTE",
   PORTFOLIO:        "PTF",
   BATCH_AUDIT:      "BAUD",
+  BATCH_SUBSTITUTE_AUDIT: "BSUB",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -235,8 +236,14 @@ const TRAINER_LOG_STATUS = Object.freeze({
 const TRAINER_LEAVE_STATUS = Object.freeze({
   PENDING:   "PENDING",
   APPROVED:  "APPROVED",
+  DENIED:    "DENIED",
   REJECTED:  "REJECTED",
   CANCELLED: "CANCELLED",
+});
+
+const TRAINER_LEAVE_TYPE = Object.freeze({
+  REGULAR:   "REGULAR",
+  EMERGENCY: "EMERGENCY",
 });
 
 // ─── Portfolio Sections & Statuses ───────────────────────────────────────────
@@ -252,6 +259,29 @@ const PORTFOLIO_SECTION = Object.freeze({
 const PORTFOLIO_STATUS = Object.freeze({
   ACTIVE:   "Active",
   INACTIVE: "Inactive",
+});
+
+// ─── Substitution Reasons & Statuses ──────────────────────────────────────────
+const SUBSTITUTION_REASON = Object.freeze({
+  LEAVE:     "Leave",
+  ABSENT:    "Absent",
+  EMERGENCY: "Emergency",
+  OTHER:     "Other",
+});
+
+const SUBSTITUTION_STATUS = Object.freeze({
+  NONE:      "NONE",
+  SCHEDULED: "SCHEDULED",
+  ACTIVE:    "ACTIVE",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED",
+});
+
+const SUBSTITUTION_ACTION = Object.freeze({
+  ASSIGNED:                     "ASSIGNED",
+  MODIFIED:                     "MODIFIED",
+  CANCELLED:                    "CANCELLED",
+  PROCEEDED_WITHOUT_SUBSTITUTE: "PROCEEDED_WITHOUT_SUBSTITUTE",
 });
 
 module.exports = {
@@ -272,8 +302,12 @@ module.exports = {
   ATTENDANCE_STATUS,
   TRAINER_LOG_STATUS,
   TRAINER_LEAVE_STATUS,
+  TRAINER_LEAVE_TYPE,
   PORTFOLIO_SECTION,
   PORTFOLIO_STATUS,
+  SUBSTITUTION_REASON,
+  SUBSTITUTION_STATUS,
+  SUBSTITUTION_ACTION,
   GENDER,
   CONTACT_METHODS,
   BLOOD_GROUPS,

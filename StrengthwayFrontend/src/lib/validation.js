@@ -207,12 +207,14 @@ export const publicMemberRegistrationSchema = yup.object().shape({
 
 // 2. Admin Submodule Member Registration Schema (All fields required)
 export const adminMemberRegistrationSchema = yup.object().shape({
-  firstName: nameValidator("First name", true),
-  lastName: nameValidator("Last name", true),
+  fullName: nameValidator("Full name", true),
+  firstName: yup.string().trim().nullable(),
+  lastName: yup.string().trim().nullable(),
   dob: dobValidator(18, 100, true),
   gender: selectValidator("Gender", true),
   mobile: phoneValidator("Mobile number", true, 10),
   email: emailValidator(true),
+  instagramProfileId: yup.string().trim().max(100, "Instagram Profile ID cannot exceed 100 characters.").nullable(),
   address: textValidator("Address", 5, 300, true),
   city: textValidator("City", 2, 100, true),
   state: textValidator("State", 2, 100, true),
@@ -224,7 +226,7 @@ export const adminMemberRegistrationSchema = yup.object().shape({
   height: numberRangeValidator("Height", 60, 260, "cm", true),
   weight: numberRangeValidator("Weight", 25, 300, "kg", true),
   bloodGroup: selectValidator("Blood group", true),
-  bio: textValidator("Bio", 10, 500, true),
+  bio: yup.string().trim().max(500, "Bio cannot exceed 500 characters.").nullable(),
   photo: yup.string().trim().nullable(),
   photoName: yup.string().trim().nullable(),
 });
@@ -267,13 +269,21 @@ export const forgotPasswordSchema = yup.object().shape({
     .test("valid-email", "Enter a valid email address", (val) => !val || EMAIL_PATTERN.test(val)),
 });
 
-// 6. Trainer Management Schema
+// 6. Coach / Trainer Management Schema
 export const trainerSchema = yup.object().shape({
-  name: nameValidator("Trainer name", true),
+  name: nameValidator("Coach name", true),
+  dob: yup.string().trim().nullable(),
   gender: yup.string().trim().nullable(),
+  bloodGroup: yup.string().trim().nullable(),
   experience: textValidator("Experience", 1, 50, true),
   phone: phoneValidator("Phone number", true, 10),
   email: emailValidator(true),
+  instagramProfileId: yup.string().trim().max(100, "Instagram Profile ID cannot exceed 100 characters.").nullable(),
+  address: yup.string().trim().nullable(),
+  city: yup.string().trim().nullable(),
+  state: yup.string().trim().nullable(),
+  country: yup.string().trim().nullable(),
+  pincode: yup.string().trim().nullable(),
   status: yup.string().trim().nullable(),
   quote: yup.string().trim().max(300, "Quote cannot exceed 300 characters.").nullable(),
   programs: yup.mixed().nullable(),

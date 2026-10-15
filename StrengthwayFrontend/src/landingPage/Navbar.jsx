@@ -11,7 +11,7 @@ const links = [
   { href: "#about", label: "About" },
   { href: "#programs", label: "Programs" },
   { href: "#plans", label: "Plans" },
-  { href: "#trainers", label: "Trainers" },
+  { href: "#trainers", label: "Coaches" },
   { href: "#portfolio", label: "Portfolio" },
   { href: "#bmi", label: "BMI" },
   { href: "#inquiries", label: "Inquiries" },

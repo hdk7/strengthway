@@ -16,20 +16,26 @@ import {
   UserCheck,
   Calendar,
   Sparkles,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getBatchAuditLogs,
   processExpiredFlexAssignments,
+  getBatchSubstitutionAuditLogs,
 } from "@/lib/batchesService";
 import { isAdmin } from "@/auth/currentUser";
 
 export default function BatchAuditLogsTab({ batch }) {
+  // Navigation Sub-tab: "MEMBERS" | "SUBSTITUTES"
+  const [activeSubTab, setActiveSubTab] = useState("MEMBERS");
+
+  // --- Member Transfers & Flex State ---
   const [logs, setLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Filters
+  // Filters (Member)
   const [search, setSearch] = useState("");
   const [assignmentType, setAssignmentType] = useState("ALL");
   const [role, setRole] = useState("ALL");
@@ -37,9 +43,19 @@ export default function BatchAuditLogsTab({ batch }) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Pagination
+  // Pagination (Member)
   const PAGE_SIZE = 8;
   const [currentPage, setCurrentPage] = useState(1);
+
+  // --- Trainer Substitutions State ---
+  const [subLogs, setSubLogs] = useState([]);
+  const [isSubLoading, setIsSubLoading] = useState(false);
+  const [subSearch, setSubSearch] = useState("");
+  const [subStatus, setSubStatus] = useState("ALL");
+  const [subReason, setSubReason] = useState("ALL");
+  const [subStartDate, setSubStartDate] = useState("");
+  const [subEndDate, setSubEndDate] = useState("");
+  const [subPage, setSubPage] = useState(1);
 
   const fetchLogs = useCallback(async () => {
     if (!batch?.id) return;
@@ -63,9 +79,37 @@ export default function BatchAuditLogsTab({ batch }) {
     }
   }, [batch?.id, search, assignmentType, role, status, startDate, endDate]);
 
+  const fetchSubLogs = useCallback(async () => {
+    if (!batch?.id) return;
+    setIsSubLoading(true);
+    try {
+      const res = await getBatchSubstitutionAuditLogs(batch.id, {
+        status: subStatus !== "ALL" ? subStatus : undefined,
+        reason: subReason !== "ALL" ? subReason : undefined,
+        startDate: subStartDate || undefined,
+        endDate: subEndDate || undefined,
+      });
+      const data = Array.isArray(res?.audits)
+        ? res.audits
+        : Array.isArray(res)
+        ? res
+        : [];
+      setSubLogs(data);
+    } catch (err) {
+      console.error("Failed to fetch substitute audit logs:", err);
+      toast.error("Failed to load trainer substitution audit history.");
+    } finally {
+      setIsSubLoading(false);
+    }
+  }, [batch?.id, subStatus, subReason, subStartDate, subEndDate]);
+
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
+
+  useEffect(() => {
+    fetchSubLogs();
+  }, [fetchSubLogs]);
 
   const handleRunRejoinCheck = async () => {
     setIsSyncing(true);
@@ -125,6 +169,246 @@ export default function BatchAuditLogsTab({ batch }) {
       setCurrentPage(1);
     }
   }, [totalPages, currentPage]);
+
+  // Trainer Substitutions Derived & Filtered
+  const filteredSubLogs = useMemo(() => {
+    if (!subSearch.trim()) return subLogs;
+    const q = subSearch.toLowerCase();
+    return subLogs.filter(
+      (item) =>
+        item.id?.toLowerCase().includes(q) ||
+        item.sessionTopic?.toLowerCase().includes(q) ||
+        item.sessionId?.toLowerCase().includes(q) ||
+        item.originalCoachName?.toLowerCase().includes(q) ||
+        item.substituteCoachName?.toLowerCase().includes(q) ||
+        item.reason?.toLowerCase().includes(q) ||
+        item.notes?.toLowerCase().includes(q) ||
+        item.performedBy?.toLowerCase().includes(q)
+    );
+  }, [subLogs, subSearch]);
+
+  const subStats = useMemo(() => {
+    let scheduled = 0;
+    let active = 0;
+    let completed = 0;
+    let cancelled = 0;
+    let noSub = 0;
+
+    for (const item of subLogs) {
+      const st = (item.status || "").toUpperCase();
+      if (st === "SCHEDULED") scheduled++;
+      else if (st === "ACTIVE") active++;
+      else if (st === "COMPLETED") completed++;
+      else if (st === "CANCELLED") cancelled++;
+      else if (st === "PROCEEDED_WITHOUT_SUB") noSub++;
+    }
+
+    return {
+      total: subLogs.length,
+      scheduled,
+      active,
+      completed,
+      cancelled,
+      noSub,
+    };
+  }, [subLogs]);
+
+  const SUB_PAGE_SIZE = 8;
+  const subTotalPages = Math.ceil(filteredSubLogs.length / SUB_PAGE_SIZE) || 1;
+  const safeSubPage = Math.max(1, Math.min(subPage, subTotalPages));
+
+  useEffect(() => {
+    if (subPage > subTotalPages) {
+      setSubPage(1);
+    }
+  }, [subTotalPages, subPage]);
+
+  const subColumns = useMemo(
+    () => [
+      {
+        header: "Audit ID & Action",
+        cell: (item) => {
+          const act = item.action || "ASSIGNED";
+          let badgeStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+          let Icon = UserCheck;
+          if (act === "CANCELLED") {
+            badgeStyle = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+            Icon = XCircle;
+          } else if (act === "PROCEEDED_WITHOUT_SUBSTITUTE") {
+            badgeStyle = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            Icon = Clock;
+          } else if (act === "UPDATED") {
+            badgeStyle = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+            Icon = RotateCw;
+          } else if (act === "COMPLETED") {
+            badgeStyle = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+            Icon = CheckCircle2;
+          }
+          return (
+            <div className="space-y-1">
+              <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-muted/80 text-foreground border border-border/80 inline-block">
+                {item.id || "BSUB"}
+              </span>
+              <div>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold border ${badgeStyle}`}
+                >
+                  <Icon size={11} /> {act.replace(/_/g, " ")}
+                </span>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Scheduled Session",
+        cell: (item) => (
+          <div className="space-y-0.5">
+            <div className="font-bold text-foreground text-xs flex items-center gap-1">
+              <Calendar size={11} className="text-primary" />
+              <span>{item.sessionDate || "N/A"}</span>
+            </div>
+            <div className="font-mono text-[11px] text-muted-foreground flex items-center gap-1">
+              <Clock size={10} />
+              <span>
+                {item.sessionStartTime || "—"} - {item.sessionEndTime || "—"}
+              </span>
+            </div>
+            <div className="text-[10px] text-muted-foreground truncate max-w-[180px]">
+              {item.sessionTopic || item.sessionId || "Class Session"}
+            </div>
+          </div>
+        ),
+      },
+      {
+        header: "Original Coach",
+        cell: (item) => (
+          <div>
+            <div className="font-bold text-foreground text-xs sm:text-sm">
+              {item.originalCoachName || item.originalCoachId || "Primary Coach"}
+            </div>
+            <span className="inline-block rounded-md bg-muted/80 px-1.5 py-0.2 text-[9px] font-semibold text-muted-foreground border border-border/60">
+              Primary Coach
+            </span>
+          </div>
+        ),
+      },
+      {
+        header: "Substitute Coach",
+        cell: (item) => {
+          if (!item.substituteCoachId || item.action === "PROCEEDED_WITHOUT_SUBSTITUTE") {
+            return (
+              <div>
+                <span className="inline-flex items-center gap-1 text-xs text-amber-400 font-semibold">
+                  <Clock size={11} /> Proceeded Without Sub
+                </span>
+                <div className="text-[10px] text-muted-foreground">Original/available coach handled</div>
+              </div>
+            );
+          }
+          return (
+            <div>
+              <div className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5">
+                <span>{item.substituteCoachName || item.substituteCoachId}</span>
+                <span className="inline-flex items-center rounded-full bg-primary/10 border border-primary/20 px-1.5 py-0.2 text-[9px] font-extrabold text-primary">
+                  Substitute
+                </span>
+              </div>
+              <div className="font-mono text-[10px] text-muted-foreground">
+                ID: {item.substituteCoachId}
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        header: "Reason & Notes",
+        cell: (item) => {
+          const reason = item.reason || "OTHER";
+          return (
+            <div className="max-w-[220px] space-y-1">
+              <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-[10px] font-bold text-foreground border border-border">
+                {reason}
+              </span>
+              {item.notes && (
+                <p className="text-xs text-muted-foreground line-clamp-2" title={item.notes}>
+                  {item.notes}
+                </p>
+              )}
+              {item.cancellationReason && (
+                <p className="text-[10px] text-rose-400 font-medium">
+                  Cancelled: {item.cancellationReason}
+                </p>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: "Status",
+        cell: (item) => {
+          const st = (item.status || "SCHEDULED").toUpperCase();
+          if (st === "COMPLETED") {
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20">
+                <CheckCircle2 size={12} /> Completed
+              </span>
+            );
+          }
+          if (st === "ACTIVE") {
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-400 border border-blue-500/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
+                Active
+              </span>
+            );
+          }
+          if (st === "SCHEDULED") {
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-bold text-amber-400 border border-amber-500/20">
+                <Clock size={12} /> Scheduled
+              </span>
+            );
+          }
+          if (st === "CANCELLED") {
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-bold text-destructive border border-destructive/20">
+                <XCircle size={12} /> Cancelled
+              </span>
+            );
+          }
+          return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2.5 py-0.5 text-xs font-semibold text-foreground border border-border">
+              {st}
+            </span>
+          );
+        },
+      },
+      {
+        header: "Authorized By & Time",
+        cell: (item) => {
+          const d = item.performedAt ? new Date(item.performedAt) : null;
+          return (
+            <div className="space-y-0.5">
+              <div className="text-xs font-bold text-foreground">
+                {item.performedBy || "Admin"}
+              </div>
+              {d && (
+                <div className="font-mono text-[10px] text-muted-foreground">
+                  {d.toISOString().slice(0, 10)}{" "}
+                  {d.toLocaleTimeString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    []
+  );
 
   const columns = useMemo(
     () => [
@@ -341,180 +625,398 @@ export default function BatchAuditLogsTab({ batch }) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
-      {/* 1. Header Metrics Card Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold">Total Logs</span>
-            <History size={15} className="text-primary" />
-          </div>
-          <div className="text-2xl font-black text-foreground">{stats.total}</div>
-          <div className="text-[10px] text-muted-foreground">Across source & target</div>
+      {/* 0. Top Sub-tab Navigation */}
+      <div className="flex items-center justify-between border-b border-border/80 pb-3 flex-wrap gap-3">
+        <div className="flex items-center gap-2 p-1 bg-muted/60 rounded-2xl border border-border">
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("MEMBERS")}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeSubTab === "MEMBERS"
+                ? "bg-card text-foreground shadow-xs border border-border"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <ArrowRightLeft
+              size={13}
+              className={activeSubTab === "MEMBERS" ? "text-purple-400" : ""}
+            />
+            <span>Member Transfers & Flex</span>
+            <span className="rounded-full bg-muted px-2 py-0.2 text-[10px] font-mono">
+              {stats.total}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveSubTab("SUBSTITUTES")}
+            className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeSubTab === "SUBSTITUTES"
+                ? "bg-card text-foreground shadow-xs border border-border"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <UserCheck
+              size={13}
+              className={activeSubTab === "SUBSTITUTES" ? "text-primary" : ""}
+            />
+            <span>Coach Substitutions</span>
+            <span className="rounded-full bg-muted px-2 py-0.2 text-[10px] font-mono">
+              {subStats.total}
+            </span>
+          </button>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold">Outbound Flex</span>
-            <ArrowUpRight size={15} className="text-amber-400" />
-          </div>
-          <div className="text-2xl font-black text-amber-400">{stats.outboundFlex}</div>
-          <div className="text-[10px] text-muted-foreground">Flexed to other batches</div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold">Inbound Flex</span>
-            <ArrowDownLeft size={15} className="text-blue-400" />
-          </div>
-          <div className="text-2xl font-black text-blue-400">{stats.inboundFlex}</div>
-          <div className="text-[10px] text-muted-foreground">Flexing into this batch</div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold">Transfers</span>
-            <ArrowRightLeft size={15} className="text-purple-400" />
-          </div>
-          <div className="text-2xl font-black text-purple-400">{stats.transfers}</div>
-          <div className="text-[10px] text-muted-foreground">Permanent moves</div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold">Auto-Rejoined</span>
-            <UserCheck size={15} className="text-emerald-400" />
-          </div>
-          <div className="text-2xl font-black text-emerald-400">{stats.rejoined}</div>
-          <div className="text-[10px] text-muted-foreground">Completed flex cycles</div>
+        <div className="text-[11px] text-muted-foreground">
+          {activeSubTab === "MEMBERS"
+            ? "Permanent & temporary athlete roster mobility trail"
+            : "Complete session coach substitution & coverage audit log"}
         </div>
       </div>
 
-      {/* 2. Filter Toolbar */}
-      <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-2xs">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-[220px]">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search by member, reason, transaction ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
-            />
+      {activeSubTab === "MEMBERS" ? (
+        <>
+          {/* 1. Header Metrics Card Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Total Logs</span>
+                <History size={15} className="text-primary" />
+              </div>
+              <div className="text-2xl font-black text-foreground">{stats.total}</div>
+              <div className="text-[10px] text-muted-foreground">Across source & target</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Outbound Flex</span>
+                <ArrowUpRight size={15} className="text-amber-400" />
+              </div>
+              <div className="text-2xl font-black text-amber-400">{stats.outboundFlex}</div>
+              <div className="text-[10px] text-muted-foreground">Flexed to other batches</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Inbound Flex</span>
+                <ArrowDownLeft size={15} className="text-blue-400" />
+              </div>
+              <div className="text-2xl font-black text-blue-400">{stats.inboundFlex}</div>
+              <div className="text-[10px] text-muted-foreground">Flexing into this batch</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Transfers</span>
+                <ArrowRightLeft size={15} className="text-purple-400" />
+              </div>
+              <div className="text-2xl font-black text-purple-400">{stats.transfers}</div>
+              <div className="text-[10px] text-muted-foreground">Permanent moves</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Auto-Rejoined</span>
+                <UserCheck size={15} className="text-emerald-400" />
+              </div>
+              <div className="text-2xl font-black text-emerald-400">{stats.rejoined}</div>
+              <div className="text-[10px] text-muted-foreground">Completed flex cycles</div>
+            </div>
           </div>
 
-          {/* Quick Filters */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <select
-              value={assignmentType}
-              onChange={(e) => setAssignmentType(e.target.value)}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
-            >
-              <option value="ALL">All Assignment Types</option>
-              <option value="TEMPORARY_FLEX">Temporary Flex</option>
-              <option value="PERMANENT_TRANSFER">Permanent Transfer</option>
-            </select>
+          {/* 2. Filter Toolbar */}
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-2xs">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-[220px]">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  type="text"
+                  placeholder="Search by member, reason, transaction ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+                />
+              </div>
 
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
-            >
-              <option value="ALL">All Roles (Source & Target)</option>
-              <option value="SOURCE">Source (Outbound)</option>
-              <option value="TARGET">Target (Inbound)</option>
-            </select>
+              {/* Quick Filters */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={assignmentType}
+                  onChange={(e) => setAssignmentType(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Assignment Types</option>
+                  <option value="TEMPORARY_FLEX">Temporary Flex</option>
+                  <option value="PERMANENT_TRANSFER">Permanent Transfer</option>
+                </select>
 
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
-            >
-              <option value="ALL">All Statuses</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="Active">Active</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Roles (Source & Target)</option>
+                  <option value="SOURCE">Source (Outbound)</option>
+                  <option value="TARGET">Target (Inbound)</option>
+                </select>
 
-            {isAdmin() && (
-              <button
-                type="button"
-                onClick={handleRunRejoinCheck}
-                disabled={isSyncing}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 text-xs font-bold transition-all cursor-pointer shadow-2xs disabled:opacity-50"
-                title="Runs the automatic rejoining check for any expired flex assignments"
-              >
-                <RotateCw size={13} className={isSyncing ? "animate-spin" : ""} />
-                <span>Run Rejoin Sync</span>
-              </button>
-            )}
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="Scheduled">Scheduled</option>
+                  <option value="Active">Active</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+
+                {isAdmin() && (
+                  <button
+                    type="button"
+                    onClick={handleRunRejoinCheck}
+                    disabled={isSyncing}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary px-3 py-2 text-xs font-bold transition-all cursor-pointer shadow-2xs disabled:opacity-50"
+                    title="Runs the automatic rejoining check for any expired flex assignments"
+                  >
+                    <RotateCw size={13} className={isSyncing ? "animate-spin" : ""} />
+                    <span>Run Rejoin Sync</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Date Window Filters */}
+            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/50 flex-wrap">
+              <span className="font-semibold flex items-center gap-1 text-foreground">
+                <Calendar size={13} className="text-muted-foreground" /> Date Range:
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px]">From:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px]">To:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none"
+                />
+              </div>
+              {(search ||
+                assignmentType !== "ALL" ||
+                role !== "ALL" ||
+                status !== "ALL" ||
+                startDate ||
+                endDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setAssignmentType("ALL");
+                    setRole("ALL");
+                    setStatus("ALL");
+                    setStartDate("");
+                    setEndDate("");
+                  }}
+                  className="text-xs font-semibold text-primary hover:underline ml-auto cursor-pointer"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Date Window Filters */}
-        <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/50 flex-wrap">
-          <span className="font-semibold flex items-center gap-1 text-foreground">
-            <Calendar size={13} className="text-muted-foreground" /> Date Range:
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px]">From:</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px]">To:</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none"
-            />
-          </div>
-          {(search || assignmentType !== "ALL" || role !== "ALL" || status !== "ALL" || startDate || endDate) && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearch("");
-                setAssignmentType("ALL");
-                setRole("ALL");
-                setStatus("ALL");
-                setStartDate("");
-                setEndDate("");
-              }}
-              className="text-xs font-semibold text-primary hover:underline ml-auto cursor-pointer"
-            >
-              Clear Filters
-            </button>
-          )}
-        </div>
-      </div>
+          {/* 3. Audit Logs Standardized Data Table */}
+          <DataTable
+            columns={columns}
+            data={logs}
+            keyField="id"
+            pageSize={PAGE_SIZE}
+            currentPage={safePage}
+            onPageChange={setCurrentPage}
+            totalItems={logs.length}
+            totalPages={totalPages}
+            itemLabel="audit records"
+            showToolbar={false}
+            emptyIcon={History}
+            emptyTitle="No batch audit logs found"
+            emptyMessage="When members are temporarily flexed or permanently transferred in or out of this batch, linked immutable audit logs will be permanently preserved here."
+            className="flex-1 min-h-0"
+          />
+        </>
+      ) : (
+        <>
+          {/* 1. Substitutions Header Metrics Card Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Total Sub Audits</span>
+                <History size={15} className="text-primary" />
+              </div>
+              <div className="text-2xl font-black text-foreground">{subStats.total}</div>
+              <div className="text-[10px] text-muted-foreground">Logged actions & assignments</div>
+            </div>
 
-      {/* 3. Audit Logs Standardized Data Table */}
-      <DataTable
-        columns={columns}
-        data={logs}
-        keyField="id"
-        pageSize={PAGE_SIZE}
-        currentPage={safePage}
-        onPageChange={setCurrentPage}
-        totalItems={logs.length}
-        totalPages={totalPages}
-        itemLabel="audit records"
-        showToolbar={false}
-        emptyIcon={History}
-        emptyTitle="No batch audit logs found"
-        emptyMessage="When members are temporarily flexed or permanently transferred in or out of this batch, linked immutable audit logs will be permanently preserved here."
-        className="flex-1 min-h-0"
-      />
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Scheduled</span>
+                <Clock size={15} className="text-amber-400" />
+              </div>
+              <div className="text-2xl font-black text-amber-400">{subStats.scheduled}</div>
+              <div className="text-[10px] text-muted-foreground">Upcoming sub sessions</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Active Now</span>
+                <UserCheck size={15} className="text-blue-400" />
+              </div>
+              <div className="text-2xl font-black text-blue-400">{subStats.active}</div>
+              <div className="text-[10px] text-muted-foreground">In-progress sessions</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Completed</span>
+                <CheckCircle2 size={15} className="text-emerald-400" />
+              </div>
+              <div className="text-2xl font-black text-emerald-400">{subStats.completed}</div>
+              <div className="text-[10px] text-muted-foreground">Successfully conducted</div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4 space-y-1 shadow-2xs">
+              <div className="flex items-center justify-between text-muted-foreground">
+                <span className="text-xs font-semibold">Cancelled / No Sub</span>
+                <XCircle size={15} className="text-rose-400" />
+              </div>
+              <div className="text-2xl font-black text-rose-400">
+                {subStats.cancelled + subStats.noSub}
+              </div>
+              <div className="text-[10px] text-muted-foreground">Revoked or handled without sub</div>
+            </div>
+          </div>
+
+          {/* 2. Substitutions Filter Toolbar */}
+          <div className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-2xs">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              <div className="relative flex-1 min-w-[220px]">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  type="text"
+                  placeholder="Search by coach name, topic, reason, audit ID..."
+                  value={subSearch}
+                  onChange={(e) => setSubSearch(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={subStatus}
+                  onChange={(e) => setSubStatus(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Statuses</option>
+                  <option value="SCHEDULED">Scheduled</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="PROCEEDED_WITHOUT_SUB">Proceeded Without Sub</option>
+                </select>
+
+                <select
+                  value={subReason}
+                  onChange={(e) => setSubReason(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground focus:outline-none cursor-pointer"
+                >
+                  <option value="ALL">All Reasons</option>
+                  <option value="LEAVE">Leave</option>
+                  <option value="ABSENT">Absent</option>
+                  <option value="EMERGENCY">Emergency</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Date Range Filters */}
+            <div className="flex items-center gap-3 text-xs text-muted-foreground pt-1 border-t border-border/50 flex-wrap">
+              <span className="font-semibold flex items-center gap-1 text-foreground">
+                <Calendar size={13} className="text-muted-foreground" /> Date Range:
+              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px]">From:</span>
+                <input
+                  type="date"
+                  value={subStartDate}
+                  onChange={(e) => setSubStartDate(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px]">To:</span>
+                <input
+                  type="date"
+                  value={subEndDate}
+                  onChange={(e) => setSubEndDate(e.target.value)}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground focus:outline-none"
+                />
+              </div>
+              {(subSearch ||
+                subStatus !== "ALL" ||
+                subReason !== "ALL" ||
+                subStartDate ||
+                subEndDate) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSubSearch("");
+                    setSubStatus("ALL");
+                    setSubReason("ALL");
+                    setSubStartDate("");
+                    setSubEndDate("");
+                  }}
+                  className="text-xs font-semibold text-primary hover:underline ml-auto cursor-pointer"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Substitute Audits Data Table */}
+          <DataTable
+            columns={subColumns}
+            data={filteredSubLogs}
+            keyField="id"
+            pageSize={SUB_PAGE_SIZE}
+            currentPage={safeSubPage}
+            onPageChange={setSubPage}
+            totalItems={filteredSubLogs.length}
+            totalPages={subTotalPages}
+            itemLabel="substitute audit records"
+            showToolbar={false}
+            emptyIcon={UserCheck}
+            emptyTitle="No trainer substitution audit records found"
+            emptyMessage="When a coach substitution is optionally assigned, modified, or cancelled for this batch, an immutable audit entry with complete reason, timing, and admin attribution is logged here."
+            className="flex-1 min-h-0"
+          />
+        </>
+      )}
     </div>
   );
 }

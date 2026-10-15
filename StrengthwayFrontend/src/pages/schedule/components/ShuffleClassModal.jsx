@@ -78,7 +78,7 @@ export function ShuffleClassModal({
       setSessions(initialSessions);
     }
 
-    setSwapReason("Trainer curriculum adjustment");
+    setSwapReason("Coach curriculum adjustment");
     setShuffleReason("Upcoming training cycle rotation");
 
     return () => {

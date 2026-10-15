@@ -24,7 +24,7 @@ export function AboutSection() {
             A gym built like a <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">product</span>.
           </h2>
           <p className="mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground">
-            We combine world-class Trainering with software that treats every member like an athlete
+            We combine world-class coaching with software that treats every member like an athlete
             worth investing in. Real programming, real progress, real accountability.
           </p>
           <ul className="mt-6 sm:mt-8 space-y-2.5 sm:space-y-3 text-sm">
@@ -32,7 +32,7 @@ export function AboutSection() {
               "Personalized programming for every member",
               "Real-time attendance and slot booking",
               "Data-driven progress and health metrics",
-              "Certified Traineres with proven track records",
+              "Certified coaches with proven track records",
             ].map((f) => (
               <li key={f} className="flex items-start gap-3">
                 <span className="mt-0.5 grid h-5 w-5 place-items-center rounded-full bg-primary/20 text-primary shrink-0">

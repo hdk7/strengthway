@@ -127,12 +127,23 @@ export function TrainerProfileView({
 
               <div className="space-y-1 pt-3 sm:pt-0">
                 <span className="text-xs text-muted-foreground font-medium block">
-                  Trainer ID
+                  Coach ID
                 </span>
                 <span className="text-sm font-mono font-bold text-emerald-600 dark:text-emerald-400 block">
                   {trainer.id}
                 </span>
               </div>
+
+              {trainer.dob && (
+                <div className="space-y-1 pt-3 sm:pt-0">
+                  <span className="text-xs text-muted-foreground font-medium block">
+                    Date of Birth
+                  </span>
+                  <span className="text-sm font-semibold text-foreground block">
+                    {trainer.dob}
+                  </span>
+                </div>
+              )}
 
               <div className="space-y-1 pt-3 sm:pt-0">
                 <span className="text-xs text-muted-foreground font-medium block">
@@ -156,6 +167,41 @@ export function TrainerProfileView({
                   {trainer.shift || "Morning (06:00 - 14:00)"}
                 </span>
               </div>
+
+              {trainer.bloodGroup && (
+                <div className="space-y-1 pt-3 sm:pt-0">
+                  <span className="text-xs text-muted-foreground font-medium block">
+                    Blood Group
+                  </span>
+                  <span className="text-sm font-semibold text-rose-500 block">
+                    {trainer.bloodGroup}
+                  </span>
+                </div>
+              )}
+
+              {trainer.instagramProfileId && (
+                <div className="space-y-1 pt-3 sm:pt-0">
+                  <span className="text-xs text-muted-foreground font-medium block">
+                    Instagram
+                  </span>
+                  <span className="text-sm font-semibold text-foreground block">
+                    {trainer.instagramProfileId}
+                  </span>
+                </div>
+              )}
+
+              {(trainer.address || trainer.city) && (
+                <div className="space-y-1 pt-3 sm:pt-0">
+                  <span className="text-xs text-muted-foreground font-medium block">
+                    Residence
+                  </span>
+                  <span className="text-sm text-foreground block">
+                    {[trainer.address, trainer.city, trainer.state, trainer.pincode, trainer.country]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                </div>
+              )}
 
               <div className="space-y-1 pt-3 sm:pt-0">
                 <span className="text-xs text-muted-foreground font-medium block">

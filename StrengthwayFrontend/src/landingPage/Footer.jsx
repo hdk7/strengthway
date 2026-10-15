@@ -17,7 +17,7 @@ export function Footer() {
           </p>
         </div>
         {[
-          { title: "Product", items: ["Memberships", "Trainers", "Programs", "Nutrition"] },
+          { title: "Product", items: ["Memberships", "Coaches", "Programs", "Nutrition"] },
           { title: "Company", items: ["About", "Careers", "Press", "Inquiries"] },
           { title: "Legal", items: ["Privacy", "Terms", "Cookies", "Security"] },
         ].map((col) => (

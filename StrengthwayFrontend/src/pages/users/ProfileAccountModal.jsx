@@ -118,7 +118,7 @@ export default function ProfileAccountModal({
 
       const result = await createUserAccount(payload);
       toast.success(
-        `Login account created for ${name}! Linked to ${isTrainer ? "Trainer" : "Member"} #${profileId}.`
+        `Login account created for ${name}! Linked to ${isTrainer ? "Coach" : "Member"} #${profileId}.`
       );
       if (onSuccess) onSuccess(result?.user || null);
       onClose();
@@ -227,7 +227,7 @@ export default function ProfileAccountModal({
               <div className="flex items-center gap-2 pt-2 border-t border-border/60 text-[11px] text-muted-foreground">
                 <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
                 <span>
-                  Linked to {isTrainer ? "Trainer" : "Member"} ID:{" "}
+                  Linked to {isTrainer ? "Coach" : "Member"} ID:{" "}
                   <strong className="text-foreground">{profileId}</strong> (No duplicate records)
                 </span>
               </div>
@@ -274,7 +274,7 @@ export default function ProfileAccountModal({
           <form id="create-account-form" onSubmit={handleCreate} className="space-y-4 py-2">
             <div className="rounded-xl border border-border bg-muted/30 p-3.5 space-y-1">
               <div className="text-xs font-bold text-foreground">
-                Linking to: {isTrainer ? "Trainer" : "Member"} #{profileId}
+                Linking to: {isTrainer ? "Coach" : "Member"} #{profileId}
               </div>
               <p className="text-[11px] text-muted-foreground">
                 This enables direct login to Strengthway for this user with role-specific access.

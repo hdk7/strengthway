@@ -117,6 +117,7 @@ const classRoutes        = require("./modules/classes/class.routes");
 const sessionNoteRoutes  = require("./modules/schedules/sessionNote.routes");
 const permissionRoutes   = require("./modules/permissions/permission.routes");
 const portfolioRoutes    = require("./modules/portfolio/portfolio.routes");
+const notificationRoutes = require("./modules/notifications/notification.routes");
 
 app.use("/api/v1/auth",           authRoutes);
 app.use("/api/v1/members",        memberRoutes);
@@ -135,6 +136,7 @@ app.use("/api/v1/reports",        reportsRoutes);
 app.use("/api/v1/uploads",        uploadRoutes);
 app.use("/api/v1/permissions",    permissionRoutes);
 app.use("/api/v1/portfolio",      portfolioRoutes);
+app.use("/api/v1/notifications",  notificationRoutes);
 
 
 

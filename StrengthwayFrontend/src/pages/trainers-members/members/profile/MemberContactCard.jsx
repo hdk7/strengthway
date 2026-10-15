@@ -5,6 +5,7 @@ import {
   MapPin,
   Shield,
   ExternalLink,
+  Instagram,
 } from "lucide-react";
 
 export function MemberContactCard({
@@ -96,6 +97,37 @@ export function MemberContactCard({
               )}
             </div>
           </div>
+
+          {/* Instagram Profile */}
+          {(member.instagramProfileId || member.instagram) && (
+            <div className="group rounded-2xl border border-border/60 bg-muted/20 p-3.5 transition-all hover:border-accent/40 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-card border border-border text-accent">
+                  <Instagram size={14} />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block">
+                    Instagram Profile
+                  </span>
+                  <span className="text-xs font-bold text-foreground font-mono truncate block">
+                    {member.instagramProfileId || member.instagram}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                <a
+                  href={`https://instagram.com/${(member.instagramProfileId || member.instagram).replace(/^@/, "").trim()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg bg-accent/10 border border-accent/25 px-2.5 py-1 text-[11px] font-semibold text-accent hover:bg-accent/20 transition-colors"
+                >
+                  <span>View</span>
+                  <ExternalLink size={10} />
+                </a>
+              </div>
+            </div>
+          )}
 
           {/* Date of Birth & Age */}
           <div className="rounded-2xl border border-border/60 bg-muted/20 p-3.5 flex items-center justify-between gap-3">

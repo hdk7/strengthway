@@ -4,12 +4,14 @@ import {
 } from "@/lib/validation";
 
 export const INITIAL_FORM = {
+  fullName: "",
   firstName: "",
   lastName: "",
   dob: "",
   gender: "",
   mobile: "",
   email: "",
+  instagramProfileId: "",
   photo: "",
   photoName: "",
   address: "",
@@ -23,15 +25,19 @@ export const INITIAL_FORM = {
   height: "",
   weight: "",
   bloodGroup: "",
-  medicalDoc: null,
-  medicalDocName: "",
-  medicalDocSize: "",
   bio: "",
   batchId: "",
 };
 
 export function validateRegistrationStep1(form, paymentForm, isEditingActiveMember = false) {
-  const step1Keys = ["firstName", "lastName", "dob", "gender", "mobile", "email"];
+  const step1Keys = [
+    "fullName",
+    "dob",
+    "gender",
+    "mobile",
+    "email",
+    "instagramProfileId",
+  ];
   const errs = {};
   step1Keys.forEach((key) => {
     const msg = validateFieldWithYup(adminMemberRegistrationSchema, key, form);
@@ -51,7 +57,7 @@ export function validateRegistrationStep1(form, paymentForm, isEditingActiveMemb
   return errs;
 }
 
-export function validateRegistrationStep2(form, isConfirmingLead) {
+export function validateRegistrationStep2(form) {
   const step2Keys = [
     "address",
     "city",
@@ -71,11 +77,6 @@ export function validateRegistrationStep2(form, isConfirmingLead) {
     const msg = validateFieldWithYup(adminMemberRegistrationSchema, key, form);
     if (msg) errs[key] = msg;
   });
-
-  if (isConfirmingLead && !form.medicalDoc && !form.medicalDocName) {
-    errs.medicalDoc =
-      "Medical fitness document is required before confirming member registration.";
-  }
 
   return errs;
 }
@@ -125,8 +126,17 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
       }
     : null;
 
+  const rawFullName = (form.fullName || "").trim();
+  const nameParts = rawFullName ? rawFullName.split(/\s+/) : [];
+  const derivedFirst = form.firstName || nameParts[0] || "";
+  const derivedLast = form.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(" ") : nameParts[0] || "");
+  const fullName = rawFullName || `${derivedFirst} ${derivedLast}`.trim();
+
   const createPayload = {
     ...form,
+    fullName,
+    firstName: derivedFirst,
+    lastName: derivedLast,
     batchId: form.batchId || "",
     batchName: scheduleDetails?.batchName || "",
     batchTiming: scheduleDetails?.batchTiming || "",
@@ -143,15 +153,6 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
     paymentNotes: paymentForm.paymentNotes,
     membershipPlan,
     paymentDetails,
-    medicalDoc: form.medicalDoc
-      ? {
-          submitted: true,
-          clearanceDate: new Date().toISOString().split("T")[0],
-          notes: form.medicalDocName || form.medicalDoc || "Medical Fitness Certificate",
-        }
-      : undefined,
-    medicalDocName: form.medicalDocName || "",
-    medicalDocSize: form.medicalDocSize || "",
   };
 
   return { plan, dates, membershipPlan, paymentDetails, scheduleDetails, createPayload };

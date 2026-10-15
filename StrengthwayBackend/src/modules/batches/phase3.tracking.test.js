@@ -82,6 +82,7 @@ describe("Phase 3: Month-Wise Category Tracking & Attendance/Reports Suite", () 
       expect(tracking.category2_Members.flexInMembers.length).toBe(1);
       const flexMember = tracking.category2_Members.flexInMembers[0];
       expect(flexMember.memberId).toBe(member2Id);
+      expect(flexMember.assignmentId).toBeDefined();
       expect(flexMember.isFlexIn).toBe(true);
       expect(flexMember.primaryBatchId).toBe(batchBId);
       expect(flexMember.selectedDays).toEqual(["Wednesday"]);

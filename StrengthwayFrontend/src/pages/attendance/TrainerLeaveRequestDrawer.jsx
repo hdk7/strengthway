@@ -2,18 +2,16 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   CalendarOff,
-  Calendar,
-  AlertCircle,
-  CheckCircle2,
-  FileText,
   User,
   History,
   Send,
   Trash2,
   Layers,
+  Zap,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { validateTrainerLeaveNotice } from "@/lib/masterScheduleService";
 import {
   createTrainerLeave,
   getTrainerLeaves,
@@ -31,6 +29,7 @@ import {
   FormModalBody,
   FormModalFooter,
 } from "@/components/ui/FormModal";
+import { PolicyRuleSimulator } from "./PolicyRuleSimulator";
 
 export function TrainerLeaveRequestDrawer({
   isOpen,
@@ -43,13 +42,21 @@ export function TrainerLeaveRequestDrawer({
   const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const [selectedTrainerId, setSelectedTrainerId] = useState(trainer?.id || "");
-  const [leaveStartDate, setLeaveStartDate] = useState("");
-  const [leaveEndDate, setLeaveEndDate] = useState("");
+  const [leaveType, setLeaveType] = useState("REGULAR"); // "REGULAR" | "EMERGENCY"
+  const [leaveStartDate, setLeaveStartDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 8);
+    return d.toISOString().slice(0, 10);
+  });
+  const [leaveEndDate, setLeaveEndDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 9);
+    return d.toISOString().slice(0, 10);
+  });
   const [reason, setReason] = useState("");
   const [allowOverride, setAllowOverride] = useState(false);
   const [overrideReason, setOverrideReason] = useState("");
 
-  const [isValidating, setIsValidating] = useState(false);
   const [validationResult, setValidationResult] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -97,65 +104,28 @@ export function TrainerLeaveRequestDrawer({
 
   useEffect(() => {
     if (isOpen) {
-      setLeaveStartDate("");
-      setLeaveEndDate("");
+      setLeaveType("REGULAR");
+      const d = new Date();
+      d.setDate(d.getDate() + 8);
+      const s = d.toISOString().slice(0, 10);
+      d.setDate(d.getDate() + 1);
+      const e = d.toISOString().slice(0, 10);
+      setLeaveStartDate(s);
+      setLeaveEndDate(e);
       setReason("");
       setAllowOverride(false);
       setOverrideReason("");
-      setValidationResult(null);
       if (selectedTrainerId) {
         loadLeaveHistory();
       }
     }
   }, [isOpen, selectedTrainerId, loadLeaveHistory]);
 
-  // Real-time Policy Validation debounced/effect
-  useEffect(() => {
-    if (!leaveStartDate) {
-      setValidationResult(null);
-      return;
-    }
-
-    const end = leaveEndDate || leaveStartDate;
-    if (end < leaveStartDate) {
-      setValidationResult({
-        isValid: false,
-        message: "Leave End Date cannot be earlier than Start Date.",
-        actualNoticeDays: 0,
-        requiredNoticeDays: 0,
-        totalDays: 0,
-      });
-      return;
-    }
-
-    let isCancelled = false;
-    async function checkPolicy() {
-      try {
-        setIsValidating(true);
-        const result = await validateTrainerLeaveNotice(leaveStartDate, end);
-        if (!isCancelled) {
-          setValidationResult(result);
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setValidationResult({
-            isValid: true,
-            message: "Standard notice validation passed.",
-            actualNoticeDays: 0,
-            requiredNoticeDays: 0,
-            totalDays: 1,
-          });
-        }
-      } finally {
-        if (!isCancelled) setIsValidating(false);
-      }
-    }
-
-    checkPolicy();
-    return () => {
-      isCancelled = true;
-    };
-  }, [leaveStartDate, leaveEndDate]);
+  const handleSimulatorDateChange = ({ startDate, endDate, leaveType: nextType }) => {
+    if (startDate) setLeaveStartDate(startDate);
+    if (endDate) setLeaveEndDate(endDate);
+    if (nextType) setLeaveType(nextType);
+  };
 
   // Handle Submit
   const handleSubmit = async (e) => {
@@ -172,16 +142,25 @@ export function TrainerLeaveRequestDrawer({
 
     const end = leaveEndDate || leaveStartDate;
 
+    if (leaveType === "EMERGENCY" && (!reason || !reason.trim())) {
+      toast.error("A reason is mandatory for emergency leave applications.");
+      return;
+    }
+
     // Check policy enforcement
     if (validationResult && !validationResult.isValid) {
-      if (!allowOverride) {
+      if (leaveType === "REGULAR" && !allowOverride) {
         toast.error(
           validationResult.message || "Leave request violates minimum notice policy."
         );
         return;
       }
-      if (!overrideReason.trim()) {
-        toast.error("Please explain the emergency circumstance for policy override.");
+      if (leaveType === "REGULAR" && allowOverride && !overrideReason.trim()) {
+        toast.error("Please explain the circumstance for policy override.");
+        return;
+      }
+      if (leaveType === "EMERGENCY") {
+        toast.error(validationResult.message || "Emergency leave rules violated.");
         return;
       }
     }
@@ -194,15 +173,16 @@ export function TrainerLeaveRequestDrawer({
           activeTrainer?.name ||
           `${activeTrainer?.firstName || ""} ${activeTrainer?.lastName || ""}`.trim() ||
           selectedTrainerId,
+        leaveType,
         leaveStartDate,
         leaveEndDate: end,
-        reason: reason.trim() || "Trainer personal absence",
-        isOverride: Boolean(allowOverride),
+        reason: reason.trim() || (leaveType === "EMERGENCY" ? "Emergency Leave" : "Regular Planned Absence"),
+        allowPolicyOverride: Boolean(allowOverride),
         overrideReason: allowOverride ? overrideReason.trim() : null,
       });
 
       toast.success(
-        `Leave request submitted for ${
+        `${leaveType === "EMERGENCY" ? "Emergency leave" : "Leave"} request submitted for ${
           activeTrainer?.name || activeTrainer?.firstName || "Faculty"
         } (${leaveStartDate} to ${end})!`
       );
@@ -232,14 +212,16 @@ export function TrainerLeaveRequestDrawer({
   if (!isOpen) return null;
 
   const isFormBlocked =
-    validationResult && !validationResult.isValid && !allowOverride;
+    (validationResult && !validationResult.isValid && leaveType === "REGULAR" && !allowOverride) ||
+    (validationResult && !validationResult.isValid && leaveType === "EMERGENCY") ||
+    (leaveType === "EMERGENCY" && !reason.trim());
 
   return (
     <FormModal isOpen={isOpen} onClose={onClose} size="lg">
       <FormModalHeader
         icon={CalendarOff}
         title="Faculty Leave Request"
-        subtitle="Enforces notice-period policy rules and schedule coverage."
+        subtitle="Submit regular advance-notice leave or urgent emergency leave."
         onClose={onClose}
       />
 
@@ -293,118 +275,61 @@ export function TrainerLeaveRequestDrawer({
             )}
           </div>
 
-          {/* Leave Date Range Picker */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <InputField
-              label="Leave Start Date"
-              type="date"
-              value={leaveStartDate}
-              onChange={(e) => {
-                setLeaveStartDate(e.target.value);
-                if (leaveEndDate < e.target.value) {
-                  setLeaveEndDate(e.target.value);
-                }
-              }}
-            />
+          {/* Integrated Live Policy Rule Simulator */}
+          <PolicyRuleSimulator
+            title="Leave Type & Policy Simulator"
+            defaultLeaveType={leaveType}
+            defaultStartDate={leaveStartDate}
+            defaultEndDate={leaveEndDate}
+            allowTypeToggle={true}
+            onDateChange={handleSimulatorDateChange}
+            onValidationChange={setValidationResult}
+          />
 
-            <InputField
-              label="Leave End Date"
-              type="date"
-              value={leaveEndDate}
-              min={leaveStartDate}
-              onChange={(e) => setLeaveEndDate(e.target.value)}
-            />
-          </div>
-
-          {/* Live Policy Validation Card */}
-          {validationResult && (
-            <div
-              className={`rounded-xl border p-3.5 space-y-2.5 transition-all ${
-                validationResult.isValid
-                  ? "border-emerald-500/35 bg-emerald-500/5 text-emerald-500"
-                  : "border-rose-500/35 bg-rose-500/5 text-rose-500"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-bold">
-                  {validationResult.isValid ? (
-                    <CheckCircle2 size={16} className="text-emerald-500" />
-                  ) : (
-                    <AlertCircle size={16} className="text-rose-500" />
-                  )}
-                  <span>
-                    {validationResult.isValid
-                      ? "Policy Compliant: Advance Notice Met"
-                      : "Policy Violation: Insufficient Notice"}
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-background border border-border/80 text-foreground">
-                  {validationResult.totalDays} Day{validationResult.totalDays > 1 ? "s" : ""}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[11px] pt-1.5 border-t border-border/50 text-foreground">
-                <div>
-                  <span className="text-muted-foreground text-[10px] block">Notice Provided:</span>
-                  <span className="font-extrabold">{validationResult.actualNoticeDays} Days</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground text-[10px] block">Notice Required:</span>
-                  <span className="font-extrabold">{validationResult.requiredNoticeDays} Days</span>
-                </div>
-              </div>
-
-              {validationResult.tier && (
-                <div className="text-[11px] text-muted-foreground">
-                  <span className="font-semibold text-foreground">Applied Rule:</span>{" "}
-                  {validationResult.tier.label}
-                </div>
-              )}
-
-              {!validationResult.isValid && validationResult.earliestEligibleStartDate && (
-                <div className="rounded-lg bg-rose-500/10 p-2 text-[11px] font-semibold text-rose-600 dark:text-rose-300">
-                  Earliest permitted start date:{" "}
-                  <span className="underline font-bold">
-                    {validationResult.earliestEligibleStartDate}
-                  </span>
-                </div>
-              )}
-
-              <p className="text-[10px] opacity-90 leading-relaxed">
-                {validationResult.message}
-              </p>
-            </div>
-          )}
-
-          {/* Emergency Policy Override Option */}
-          {validationResult && !validationResult.isValid && (
+          {/* Emergency Notice Override Option (for Regular leave when short notice) */}
+          {leaveType === "REGULAR" && validationResult && !validationResult.isValid && (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
               <CheckboxField
                 checked={allowOverride}
                 onChange={(e) => setAllowOverride(e.target.checked)}
-                label="Authorize Emergency Policy Override"
-                description="Bypass advance-notice requirement for emergency/medical cases. Logs an audit record."
+                label="Request Administrative Policy Override"
+                description="Bypass normal advance-notice requirement for unexpected circumstances. Logs an audit record."
               />
 
               {allowOverride && (
                 <InputField
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="Provide emergency reason for admin override..."
+                  placeholder="Provide reason for policy notice override..."
                 />
               )}
             </div>
           )}
 
-          {/* Reason Textarea */}
-          <TextareaField
-            label="Reason / Notes for Absence"
-            rows={2}
-            resize="vertical"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Reason for leave, coverage handover, or special remarks..."
-          />
+          {/* Reason Textarea (Mandatory for Emergency Leave) */}
+          <div>
+            <label className="text-[11px] font-semibold text-foreground flex items-center justify-between mb-1">
+              <span>
+                Reason for Leave{" "}
+                {leaveType === "EMERGENCY" ? (
+                  <span className="text-rose-500 font-bold">* (Mandatory for Emergency Leave)</span>
+                ) : (
+                  <span className="text-muted-foreground font-normal">(Recommended)</span>
+                )}
+              </span>
+            </label>
+            <TextareaField
+              rows={2}
+              resize="vertical"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={
+                leaveType === "EMERGENCY"
+                  ? "Detail the urgent circumstance or emergency requiring immediate leave..."
+                  : "Reason for planned leave, personal commitment, coverage handover..."
+              }
+            />
+          </div>
 
           {/* Trainer Recent Leave History Section */}
           <div className="pt-2 border-t border-border/70 space-y-2">
@@ -421,7 +346,7 @@ export function TrainerLeaveRequestDrawer({
                 No prior leave records for this faculty member.
               </div>
             ) : (
-              <div className="space-y-1.5 max-h-40 overflow-y-auto no-scrollbar">
+              <div className="space-y-1.5 max-h-36 overflow-y-auto no-scrollbar">
                 {trainerLeaves.map((item) => (
                   <div
                     key={item.id}
@@ -429,6 +354,15 @@ export function TrainerLeaveRequestDrawer({
                   >
                     <div>
                       <div className="font-bold text-foreground flex items-center gap-1.5">
+                        <span
+                          className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
+                            item.leaveType === "EMERGENCY"
+                              ? "bg-amber-500/15 text-amber-500 border border-amber-500/30"
+                              : "bg-primary/10 text-primary border border-primary/20"
+                          }`}
+                        >
+                          {item.leaveType || "REGULAR"}
+                        </span>
                         <span>
                           {item.leaveStartDate} → {item.leaveEndDate}
                         </span>
@@ -436,7 +370,7 @@ export function TrainerLeaveRequestDrawer({
                           ({item.totalDays}d)
                         </span>
                       </div>
-                      <div className="text-[10px] text-muted-foreground truncate max-w-xs">
+                      <div className="text-[10px] text-muted-foreground truncate max-w-xs mt-0.5">
                         {item.reason || "No description"}
                       </div>
                     </div>
@@ -460,9 +394,9 @@ export function TrainerLeaveRequestDrawer({
                             <Trash2 size={12} />
                           </button>
                         </>
-                      ) : item.status === "REJECTED" ? (
+                      ) : item.status === "DENIED" || item.status === "REJECTED" ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                          Rejected
+                          Denied
                         </span>
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
@@ -481,7 +415,7 @@ export function TrainerLeaveRequestDrawer({
           onCancel={onClose}
           cancelText="Close"
           onSubmit={handleSubmit}
-          submitText="Submit Leave Request"
+          submitText={leaveType === "EMERGENCY" ? "Submit Emergency Leave" : "Submit Leave Request"}
           submitIcon={Send}
           isSubmitting={isSubmitting}
           submitDisabled={isFormBlocked}

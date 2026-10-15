@@ -1,7 +1,7 @@
 "use strict";
 
 const mongoose = require("mongoose");
-const { TRAINER_STATUS, GENDER } = require("../../shared/constants");
+const { TRAINER_STATUS, GENDER, BLOOD_GROUPS } = require("../../shared/constants");
 
 const statsSchema = new mongoose.Schema(
   {
@@ -26,10 +26,21 @@ const trainerSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    dob: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     gender: {
       type: String,
       enum: GENDER,
       default: "Male",
+    },
+    bloodGroup: {
+      type: String,
+      enum: [...BLOOD_GROUPS, ""],
+      trim: true,
+      default: "",
     },
     experience: {
       type: String,
@@ -48,6 +59,36 @@ const trainerSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
       index: true,
+    },
+    instagramProfileId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    address: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    city: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    state: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    country: {
+      type: String,
+      trim: true,
+      default: "India",
+    },
+    pincode: {
+      type: String,
+      trim: true,
+      default: "",
     },
     specialization: {
       type: String,

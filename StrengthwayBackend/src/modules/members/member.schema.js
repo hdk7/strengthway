@@ -12,16 +12,15 @@ const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PINCODE_PATTERN = /^[1-9][0-9]{5}$/;
 
 const createMemberSchema = yup.object().shape({
+  fullName: yup.string().trim().nullable(),
   firstName: yup
     .string()
     .trim()
-    .required("First name is required.")
-    .min(2, "First name must be at least 2 characters."),
-  lastName: yup
-    .string()
-    .trim()
-    .required("Last name is required.")
-    .min(2, "Last name must be at least 2 characters."),
+    .nullable()
+    .test("first-name-required", "Name is required.", function (v) {
+      return Boolean((v && v.length >= 2) || (this.parent.fullName && this.parent.fullName.trim().length >= 2));
+    }),
+  lastName: yup.string().trim().nullable(),
   email: yup
     .string()
     .trim()
@@ -98,6 +97,8 @@ const createMemberSchema = yup.object().shape({
     .string()
     .nullable()
     .oneOf([...BLOOD_GROUPS, "", null]),
+  instagramProfileId: yup.string().trim().nullable().default(""),
+  instagram: yup.string().trim().nullable(),
   address: yup
     .string()
     .trim()
@@ -173,6 +174,7 @@ const createMemberSchema = yup.object().shape({
 });
 
 const updateMemberSchema = yup.object().shape({
+  fullName: yup.string().trim().nullable(),
   firstName: yup.string().trim().min(2).nullable(),
   lastName: yup.string().trim().min(2).nullable(),
   email: yup.string().trim().lowercase().matches(EMAIL_PATTERN).nullable(),
@@ -189,6 +191,8 @@ const updateMemberSchema = yup.object().shape({
     .string()
     .nullable()
     .oneOf([...BLOOD_GROUPS, "", null]),
+  instagramProfileId: yup.string().trim().nullable(),
+  instagram: yup.string().trim().nullable(),
   address: yup.string().trim().nullable(),
   city: yup.string().trim().nullable(),
   state: yup.string().trim().nullable(),

@@ -143,7 +143,18 @@ class BatchScheduleService {
 
     const createdSessions = [];
     const todayStr = new Date().toISOString().slice(0, 10);
-    const resolvedCoachId = coachId || (batch.trainerIds && batch.trainerIds[0]) || "TRN-101";
+    const Trainer = require("../trainers/trainer.model");
+    let resolvedCoachId = coachId || (batch.trainerIds && batch.trainerIds[0]) || "";
+    let resolvedCoachName = batch.coachName || "";
+    if (resolvedCoachId) {
+      const trn = await Trainer.findOne({ id: resolvedCoachId, isDeleted: false }).lean();
+      if (trn) {
+        resolvedCoachName = trn.name || `${trn.firstName || ""} ${trn.lastName || ""}`.trim() || resolvedCoachId;
+      }
+    }
+    if (!resolvedCoachName) {
+      resolvedCoachName = "Assigned Coach";
+    }
 
     for (let i = 0; i < orderedClasses.length; i++) {
       const cls = orderedClasses[i];
@@ -176,7 +187,7 @@ class BatchScheduleService {
             endTime: batch.endTime || "07:00 AM",
             timing: batch.timingLabel || `${batch.startTime} - ${batch.endTime}`,
             coachId: resolvedCoachId,
-            coachName: batch.coachName || "Assigned Floor Coach",
+            coachName: resolvedCoachName,
             status: sessionStatus,
           },
         },
@@ -413,6 +424,44 @@ class BatchScheduleService {
       .skip(skip)
       .limit(Number(limit))
       .lean();
+
+    // Dynamically resolve and enrich registered trainer names from database
+    const trainerIds = new Set();
+    sessions.forEach((s) => {
+      if (s.coachId) trainerIds.add(s.coachId);
+      if (s.originalCoachId) trainerIds.add(s.originalCoachId);
+      if (s.substituteCoachId) trainerIds.add(s.substituteCoachId);
+    });
+    if (Array.isArray(batch.trainerIds)) {
+      batch.trainerIds.forEach((id) => id && trainerIds.add(id));
+    }
+
+    const Trainer = require("../trainers/trainer.model");
+    const registeredTrainers = await Trainer.find({
+      id: { $in: Array.from(trainerIds) },
+      isDeleted: { $ne: true },
+    }).lean();
+    const trainerMap = new Map(
+      registeredTrainers.map((t) => [t.id, t.name || `${t.firstName || ""} ${t.lastName || ""}`.trim() || t.id])
+    );
+
+    for (const s of sessions) {
+      if (s.isSubstituted && s.substituteCoachId) {
+        const realSubName = trainerMap.get(s.substituteCoachId) || s.substituteCoachName || s.substituteCoachId;
+        s.substituteCoachName = realSubName;
+        s.coachId = s.substituteCoachId;
+        s.coachName = realSubName;
+        const realOrigName = trainerMap.get(s.originalCoachId) || s.originalCoachName || s.coachName;
+        s.originalCoachName = realOrigName;
+      } else {
+        if (s.coachId && trainerMap.has(s.coachId)) {
+          s.coachName = trainerMap.get(s.coachId);
+        } else if (batch.trainerIds && batch.trainerIds.length > 0 && trainerMap.has(batch.trainerIds[0])) {
+          s.coachId = batch.trainerIds[0];
+          s.coachName = trainerMap.get(batch.trainerIds[0]);
+        }
+      }
+    }
 
     const total = await Session.countDocuments(filter);
 

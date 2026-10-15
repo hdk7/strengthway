@@ -294,7 +294,7 @@ export default function TrainersAttendancePage() {
   const handleSaveModal = async (e) => {
     e.preventDefault();
     if (!modalFormData.trainerId || !modalFormData.batchId) {
-      toast.error("Trainer and batch container are required.");
+      toast.error("Coach and batch container are required.");
       return;
     }
 
@@ -363,7 +363,8 @@ export default function TrainersAttendancePage() {
   // Monthly Faculty Summary Matrix
   const monthlySummary = useMemo(() => {
     const summaryMap = {};
-    const allowance = monthlyLeaveSummary?.monthlyAllowance ?? 2;
+    const annualAllowance = monthlyLeaveSummary?.annualAllowance ?? 36;
+    const monthlyAllowance = monthlyLeaveSummary?.monthlyAllowance ?? 3;
     const deductionRate = monthlyLeaveSummary?.deductionPerDay ?? 1000;
 
     trainers.forEach((t) => {
@@ -395,16 +396,33 @@ export default function TrainersAttendancePage() {
         (ts) => ts.trainerId === item.trainer.id
       );
 
-      const leaveDaysCount = Math.max(item.leaveDates.size, beItem?.approvedDays ?? 0);
-      const paidLeaveDays = Math.min(leaveDaysCount, allowance);
-      const unpaidLeaveDays = Math.max(0, leaveDaysCount - allowance);
-      const deductionAmount = unpaidLeaveDays * deductionRate;
-      const remainingBalance = Math.max(0, allowance - leaveDaysCount);
+      let leaveDaysCount = item.leaveDates.size;
+      let paidLeaveDays = leaveDaysCount;
+      let unpaidLeaveDays = 0;
+      let deductionAmount = 0;
+      let remainingBalance = annualAllowance;
+      let trainerAnnualAllowance = annualAllowance;
+
+      if (beItem) {
+        leaveDaysCount = Math.max(item.leaveDates.size, beItem.approvedDays ?? 0);
+        paidLeaveDays = beItem.paidDays ?? leaveDaysCount;
+        unpaidLeaveDays = beItem.unpaidDays ?? 0;
+        deductionAmount = beItem.totalDeduction ?? (unpaidLeaveDays * deductionRate);
+        remainingBalance = beItem.annualRemainingDays ?? beItem.remainingBalance ?? Math.max(0, annualAllowance - leaveDaysCount);
+        trainerAnnualAllowance = beItem.annualAllowance ?? annualAllowance;
+      } else {
+        paidLeaveDays = Math.min(leaveDaysCount, monthlyAllowance);
+        unpaidLeaveDays = Math.max(0, leaveDaysCount - monthlyAllowance);
+        deductionAmount = unpaidLeaveDays * deductionRate;
+        remainingBalance = Math.max(0, annualAllowance - leaveDaysCount);
+      }
 
       return {
         ...item,
         leaveDaysCount,
-        monthlyAllowance: allowance,
+        monthlyAllowance,
+        annualAllowance: trainerAnnualAllowance,
+        annualRemainingDays: remainingBalance,
         paidLeaveDays,
         unpaidLeaveDays,
         remainingBalance,
@@ -480,7 +498,7 @@ export default function TrainersAttendancePage() {
       <div className="shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border/60 pb-3">
         <div>
           <h1 className="font-display text-3xl sm:text-4xl font-black text-foreground tracking-tight mt-1">
-            Trainer Attendance
+            Coach Attendance
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
             Faculty shift, daily check-in / check-out operations, and attendance tracking.

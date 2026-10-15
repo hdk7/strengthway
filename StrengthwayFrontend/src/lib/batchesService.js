@@ -22,6 +22,13 @@ import {
   getBatchAuditLogs,
   processExpiredFlexAssignments,
 } from "./batchTransferService";
+import {
+  getEligibleSubstitutes,
+  assignSubstituteTrainer,
+  cancelSubstituteTrainer,
+  getBatchSubstitutionAuditLogs,
+  getSessionSubstitutionHistory,
+} from "./substituteTrainerService";
 
 export { SHIFT_SLOTS, resolveDaysDetails };
 export {
@@ -34,6 +41,11 @@ export {
   getBatchEffectiveAttendees,
   getBatchAuditLogs,
   processExpiredFlexAssignments,
+  getEligibleSubstitutes,
+  assignSubstituteTrainer,
+  cancelSubstituteTrainer,
+  getBatchSubstitutionAuditLogs,
+  getSessionSubstitutionHistory,
 };
 
 // ── Batches Read ─────────────────────────────────────────────────────────────

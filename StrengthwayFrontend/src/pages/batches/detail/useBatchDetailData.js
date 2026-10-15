@@ -205,12 +205,31 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
     );
   }, [members, monthTracking, memberSearch]);
 
-  // Filtered inbound flexible attendees for this batch in selected month
+  // Filtered inbound flexible attendees for this batch: strictly active and valid passes only
   const filteredFlexInMembers = useMemo(() => {
-    const list = monthTracking?.category2_Members?.flexInMembers || [];
-    if (!memberSearch?.trim()) return list;
+    const rawList = monthTracking?.category2_Members?.flexInMembers || [];
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    // Remove any expired, completed, cancelled, or revoked flex passes from active inbound attendees list
+    const activeList = rawList.filter((m) => {
+      const st = (m.status || "").toUpperCase();
+      if (["COMPLETED", "CANCELLED", "REVOKED", "EXPIRED"].includes(st)) {
+        return false;
+      }
+      // If end date has elapsed (prior to today), it is expired and must not appear
+      if (m.endDate && m.endDate < todayStr) {
+        return false;
+      }
+      // If start date is in the future, it is not yet active
+      if (m.startDate && m.startDate > todayStr) {
+        return false;
+      }
+      return true;
+    });
+
+    if (!memberSearch?.trim()) return activeList;
     const q = memberSearch.toLowerCase();
-    return list.filter(
+    return activeList.filter(
       (m) =>
         m.name?.toLowerCase().includes(q) ||
         m.memberId?.toLowerCase().includes(q) ||
@@ -304,9 +323,15 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
         uniqueByDate.set(dateKey, s);
       } else {
         const existing = uniqueByDate.get(dateKey);
-        // Prefer assigned class with explicit classId or non-scheduled status
-        if (s.classId && !existing.classId) {
+        // Prefer substituted session, or assigned class with explicit classId
+        if (s.isSubstituted && !existing.isSubstituted) {
           uniqueByDate.set(dateKey, s);
+        } else if (!existing.isSubstituted && s.classId && !existing.classId) {
+          uniqueByDate.set(dateKey, s);
+        } else if (s.updatedAt && existing.updatedAt && new Date(s.updatedAt) > new Date(existing.updatedAt)) {
+          if (!existing.isSubstituted || s.isSubstituted) {
+            uniqueByDate.set(dateKey, s);
+          }
         }
       }
     }
@@ -318,11 +343,39 @@ export function useBatchDetailData(id, memberSearch, trainerSearch, sessionsTab,
       return (a.classNumber || 0) - (b.classNumber || 0);
     });
 
-    return uniqueList.map((s, idx) => ({
-      ...s,
-      classNumber: idx + 1,
-    }));
-  }, [sessions, batch, monthTracking, selectedMonth, masterClassItems, masterSchedule, members.length]);
+    const trainerMap = new Map(
+      (allTrainers || []).map((t) => [t.id, t.name || `${t.firstName || ""} ${t.lastName || ""}`.trim() || t.id])
+    );
+
+    return uniqueList.map((s, idx) => {
+      let coachName = s.coachName;
+      let substituteCoachName = s.substituteCoachName;
+      let originalCoachName = s.originalCoachName;
+
+      if (s.substituteCoachId && trainerMap.has(s.substituteCoachId)) {
+        substituteCoachName = trainerMap.get(s.substituteCoachId);
+      }
+      if (s.originalCoachId && trainerMap.has(s.originalCoachId)) {
+        originalCoachName = trainerMap.get(s.originalCoachId);
+      }
+      if (s.coachId && trainerMap.has(s.coachId)) {
+        coachName = trainerMap.get(s.coachId);
+      }
+
+      // If substituted, conducting coach is the substitute coach
+      if (s.isSubstituted && s.substituteCoachId) {
+        coachName = substituteCoachName || coachName;
+      }
+
+      return {
+        ...s,
+        classNumber: idx + 1,
+        coachName: coachName || "Assigned Coach",
+        substituteCoachName,
+        originalCoachName: originalCoachName || coachName,
+      };
+    });
+  }, [sessions, batch, monthTracking, selectedMonth, masterClassItems, masterSchedule, members.length, allTrainers]);
 
   const getTodayStrings = () => {
     const now = new Date();

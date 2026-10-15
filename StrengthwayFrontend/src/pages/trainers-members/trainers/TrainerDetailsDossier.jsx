@@ -25,11 +25,58 @@ export function TrainerDetailsDossier({
         </div>
 
         <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
-          <dt className="font-medium text-muted-foreground">Trainer ID</dt>
+          <dt className="font-medium text-muted-foreground">Coach ID</dt>
           <dd className="mt-1 font-mono font-semibold text-emerald-500 sm:col-span-2 sm:mt-0">
             {trainer.id}
           </dd>
         </div>
+
+        {trainer.dob && (
+          <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-muted-foreground">Date of Birth</dt>
+            <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
+              {trainer.dob}
+            </dd>
+          </div>
+        )}
+
+        {trainer.gender && (
+          <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-muted-foreground">Gender</dt>
+            <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
+              {trainer.gender}
+            </dd>
+          </div>
+        )}
+
+        {trainer.bloodGroup && (
+          <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-muted-foreground">Blood Group</dt>
+            <dd className="mt-1 font-semibold text-rose-500 sm:col-span-2 sm:mt-0">
+              {trainer.bloodGroup}
+            </dd>
+          </div>
+        )}
+
+        {trainer.instagramProfileId && (
+          <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-muted-foreground">Instagram</dt>
+            <dd className="mt-1 font-semibold text-foreground sm:col-span-2 sm:mt-0">
+              {trainer.instagramProfileId}
+            </dd>
+          </div>
+        )}
+
+        {(trainer.address || trainer.city) && (
+          <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
+            <dt className="font-medium text-muted-foreground">Residence</dt>
+            <dd className="mt-1 text-foreground sm:col-span-2 sm:mt-0">
+              {[trainer.address, trainer.city, trainer.state, trainer.pincode, trainer.country]
+                .filter(Boolean)
+                .join(", ")}
+            </dd>
+          </div>
+        )}
 
         <div className="py-3.5 sm:grid sm:grid-cols-3 sm:gap-4">
           <dt className="font-medium text-muted-foreground">Specialization</dt>

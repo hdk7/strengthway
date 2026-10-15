@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Save,
-  RotateCcw,
   Sparkles,
   ArrowRight,
   Plus,
@@ -23,6 +22,7 @@ import {
   saveTrainerLeavePolicy,
   validateTrainerLeaveNotice,
 } from "@/lib/masterScheduleService";
+import { PolicyRuleSimulator } from "@/pages/attendance/PolicyRuleSimulator";
 
 const FACTORY_DEFAULT_TIERS = [
   {
@@ -58,28 +58,14 @@ export function TrainerLeavePolicyTab() {
     id: "DEFAULT_TRAINER_LEAVE_POLICY",
     isActive: true,
     effectiveFrom: new Date().toISOString().slice(0, 10),
-    monthlyPaidLeaveAllowance: 2,
+    annualPaidLeaveAllowance: 36,
+    monthlyPaidLeaveAllowance: 3,
     unpaidDeductionPerDay: 1000,
-    description: "Standard Trainer Leave Policy with duration-based advance notice requirements.",
+    maxConsecutiveEmergencyDays: 3,
+    description: "Standard Coach Leave Policy with duration-based advance notice requirements and 36-day annual leave allowance.",
     tiers: FACTORY_DEFAULT_TIERS,
   });
   const [initialPolicy, setInitialPolicy] = useState(null);
-
-  // Simulator State
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const [simStart, setSimStart] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 10);
-    return d.toISOString().slice(0, 10);
-  });
-  const [simEnd, setSimEnd] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 12);
-    return d.toISOString().slice(0, 10);
-  });
-  const [simSubmitted, setSimSubmitted] = useState(todayStr);
-  const [simResult, setSimResult] = useState(null);
-  const [simulating, setSimulating] = useState(false);
 
   // Load Policy from Backend
   const loadPolicy = useCallback(async () => {
@@ -89,14 +75,16 @@ export function TrainerLeavePolicyTab() {
       if (data) {
         setPolicy({
           ...data,
-          monthlyPaidLeaveAllowance: typeof data.monthlyPaidLeaveAllowance === "number" ? data.monthlyPaidLeaveAllowance : 2,
+          annualPaidLeaveAllowance: typeof data.annualPaidLeaveAllowance === "number" ? data.annualPaidLeaveAllowance : 36,
+          monthlyPaidLeaveAllowance: typeof data.monthlyPaidLeaveAllowance === "number" ? data.monthlyPaidLeaveAllowance : 3,
           unpaidDeductionPerDay: typeof data.unpaidDeductionPerDay === "number" ? data.unpaidDeductionPerDay : 1000,
+          maxConsecutiveEmergencyDays: typeof data.maxConsecutiveEmergencyDays === "number" ? data.maxConsecutiveEmergencyDays : 3,
           tiers: Array.isArray(data.tiers) && data.tiers.length > 0 ? data.tiers : FACTORY_DEFAULT_TIERS,
         });
         setInitialPolicy(JSON.stringify(data));
       }
     } catch (err) {
-      toast.error(err.message || "Failed to load trainer leave policy.");
+      toast.error(err.message || "Failed to load coach leave policy.");
     } finally {
       setLoading(false);
     }
@@ -110,33 +98,6 @@ export function TrainerLeavePolicyTab() {
     if (!initialPolicy) return false;
     return JSON.stringify(policy) !== initialPolicy;
   }, [policy, initialPolicy]);
-
-  // Run Simulator
-  const runSimulation = useCallback(async () => {
-    if (!simStart || !simEnd) return;
-    try {
-      setSimulating(true);
-      const res = await validateTrainerLeaveNotice({
-        startDate: simStart,
-        endDate: simEnd,
-        submittedOn: simSubmitted || todayStr,
-      });
-      setSimResult(res);
-    } catch (err) {
-      setSimResult({
-        isValid: false,
-        message: err.message || "Validation failed.",
-      });
-    } finally {
-      setSimulating(false);
-    }
-  }, [simStart, simEnd, simSubmitted, todayStr]);
-
-  useEffect(() => {
-    if (simStart && simEnd) {
-      runSimulation();
-    }
-  }, [simStart, simEnd, simSubmitted, runSimulation]);
 
   // Tier field updater
   const handleUpdateTier = (index, field, value) => {
@@ -176,25 +137,13 @@ export function TrainerLeavePolicyTab() {
     }));
   };
 
-  const handleResetDefaults = () => {
-    if (window.confirm("Reset policy rules back to standard default tiers?")) {
-      setPolicy((prev) => ({
-        ...prev,
-        isActive: true,
-        tiers: FACTORY_DEFAULT_TIERS,
-      }));
-      toast.info("Rules reset to default tiers. Click 'Save Policy' to apply.");
-    }
-  };
-
   const handleSavePolicy = async () => {
     try {
       setSaving(true);
       const res = await saveTrainerLeavePolicy(policy);
       setPolicy(res);
       setInitialPolicy(JSON.stringify(res));
-      toast.success("Trainer leave policy saved and enforced successfully.");
-      runSimulation();
+      toast.success("Coach leave policy saved successfully.");
     } catch (err) {
       toast.error(err.message || "Failed to save leave policy.");
     } finally {
@@ -219,25 +168,17 @@ export function TrainerLeavePolicyTab() {
       <div className="shrink-0 grid grid-cols-1 gap-2.5 sm:grid-cols-4">
         <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Enforcement Status</span>
-            {policy.isActive ? (
-              <ShieldCheck size={16} className="text-emerald-500" />
-            ) : (
-              <ShieldAlert size={16} className="text-amber-500" />
-            )}
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Annual Allowance</span>
+            <ShieldCheck size={16} className="text-emerald-500" />
           </div>
-          <div className="mt-1 flex items-center gap-2">
-            <span
-              className={`h-2.5 w-2.5 rounded-full ${
-                policy.isActive ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground"
-              }`}
-            />
+          <div className="mt-1 flex items-baseline gap-1.5">
             <span className="text-lg sm:text-xl font-extrabold text-foreground">
-              {policy.isActive ? "Active & Enforced" : "Disabled (Dry Run)"}
+              {policy.annualPaidLeaveAllowance ?? 36} Days
             </span>
+            <span className="text-[10px] text-muted-foreground">/ year</span>
           </div>
           <p className="mt-0.5 text-[10px] text-muted-foreground">
-            {policy.isActive ? "Rules applied to all trainer leave logs" : "Leaves recorded without restriction"}
+            Paid leave without Loss of Pay (LOP)
           </p>
         </div>
 
@@ -247,7 +188,7 @@ export function TrainerLeavePolicyTab() {
             <Clock size={16} className="text-primary" />
           </div>
           <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
-            {policy.tiers.length}
+            {policy.tiers.length} Tiers
           </div>
           <p className="mt-0.5 text-[10px] text-muted-foreground">Advance notice thresholds</p>
         </div>
@@ -265,13 +206,14 @@ export function TrainerLeavePolicyTab() {
 
         <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Effective Date</span>
-            <Calendar size={16} className="text-emerald-500" />
+            <span className="text-[11px] font-semibold uppercase tracking-wider">Loss of Pay (LOP) Rate</span>
+            <AlertCircle size={16} className="text-rose-500" />
           </div>
           <div className="mt-1 text-lg sm:text-xl font-extrabold text-foreground">
-            {policy.effectiveFrom || todayStr}
+            ₹{(policy.unpaidDeductionPerDay ?? 1000).toLocaleString("en-IN")}
+            <span className="text-xs font-normal text-muted-foreground ml-1">/ day</span>
           </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Current policy version origin</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">Applied to every day beyond 36 days</p>
         </div>
       </div>
 
@@ -295,15 +237,6 @@ export function TrainerLeavePolicyTab() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleResetDefaults}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted transition-colors cursor-pointer"
-                  title="Reset to default 4 tiers"
-                >
-                  <RotateCcw size={13} />
-                  <span>Defaults</span>
-                </button>
-                <button
-                  type="button"
                   onClick={handleAddTier}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors cursor-pointer"
                 >
@@ -323,37 +256,6 @@ export function TrainerLeavePolicyTab() {
                   <Save size={13} />
                   <span>{saving ? "Saving..." : "Save Policy"}</span>
                 </button>
-              </div>
-            </div>
-
-            {/* General Policy Toggles */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 border-b border-border/60">
-              <label className="flex items-center gap-2.5 p-2 rounded-lg bg-background border border-border/60 cursor-pointer hover:border-primary/50 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={policy.isActive}
-                  onChange={(e) => setPolicy((p) => ({ ...p, isActive: e.target.checked }))}
-                  className="rounded border-border text-primary focus:ring-primary h-4 w-4"
-                />
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-foreground">Enforce Policy Validation</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    When enabled, trainer leave applications must meet advance notice rules.
-                  </span>
-                </div>
-              </label>
-
-              <div className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border/60">
-                <Calendar size={15} className="text-muted-foreground shrink-0" />
-                <div className="flex-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block">Effective From</span>
-                  <input
-                    type="date"
-                    value={policy.effectiveFrom || todayStr}
-                    onChange={(e) => setPolicy((p) => ({ ...p, effectiveFrom: e.target.value }))}
-                    className="w-full bg-transparent text-xs font-semibold text-foreground focus:outline-none"
-                  />
-                </div>
               </div>
             </div>
 
@@ -482,50 +384,51 @@ export function TrainerLeavePolicyTab() {
               })}
             </div>
 
-            {/* Monthly Allowance & Payroll Deduction Governance */}
+            {/* Annual Allowance & Loss of Pay (LOP) Governance */}
             <div className="mt-4 pt-3 border-t border-border/60">
-              <div className="rounded-xl border border-border/70 bg-muted/20 p-3 sm:p-4 space-y-3">
+              <div className="rounded-xl border border-border/70 bg-muted/20 p-3.5 sm:p-4 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold text-foreground">
-                      Monthly Paid Leave Allowance &amp; Payroll Deduction Rate
+                    <h4 className="text-xs sm:text-sm font-bold text-foreground flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-emerald-500" />
+                      <span>Annual Paid Leave Allowance (36 Days) &amp; Loss of Pay (LOP)</span>
                     </h4>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Determines how many days of approved leave are compensated, and the deduction rate for excess days.
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Each faculty coach is granted 36 paid leave days per calendar year. Excess days automatically incur Loss of Pay (LOP).
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                   <div>
                     <label className="text-[11px] font-semibold text-muted-foreground block">
-                      Paid Leave Allowance (Monthly)
+                      Annual Paid Allowance
                     </label>
                     <div className="flex items-center gap-1.5 mt-1">
                       <input
                         type="number"
                         min="0"
-                        max="15"
+                        max="365"
                         step="1"
-                        value={policy.monthlyPaidLeaveAllowance ?? 2}
+                        value={policy.annualPaidLeaveAllowance ?? 36}
                         onChange={(e) =>
                           setPolicy((p) => ({
                             ...p,
-                            monthlyPaidLeaveAllowance: parseInt(e.target.value, 10) || 0,
+                            annualPaidLeaveAllowance: parseInt(e.target.value, 10) || 0,
                           }))
                         }
                         className="w-20 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-center font-bold text-emerald-500 focus:border-primary focus:outline-none"
                       />
-                      <span className="text-xs font-semibold text-muted-foreground">Days per month</span>
+                      <span className="text-xs font-semibold text-muted-foreground">Days/year</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground block mt-1">
-                      Leaves up to this limit incur no salary reduction.
+                      Both informed &amp; uninformed leaves count toward this allowance.
                     </span>
                   </div>
 
                   <div>
                     <label className="text-[11px] font-semibold text-muted-foreground block">
-                      Unpaid Deduction Rate
+                      Loss of Pay (LOP) Deduction
                     </label>
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-xs font-bold text-muted-foreground">₹</span>
@@ -540,13 +443,62 @@ export function TrainerLeavePolicyTab() {
                             unpaidDeductionPerDay: parseInt(e.target.value, 10) || 0,
                           }))
                         }
-                        className="w-24 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-center font-bold text-amber-500 focus:border-primary focus:outline-none"
+                        className="w-24 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-center font-bold text-rose-500 focus:border-primary focus:outline-none"
                       />
-                      <span className="text-xs font-semibold text-muted-foreground">per unpaid day</span>
+                      <span className="text-xs font-semibold text-muted-foreground">/LOP day</span>
                     </div>
                     <span className="text-[10px] text-muted-foreground block mt-1">
-                      Subtracted from monthly coach compensation ledger.
+                      Deducted per leave day taken beyond the 36-day annual limit.
                     </span>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-semibold text-muted-foreground block">
+                      Max Emergency Duration
+                    </label>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <input
+                        type="number"
+                        min="1"
+                        max="14"
+                        step="1"
+                        value={policy.maxConsecutiveEmergencyDays ?? 3}
+                        onChange={(e) =>
+                          setPolicy((p) => ({
+                            ...p,
+                            maxConsecutiveEmergencyDays: parseInt(e.target.value, 10) || 3,
+                          }))
+                        }
+                        className="w-20 rounded-lg border border-border bg-card px-2.5 py-1 text-xs text-center font-bold text-primary focus:border-primary focus:outline-none"
+                      />
+                      <span className="text-xs font-semibold text-muted-foreground">Consecutive days</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground block mt-1">
+                      Maximum emergency span bypassing advance notice requirements.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Annual Leave Governance Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-border/60">
+                  <div className="p-2.5 rounded-lg border border-border/60 bg-background/50 text-[11px] space-y-1">
+                    <span className="font-bold text-foreground flex items-center gap-1.5">
+                      <CheckCircle2 size={13} className="text-emerald-500" />
+                      Combined Allowance Counting
+                    </span>
+                    <p className="text-muted-foreground text-[10px] leading-relaxed">
+                      Both informed leave (approved leave applications) and uninformed leave (unexcused absences) deduct from the same 36-day allowance based on actual dates taken.
+                    </p>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg border border-border/60 bg-background/50 text-[11px] space-y-1">
+                    <span className="font-bold text-foreground flex items-center gap-1.5">
+                      <AlertCircle size={13} className="text-amber-500" />
+                      Dynamic LOP &amp; Annual Reset
+                    </span>
+                    <p className="text-muted-foreground text-[10px] leading-relaxed">
+                      Excess days beyond 36 incur LOP (e.g., 34 used + 5 requested = 2 paid, 3 LOP). Allowance resets at the start of each calendar year while preserving historical archives.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -571,142 +523,10 @@ export function TrainerLeavePolicyTab() {
 
         {/* Live Simulator Column (4 cols) */}
         <div className="lg:col-span-4 flex flex-col gap-3">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-xs flex flex-col gap-3">
-            <div className="flex items-center gap-2 pb-2 border-b border-border/60">
-              <span className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                <Sparkles size={16} />
-              </span>
-              <div>
-                <h3 className="text-sm font-bold text-foreground">Policy Rule Simulator</h3>
-                <p className="text-[11px] text-muted-foreground">
-                  Test dates in real time against the leave rules
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              <div>
-                <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
-                  Application / Submission Date
-                </label>
-                <input
-                  type="date"
-                  value={simSubmitted}
-                  onChange={(e) => setSimSubmitted(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-background px-3 py-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
-                    Leave Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={simStart}
-                    onChange={(e) => setSimStart(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-background px-3 py-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">
-                    Leave End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={simEnd}
-                    min={simStart}
-                    onChange={(e) => setSimEnd(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-background px-3 py-2 text-xs font-semibold text-foreground focus:border-primary focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Validation Output Card */}
-            {simResult && (
-              <div
-                className={`mt-1 rounded-lg border p-3 flex flex-col gap-2 transition-all ${
-                  simResult.isValid
-                    ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400"
-                    : "border-rose-500/40 bg-rose-500/5 text-rose-600 dark:text-rose-400"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 font-bold text-xs">
-                    {simResult.isValid ? (
-                      <CheckCircle2 size={16} className="text-emerald-500" />
-                    ) : (
-                      <AlertCircle size={16} className="text-rose-500" />
-                    )}
-                    <span>
-                      {simResult.isValid ? "Eligible (Notice Met)" : "Non-Compliant (Short Notice)"}
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-background border border-border/80">
-                    {simResult.totalDays} Day{simResult.totalDays > 1 ? "s" : ""} Leave
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-border/40 text-foreground">
-                  <div>
-                    <span className="text-muted-foreground block text-[10px]">Notice Given:</span>
-                    <span className="font-extrabold">{simResult.actualNoticeDays} Days</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block text-[10px]">Required Notice:</span>
-                    <span className="font-extrabold">{simResult.requiredNoticeDays} Days</span>
-                  </div>
-                </div>
-
-                {simResult.tier && (
-                  <div className="text-[11px] text-muted-foreground">
-                    <span className="font-semibold text-foreground">Applied Rule:</span>{" "}
-                    {simResult.tier.label}
-                  </div>
-                )}
-
-                {!simResult.isValid && simResult.earliestEligibleStartDate && (
-                  <div className="rounded-lg bg-rose-500/10 p-2 text-[11px] font-semibold text-rose-600 dark:text-rose-300">
-                    Earliest permitted start date:{" "}
-                    <span className="underline font-bold">
-                      {simResult.earliestEligibleStartDate}
-                    </span>
-                  </div>
-                )}
-
-                <p className="text-[10px] opacity-90 leading-relaxed mt-0.5">
-                  {simResult.message}
-                </p>
-              </div>
-            )}
-
-            {/* Quick Policy Reference Cards */}
-            <div className="mt-2 pt-2 border-t border-border/60 flex flex-col gap-1.5">
-              <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                Policy Rule Cheat Sheet
-              </span>
-              <div className="flex flex-col gap-1 text-[11px]">
-                <div className="flex items-center justify-between py-1 px-2 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">0 – 2 Days:</span>
-                  <span className="font-bold text-foreground">1 Week Notice (7d)</span>
-                </div>
-                <div className="flex items-center justify-between py-1 px-2 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">2 – 5 Days:</span>
-                  <span className="font-bold text-foreground">2 Weeks Notice (14d)</span>
-                </div>
-                <div className="flex items-center justify-between py-1 px-2 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">5 – 10 Days:</span>
-                  <span className="font-bold text-foreground">1 Month Notice (30d)</span>
-                </div>
-                <div className="flex items-center justify-between py-1 px-2 rounded-lg bg-muted/40">
-                  <span className="text-muted-foreground">&gt; 10 Days:</span>
-                  <span className="font-bold text-foreground">2 Months Notice (60d)</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <PolicyRuleSimulator
+            title="Policy Rule Simulator"
+            allowTypeToggle={true}
+          />
         </div>
       </div>
     </div>

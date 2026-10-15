@@ -54,6 +54,12 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
   const Member = require("../members/member.model");
   const BatchAssignment = require("./batchAssignment.model");
   const Attendance = require("../attendance/attendance.model");
+  const batchAssignmentService = require("./batchAssignment.service");
+
+  // Automatically process expired flex assignments so database status & audit history stay synchronized
+  await batchAssignmentService.processExpiredFlexAssignments().catch(() => null);
+
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   // Primary enrolled members
   const primaryMembers = await Member.find({
@@ -62,13 +68,13 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
     status: { $ne: "Archived" },
   }).lean();
 
-  // Flex-in members active in this month
+  // Flex-in members: strictly active and valid (not expired, not completed, not scheduled for the future)
   const flexAssignments = await BatchAssignment.find({
     targetBatchId: batchId,
     status: "ACTIVE",
     assignmentType: "TEMPORARY_FLEX",
-    startDate: { $lte: endDate },
-    $or: [{ endDate: null }, { endDate: { $gte: startDate } }],
+    startDate: { $lte: todayStr },
+    $or: [{ endDate: null }, { endDate: { $gte: todayStr } }],
   }).lean();
 
   const flexInMemberIds = flexAssignments.map((f) => f.memberId);
@@ -91,8 +97,8 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
     const flexOut = (m.activeFlexAssignments || []).filter((fp) => {
       return (
         fp.status === "ACTIVE" &&
-        (!fp.startDate || fp.startDate <= endDate) &&
-        (!fp.endDate || fp.endDate >= startDate) &&
+        (!fp.startDate || fp.startDate <= todayStr) &&
+        (!fp.endDate || fp.endDate >= todayStr) &&
         fp.targetBatchId !== batchId
       );
     });
@@ -118,32 +124,55 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
     };
   });
 
-  const flexMembersTracking = flexInMembers.map((m) => {
-    const pass = flexAssignments.find((f) => f.memberId === m.id);
-    const records = monthAttendance.filter((a) => a.memberId === m.id && a.isFlexAttendance);
-    const presentCount = records.filter((a) => isAttended(a.status)).length;
-    const rate = records.length > 0 ? Math.round((presentCount / records.length) * 100) : 0;
+  const flexMembersTracking = flexInMembers
+    .map((m) => {
+      const pass = flexAssignments.find((f) => f.memberId === m.id);
+      const memberFlex = (m.activeFlexAssignments || []).find(
+        (f) => f.targetBatchId === batchId && f.status === "ACTIVE"
+      );
+      const records = monthAttendance.filter((a) => a.memberId === m.id && a.isFlexAttendance);
+      const presentCount = records.filter((a) => isAttended(a.status)).length;
+      const rate = records.length > 0 ? Math.round((presentCount / records.length) * 100) : 0;
 
-    return {
-      memberId: m.id,
-      name: `${m.firstName} ${m.lastName}`.trim(),
-      email: m.email,
-      mobile: m.mobile,
-      photo: m.photo || null,
-      joinedAt: m.registeredAt,
-      status: m.status,
-      isPrimary: false,
-      isFlexIn: true,
-      primaryBatchId: m.batchId,
-      primaryBatchName: m.batchName,
-      selectedDays: pass ? pass.selectedDays : [],
-      startDate: pass ? pass.startDate : "",
-      endDate: pass ? pass.endDate : null,
-      attendanceRate: rate,
-      presentSessions: presentCount,
-      totalLoggedSessions: records.length,
-    };
-  });
+      const effStartDate = pass ? pass.startDate : (memberFlex ? memberFlex.startDate : "");
+      const effEndDate = pass ? pass.endDate : (memberFlex ? memberFlex.endDate : null);
+
+      return {
+        assignmentId:
+          pass?.id ||
+          pass?.transactionId ||
+          memberFlex?.assignmentId ||
+          memberFlex?.transactionId ||
+          (pass?._id ? String(pass._id) : "") ||
+          "",
+        transactionId: pass?.transactionId || memberFlex?.transactionId || "",
+        memberId: m.id,
+        name: `${m.firstName} ${m.lastName}`.trim(),
+        email: m.email,
+        mobile: m.mobile,
+        photo: m.photo || null,
+        joinedAt: m.registeredAt,
+        status: m.status,
+        isPrimary: false,
+        isFlexIn: true,
+        primaryBatchId: m.batchId,
+        primaryBatchName: m.batchName,
+        selectedDays: pass ? pass.selectedDays : (memberFlex ? memberFlex.selectedDays : []),
+        startDate: effStartDate,
+        endDate: effEndDate,
+        reason: pass?.reason || memberFlex?.reason || "Temporary flexible pass",
+        attendanceRate: rate,
+        presentSessions: presentCount,
+        totalLoggedSessions: records.length,
+      };
+    })
+    .filter((fm) => {
+      // Strictly exclude any pass that is missing an ID, expired, or scheduled in the future
+      if (!fm.assignmentId) return false;
+      if (fm.endDate && fm.endDate < todayStr) return false;
+      if (fm.startDate && fm.startDate > todayStr) return false;
+      return true;
+    });
 
   // Category 3: Scheduled Classes & Sessions in this Month (strictly 1 class per day)
   const Session = require("../schedules/session.model");
@@ -157,7 +186,7 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
   const rawSessions = await Session.find({
     batchId: { $in: batchCandidates },
     sessionDate: { $regex: `^${ym}` },
-  }).sort({ sessionDate: 1, startTime: 1, createdAt: -1 }).lean();
+  }).sort({ sessionDate: 1, startTime: 1, updatedAt: -1, createdAt: -1 }).lean();
 
   const sessionByDate = new Map();
   for (const s of rawSessions) {
@@ -167,13 +196,57 @@ async function getBatchMonthTracking(batchService, batchId, yearMonth) {
       sessionByDate.set(d, s);
     } else {
       const existing = sessionByDate.get(d);
-      if (s.classId && !existing.classId) {
+      // Prefer substituted session, or more recently updated session, or session with classId
+      if (s.isSubstituted && !existing.isSubstituted) {
         sessionByDate.set(d, s);
+      } else if (!existing.isSubstituted && s.classId && !existing.classId) {
+        sessionByDate.set(d, s);
+      } else if (s.updatedAt && existing.updatedAt && new Date(s.updatedAt) > new Date(existing.updatedAt)) {
+        if (!existing.isSubstituted || s.isSubstituted) {
+          sessionByDate.set(d, s);
+        }
       }
     }
   }
   const sessions = Array.from(sessionByDate.values())
     .sort((a, b) => (a.sessionDate || "").localeCompare(b.sessionDate || ""));
+
+  // Dynamically resolve and enrich registered trainer names from database
+  const allSessionTrainerIds = new Set();
+  for (const s of sessions) {
+    if (s.coachId) allSessionTrainerIds.add(s.coachId);
+    if (s.originalCoachId) allSessionTrainerIds.add(s.originalCoachId);
+    if (s.substituteCoachId) allSessionTrainerIds.add(s.substituteCoachId);
+  }
+  if (Array.isArray(batch.trainerIds)) {
+    batch.trainerIds.forEach((id) => id && allSessionTrainerIds.add(id));
+  }
+
+  const registeredTrainers = await Trainer.find({
+    id: { $in: Array.from(allSessionTrainerIds) },
+    isDeleted: { $ne: true },
+  }).lean();
+  const registeredTrainerMap = new Map(
+    registeredTrainers.map((t) => [t.id, t.name || `${t.firstName || ""} ${t.lastName || ""}`.trim() || t.id])
+  );
+
+  for (const s of sessions) {
+    if (s.isSubstituted && s.substituteCoachId) {
+      const realSubName = registeredTrainerMap.get(s.substituteCoachId) || s.substituteCoachName || s.substituteCoachId;
+      s.substituteCoachName = realSubName;
+      s.coachId = s.substituteCoachId;
+      s.coachName = realSubName;
+      const realOrigName = registeredTrainerMap.get(s.originalCoachId) || s.originalCoachName || s.coachName;
+      s.originalCoachName = realOrigName;
+    } else {
+      if (s.coachId && registeredTrainerMap.has(s.coachId)) {
+        s.coachName = registeredTrainerMap.get(s.coachId);
+      } else if (batch.trainerIds && batch.trainerIds.length > 0 && registeredTrainerMap.has(batch.trainerIds[0])) {
+        s.coachId = batch.trainerIds[0];
+        s.coachName = registeredTrainerMap.get(batch.trainerIds[0]);
+      }
+    }
+  }
 
   const completedSessions = sessions.filter((s) => s.status === "COMPLETED").length;
   const scheduledSessions = sessions.filter((s) => s.status === "SCHEDULED").length;

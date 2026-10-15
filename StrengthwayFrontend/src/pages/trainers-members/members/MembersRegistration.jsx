@@ -110,19 +110,22 @@ export function AdminMemberRegistrationModal({
 
         const sourceData = activeLead || memberToEdit;
         if (sourceData) {
-          const rawName = (sourceData.name || sourceData.fullName || "").trim();
+          const rawName = (sourceData.fullName || sourceData.name || "").trim();
           const nameParts = rawName ? rawName.split(/\s+/) : [];
           const derivedFirst = sourceData.firstName || nameParts[0] || "";
           const derivedLast =
             sourceData.lastName || (nameParts.length > 1 ? nameParts.slice(1).join(" ") : "");
+          const derivedFullName = rawName || `${derivedFirst} ${derivedLast}`.trim();
 
           setForm({
+            fullName: derivedFullName,
             firstName: derivedFirst,
             lastName: derivedLast,
             dob: sourceData.dob || "",
             gender: sourceData.gender || "",
             mobile: sourceData.mobile || "",
             email: sourceData.email || "",
+            instagramProfileId: sourceData.instagramProfileId || sourceData.instagram || "",
             photo: sourceData.photo || "",
             photoName: sourceData.photoName || "",
             address: sourceData.address || "",
@@ -178,6 +181,11 @@ export function AdminMemberRegistrationModal({
   const handleChange = (e) => {
     const { name, value } = e.target;
     const nextForm = { ...form, [name]: value };
+    if (name === "fullName") {
+      const parts = value.trim().split(/\s+/);
+      nextForm.firstName = parts[0] || "";
+      nextForm.lastName = parts.length > 1 ? parts.slice(1).join(" ") : parts[0] || "";
+    }
     setForm(nextForm);
     const fieldError = validateFieldWithYup(adminMemberRegistrationSchema, name, nextForm);
     setErrors((prev) => ({ ...prev, [name]: fieldError }));

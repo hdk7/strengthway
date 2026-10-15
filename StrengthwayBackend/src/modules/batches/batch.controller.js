@@ -2,6 +2,7 @@
 
 const batchService = require("./batch.service");
 const batchAssignmentService = require("./batchAssignment.service");
+const substituteTrainerService = require("./substituteTrainer.service");
 const { success, created } = require("../../shared/response");
 
 // ─── Batches ──────────────────────────────────────────────────────────────────
@@ -264,6 +265,75 @@ async function processExpiredFlexAssignments(req, res, next) {
   }
 }
 
+// ─── Substitute Trainer Management ───────────────────────────────────────────
+async function getEligibleSubstitutes(req, res, next) {
+  try {
+    const sessionId = req.params.sessionId;
+    const data = await substituteTrainerService.getEligibleSubstitutes(sessionId);
+    return success(res, data, "Eligible substitute trainers retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function assignSubstitute(req, res, next) {
+  try {
+    const sessionId = req.params.sessionId;
+    const performedBy = req.user?.name || req.body?.performedBy || "Admin";
+    const result = await substituteTrainerService.assignSubstitute({
+      sessionId,
+      originalTrainerId: req.body?.originalTrainerId,
+      substituteTrainerId: req.body?.substituteTrainerId,
+      reason: req.body?.reason,
+      notes: req.body?.notes,
+      proceedWithoutSubstitute: Boolean(req.body?.proceedWithoutSubstitute),
+      idempotencyKey: req.body?.idempotencyKey || req.headers["x-idempotency-key"] || "",
+      performedBy,
+    });
+    const message = result.proceededWithoutSubstitute
+      ? "Proceeding without assigning substitute trainer."
+      : "Substitute trainer assigned successfully.";
+    return success(res, result, message);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function cancelSubstitute(req, res, next) {
+  try {
+    const sessionId = req.params.sessionId;
+    const performedBy = req.user?.name || req.body?.performedBy || "Admin";
+    const result = await substituteTrainerService.cancelSubstitute({
+      sessionId,
+      cancellationReason: req.body?.cancellationReason,
+      performedBy,
+    });
+    return success(res, result, "Substitute assignment cancelled successfully. Primary trainer restored.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getBatchSubstituteAudits(req, res, next) {
+  try {
+    const batchId = req.params.id;
+    const data = await substituteTrainerService.getBatchSubstitutionAuditLogs(batchId, req.query);
+    return success(res, data, "Batch substitution audit logs retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getSessionSubstituteAudits(req, res, next) {
+  try {
+    const sessionId = req.params.sessionId;
+    const data = await substituteTrainerService.getSessionSubstitutionHistory(sessionId);
+    return success(res, data, "Session substitution audit history retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getAll,
   getById,
@@ -290,5 +360,10 @@ module.exports = {
   getEffectiveAttendees,
   getBatchAuditLogs,
   processExpiredFlexAssignments,
+  getEligibleSubstitutes,
+  assignSubstitute,
+  cancelSubstitute,
+  getBatchSubstituteAudits,
+  getSessionSubstituteAudits,
 };
 

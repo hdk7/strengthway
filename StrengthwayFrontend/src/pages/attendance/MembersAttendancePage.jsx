@@ -281,7 +281,7 @@ function AdminMembersAttendanceContent() {
 
   const handleOpenEditModal = (attendee, record, date) => {
     if (!isAdmin()) {
-      toast.info("Trainers have read-only attendance access.");
+      toast.info("Coaches have read-only attendance access.");
       return;
     }
     const effectiveDate = date || selectedDate;

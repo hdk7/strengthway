@@ -421,7 +421,16 @@ export async function saveTrainerLeavePolicy(policyData) {
   return api.put("/v1/attendance/leave-policy", policyData);
 }
 
-export async function validateTrainerLeaveNotice(payload) {
-  return api.post("/v1/attendance/leave-policy/validate", payload);
+export async function validateTrainerLeaveNotice(payload, maybeEndDate, maybeSubmittedOn, maybeLeaveType) {
+  let body = payload;
+  if (typeof payload === "string") {
+    body = {
+      startDate: payload,
+      endDate: maybeEndDate,
+      submittedOn: maybeSubmittedOn,
+      leaveType: maybeLeaveType || "REGULAR",
+    };
+  }
+  return api.post("/v1/attendance/leave-policy/validate", body);
 }
 

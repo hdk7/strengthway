@@ -67,7 +67,7 @@ const GYM_MATRIX_MODULES = [
   },
   {
     id: "trainers",
-    name: "Coaching Faculty (Trainers)",
+    name: "Coaching Faculty (Coaches)",
     key: "key: trainers",
     category: "STAFF",
     icon: Dumbbell,
@@ -336,7 +336,7 @@ export default function SettingsPage() {
 
     // Phase 3 Rule: Trainers cannot mark or edit attendance
     if (selectedRole === "trainer" && moduleId === "attendance" && (actionId === "special" || actionId === "edit")) {
-      toast.info("Trainers have read-only attendance access and cannot mark or edit attendance.");
+      toast.info("Coaches have read-only attendance access and cannot mark or edit attendance.");
       return;
     }
 
@@ -659,7 +659,7 @@ export default function SettingsPage() {
                                   title={
                                     isRestrictedByRole
                                       ? selectedRole === "trainer"
-                                        ? "Trainers have read-only attendance access (cannot mark or edit)"
+                                        ? "Coaches have read-only attendance access (cannot mark or edit)"
                                         : "Members cannot view or access the class curriculum catalogue"
                                       : `${col.label} for ${mod.name}`
                                   }

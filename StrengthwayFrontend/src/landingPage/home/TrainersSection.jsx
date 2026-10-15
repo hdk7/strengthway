@@ -36,13 +36,13 @@ export function TrainersSection() {
       <div className="mx-auto max-w-[100rem] px-4 sm:px-6 lg:px-8">
         <Reveal className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-widest text-muted-foreground">
-            Trainers
+            Coaches
           </div>
           <h2 className="mt-3 sm:mt-4 font-display text-3xl font-bold sm:text-4xl md:text-5xl">
             Train with the <span className="bg-linear-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">best</span>.
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-muted-foreground">
-            Click on any trainer to view their full profile and form details.
+            Click on any coach to view their full profile and form details.
           </p>
         </Reveal>
 

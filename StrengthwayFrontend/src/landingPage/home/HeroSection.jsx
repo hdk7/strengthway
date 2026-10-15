@@ -5,7 +5,7 @@ import heroImage from "@/assets/1mw.jpg";
 // Placeholder gym metrics — replace with real numbers before launch.
 const HERO_STATS = [
   { k: 12500, s: "+", l: "Members" },
-  { k: 48, s: "", l: "Trainers" },
+  { k: 48, s: "", l: "Coaches" },
   { k: 97, s: "%", l: "Retention" },
 ];
 

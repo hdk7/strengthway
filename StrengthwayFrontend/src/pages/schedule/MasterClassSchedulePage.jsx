@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import { Dumbbell, Plus, AlertCircle, RefreshCw, Trash2, X, Check, CalendarPlus, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -20,15 +21,34 @@ import Pagination from "@/components/table/Pagination";
 import { isAdmin } from "@/auth/currentUser";
 
 export default function MasterClassSchedulePage() {
+  const location = useLocation();
   const [classes, setClasses] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Active perspective: "library" | "month"
-  const [activeView, setActiveView] = useState("library");
-  // View mode within library: "table" | "grid"
-  const [viewMode, setViewMode] = useState("table");
+  // Month Calendar subtab View is the default view across module navigation, reloads, and refreshes
+  const [activeView, setActiveView] = useState("month");
+
+  // View mode within library: defaults to "grid"
+  const [viewMode, setViewMode] = useState("grid");
+
+  // Reset to Month Calendar view when navigating to this module
+  useEffect(() => {
+    setActiveView("month");
+  }, [location.key]);
+
+  // Handle in-page navigation clicks from the navigation menu
+  useEffect(() => {
+    const handleSidebarNav = (e) => {
+      const target = e.detail?.view || "month";
+      setActiveView(target);
+    };
+
+    window.addEventListener("tsw-nav-class-schedule", handleSidebarNav);
+    return () => window.removeEventListener("tsw-nav-class-schedule", handleSidebarNav);
+  }, []);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState("");

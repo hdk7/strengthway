@@ -29,7 +29,15 @@ class RbacScope {
 
     const [batches, sessions] = await Promise.all([
       Batch.find({ trainerIds: trainerId }, { id: 1 }).lean(),
-      Session.find({ coachId: trainerId }, { batchId: 1 }).lean(),
+      Session.find(
+        {
+          $or: [
+            { coachId: trainerId },
+            { substituteCoachId: trainerId, substitutionStatus: { $ne: "CANCELLED" } },
+          ],
+        },
+        { batchId: 1 }
+      ).lean(),
     ]);
 
     const batchIdSet = new Set();

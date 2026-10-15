@@ -51,7 +51,7 @@ export default function BatchDetailTabsNav({
           }`}
         >
           <UserCheck size={16} className={activeTab === "trainers" ? "text-primary" : ""} />
-          <span>{isMember() ? "Faculty Coaches" : "Trainers"}</span>
+          <span>{isMember() ? "Faculty Coaches" : "Coaches"}</span>
           <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground">
             {trainers.length}
           </span>
@@ -132,7 +132,7 @@ export default function BatchDetailTabsNav({
               className="inline-flex items-center gap-1.5 shrink-0 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-background hover:bg-primary/90 transition-all shadow-sm cursor-pointer"
             >
               <Plus size={14} />
-              <span>Add Trainer</span>
+              <span>Add Coach</span>
             </button>
           )}
         </div>

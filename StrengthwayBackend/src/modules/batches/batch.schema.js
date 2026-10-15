@@ -104,6 +104,54 @@ const revokeFlexAssignmentSchema = yup.object().shape({
   revokedBy: yup.string().trim().default("Admin"),
 });
 
+const assignSubstituteSchema = yup.object().shape({
+  originalTrainerId: yup.string().trim().nullable().notRequired(),
+  substituteTrainerId: yup
+    .string()
+    .trim()
+    .nullable()
+    .notRequired()
+    .when("proceedWithoutSubstitute", {
+      is: (val) => val === true || val === "true",
+      then: (schema) => schema.nullable().notRequired(),
+      otherwise: (schema) => schema.required("Substitute Trainer ID is required."),
+    }),
+  reason: yup
+    .string()
+    .trim()
+    .nullable()
+    .notRequired()
+    .when("proceedWithoutSubstitute", {
+      is: (val) => val === true || val === "true",
+      then: (schema) => schema.nullable().notRequired(),
+      otherwise: (schema) =>
+        schema
+          .oneOf(
+            [
+              "Leave",
+              "Absent",
+              "Emergency",
+              "Other",
+              "LEAVE",
+              "ABSENT",
+              "EMERGENCY",
+              "OTHER",
+              "None",
+              "NONE",
+            ],
+            "Invalid reason. Must be Leave, Absent, Emergency, or Other."
+          )
+          .required("Substitution reason is required."),
+    }),
+  notes: yup.string().trim().nullable().notRequired(),
+  proceedWithoutSubstitute: yup.boolean().default(false),
+  idempotencyKey: yup.string().trim().nullable().notRequired(),
+});
+
+const cancelSubstituteSchema = yup.object().shape({
+  cancellationReason: yup.string().trim().nullable(),
+});
+
 module.exports = {
   createBatchSchema,
   updateBatchSchema,
@@ -115,5 +163,7 @@ module.exports = {
   permanentTransferSchema,
   flexibleAssignmentSchema,
   revokeFlexAssignmentSchema,
+  assignSubstituteSchema,
+  cancelSubstituteSchema,
 };
 

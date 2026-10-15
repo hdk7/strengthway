@@ -159,6 +159,11 @@ const memberSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    fullName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     firstName: {
       type: String,
       required: true,
@@ -191,6 +196,11 @@ const memberSchema = new mongoose.Schema(
     dob: {
       type: String,
       required: true,
+    },
+    instagramProfileId: {
+      type: String,
+      trim: true,
+      default: "",
     },
     height: {
       type: String,

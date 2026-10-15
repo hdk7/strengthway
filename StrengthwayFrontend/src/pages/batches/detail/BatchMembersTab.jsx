@@ -6,7 +6,6 @@ import {
   Users,
   Plus,
   CalendarRange,
-  ArrowRightLeft,
   Trash2,
   RotateCcw,
   Phone,
@@ -176,45 +175,25 @@ export default function BatchMembersTab({
         cell: (mem) => (
           <div className="flex items-center justify-end gap-1.5">
             {isAdmin() && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => onOpenTransfer(mem, "flex")}
-                  className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-xs font-semibold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                  title="Grant temporary flex pass"
-                >
-                  <CalendarRange size={12} />
-                  <span>Flex</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onOpenTransfer(mem, "transfer")}
-                  className="inline-flex items-center gap-1 h-7 px-2 rounded-lg text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                  title="Permanent transfer to another batch"
-                >
-                  <ArrowRightLeft size={12} />
-                  <span>Transfer</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    onRemoveMember(
-                      mem.id,
-                      `${mem.firstName} ${mem.lastName || ""}`
-                    )
-                  }
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                  title="Remove member from batch"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={() =>
+                  onRemoveMember(
+                    mem.id,
+                    `${mem.firstName} ${mem.lastName || ""}`
+                  )
+                }
+                className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                title="Remove member from batch"
+              >
+                <Trash2 size={14} />
+              </button>
             )}
           </div>
         ),
       },
     ],
-    [navigate, onRemoveMember, onOpenTransfer]
+    [navigate, onRemoveMember]
   );
 
   // ─── 2. Declarative Columns for Inbound Flexible Attendees ─────────────────
@@ -282,7 +261,7 @@ export default function BatchMembersTab({
             {isAdmin() && (
               <button
                 type="button"
-                onClick={() => onRevokeFlexPass(item.assignmentId, item.name)}
+                onClick={() => onRevokeFlexPass(item.assignmentId || item.transactionId || item.memberId, item.name)}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/20 transition-all cursor-pointer hover:scale-105 active:scale-95"
                 title="Revoke flexible pass"
               >
@@ -301,17 +280,6 @@ export default function BatchMembersTab({
     <div className="space-y-6 animate-in fade-in duration-150">
       {/* Segment 1: Primary Enrolled Members Standardized Data Table */}
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Enrolled Primary Members
-            </h3>
-            <span className="rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-xs font-bold font-mono">
-              {filteredPrimaryMembers.length}
-            </span>
-          </div>
-        </div>
-
         <DataTable
           columns={primaryMemberColumns}
           data={filteredPrimaryMembers}
@@ -356,8 +324,7 @@ export default function BatchMembersTab({
               </span>
             </h3>
             <p className="text-xs text-muted-foreground">
-              Members permanently assigned to other batches who are authorized
-              to attend {batch?.name} on specific days in {formattedMonthLabel}.
+              Active inbound flexible attendees authorized to attend {batch?.name} on specific days.
             </p>
           </div>
         </div>
@@ -369,11 +336,11 @@ export default function BatchMembersTab({
               className="mx-auto text-muted-foreground/50 mb-1.5"
             />
             <p className="text-xs font-semibold text-foreground">
-              No Inbound Flexible Attendees in {formattedMonthLabel}
+              No Active Inbound Flexible Attendees
             </p>
             <p className="text-[11px] text-muted-foreground mt-0.5 max-w-sm mx-auto">
-              When members from other batches are granted flexible day passes to
-              attend this batch slot, they will be tracked here.
+              When members from other batches are granted active flexible day passes to
+              attend this batch slot, they will appear here.
             </p>
           </div>
         ) : (

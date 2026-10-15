@@ -91,7 +91,7 @@ export default function BatchOverviewTab({
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
                   <UserCheck size={16} />
                 </span>
-                <h3 className="font-bold text-foreground text-sm">Trainers</h3>
+                <h3 className="font-bold text-foreground text-sm">Coaches</h3>
               </div>
               <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400">
                 {trainers.length} Faculty

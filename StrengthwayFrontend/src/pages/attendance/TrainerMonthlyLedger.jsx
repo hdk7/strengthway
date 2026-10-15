@@ -25,7 +25,8 @@ export function TrainerMonthlyLedger({
     );
   }, [monthlyLeaves]);
 
-  const monthlyAllowance = monthlyLeaveSummary?.monthlyAllowance ?? 2;
+  const monthlyAllowance = monthlyLeaveSummary?.monthlyAllowance ?? 3;
+  const annualAllowance = monthlyLeaveSummary?.annualAllowance ?? 36;
   const deductionPerDay = monthlyLeaveSummary?.deductionPerDay ?? 1000;
 
   return (
@@ -39,7 +40,7 @@ export function TrainerMonthlyLedger({
               <span>Faculty Coaching &amp; Leave Ledger — {formattedSelectedMonth}</span>
             </h3>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Aggregate coaching performance, leave balances ({monthlyAllowance} days paid/mo), and estimated payroll deductions.
+              Aggregate coaching performance, leave balances ({annualAllowance} days annual paid allowance), and estimated payroll deductions.
             </p>
           </div>
         </div>
@@ -82,9 +83,12 @@ export function TrainerMonthlyLedger({
                     leaveDaysCount = 0,
                     paidLeaveDays = 0,
                     unpaidLeaveDays = 0,
-                    remainingBalance = monthlyAllowance,
+                    remainingBalance = annualAllowance,
+                    annualRemainingDays = annualAllowance,
                     deductionAmount = 0,
                   } = item;
+
+                  const coachRemaining = item.annualRemainingDays ?? remainingBalance;
 
                   return (
                     <tr key={trainer.id} className="group transition-all duration-150 hover:-translate-y-px">
@@ -150,7 +154,7 @@ export function TrainerMonthlyLedger({
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-xs font-bold text-rose-500 whitespace-nowrap">
                             <AlertTriangle size={11} />
-                            <span>{leaveDaysCount}d ({unpaidLeaveDays}d unpaid)</span>
+                            <span>{leaveDaysCount}d ({unpaidLeaveDays}d LOP)</span>
                           </span>
                         )}
                       </td>
@@ -160,25 +164,25 @@ export function TrainerMonthlyLedger({
                         <div className="inline-flex items-center gap-2 whitespace-nowrap">
                           <span
                             className={`text-xs font-bold ${
-                              remainingBalance > 0
+                              coachRemaining > 0
                                 ? "text-emerald-600 dark:text-emerald-400"
                                 : "text-amber-500"
                             }`}
                           >
-                            {remainingBalance > 0
-                              ? `${remainingBalance}d left`
+                            {coachRemaining > 0
+                              ? `${coachRemaining}d left`
                               : "Exhausted"}
                           </span>
                           {/* Mini Progress Bar */}
                           <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden shrink-0">
                             <div
                               className={`h-full rounded-full transition-all duration-300 ${
-                                remainingBalance === 0
+                                coachRemaining === 0
                                   ? "bg-rose-500"
-                                  : remainingBalance === 1
+                                  : coachRemaining <= 5
                                   ? "bg-amber-500"
                                   : "bg-emerald-500"
-                              } ${getTailwindWidth((paidLeaveDays / monthlyAllowance) * 100)}`}
+                              } ${getTailwindWidth(((annualAllowance - coachRemaining) / annualAllowance) * 100)}`}
                             />
                           </div>
                         </div>
@@ -192,7 +196,7 @@ export function TrainerMonthlyLedger({
                               -₹{deductionAmount.toLocaleString("en-IN")}
                             </span>
                             <span className="text-[10px] text-muted-foreground">
-                              ({unpaidLeaveDays}d unpaid)
+                              ({unpaidLeaveDays}d LOP)
                             </span>
                           </div>
                         ) : (
@@ -328,13 +332,13 @@ export function TrainerMonthlyLedger({
 
                       {/* Allowance Classification */}
                       <td className="bg-card py-3 px-4 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center whitespace-nowrap">
-                        {leave.totalDays <= monthlyAllowance ? (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
-                            Paid Allowance
+                        {leave.annualLeaveCalculation?.requestImpact?.lopDays > 0 ? (
+                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500 whitespace-nowrap">
+                            {leave.annualLeaveCalculation.requestImpact.paidDays > 0 ? "Partial LOP" : "100% LOP"}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-md bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-500 whitespace-nowrap">
-                            Partial Unpaid
+                          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                            Paid Allowance
                           </span>
                         )}
                       </td>

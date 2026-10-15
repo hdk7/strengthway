@@ -52,7 +52,7 @@ export default function BatchPermanentTransferTab({
       return;
     }
     if (isTransferBatchFull) {
-      toast.error("Target batch is at maximum capacity.");
+      toast.error("This batch has reached its maximum capacity. Please select another batch.");
       return;
     }
     if (!transferReason.trim()) {
@@ -169,7 +169,7 @@ export default function BatchPermanentTransferTab({
           </div>
           {isTransferBatchFull && (
             <div className="mt-2 flex items-center gap-1.5 text-destructive font-semibold">
-              <ShieldAlert size={14} /> This batch is at maximum capacity. Cannot transfer here.
+              <ShieldAlert size={14} /> This batch has reached its maximum capacity. Please select another batch.
             </div>
           )}
           {selectedTransferBatch.status === "Inactive" && (

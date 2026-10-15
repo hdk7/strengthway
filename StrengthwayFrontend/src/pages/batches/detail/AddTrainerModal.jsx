@@ -38,7 +38,7 @@ export default function AddTrainerModal({
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-foreground font-display">
-                Add Trainer to {batch.name}
+                Add Coach to {batch.name}
               </h3>
               <p className="text-xs text-slate-500 dark:text-muted-foreground">
                 Assign coaches to {batch.timingLabel} ({batch.daysPattern})

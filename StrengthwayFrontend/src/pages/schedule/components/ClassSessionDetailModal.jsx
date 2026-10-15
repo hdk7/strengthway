@@ -98,7 +98,17 @@ export function ClassSessionDetailModal({
             </span>
             <span className="font-bold text-slate-900 dark:text-foreground truncate block">
               {session.coachName || "Assigned Coach"}
+              {session.isSubstituted && (
+                <span className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                  (Substitute)
+                </span>
+              )}
             </span>
+            {session.isSubstituted && session.originalCoachName && (
+              <span className="text-[10px] text-muted-foreground block truncate mt-0.5">
+                Original: {session.originalCoachName}
+              </span>
+            )}
           </div>
 
           <div className="rounded-xl bg-slate-50 dark:bg-muted/30 p-2.5 border border-slate-200/70 dark:border-border">
@@ -123,12 +133,12 @@ export function ClassSessionDetailModal({
         {/* Workout Prescriptions */}
         <div className="space-y-3">
           {/* Beginner Routine */}
-          <div className="rounded-xl border border-slate-100 dark:border-border/80 bg-slate-50/70 dark:bg-muted/20 p-3.5 space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <div className="rounded-xl border border-emerald-500/30 dark:border-emerald-500/40 bg-emerald-500/10 dark:bg-emerald-950/25 p-3.5 space-y-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
               Beginner Workouts
             </span>
-            <p className="text-xs text-slate-800 dark:text-foreground/90 leading-relaxed font-medium">
+            <p className="text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal">
               {hasBeginner
                 ? session.beginnerWorkouts
                 : "No beginner-specific routine prescribed."}
@@ -136,12 +146,12 @@ export function ClassSessionDetailModal({
           </div>
 
           {/* Intermediate Routine */}
-          <div className="rounded-xl border border-blue-100 dark:border-primary/20 bg-blue-50/40 dark:bg-primary/5 p-3.5 space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-primary flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-primary" />
+          <div className="rounded-xl border border-blue-500/30 dark:border-blue-500/40 bg-blue-500/10 dark:bg-blue-950/25 p-3.5 space-y-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400" />
               Intermediate Workouts
             </span>
-            <p className="text-xs text-slate-800 dark:text-foreground leading-relaxed font-medium">
+            <p className="text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal">
               {hasIntermediate
                 ? session.intermediateWorkouts
                 : "No intermediate routine prescribed."}

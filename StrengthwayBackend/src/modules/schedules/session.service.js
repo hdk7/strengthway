@@ -68,8 +68,43 @@ class SessionService {
     }
     if (status) filter.status = status;
     if (date) filter.sessionDate = date;
+    const sessions = await scheduleRepository.findAllSessions({ filter });
 
-    return scheduleRepository.findAllSessions({ filter });
+    // Dynamically resolve and enrich registered trainer names from database
+    const trainerIds = new Set();
+    sessions.forEach((s) => {
+      if (s.coachId) trainerIds.add(s.coachId);
+      if (s.originalCoachId) trainerIds.add(s.originalCoachId);
+      if (s.substituteCoachId) trainerIds.add(s.substituteCoachId);
+    });
+
+    if (trainerIds.size > 0) {
+      const Trainer = require("../trainers/trainer.model");
+      const registeredTrainers = await Trainer.find({
+        id: { $in: Array.from(trainerIds) },
+        isDeleted: { $ne: true },
+      }).lean();
+      const trainerMap = new Map(
+        registeredTrainers.map((t) => [t.id, t.name || `${t.firstName || ""} ${t.lastName || ""}`.trim() || t.id])
+      );
+
+      for (const s of sessions) {
+        if (s.isSubstituted && s.substituteCoachId) {
+          const realSubName = trainerMap.get(s.substituteCoachId) || s.substituteCoachName || s.substituteCoachId;
+          s.substituteCoachName = realSubName;
+          s.coachId = s.substituteCoachId;
+          s.coachName = realSubName;
+          const realOrigName = trainerMap.get(s.originalCoachId) || s.originalCoachName || s.coachName;
+          s.originalCoachName = realOrigName;
+        } else {
+          if (s.coachId && trainerMap.has(s.coachId)) {
+            s.coachName = trainerMap.get(s.coachId);
+          }
+        }
+      }
+    }
+
+    return sessions;
   }
 
   async getSessionById(id) {

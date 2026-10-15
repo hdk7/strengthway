@@ -1,6 +1,5 @@
-/* eslint-disable max-lines */
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
   Edit3,
@@ -10,6 +9,10 @@ import {
   Quote,
   ShieldCheck,
   KeyRound,
+  CalendarOff,
+  CalendarDays,
+  UserCheck,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,6 +28,7 @@ import { getBatches } from "@/lib/batchesService";
 import { TrainerModal } from "./TrainerModal";
 import { TrainerProfileView } from "./TrainerProfileView";
 import { TrainerMonthlyCoachingPanel } from "./TrainerMonthlyCoachingPanel";
+import { TrainerLeaveSection } from "./TrainerLeaveSection";
 import { isAdmin, isTrainer } from "@/auth/currentUser";
 import {
   stepMonth,
@@ -41,6 +45,27 @@ export default function TrainerProfilePage() {
   const [assignedBatches, setAssignedBatches] = useState([]);
   const [accountInfo, setAccountInfo] = useState({ hasAccount: false, user: null });
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => searchParams.get("tab") || "all");
+
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && ["all", "overview", "coaching", "leave"].includes(t)) {
+      setActiveTab(t);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    const p = new URLSearchParams(searchParams);
+    if (newTab === "all") {
+      p.delete("tab");
+    } else {
+      p.set("tab", newTab);
+    }
+    setSearchParams(p, { replace: true });
+  };
 
   const loadAccountStatus = useCallback(() => {
     if (!id) return;
@@ -163,16 +188,16 @@ export default function TrainerProfilePage() {
       if (updated) {
         setTrainer(updated);
         loadAssignedBatches();
-        toast.success("Trainer profile updated successfully.");
+        toast.success("Coach profile updated successfully.");
       }
     } catch (e) {
-      toast.error(e?.message || "Failed to update Trainer.");
+      toast.error(e?.message || "Failed to update Coach.");
     }
   };
 
   const handleDelete = async () => {
     if (
-      !window.confirm(`Are you sure you want to remove ${trainer.name} from the training roster?`)
+      !window.confirm(`Are you sure you want to remove ${trainer.name} from the coaching roster?`)
     )
       return;
     try {
@@ -180,7 +205,7 @@ export default function TrainerProfilePage() {
       toast.success(`${trainer.name} has been removed.`);
       navigate("/admin/trainers-members/trainers");
     } catch (e) {
-      toast.error(e?.message || "Failed to delete trainer.");
+      toast.error(e?.message || "Failed to delete coach.");
     }
   };
 
@@ -188,7 +213,7 @@ export default function TrainerProfilePage() {
     return (
       <div className="py-20 text-center text-muted-foreground no-scrollbar">
         <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-accent border-r-transparent" />
-        <p className="mt-3 text-sm">Loading Trainer profile…</p>
+        <p className="mt-3 text-sm">Loading Coach profile…</p>
       </div>
     );
   }
@@ -197,9 +222,9 @@ export default function TrainerProfilePage() {
     return (
       <div className="py-16 text-center space-y-4 no-scrollbar">
         <AlertCircle size={48} className="mx-auto text-muted-foreground/50" />
-        <h2 className="text-xl font-bold text-foreground">Trainer Not Found</h2>
+        <h2 className="text-xl font-bold text-foreground">Coach Not Found</h2>
         <p className="text-sm text-muted-foreground">
-          No gym Trainer record exists with ID <strong className="text-foreground">{id}</strong>.
+          No gym Coach record exists with ID <strong className="text-foreground">{id}</strong>.
         </p>
         <button
           type="button"
@@ -207,7 +232,7 @@ export default function TrainerProfilePage() {
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-background hover:bg-primary/90 transition-all cursor-pointer"
         >
           <ArrowLeft size={14} />
-          <span>{isTrainer() ? "Back to Dashboard" : "Back to Trainers Directory"}</span>
+          <span>{isTrainer() ? "Back to Dashboard" : "Back to Coaches Directory"}</span>
         </button>
       </div>
     );
@@ -261,7 +286,7 @@ export default function TrainerProfilePage() {
               className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 sm:px-5 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold text-foreground hover:bg-muted hover:border-foreground/30 transition-all shadow-xs cursor-pointer active:scale-[0.99]"
             >
               <ArrowLeft size={16} />
-              <span>Back to Trainers</span>
+              <span>Back to Coaches</span>
             </button>
           )}
 
@@ -312,27 +337,74 @@ export default function TrainerProfilePage() {
         </div>
       </div>
 
-      {/* Unified Profile Layout & Sections */}
-      <TrainerProfileView
-        trainer={trainer}
-        assignedBatches={assignedBatches}
-        onUpdateTrainer={handleSaveEdit}
-        isAdmin={true}
-        canUploadAccreditations={true}
-      >
-        {/* SECTION: Monthly Coaching & Class Conduction (Phase 6) */}
-        <TrainerMonthlyCoachingPanel
-          id={id}
-          selectedMonth={selectedMonth}
-          setSelectedMonth={setSelectedMonth}
-          formattedSelectedMonth={formattedSelectedMonth}
-          handlePrevMonth={handlePrevMonth}
-          handleNextMonth={handleNextMonth}
-          handleCurrentMonth={handleCurrentMonth}
-          coachingSummary={coachingSummary}
-          activelyCoachedBatches={activelyCoachedBatches}
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1.5 border-b border-border/70 pb-2 overflow-x-auto no-scrollbar">
+        {[
+          { id: "all", label: "All Sections", icon: Layers },
+          { id: "overview", label: "Profile & Accreditations", icon: UserCheck },
+          { id: "coaching", label: "Monthly Coaching & Classes", icon: CalendarDays },
+          {
+            id: "leave",
+            label: isTrainer() ? "My Leave & Policy Simulator" : "Leave Management & Policy Simulator",
+            icon: CalendarOff,
+          },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? "bg-primary text-background shadow-xs"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <Icon size={14} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 1. Profile Overview & Accreditations */}
+      {(activeTab === "all" || activeTab === "overview") && (
+        <TrainerProfileView
+          trainer={trainer}
+          assignedBatches={assignedBatches}
+          onUpdateTrainer={handleSaveEdit}
+          isAdmin={isAdmin()}
+          canUploadAccreditations={true}
         />
-      </TrainerProfileView>
+      )}
+
+      {/* 2. Monthly Coaching & Classes */}
+      {(activeTab === "all" || activeTab === "coaching") && (
+        <div className="rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md p-6 sm:p-8 shadow-xs">
+          <TrainerMonthlyCoachingPanel
+            id={id}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            formattedSelectedMonth={formattedSelectedMonth}
+            handlePrevMonth={handlePrevMonth}
+            handleNextMonth={handleNextMonth}
+            handleCurrentMonth={handleCurrentMonth}
+            coachingSummary={coachingSummary}
+            activelyCoachedBatches={activelyCoachedBatches}
+          />
+        </div>
+      )}
+
+      {/* 3. Leave Management & Policy Rule Simulator */}
+      {(activeTab === "all" || activeTab === "leave") && (
+        <TrainerLeaveSection
+          trainer={trainer}
+          isAdmin={isAdmin()}
+          onLeavesUpdated={loadMonthTracking}
+        />
+      )}
 
       {/* Edit Trainer Modal with all corresponding fields */}
       <TrainerModal

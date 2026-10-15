@@ -3,6 +3,7 @@
 const batchRepository = require("./batch.repository");
 const memberRepository = require("../members/member.repository");
 const BatchAssignment = require("./batchAssignment.model");
+const Member = require("../members/member.model");
 const { ConflictError, BadRequestError, NotFoundError } = require("../../shared/apiError");
 const {
   BATCH_STATUS,
@@ -68,12 +69,21 @@ class BatchValidationService {
       );
     }
 
-    // 4. Capacity check
-    const currentPax = Array.isArray(targetBatch.memberIds) ? targetBatch.memberIds.length : 0;
+    // 4. Capacity check - Enforce actual DB count + batch headroom
+    const activeMemberCount = await Member.countDocuments({
+      batchId: targetBatchId,
+      isDeleted: false,
+      status: { $ne: "Archived" },
+    });
+    const currentPax = Math.max(
+      activeMemberCount,
+      Array.isArray(targetBatch.memberIds) ? targetBatch.memberIds.length : 0,
+      targetBatch.currentPax || 0
+    );
     const maxPax = Number(targetBatch.maxPax) || 25;
     if (currentPax >= maxPax) {
       throw new ConflictError(
-        `Batch "${targetBatch.name}" has reached full capacity (${currentPax}/${maxPax} members). Permanent transfer rejected.`
+        "This batch has reached full capacity. This batch has reached its maximum capacity. Please select another batch."
       );
     }
 
@@ -219,9 +229,24 @@ class BatchValidationService {
       }
     }
 
-    // 7. Dynamic capacity check for target batch on each selected day
-    const primaryPax = Array.isArray(targetBatch.memberIds) ? targetBatch.memberIds.length : 0;
+    // 7. Dynamic capacity check for target batch
+    const activeMemberCount = await Member.countDocuments({
+      batchId: targetBatchId,
+      isDeleted: false,
+      status: { $ne: "Archived" },
+    });
+    const primaryPax = Math.max(
+      activeMemberCount,
+      Array.isArray(targetBatch.memberIds) ? targetBatch.memberIds.length : 0,
+      targetBatch.currentPax || 0
+    );
     const maxPax = Number(targetBatch.maxPax) || 25;
+
+    if (primaryPax >= maxPax) {
+      throw new ConflictError(
+        "This batch has reached full capacity. This batch has reached its maximum capacity. Please select another batch."
+      );
+    }
 
     for (const day of effectiveSelectedDays) {
       const flexCountOnDay = await BatchAssignment.countDocuments({
@@ -235,7 +260,7 @@ class BatchValidationService {
 
       if (primaryPax + flexCountOnDay >= maxPax) {
         throw new ConflictError(
-          `Batch "${targetBatch.name}" has reached capacity on ${day}s (Max: ${maxPax}, Currently booked: ${primaryPax + flexCountOnDay} attendees). Flexible assignment rejected.`
+          `Batch "${targetBatch.name}" has reached capacity on ${day}s (Max: ${maxPax}, Currently booked: ${primaryPax + flexCountOnDay} attendees). This batch has reached its maximum capacity. Please select another batch.`
         );
       }
     }

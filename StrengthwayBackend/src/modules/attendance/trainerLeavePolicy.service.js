@@ -80,13 +80,17 @@ class TrainerLeavePolicyService {
         id: DEFAULT_POLICY_ID,
         tiers: DEFAULT_TIERS,
         isActive: true,
-        monthlyPaidLeaveAllowance: 2,
+        annualPaidLeaveAllowance: 36,
+        monthlyPaidLeaveAllowance: 3,
         unpaidDeductionPerDay: 1000,
-        description: "Standard Trainer Leave Policy with duration-based advance notice requirements.",
+        maxConsecutiveEmergencyDays: 3,
+        description: "Standard Trainer Leave Policy with duration-based advance notice requirements and 36 days annual paid allowance.",
         effectiveFrom: new Date().toISOString().slice(0, 10),
         updatedBy: "System",
       });
       policy = created.toObject();
+    } else if (typeof policy.annualPaidLeaveAllowance !== "number") {
+      policy.annualPaidLeaveAllowance = 36;
     }
 
     return policy;
@@ -110,15 +114,24 @@ class TrainerLeavePolicyService {
       }
     }
 
+    const annualPaidLeaveAllowance =
+      typeof payload.annualPaidLeaveAllowance === "number" && payload.annualPaidLeaveAllowance >= 0
+        ? payload.annualPaidLeaveAllowance
+        : 36;
+
     const updateData = {
       tiers: payload.tiers,
-      isActive: payload.isActive !== undefined ? Boolean(payload.isActive) : true,
+      isActive: true, // Always enforce policy notice validation
+      annualPaidLeaveAllowance,
       monthlyPaidLeaveAllowance: typeof payload.monthlyPaidLeaveAllowance === "number" && payload.monthlyPaidLeaveAllowance >= 0
         ? payload.monthlyPaidLeaveAllowance
-        : 2,
+        : Math.round(annualPaidLeaveAllowance / 12) || 3,
       unpaidDeductionPerDay: typeof payload.unpaidDeductionPerDay === "number" && payload.unpaidDeductionPerDay >= 0
         ? payload.unpaidDeductionPerDay
         : 1000,
+      maxConsecutiveEmergencyDays: typeof payload.maxConsecutiveEmergencyDays === "number" && payload.maxConsecutiveEmergencyDays >= 1
+        ? payload.maxConsecutiveEmergencyDays
+        : 3,
       description: payload.description ? String(payload.description).trim() : "",
       effectiveFrom: payload.effectiveFrom || new Date().toISOString().slice(0, 10),
       updatedBy: updatedBy || "admin",
@@ -139,9 +152,10 @@ class TrainerLeavePolicyService {
    * @param {string} startDate - YYYY-MM-DD
    * @param {string} endDate   - YYYY-MM-DD
    * @param {string} [submittedOn] - YYYY-MM-DD (defaults to today)
+   * @param {string} [leaveType]   - "REGULAR" | "EMERGENCY" (defaults to "REGULAR")
    * @returns {Object} validation result
    */
-  async validateLeaveNotice(startDate, endDate, submittedOn) {
+  async validateLeaveNotice(startDate, endDate, submittedOn, leaveType = "REGULAR") {
     if (!startDate || !endDate) {
       throw new BadRequestError("Both startDate and endDate are required.");
     }
@@ -151,26 +165,59 @@ class TrainerLeavePolicyService {
 
     const totalDays = calculateLeaveDays(startDate, endDate);
     const policy = await this.getPolicy();
-
-    if (!policy.isActive) {
-      return {
-        isValid: true,
-        policyActive: false,
-        totalDays,
-        requiredNoticeDays: 0,
-        actualNoticeDays: 0,
-        tier: null,
-        message: "Leave policy enforcement is currently disabled.",
-      };
-    }
-
-    const tier = findMatchingTier(policy.tiers, totalDays);
-    const requiredNoticeDays = tier ? Number(tier.requiredNoticeDays) : 0;
+    const isEmergency = String(leaveType).toUpperCase() === "EMERGENCY";
+    const maxEmergencyDays = typeof policy.maxConsecutiveEmergencyDays === "number" ? policy.maxConsecutiveEmergencyDays : 3;
 
     const dSub = new Date(submissionDateStr + "T00:00:00Z");
     const dStart = new Date(startDate + "T00:00:00Z");
     const diffMs = dStart.getTime() - dSub.getTime();
     const actualNoticeDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (!policy.isActive) {
+      return {
+        isValid: true,
+        isEmergency,
+        policyActive: false,
+        totalDays,
+        requiredNoticeDays: 0,
+        actualNoticeDays: Math.max(0, actualNoticeDays),
+        tier: null,
+        message: "Leave policy enforcement is currently disabled.",
+      };
+    }
+
+    // Emergency Leave Handling
+    if (isEmergency) {
+      if (totalDays > maxEmergencyDays) {
+        return {
+          isValid: false,
+          isEmergency: true,
+          policyActive: true,
+          totalDays,
+          requiredNoticeDays: 0,
+          actualNoticeDays: Math.max(0, actualNoticeDays),
+          maxConsecutiveEmergencyDays: maxEmergencyDays,
+          tier: { label: `Emergency Leave Limit (Max ${maxEmergencyDays} days)` },
+          message: `Emergency leave cannot exceed ${maxEmergencyDays} consecutive day(s) (requested ${totalDays} days). For longer leaves, please submit a regular leave request with advance notice.`,
+        };
+      }
+
+      return {
+        isValid: true,
+        isEmergency: true,
+        policyActive: true,
+        totalDays,
+        requiredNoticeDays: 0,
+        actualNoticeDays: Math.max(0, actualNoticeDays),
+        maxConsecutiveEmergencyDays: maxEmergencyDays,
+        tier: { label: "Emergency Leave (Advance Notice Bypassed)" },
+        message: `Emergency leave request for ${totalDays} day(s). Normal advance notice bypassed. Mandatory reason and Admin approval required before leave becomes active.`,
+      };
+    }
+
+    // Regular Leave Handling
+    const tier = findMatchingTier(policy.tiers, totalDays);
+    const requiredNoticeDays = tier ? Number(tier.requiredNoticeDays) : 0;
 
     const earliestStart = new Date(dSub.getTime() + requiredNoticeDays * 24 * 60 * 60 * 1000);
     const earliestEligibleStartDate = earliestStart.toISOString().slice(0, 10);
@@ -187,6 +234,7 @@ class TrainerLeavePolicyService {
 
     return {
       isValid,
+      isEmergency: false,
       policyActive: true,
       totalDays,
       requiredNoticeDays,

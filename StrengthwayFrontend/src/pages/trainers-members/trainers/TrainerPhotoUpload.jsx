@@ -21,7 +21,7 @@ export default function TrainerPhotoUpload({
           {photo ? (
             <img
               src={photo}
-              alt="Trainer Preview"
+              alt="Coach Preview"
               className="h-full w-full object-cover object-top"
               onError={(e) => {
                 e.currentTarget.classList.add("hidden");

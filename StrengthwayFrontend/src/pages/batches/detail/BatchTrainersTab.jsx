@@ -20,7 +20,7 @@ export default function BatchTrainersTab({
       {/* Subtab Header Strip */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
-          Faculty trainers assigned to <strong>{batch?.name}</strong> for{" "}
+          Faculty coaches assigned to <strong>{batch?.name}</strong> for{" "}
           <strong>{formattedMonthLabel}</strong>
         </span>
         <span className="font-semibold text-foreground">
@@ -32,12 +32,12 @@ export default function BatchTrainersTab({
         <div className="rounded-2xl border border-dashed border-border p-6 text-center bg-card/40">
           <UserCheck size={28} className="mx-auto text-muted-foreground/60 mb-2" />
           <p className="font-semibold text-foreground text-sm">
-            {trainerSearch ? "No matching trainers found" : "No trainers assigned"}
+            {trainerSearch ? "No matching coaches found" : "No coaches assigned"}
           </p>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
             {trainerSearch
               ? "Try searching with a different coach name or phone number."
-              : `No coaches are currently assigned to ${batch?.name}. Assign an existing trainer to this batch.`}
+              : `No coaches are currently assigned to ${batch?.name}. Assign an existing coach to this batch.`}
           </p>
           {!trainerSearch && isAdmin() && (
             <button
@@ -46,7 +46,7 @@ export default function BatchTrainersTab({
               className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-background hover:bg-primary/90 transition-all cursor-pointer shadow-xs"
             >
               <Plus size={14} />
-              <span>Add Trainer to Batch</span>
+              <span>Add Coach to Batch</span>
             </button>
           )}
         </div>

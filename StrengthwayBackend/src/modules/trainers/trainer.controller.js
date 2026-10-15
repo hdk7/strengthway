@@ -25,7 +25,7 @@ async function getAll(req, res, next) {
         data,
         ...buildPaginationResult(total, page, pageSize),
       },
-      "Trainers retrieved successfully."
+      "Coaches retrieved successfully."
     );
   } catch (err) {
     next(err);
@@ -35,7 +35,7 @@ async function getAll(req, res, next) {
 async function getById(req, res, next) {
   try {
     const trainer = await trainerService.getById(req.params.id);
-    return success(res, trainer, "Trainer retrieved successfully.");
+    return success(res, trainer, "Coach retrieved successfully.");
   } catch (err) {
     next(err);
   }
@@ -44,7 +44,7 @@ async function getById(req, res, next) {
 async function create(req, res, next) {
   try {
     const trainer = await trainerService.create(req.body);
-    return created(res, trainer, "Trainer added successfully.");
+    return created(res, trainer, "Coach added successfully.");
   } catch (err) {
     next(err);
   }
@@ -53,7 +53,7 @@ async function create(req, res, next) {
 async function update(req, res, next) {
   try {
     const trainer = await trainerService.update(req.params.id, req.body);
-    return success(res, trainer, "Trainer updated successfully.");
+    return success(res, trainer, "Coach updated successfully.");
   } catch (err) {
     next(err);
   }
@@ -62,7 +62,7 @@ async function update(req, res, next) {
 async function remove(req, res, next) {
   try {
     const result = await trainerService.delete(req.params.id);
-    return success(res, result, "Trainer permanently deleted.");
+    return success(res, result, "Coach permanently deleted.");
   } catch (err) {
     next(err);
   }
@@ -71,7 +71,7 @@ async function remove(req, res, next) {
 async function softDelete(req, res, next) {
   try {
     const trainer = await trainerService.softDelete(req.params.id);
-    return success(res, trainer, "Trainer deactivated successfully.");
+    return success(res, trainer, "Coach deactivated successfully.");
   } catch (err) {
     next(err);
   }
@@ -80,7 +80,7 @@ async function softDelete(req, res, next) {
 async function restore(req, res, next) {
   try {
     const trainer = await trainerService.restore(req.params.id);
-    return success(res, trainer, "Trainer restored successfully.");
+    return success(res, trainer, "Coach restored successfully.");
   } catch (err) {
     next(err);
   }
@@ -89,7 +89,7 @@ async function restore(req, res, next) {
 async function toggleStatus(req, res, next) {
   try {
     const trainer = await trainerService.toggleStatus(req.params.id);
-    return success(res, trainer, `Trainer status changed to ${trainer.status}.`);
+    return success(res, trainer, `Coach status changed to ${trainer.status}.`);
   } catch (err) {
     next(err);
   }
@@ -99,7 +99,7 @@ async function syncBatches(req, res, next) {
   try {
     const { batchIds } = req.body;
     const trainer = await trainerService.syncBatches(req.params.id, batchIds);
-    return success(res, trainer, "Trainer batch assignments updated successfully.");
+    return success(res, trainer, "Coach batch assignments updated successfully.");
   } catch (err) {
     next(err);
   }
@@ -109,7 +109,7 @@ async function getMonthTracking(req, res, next) {
   try {
     const { month } = req.query;
     const tracking = await trainerService.getTrainerMonthTracking(req.params.id, month);
-    return success(res, tracking, "Trainer month tracking retrieved successfully.");
+    return success(res, tracking, "Coach month tracking retrieved successfully.");
   } catch (err) {
     next(err);
   }

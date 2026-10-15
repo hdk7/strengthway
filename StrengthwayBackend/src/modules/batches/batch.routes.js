@@ -17,6 +17,8 @@ const {
   permanentTransferSchema,
   flexibleAssignmentSchema,
   revokeFlexAssignmentSchema,
+  assignSubstituteSchema,
+  cancelSubstituteSchema,
 } = require("./batch.schema");
 
 // ─── Literal Routes (Must precede /:id) ───────────────────────────────────────
@@ -41,6 +43,13 @@ router.delete("/assignments/:id/revoke", authenticate, requireAdmin, validate(re
 router.post("/assignments/:assignmentId/revoke", authenticate, requireAdmin, validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
 router.post("/assignments/:id/revoke", authenticate, requireAdmin, validate(revokeFlexAssignmentSchema), ctrl.revokeFlexAssignment);
 
+// ─── Direct Session Substitute Routes (Literal routes preceding /:id) ────────
+router.get("/sessions/:sessionId/substitutes/eligible", authenticate, requireAdmin, ctrl.getEligibleSubstitutes);
+router.post("/sessions/:sessionId/substitute", authenticate, requireAdmin, validate(assignSubstituteSchema), ctrl.assignSubstitute);
+router.delete("/sessions/:sessionId/substitute", authenticate, requireAdmin, validate(cancelSubstituteSchema), ctrl.cancelSubstitute);
+router.post("/sessions/:sessionId/substitute/cancel", authenticate, requireAdmin, validate(cancelSubstituteSchema), ctrl.cancelSubstitute);
+router.get("/sessions/:sessionId/substitute-audits", authenticate, requireAdmin, ctrl.getSessionSubstituteAudits);
+
 // ─── Batches Core ─────────────────────────────────────────────────────────────
 // GET /api/v1/batches — Admin sees all; Trainer sees assigned; Member sees enrolled
 router.get("/", authenticate, scopeBatchQuery, ctrl.getAll);
@@ -62,6 +71,13 @@ router.get("/:id/capacity-check", authenticate, scopeBatchDoc, ctrl.getCapacityC
 router.get("/:id/effective-attendees", authenticate, scopeBatchDoc, ctrl.getEffectiveAttendees);
 router.get("/:id/audit-logs", authenticate, scopeBatchDoc, ctrl.getBatchAuditLogs);
 router.get("/:id/audit-history", authenticate, scopeBatchDoc, ctrl.getBatchAuditLogs);
+router.get("/:id/substitute-audits", authenticate, scopeBatchDoc, ctrl.getBatchSubstituteAudits);
+router.get("/:id/sessions/:sessionId/substitutes/eligible", authenticate, requireAdmin, ctrl.getEligibleSubstitutes);
+router.get("/:id/sessions/:sessionId/eligible-substitutes", authenticate, requireAdmin, ctrl.getEligibleSubstitutes);
+router.post("/:id/sessions/:sessionId/substitute", authenticate, requireAdmin, validate(assignSubstituteSchema), ctrl.assignSubstitute);
+router.delete("/:id/sessions/:sessionId/substitute", authenticate, requireAdmin, validate(cancelSubstituteSchema), ctrl.cancelSubstitute);
+router.post("/:id/sessions/:sessionId/substitute/cancel", authenticate, requireAdmin, validate(cancelSubstituteSchema), ctrl.cancelSubstitute);
+router.get("/:id/sessions/:sessionId/substitute-history", authenticate, scopeBatchDoc, ctrl.getSessionSubstituteAudits);
 
 // ─── Batch Scheduled Classes Sub-routes ───────────────────────────────────────
 router.get("/:id/classes", authenticate, scopeBatchDoc, ctrl.getClassesByBatch);

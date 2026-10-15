@@ -270,7 +270,7 @@ export default function AttendancePolicyMasterPage() {
           <p className="mt-0.5 text-xs text-muted-foreground">
             {activeTab === "holidays"
               ? "Manage scheduled gym closures, festival blackout dates, and batch attendance exemptions."
-              : "Configure trainer leave notice duration tiers and advance-application compliance rules."}
+              : "Configure coach leave notice duration tiers and advance-application compliance rules."}
           </p>
         </div>
 
@@ -299,7 +299,7 @@ export default function AttendancePolicyMasterPage() {
               }`}
             >
               <ShieldCheck size={14} />
-              <span>Trainer Leave Policy</span>
+              <span>Coach Leave Policy</span>
             </button>
           </div>
 

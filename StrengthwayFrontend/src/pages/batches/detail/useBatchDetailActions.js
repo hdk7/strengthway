@@ -36,6 +36,10 @@ export function useBatchDetailActions({
   currentBatchSessions = [],
 }) {
   const handleRevokeFlexPass = async (assignmentId, memberName) => {
+    if (!assignmentId) {
+      toast.error(`Cannot revoke pass: Missing flex pass identifier for ${memberName || "this member"}.`);
+      return;
+    }
     if (!window.confirm(`Are you sure you want to revoke the flexible batch pass for ${memberName}?`)) {
       return;
     }
@@ -93,13 +97,21 @@ export function useBatchDetailActions({
 
   const handleEnrollExistingMember = async (member) => {
     if (!batch) return;
+    const currentPax = Array.isArray(batch.memberIds)
+      ? batch.memberIds.length
+      : (batch.currentPax || 0);
+    const capacity = Number(batch.maxPax) || 25;
+    if (currentPax >= capacity) {
+      toast.error("This batch has reached its maximum capacity. Please select another batch.");
+      return;
+    }
     try {
-      await updateMember(member.id, { batchId: batch.id });
       await enrollMemberInBatch(batch.id, member.id);
+      await updateMember(member.id, { batchId: batch.id });
       toast.success(`${member.firstName} ${member.lastName || ""} enrolled into ${batch.name}!`);
       await loadBatchData();
-    } catch {
-      toast.error("Failed to enroll member in batch.");
+    } catch (err) {
+      toast.error(err?.message || "Failed to enroll member in batch.");
     }
   };
 

@@ -89,7 +89,9 @@ export async function getMemberBatchAssignments(memberId) {
  * Revokes an active flexible batch assignment.
  */
 export async function revokeFlexibleAssignment(assignmentId, reasonOrOptions = {}) {
-  if (!assignmentId) return null;
+  if (!assignmentId) {
+    throw new Error("Assignment ID is required to revoke a flexible batch pass.");
+  }
   let reason = "Revoked by admin";
   let revokedBy = "Admin";
 

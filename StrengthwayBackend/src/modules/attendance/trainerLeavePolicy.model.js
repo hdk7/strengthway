@@ -40,10 +40,14 @@ const trainerLeavePolicySchema = new mongoose.Schema(
     },
     /** Whether this policy is currently active and enforced. */
     isActive: { type: Boolean, default: true, index: true },
-    /** Monthly paid leave allowance per trainer in days (default: 2 days). Leaves exceeding this count in a calendar month are treated as unpaid deductions. */
-    monthlyPaidLeaveAllowance: { type: Number, default: 2, min: 0 },
-    /** Financial deduction in INR applied per unpaid leave day. */
+    /** Annual paid leave allowance per trainer in days (default: 36 days). Both informed and uninformed leave count toward this allowance. Leaves exceeding this count in a calendar year are treated as Loss of Pay (LOP). */
+    annualPaidLeaveAllowance: { type: Number, default: 36, min: 0 },
+    /** Monthly paid leave allowance per trainer in days (backward compatibility). */
+    monthlyPaidLeaveAllowance: { type: Number, default: 3, min: 0 },
+    /** Financial deduction in INR applied per unpaid / LOP leave day. */
     unpaidDeductionPerDay: { type: Number, default: 1000, min: 0 },
+    /** Maximum consecutive emergency leave days permitted without standard advance notice (default: 3 days). */
+    maxConsecutiveEmergencyDays: { type: Number, default: 3, min: 1, max: 14 },
     /** Free-text description/notes about this policy. */
     description: { type: String, trim: true, default: "" },
     /** ISO date string (YYYY-MM-DD) from which this policy is effective. */

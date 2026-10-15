@@ -75,6 +75,71 @@ const sessionSchema = new mongoose.Schema(
       trim: true,
       default: "Assigned Coach",
     },
+    originalCoachId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    originalCoachName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    substituteCoachId: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
+    substituteCoachName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    isSubstituted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    substitutionReason: {
+      type: String,
+      enum: ["Leave", "Absent", "Emergency", "Other", "LEAVE", "ABSENT", "EMERGENCY", "OTHER", "None", "NONE", ""],
+      default: "",
+    },
+    substitutionNotes: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    substitutionStatus: {
+      type: String,
+      enum: ["NONE", "SCHEDULED", "ACTIVE", "COMPLETED", "CANCELLED"],
+      default: "NONE",
+      index: true,
+    },
+    substitutionAssignedBy: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    substitutionAssignedAt: {
+      type: Date,
+      default: null,
+    },
+    substitutionCancelledBy: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    substitutionCancelledAt: {
+      type: Date,
+      default: null,
+    },
+    substitutionCancellationReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     sessionDate: {
       type: String,
       trim: true,

@@ -62,41 +62,100 @@ function formatDateAndMonth(session) {
 }
 
 function getSessionAssignedTrainers(session, batch, trainers = []) {
-  const ids = new Set();
-  if (Array.isArray(batch?.trainerIds)) {
-    batch.trainerIds.forEach((id) => id && ids.add(id));
-  }
-  if (session?.coachId) {
-    ids.add(session.coachId);
-  }
-  if (Array.isArray(session?.assignedTrainerIds)) {
-    session.assignedTrainerIds.forEach((id) => id && ids.add(id));
-  }
-
   const trainerMap = new Map();
   (trainers || []).forEach((t) => {
     if (t?.id) trainerMap.set(t.id, t);
+    if (t?._id) trainerMap.set(String(t._id), t);
   });
 
-  const list = Array.from(ids).map((tid) => {
-    const match = trainerMap.get(tid);
-    const name =
-      match?.name ||
-      `${match?.firstName || ""} ${match?.lastName || ""}`.trim() ||
-      (session?.coachId === tid ? session.coachName : tid);
-    return {
-      id: tid,
-      name: name || tid,
-      role: match?.role || "Faculty Coach",
-    };
-  });
+  const getTrainerName = (id, fallback) => {
+    const t = trainerMap.get(id);
+    if (!t) return fallback || id || "Unassigned";
+    const name = t.name || `${t.firstName || ""} ${t.lastName || ""}`.trim();
+    return name || fallback || id || "Unassigned";
+  };
+
+  const list = [];
+  const processedIds = new Set();
+
+  // If a substitute is assigned, the SUBSTITUTE coach conducts the class and goes FIRST
+  if (session?.isSubstituted && session?.substituteCoachId) {
+    const subId = session.substituteCoachId;
+    processedIds.add(subId);
+    list.push({
+      id: subId,
+      name: getTrainerName(subId, session.substituteCoachName),
+      role: `Substitute Coach (${session?.substitutionReason || "Leave Coverage"})`,
+      isSubstitute: true,
+      isConducting: true,
+    });
+
+    // If an original coach exists and is replaced, show them next
+    const origId = session.originalCoachId;
+    if (origId && origId !== subId) {
+      processedIds.add(origId);
+      list.push({
+        id: origId,
+        name: getTrainerName(origId, session.originalCoachName),
+        role: "Original Coach (On Leave)",
+        isOriginalReplaced: true,
+        isSubstitute: false,
+      });
+    }
+  } else {
+    // Normal session: conducting coach is session.coachId or primary batch trainer
+    if (session?.coachId) {
+      processedIds.add(session.coachId);
+      list.push({
+        id: session.coachId,
+        name: getTrainerName(session.coachId, session.coachName),
+        role: "Conducting Coach",
+        isSubstitute: false,
+        isConducting: true,
+      });
+    }
+  }
+
+  // Next, include any batch trainers who are not already processed
+  if (Array.isArray(batch?.trainerIds)) {
+    batch.trainerIds.forEach((tid) => {
+      if (tid && !processedIds.has(tid)) {
+        processedIds.add(tid);
+        list.push({
+          id: tid,
+          name: getTrainerName(tid, ""),
+          role: "Assigned Coach",
+          isSubstitute: false,
+        });
+      }
+    });
+  }
+
+  // Include any extra assignedTrainerIds from session
+  if (Array.isArray(session?.assignedTrainerIds)) {
+    session.assignedTrainerIds.forEach((tid) => {
+      if (tid && !processedIds.has(tid)) {
+        processedIds.add(tid);
+        list.push({
+          id: tid,
+          name: getTrainerName(tid, ""),
+          role: "Assigned Coach",
+          isSubstitute: false,
+        });
+      }
+    });
+  }
 
   if (list.length === 0) {
-    list.push({
-      id: session?.coachId || "TRN-101",
-      name: session?.coachName || "Assigned Coach",
-      role: "Faculty Coach",
-    });
+    const fallbackId = session?.coachId || batch?.trainerId;
+    if (fallbackId) {
+      list.push({
+        id: fallbackId,
+        name: getTrainerName(fallbackId, session?.coachName || "Assigned Coach"),
+        role: "Assigned Coach",
+        isSubstitute: false,
+      });
+    }
   }
 
   return list;
@@ -122,6 +181,7 @@ export default function BatchClassesTab({
   onRestoreSession,
   onCreateMasterSchedule,
   onOpenAddClasses,
+  onOpenSubstituteModal,
   onRefresh,
 }) {
   const currentUser = getCurrentUser() || {};
@@ -356,6 +416,12 @@ export default function BatchClassesTab({
                         </div>
 
                         <div className="flex items-center gap-1.5">
+                          {session.isSubstituted && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                              <UserCheck size={11} className="text-amber-500 shrink-0" />
+                              <span>Substitute Assigned</span>
+                            </span>
+                          )}
                           <span
                             className="rounded-md bg-muted border border-border/70 px-2.5 py-1 text-xs font-bold text-foreground"
                             title={session.displayDate || session.sessionDate || ""}
@@ -401,13 +467,33 @@ export default function BatchClassesTab({
                         )}
                       </div>
 
+                      {/* Substituted Trainer Banner */}
+                      {session.isSubstituted && session.substituteCoachId && (
+                        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <UserCheck size={13} className="text-amber-500 shrink-0" />
+                            <span className="font-bold text-amber-700 dark:text-amber-400 truncate text-[11px]">
+                              Conducting: {session.substituteCoachName || session.substituteCoachId}
+                            </span>
+                            <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-600 dark:text-amber-300 font-bold shrink-0">
+                              {session.substitutionReason || "Leave Coverage"}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                            Original: {session.originalCoachName || session.coachName}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Assigned Trainers & Individual Notes Submission Status */}
                       <div className="space-y-1.5 pt-2 border-t border-border/40">
                         <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <User size={12} className="text-primary" />
                             <span>
-                              Assigned {assignedCoaches.length > 1 ? "Coaches" : "Coach"}:
+                              {session.isSubstituted
+                                ? "Conducting Coach (Substitute):"
+                                : `Assigned ${assignedCoaches.length > 1 ? "Coaches" : "Coach"}:`}
                             </span>
                           </span>
                           {(isEligibleForNotes || submittedCount > 0) && (
@@ -424,6 +510,39 @@ export default function BatchClassesTab({
                             const coachNote = notesForThisSession.find((n) => n.trainerId === coach.id);
                             const isSubmitted = !!(coachNote && coachNote.sessionSummary?.trim());
                             const isMyCoach = userIsTrainer && coach.id === myTrainerId;
+
+                            // If this coach is the active substitute conducting coach
+                            if (coach.isSubstitute) {
+                              return (
+                                <span
+                                  key={coach.id}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2 py-1 text-[11px] text-amber-700 dark:text-amber-300 font-bold shadow-2xs"
+                                  title={`Conducting Substitute Trainer: ${coach.name}`}
+                                >
+                                  <UserCheck size={11} className="text-amber-500 shrink-0" />
+                                  <span className="truncate max-w-[120px]">{coach.name}</span>
+                                  <span className="rounded bg-amber-500/25 px-1 py-0.2 text-[8px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-200">
+                                    Substitute
+                                  </span>
+                                </span>
+                              );
+                            }
+
+                            // If this coach was the original replaced trainer (on leave)
+                            if (coach.isOriginalReplaced) {
+                              return (
+                                <span
+                                  key={coach.id}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-border/40 bg-muted/20 px-2 py-1 text-[11px] text-muted-foreground/75"
+                                  title={`Original Assigned Trainer: ${coach.name} (On Leave)`}
+                                >
+                                  <span className="line-through truncate max-w-[100px]">{coach.name}</span>
+                                  <span className="text-[9px] text-muted-foreground font-mono">
+                                    (On Leave)
+                                  </span>
+                                </span>
+                              );
+                            }
 
                             // When logged in as trainer, restrict interactive notes button to own coach profile only
                             if (userIsTrainer && !isMyCoach) {
@@ -600,6 +719,29 @@ export default function BatchClassesTab({
                               <Edit3 size={11} />
                               <span>Edit Item</span>
                             </button>
+
+                            {!isCompleted && !isCancelled && (
+                              <button
+                                type="button"
+                                onClick={() => onOpenSubstituteModal && onOpenSubstituteModal(session)}
+                                className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold cursor-pointer transition-colors ${
+                                  session.isSubstituted
+                                    ? "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-400 hover:bg-amber-500/25 shadow-2xs"
+                                    : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                                }`}
+                                title={
+                                  session.isSubstituted
+                                    ? `Substitute Assigned: ${session.substituteCoachName} (${session.substitutionReason || "Leave"}). Click to manage or cancel.`
+                                    : "Optionally assign a substitute trainer for this session."
+                                }
+                              >
+                                <UserCheck size={11} className={session.isSubstituted ? "text-amber-500" : ""} />
+                                <span>{session.isSubstituted ? "Substituted" : "Substitute"}</span>
+                                {session.isSubstituted && (
+                                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                )}
+                              </button>
+                            )}
 
                             {!isCompleted && !isCancelled && isSessionEligibleForInterchange(session, batch) && currentBatchSessions.length >= 2 && (
                               <button

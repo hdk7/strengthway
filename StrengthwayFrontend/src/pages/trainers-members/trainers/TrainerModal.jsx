@@ -23,10 +23,18 @@ import TrainerBatchPicker from "./TrainerBatchPicker";
 
 const INITIAL_FORM = {
   name: "",
+  dob: "",
   gender: "",
+  bloodGroup: "",
   experience: "",
   phone: "",
   email: "",
+  instagramProfileId: "",
+  address: "",
+  city: "",
+  state: "",
+  country: "India",
+  pincode: "",
   status: "Active",
   quote: "",
   photo: "",
@@ -59,10 +67,18 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
 
             setForm({
               name: trainerToEdit.name || "",
+              dob: trainerToEdit.dob || "",
               gender: trainerToEdit.gender || "Male",
+              bloodGroup: trainerToEdit.bloodGroup || "",
               experience: trainerToEdit.experience || "",
               phone: trainerToEdit.phone || "",
               email: trainerToEdit.email || "",
+              instagramProfileId: trainerToEdit.instagramProfileId || "",
+              address: trainerToEdit.address || "",
+              city: trainerToEdit.city || "",
+              state: trainerToEdit.state || "",
+              country: trainerToEdit.country || "India",
+              pincode: trainerToEdit.pincode || "",
               status: trainerToEdit.status || "Active",
               quote: trainerToEdit.quote || "",
               photo: trainerToEdit.photo || "",
@@ -113,7 +129,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
     reader.onload = (event) => {
       const dataUrl = event.target?.result;
       setForm((prev) => ({ ...prev, photo: dataUrl }));
-      toast.success("Trainer portrait image loaded.");
+      toast.success("Coach portrait image loaded.");
     };
     reader.readAsDataURL(file);
   };
@@ -170,19 +186,19 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
       if (trainerToEdit) {
         savedTrainer = await updateTrainer(trainerToEdit.id, submitPayload);
         await syncTrainerBatches(trainerToEdit.id, submitPayload.batchIds);
-        toast.success(`Trainer "${form.name}" updated successfully.`);
+        toast.success(`Coach "${form.name}" updated successfully.`);
       } else {
         savedTrainer = await createTrainer(submitPayload);
         if (savedTrainer?.id && submitPayload.batchIds.length > 0) {
           await syncTrainerBatches(savedTrainer.id, submitPayload.batchIds);
         }
-        toast.success(`Trainer "${form.name}" created successfully.`);
+        toast.success(`Coach "${form.name}" created successfully.`);
       }
 
       if (onSuccess) onSuccess(savedTrainer);
       handleClose();
     } catch (e) {
-      toast.error(e?.message || "Failed to save trainer details.");
+      toast.error(e?.message || "Failed to save coach details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -191,11 +207,11 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
   return (
     <FormModal isOpen={isOpen} onClose={handleClose} size="xl">
       <FormModalHeader
-        title={trainerToEdit ? "Edit Trainer Profile" : "Add New Trainer"}
+        title={trainerToEdit ? "Edit Coach Profile" : "Add New Coach"}
         description={
           trainerToEdit
-            ? "Update trainer details, experience, and biography"
-            : "Create a new Trainer profile for the Strength Way roster"
+            ? "Update coach details, experience, and biography"
+            : "Create a new Coach profile for the Strength Way roster"
         }
         onClose={handleClose}
       />
@@ -210,7 +226,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
           {/* 1. Identification & Portrait Photo */}
           <div className="space-y-4">
             <FormSectionHeader
-              title="Personal Details & Portrait"
+              title="Personal Details"
               subtitle="Profile identification, coaching status, and display picture"
             />
 
@@ -222,8 +238,8 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
               photoInputRef={photoInputRef}
             />
 
-            {/* Full Name, Gender & Status */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            {/* Full Name & Experience */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <InputField
                 id="trainer-name"
                 name="name"
@@ -235,22 +251,6 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 placeholder="e.g. Dolliee Ellens"
                 error={errors.name}
                 size="sm"
-                className="sm:col-span-2"
-              />
-
-              <SelectField
-                id="trainer-gender"
-                name="gender"
-                label="Gender"
-                value={form.gender}
-                onChange={handleChange}
-                size="sm"
-                options={[
-                  { value: "", label: "Select Gender" },
-                  { value: "Female", label: "Female" },
-                  { value: "Male", label: "Male" },
-                  { value: "Other", label: "Other" },
-                ]}
               />
 
               <InputField
@@ -267,8 +267,63 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
               />
             </div>
 
-            {trainerToEdit && (
-              <div>
+            {/* Date of Birth & Gender */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InputField
+                id="trainer-dob"
+                name="dob"
+                type="date"
+                label="Date of Birth"
+                value={form.dob}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.dob}
+                size="sm"
+              />
+
+              <SelectField
+                id="trainer-gender"
+                name="gender"
+                label="Gender"
+                value={form.gender}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.gender}
+                size="sm"
+                options={[
+                  { value: "", label: "Select Gender" },
+                  { value: "Female", label: "Female" },
+                  { value: "Male", label: "Male" },
+                  { value: "Other", label: "Other" },
+                ]}
+              />
+            </div>
+
+            {/* Blood Group & Status */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <SelectField
+                id="trainer-blood-group"
+                name="bloodGroup"
+                label="Blood Group"
+                value={form.bloodGroup}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={errors.bloodGroup}
+                size="sm"
+                options={[
+                  { value: "", label: "Select Blood Group" },
+                  { value: "A+", label: "A+" },
+                  { value: "A-", label: "A-" },
+                  { value: "B+", label: "B+" },
+                  { value: "B-", label: "B-" },
+                  { value: "AB+", label: "AB+" },
+                  { value: "AB-", label: "AB-" },
+                  { value: "O+", label: "O+" },
+                  { value: "O-", label: "O-" },
+                ]}
+              />
+
+              {trainerToEdit ? (
                 <SelectField
                   id="trainer-status"
                   name="status"
@@ -281,15 +336,15 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                     { value: "Inactive", label: "Inactive" },
                   ]}
                 />
-              </div>
-            )}
+              ) : <div />}
+            </div>
           </div>
 
           {/* 2. Contact Channels */}
           <div className="space-y-4">
             <FormSectionHeader
               title="Contact Channels"
-              subtitle="Direct phone and email contact for roster scheduling"
+              subtitle="Direct phone, email, and social contact for roster scheduling"
               hasDivider
             />
 
@@ -317,18 +372,103 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 value={form.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="e.g. trainer@strengthway.fit"
+                placeholder="e.g. coach@strengthway.fit"
                 error={errors.email}
+                size="sm"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InputField
+                id="trainer-instagram"
+                name="instagramProfileId"
+                label="Instagram Profile ID"
+                value={form.instagramProfileId}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="e.g. @coach_strength"
+                error={errors.instagramProfileId}
                 size="sm"
               />
             </div>
           </div>
 
-          {/* 3. Batch Slots & Shift Timings (Multi-Select) */}
+          {/* 3. Residence Information */}
+          <div className="space-y-4">
+            <FormSectionHeader
+              title="Residence Information"
+              subtitle="Residential address and geographical location details"
+              hasDivider
+            />
+
+            <InputField
+              id="trainer-address"
+              name="address"
+              label="Residential Address"
+              value={form.address}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="e.g. Flat 402, Gym Street"
+              error={errors.address}
+              size="sm"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <InputField
+                id="trainer-city"
+                name="city"
+                label="City"
+                value={form.city}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="e.g. Mumbai"
+                error={errors.city}
+                size="sm"
+              />
+
+              <InputField
+                id="trainer-state"
+                name="state"
+                label="State"
+                value={form.state}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="e.g. Maharashtra"
+                error={errors.state}
+                size="sm"
+              />
+
+              <InputField
+                id="trainer-country"
+                name="country"
+                label="Country"
+                value={form.country}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="e.g. India"
+                error={errors.country}
+                size="sm"
+              />
+
+              <InputField
+                id="trainer-pincode"
+                name="pincode"
+                label="PIN / Postal Code"
+                value={form.pincode}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="e.g. 400001"
+                error={errors.pincode}
+                size="sm"
+              />
+            </div>
+          </div>
+
+          {/* 4. Batch Slots & Shift Timings (Multi-Select) */}
           <div className="space-y-3">
             <FormSectionHeader
               title="Assigned Batches & Class Shifts"
-              subtitle="Map trainer availability to specific gym batches"
+              subtitle="Map coach availability to specific gym batches"
               hasDivider
             />
             <TrainerBatchPicker
@@ -340,7 +480,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
             />
           </div>
 
-          {/* 4. Coaching Philosophy & Biography */}
+          {/* 5. Coaching Philosophy & Biography */}
           <div className="space-y-4">
             <FormSectionHeader
               title="Coaching Philosophy & Biography"
@@ -378,8 +518,8 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
             isSubmitting
               ? "Saving..."
               : trainerToEdit
-                ? "Update Trainer Profile"
-                : "Create Trainer"
+                ? "Update Coach Profile"
+                : "Create Coach"
           }
           submitIcon={CheckCircle2}
           isSubmitting={isSubmitting}

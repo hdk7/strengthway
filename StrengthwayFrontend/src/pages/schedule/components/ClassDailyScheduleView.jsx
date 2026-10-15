@@ -272,7 +272,12 @@ export function ClassDailyScheduleView({
                     )}
                   </div>
                   <p className="text-xs text-slate-500 dark:text-muted-foreground mt-0.5">
-                    Coach: <strong>{s.coachName || "Coach"}</strong> • Studio:{" "}
+                    Coach: <strong>{s.coachName || "Coach"}</strong>
+                    {s.isSubstituted && (
+                      <span className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                        (Substitute)
+                      </span>
+                    )} • Studio:{" "}
                     <strong>{s.roomName || s.room || "Studio 1"}</strong>
                   </p>
                 </div>

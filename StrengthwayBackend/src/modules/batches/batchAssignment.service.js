@@ -400,9 +400,21 @@ class BatchAssignmentService {
    * 3. Cancels or revokes an active/scheduled flexible assignment.
    */
   async revokeFlexibleAssignment(assignmentId, reason = "Revoked by admin", revokedBy = "Admin") {
-    const assignment = await BatchAssignment.findOne({
-      $or: [{ id: assignmentId }, { transactionId: assignmentId }],
-    });
+    const mongoose = require("mongoose");
+    const orConditions = [
+      { id: assignmentId },
+      { transactionId: assignmentId },
+      {
+        memberId: assignmentId,
+        assignmentType: ASSIGNMENT_TYPE.TEMPORARY_FLEX,
+        status: { $in: [ASSIGNMENT_STATUS.ACTIVE, ASSIGNMENT_STATUS.SCHEDULED] },
+      },
+    ];
+    if (mongoose.isValidObjectId(assignmentId)) {
+      orConditions.push({ _id: assignmentId });
+    }
+
+    const assignment = await BatchAssignment.findOne({ $or: orConditions });
     if (!assignment) {
       throw new NotFoundError(`Batch assignment with ID "${assignmentId}" not found.`);
     }
@@ -427,7 +439,15 @@ class BatchAssignmentService {
     await Member.findOneAndUpdate(
       { id: assignment.memberId },
       {
-        $pull: { activeFlexAssignments: { assignmentId: assignment.id } },
+        $pull: {
+          activeFlexAssignments: {
+            $or: [
+              { assignmentId: assignment.id },
+              ...(assignment.transactionId ? [{ transactionId: assignment.transactionId }] : []),
+              { targetBatchId: assignment.targetBatchId },
+            ],
+          },
+        },
         $push: {
           batchHistory: {
             assignmentId: assignment.id,
@@ -547,7 +567,15 @@ class BatchAssignmentService {
         await Member.updateOne(
           { id: asg.memberId },
           {
-            $pull: { activeFlexAssignments: { assignmentId: asg.id } },
+            $pull: {
+              activeFlexAssignments: {
+                $or: [
+                  { assignmentId: asg.id },
+                  ...(asg.transactionId ? [{ transactionId: asg.transactionId }] : []),
+                  { targetBatchId: asg.targetBatchId },
+                ],
+              },
+            },
             $push: {
               batchHistory: {
                 assignmentId: asg.id,
@@ -575,15 +603,20 @@ class BatchAssignmentService {
       }
 
       // Update Audit Logs in both batches
-      if (asg.transactionId) {
+      if (asg.transactionId || asg.id) {
+        const auditOr = [];
+        if (asg.transactionId) auditOr.push({ transactionId: asg.transactionId });
+        if (asg.id) auditOr.push({ assignmentId: asg.id });
+
         await BatchAudit.updateMany(
-          { transactionId: asg.transactionId },
+          { $or: auditOr },
           {
             $set: {
               status: ASSIGNMENT_STATUS.COMPLETED,
               rejoinedAt: now,
               rejoinReason: "Flex period ended - automatically returned to original batch",
               actionType: BATCH_AUDIT_ACTION.MEMBER_REJOINED,
+              "metadata.completedAt": now,
             },
           }
         );
