@@ -87,10 +87,17 @@ router.delete("/:id/classes/:classId", authenticate, requireAdmin, ctrl.deleteCl
 
 // ─── Batch Reusable Classes Scheduling, Shuffling & History Sub-routes ────────
 const batchScheduleCtrl = require("../classes/batchSchedule.controller");
+const classCancellationCtrl = require("../classes/classCancellation.controller");
+
 router.get("/:id/schedule", authenticate, scopeBatchDoc, batchScheduleCtrl.getBatchSchedule);
 router.post("/:id/schedule/assign-classes", authenticate, requireAdmin, batchScheduleCtrl.assignClasses);
 router.post("/:id/schedule/shuffle", authenticate, requireAdmin, batchScheduleCtrl.shuffleClasses);
 router.get("/:id/schedule/history", authenticate, scopeBatchDoc, batchScheduleCtrl.getScheduleHistory);
+
+// ─── Batch Class Cancellation, Rescheduling & Adjustment Sub-routes ───────────
+router.post("/:id/schedule/cancel-reschedule/simulate", authenticate, requireAdmin, classCancellationCtrl.simulate);
+router.post("/:id/schedule/cancel-reschedule", authenticate, requireAdmin, classCancellationCtrl.apply);
+router.get("/:id/schedule/cancellations", authenticate, scopeBatchDoc, classCancellationCtrl.getBatchCancellations);
 
 module.exports = router;
 

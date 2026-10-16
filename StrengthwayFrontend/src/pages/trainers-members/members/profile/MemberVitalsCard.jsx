@@ -1,5 +1,4 @@
 import { Activity, Dumbbell, UserCheck, Heart } from "lucide-react";
-import { MemberMedicalClearanceCard } from "./MemberMedicalClearanceCard";
 
 export function MemberVitalsCard({
   member,
@@ -103,5 +102,3 @@ export function MemberVitalsCard({
     </div>
   );
 }
-
-export { MemberMedicalClearanceCard };

@@ -3,6 +3,7 @@ import {
   X,
   PhoneCall,
   UserCheck,
+  UserPlus,
   Archive,
   CheckCircle2,
 } from "lucide-react";
@@ -112,8 +113,8 @@ export function InquiryProfileModal({
                     onClick={() => onConvert?.(inquiry)}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
                   >
-                    <UserCheck size={13} />
-                    <span>Convert to Member</span>
+                    <UserPlus size={13} />
+                    <span>Proceed to Enrollment</span>
                   </button>
                 )}
                 <button

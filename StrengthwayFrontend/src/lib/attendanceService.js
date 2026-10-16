@@ -165,6 +165,147 @@ export async function getDailyAttendanceRecords(params = {}) {
   return api.get(`/v1/attendance${qs}`);
 }
 
+/**
+ * Initiates check-in for a trainer session or consecutive session block.
+ *
+ * @param {object} payload
+ * @param {string} payload.trainerId
+ * @param {string} payload.date
+ * @param {string} [payload.sessionId]
+ * @param {string} [payload.batchId]
+ * @param {string} [payload.checkInTime]
+ * @param {boolean} [payload.isAdminOverride]
+ * @param {string} [payload.overrideReason]
+ * @returns {Promise<object>}
+ */
+export async function trainerCheckIn(payload) {
+  return api.post("/v1/attendance/trainer-checkin", payload);
+}
+
+/**
+ * Completes check-out for a trainer session or continuous session interval,
+ * calculating actual presence and scheduled teaching duration.
+ *
+ * @param {object} payload
+ * @param {string} payload.trainerId
+ * @param {string} payload.date
+ * @param {string} [payload.intervalId]
+ * @param {string} [payload.sessionId]
+ * @param {string} [payload.checkOutTime]
+ * @param {boolean} [payload.isAdminOverride]
+ * @param {string} [payload.overrideReason]
+ * @returns {Promise<object>}
+ */
+export async function trainerCheckOut(payload) {
+  return api.post("/v1/attendance/trainer-checkout", payload);
+}
+
+/**
+ * Retrieves a trainer's scheduled sessions on a given date, grouped by consecutive blocks.
+ *
+ * @param {string} trainerId
+ * @param {string} [date] YYYY-MM-DD
+ * @returns {Promise<object>}
+ */
+export async function getTrainerDailySchedule(trainerId, date) {
+  if (!trainerId) return null;
+  const d = date || new Date().toISOString().slice(0, 10);
+  return api.get(`/v1/attendance/trainer-schedule/${encodeURIComponent(trainerId)}?date=${encodeURIComponent(d)}`);
+}
+
+/**
+ * Retrieves continuous attendance intervals for trainers.
+ *
+ * @param {object} [params]
+ * @param {string} [params.trainerId]
+ * @param {string} [params.date]
+ * @param {string} [params.month]
+ * @returns {Promise<object[]>}
+ */
+export async function getTrainerIntervals(params = {}) {
+  const q = new URLSearchParams();
+  if (params.trainerId && params.trainerId !== "all") q.append("trainerId", params.trainerId);
+  if (params.date) q.append("date", params.date);
+  if (params.month) q.append("month", params.month);
+  const qs = q.toString() ? `?${q.toString()}` : "";
+  return api.get(`/v1/attendance/trainer-intervals${qs}`);
+}
+
+/**
+ * Administrative override / correction for member attendance with mandatory reason.
+ *
+ * @param {object} payload
+ * @returns {Promise<object>}
+ */
+export async function adminOverrideMemberAttendance(payload) {
+  return api.post("/v1/attendance/admin/override-member", payload);
+}
+
+/**
+ * Administrative override / correction for trainer attendance with mandatory reason.
+ *
+ * @param {object} payload
+ * @returns {Promise<object>}
+ */
+export async function adminOverrideTrainerAttendance(payload) {
+  return api.post("/v1/attendance/admin/override-trainer", payload);
+}
+
+/**
+ * Transitions trainer attendance to the next consecutive scheduled session ("Add Another Session").
+ * Closes the current session interval and initiates check-in for the next eligible class.
+ *
+ * @param {object} payload
+ * @param {string} payload.trainerId
+ * @param {string} payload.date
+ * @param {string} payload.currentSessionId
+ * @param {string} payload.nextSessionId
+ * @param {string} [payload.transitionTime]
+ * @returns {Promise<object>}
+ */
+export async function trainerAddAnotherSession(payload) {
+  return api.post("/v1/attendance/trainer/add-another-session", payload);
+}
+
+/**
+ * Triggers backend processing for automatic member check-outs for expired class sessions.
+ *
+ * @param {object} [payload]
+ * @param {string} [payload.date]
+ * @param {string} [payload.batchId]
+ * @returns {Promise<{ count: number, records: object[] }>}
+ */
+export async function processMemberAutoCheckouts(payload = {}) {
+  return api.post("/v1/attendance/process-auto-checkouts", payload);
+}
+
+/**
+ * Admin manual correction when a trainer forgot "Add Another Session",
+ * calculating accurate session overlaps and recording audit trail.
+ *
+ * @param {object} payload
+ * @returns {Promise<object>}
+ */
+export async function adminCorrectContinuousSession(payload) {
+  return api.post("/v1/attendance/admin/correct-continuous-session", payload);
+}
+
+/**
+ * Retrieves attendance audit logs.
+ *
+ * @param {object} [params]
+ * @returns {Promise<object[]>}
+ */
+export async function getAttendanceAuditLogs(params = {}) {
+  const q = new URLSearchParams();
+  if (params.attendanceType) q.append("attendanceType", params.attendanceType);
+  if (params.date) q.append("date", params.date);
+  if (params.memberId) q.append("memberId", params.memberId);
+  if (params.trainerId) q.append("trainerId", params.trainerId);
+  const qs = q.toString() ? `?${q.toString()}` : "";
+  return api.get(`/v1/attendance/audit-logs${qs}`);
+}
+
 export default {
   getBatchAttendanceGrid,
   markAttendance,
@@ -174,4 +315,14 @@ export default {
   getTrainerAttendanceHistory,
   getAllTrainerLogs,
   getDailyAttendanceRecords,
+  trainerCheckIn,
+  trainerCheckOut,
+  trainerAddAnotherSession,
+  processMemberAutoCheckouts,
+  adminCorrectContinuousSession,
+  getTrainerDailySchedule,
+  getTrainerIntervals,
+  adminOverrideMemberAttendance,
+  adminOverrideTrainerAttendance,
+  getAttendanceAuditLogs,
 };

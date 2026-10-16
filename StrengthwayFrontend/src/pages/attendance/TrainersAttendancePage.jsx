@@ -5,6 +5,7 @@ import {
   Grid3X3,
   UserCheck,
   CalendarOff,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getTrainers } from "@/lib/trainersService";
@@ -12,7 +13,14 @@ import { getBatches } from "@/lib/batchesService";
 import {
   recordTrainerLog,
   getAllTrainerLogs,
+  trainerCheckIn,
+  trainerCheckOut,
+  trainerAddAnotherSession,
+  getTrainerDailySchedule,
+  getTrainerIntervals,
+  adminOverrideTrainerAttendance,
 } from "@/lib/attendanceService";
+import { isAdmin, isTrainer, getCurrentUser } from "@/auth/currentUser";
 import { Pagination } from "@/components/table";
 import { TrainerAttendanceStats } from "./TrainerAttendanceStats";
 import { TrainerAttendanceModal } from "./TrainerAttendanceModal";
@@ -22,6 +30,7 @@ import { TrainerAttendanceToolbar } from "./TrainerAttendanceToolbar";
 import { TrainerAttendanceDetailModal } from "./TrainerAttendanceDetailModal";
 import { TrainerLeaveRequestDrawer } from "./TrainerLeaveRequestDrawer";
 import { TrainerLeaveTrackerView } from "./TrainerLeaveTrackerView";
+import { AttendanceAuditModal } from "./AttendanceAuditModal";
 import {
   getTrainerLeaves,
   getTrainerLeaveMonthlySummary,
@@ -57,11 +66,14 @@ export default function TrainersAttendancePage() {
   const [trainers, setTrainers] = useState([]);
   const [batches, setBatches] = useState([]);
   const [trainerLogs, setTrainerLogs] = useState([]);
+  const [trainerIntervals, setTrainerIntervals] = useState([]);
+  const [trainerSchedulesMap, setTrainerSchedulesMap] = useState({});
   const [monthlyLogs, setMonthlyLogs] = useState([]);
   const [monthlyLeaveSummary, setMonthlyLeaveSummary] = useState(null);
   const [monthlyLeaves, setMonthlyLeaves] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   // View Record Modal State
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -112,15 +124,33 @@ export default function TrainersAttendancePage() {
     };
   }, []);
 
-  // ─── 2. Load Daily Logs ──────────────────────────────────────────────────────
+  // ─── 2. Load Daily Logs, Intervals & Trainer Schedules ─────────────────────────
   const loadDailyLogs = useCallback(async () => {
     try {
-      const logs = await getAllTrainerLogs({ date: selectedDate });
+      const [logs, intervals] = await Promise.all([
+        getAllTrainerLogs({ date: selectedDate }),
+        getTrainerIntervals({ date: selectedDate }).catch(() => []),
+      ]);
       setTrainerLogs(Array.isArray(logs) ? logs : []);
+      setTrainerIntervals(Array.isArray(intervals) ? intervals : []);
+
+      if (trainers.length > 0) {
+        const schedulePromises = trainers.map((t) =>
+          getTrainerDailySchedule(t.id, selectedDate).catch(() => null)
+        );
+        const schedules = await Promise.all(schedulePromises);
+        const schedMap = {};
+        schedules.forEach((sch) => {
+          if (sch?.trainerId) {
+            schedMap[sch.trainerId] = sch;
+          }
+        });
+        setTrainerSchedulesMap(schedMap);
+      }
     } catch (err) {
-      console.error("Failed to load daily trainer logs:", err);
+      console.error("Failed to load daily trainer logs & intervals:", err);
     }
-  }, [selectedDate]);
+  }, [selectedDate, trainers]);
 
   useEffect(() => {
     if (viewMode === "daily") {
@@ -161,30 +191,36 @@ export default function TrainersAttendancePage() {
     return map;
   }, [trainerLogs]);
 
-  // ─── 4. Quick Check-In (Automatically Marks Status as Present) ───────────────
+  // Daily continuous intervals map keyed by trainerId
+  const trainerIntervalsMap = useMemo(() => {
+    const map = {};
+    (trainerIntervals || []).forEach((inv) => {
+      if (inv.trainerId) {
+        map[inv.trainerId] = inv;
+      }
+    });
+    return map;
+  }, [trainerIntervals]);
+
+  // ─── 4. Quick Check-In (Supports Consecutive Sessions & Continuous Shift) ────
   const handleQuickCheckIn = async (trainer) => {
     if (!isDateToday(selectedDate)) {
       return toast.error("Check-in is permitted only for the current day.");
     }
     const access = checkTrainerScheduleAccess(selectedDate, trainer, batches);
-    if (!access.isAllowed) {
+    if (!access.isAllowed && !isAdmin()) {
       return toast.error(access.reason);
     }
 
-    const schedule = getTrainerScheduleDetails(trainer, batches, selectedDate);
     const nowTime = getCurrentTimeString();
 
     try {
-      await recordTrainerLog({
+      await trainerCheckIn({
         date: selectedDate,
         trainerId: trainer.id,
-        trainerName: trainer.name,
-        batchId: schedule.primaryBatchId || trainer.batchIds?.[0] || "BATCH-DEFAULT",
-        status: "PRESENT",
         checkInTime: nowTime,
-        durationMinutes: 60,
-        attendeesCount: 0,
-        notes: `Checked in on ${selectedDate} at ${nowTime}`,
+        isAdminOverride: !access.isAllowed && isAdmin(),
+        overrideReason: !access.isAllowed && isAdmin() ? "Admin shift window override" : undefined,
       });
       toast.success(`${trainer.name} checked in (Status: Present).`);
       loadDailyLogs();
@@ -194,7 +230,7 @@ export default function TrainersAttendancePage() {
     }
   };
 
-  // ─── 5. Quick Check-Out (Only Available After Successful Check-In) ───────────
+  // ─── 5. Quick Check-Out (Calculates Overlap & Excludes Off-Schedule Time) ───────
   const handleQuickCheckOut = async (trainer, record) => {
     if (!isDateToday(selectedDate)) {
       return toast.error("Check-out is permitted only for the current day.");
@@ -203,33 +239,97 @@ export default function TrainersAttendancePage() {
       return toast.error("Check Out is available only after a successful check-in.");
     }
 
-    const schedule = getTrainerScheduleDetails(trainer, batches, selectedDate);
     const nowTime = getCurrentTimeString();
-    const inM = parseTimeToMinutes(record.checkInTime);
-    const outM = parseTimeToMinutes(nowTime);
-    let durationMinutes = record.durationMinutes || 60;
-    if (inM !== null && outM !== null && outM > inM) {
-      durationMinutes = outM - inM;
-    }
 
     try {
-      await recordTrainerLog({
-        ...record,
+      await trainerCheckOut({
         date: selectedDate,
         trainerId: trainer.id,
-        trainerName: trainer.name,
-        batchId: record.batchId || schedule.primaryBatchId || "BATCH-DEFAULT",
-        status: "PRESENT",
-        checkInTime: record.checkInTime,
+        intervalId: record.intervalId || record.id,
+        sessionId: record.sessionId,
         checkOutTime: nowTime,
-        durationMinutes,
-        notes: record.notes || `Checked out at ${nowTime}`,
       });
       toast.success(`${trainer.name} checked out at ${nowTime}.`);
       loadDailyLogs();
     } catch (err) {
       console.error("Failed to check out trainer:", err);
       toast.error(err?.message || "Failed to check out faculty coach.");
+    }
+  };
+
+  // ─── 4b. Session-Specific Quick Check-In (Targeted Session Window) ────────────
+  const handleQuickCheckInSession = async ({ trainerId, date, sessionId, batchId }) => {
+    const targetDate = date || selectedDate;
+    if (!isDateToday(targetDate) && !isAdmin()) {
+      return toast.error("Check-in is permitted only for the current day.");
+    }
+    const trainerObj = trainers.find((t) => t.id === trainerId);
+    const nowTime = getCurrentTimeString();
+    try {
+      await trainerCheckIn({
+        date: targetDate,
+        trainerId,
+        sessionId,
+        batchId,
+        checkInTime: nowTime,
+        isAdminOverride: isAdmin(),
+        overrideReason: isAdmin() ? "Admin recorded session check-in" : undefined,
+      });
+      toast.success(`${trainerObj?.name || "Trainer"} checked in for scheduled session.`);
+      loadDailyLogs();
+    } catch (err) {
+      console.error("Failed to check in trainer session:", err);
+      toast.error(err?.message || "Failed to check in session.");
+    }
+  };
+
+  // ─── 5c. Session-Specific Quick Check-Out (Targeted Session Window) ───────────
+  const handleQuickCheckOutSession = async ({ trainerId, date, sessionId, batchId }) => {
+    const targetDate = date || selectedDate;
+    if (!isDateToday(targetDate) && !isAdmin()) {
+      return toast.error("Check-out is permitted only for the current day.");
+    }
+    const trainerObj = trainers.find((t) => t.id === trainerId);
+    const nowTime = getCurrentTimeString();
+    try {
+      await trainerCheckOut({
+        date: targetDate,
+        trainerId,
+        sessionId,
+        batchId,
+        checkOutTime: nowTime,
+        isAdminOverride: isAdmin(),
+        overrideReason: isAdmin() ? "Admin recorded session check-out" : undefined,
+      });
+      toast.success(`${trainerObj?.name || "Trainer"} checked out of scheduled session.`);
+      loadDailyLogs();
+    } catch (err) {
+      console.error("Failed to check out trainer session:", err);
+      toast.error(err?.message || "Failed to check out session.");
+    }
+  };
+
+  // ─── 5b. Add Another Session (Consecutive Session Transition) ────────────────
+  const handleTrainerAddAnotherSession = async (trainer, currentSession, nextSession) => {
+    if (!isDateToday(selectedDate)) {
+      return toast.error("Session transitions are permitted only for the current day.");
+    }
+    const nowTime = getCurrentTimeString();
+    try {
+      await trainerAddAnotherSession({
+        trainerId: trainer.id,
+        date: selectedDate,
+        currentSessionId: currentSession.id || currentSession.sessionId,
+        nextSessionId: nextSession.id || nextSession.sessionId,
+        transitionTime: nowTime,
+      });
+      toast.success(
+        `Transitioned from ${currentSession.batchName || currentSession.id} to ${nextSession.batchName || nextSession.id}.`
+      );
+      loadDailyLogs();
+    } catch (err) {
+      console.error("Failed to add consecutive session:", err);
+      toast.error(err?.message || "Failed to transition to next session.");
     }
   };
 
@@ -290,31 +390,104 @@ export default function TrainersAttendancePage() {
     setIsViewModalOpen(true);
   };
 
-  // ─── 8. Manual Class Conduction Log Modal ─────────────────────────────────────
+  // ─── 8. Manual Class Conduction Log Modal / Admin Override ─────────────────────
+  const handleOpenEditModal = (trainer, sessionOrRecord = null) => {
+    const schedule = getTrainerScheduleDetails(trainer, batches, selectedDate);
+    const isSessionObj = sessionOrRecord?.startTime && sessionOrRecord?.endTime;
+    const sessionLog = isSessionObj ? sessionOrRecord.attendanceLog : null;
+    const actualRecord = isSessionObj ? sessionLog : sessionOrRecord;
+
+    setModalFormData({
+      date: selectedDate,
+      trainerId: trainer?.id || "",
+      batchId: sessionOrRecord?.batchId || actualRecord?.batchId || schedule?.primaryBatchId || trainer?.batchIds?.[0] || "",
+      sessionId: isSessionObj ? sessionOrRecord.id : (actualRecord?.sessionId || ""),
+      status: actualRecord?.status || "PRESENT",
+      checkInTime: actualRecord?.checkInTime || "",
+      checkOutTime: actualRecord?.checkOutTime || "",
+      durationMinutes: actualRecord?.durationMinutes || 60,
+      attendeesCount: actualRecord?.attendeesCount || 0,
+      notes: actualRecord?.notes || actualRecord?.remarks || "",
+      recordId: actualRecord?.id || "",
+      intervalId: actualRecord?.intervalId || "",
+      isOverride: Boolean(actualRecord?.checkInTime),
+      overrideReason: "",
+    });
+    setIsModalOpen(true);
+  };
+
   const handleSaveModal = async (e) => {
-    e.preventDefault();
-    if (!modalFormData.trainerId || !modalFormData.batchId) {
-      toast.error("Coach and batch container are required.");
+    if (e?.preventDefault) e.preventDefault();
+    if (!modalFormData.trainerId || (!modalFormData.batchId && !modalFormData.sessionId)) {
+      toast.error("Coach and batch container / scheduled session are required.");
+      return;
+    }
+
+    if (modalFormData.isOverride && (!modalFormData.overrideReason || !modalFormData.overrideReason.trim())) {
+      toast.error("Override reason is mandatory for manual attendance entries and corrections.");
       return;
     }
 
     setIsSubmitting(true);
     const trainerObj = trainers.find((t) => t.id === modalFormData.trainerId);
+    const nowTime = getCurrentTimeString();
 
     try {
-      await recordTrainerLog({
-        ...modalFormData,
-        trainerName: trainerObj?.name || modalFormData.trainerId,
-        durationMinutes: Number(modalFormData.durationMinutes) || 60,
-        attendeesCount: Number(modalFormData.attendeesCount) || 0,
-      });
-      toast.success("Class conduction record logged successfully.");
+      if (modalFormData.isOverride) {
+        await adminOverrideTrainerAttendance({
+          recordId: modalFormData.recordId,
+          trainerId: modalFormData.trainerId,
+          batchId: modalFormData.batchId,
+          sessionId: modalFormData.sessionId,
+          intervalId: modalFormData.intervalId,
+          date: modalFormData.date,
+          status: modalFormData.status,
+          checkInTime: modalFormData.checkInTime || nowTime,
+          checkOutTime: modalFormData.checkOutTime || "",
+          notes: modalFormData.notes,
+          reason: modalFormData.overrideReason?.trim() || "Administrative manual attendance adjustment",
+        });
+        toast.success("Attendance correction saved and audited.");
+      } else {
+        // Normal attendance mode from modal using server timestamps
+        if (!modalFormData.checkInTime) {
+          await trainerCheckIn({
+            date: modalFormData.date,
+            trainerId: modalFormData.trainerId,
+            sessionId: modalFormData.sessionId,
+            batchId: modalFormData.batchId,
+            checkInTime: nowTime,
+            isAdminOverride: isAdmin(),
+            overrideReason: isAdmin() ? "Admin recorded session check-in" : undefined,
+          });
+          toast.success(`${trainerObj?.name || "Trainer"} checked in for scheduled session.`);
+        } else if (!modalFormData.checkOutTime) {
+          await trainerCheckOut({
+            date: modalFormData.date,
+            trainerId: modalFormData.trainerId,
+            sessionId: modalFormData.sessionId,
+            batchId: modalFormData.batchId,
+            checkOutTime: nowTime,
+            isAdminOverride: isAdmin(),
+            overrideReason: isAdmin() ? "Admin recorded session check-out" : undefined,
+          });
+          toast.success(`${trainerObj?.name || "Trainer"} checked out of scheduled session.`);
+        } else {
+          await recordTrainerLog({
+            ...modalFormData,
+            trainerName: trainerObj?.name || modalFormData.trainerId,
+            durationMinutes: Number(modalFormData.durationMinutes) || 60,
+            attendeesCount: Number(modalFormData.attendeesCount) || 0,
+          });
+          toast.success("Session attendance record saved.");
+        }
+      }
       setIsModalOpen(false);
       loadDailyLogs();
       if (viewMode === "monthly") loadMonthlyLogs();
     } catch (err) {
       console.error("Failed to save trainer log:", err);
-      toast.error("Failed to record class log.");
+      toast.error(err?.message || "Failed to record class log.");
     } finally {
       setIsSubmitting(false);
     }
@@ -323,7 +496,15 @@ export default function TrainersAttendancePage() {
   // ─── 10. Filtered Faculty Computation ────────────────────────────────────────
   const filteredTrainers = useMemo(() => {
     const isPast = isDatePast(selectedDate);
+    const currentUser = getCurrentUser();
+    const isTrainerUser = isTrainer();
+
     return trainers.filter((t) => {
+      // Role scope: trainer only sees themselves
+      if (isTrainerUser && currentUser?.trainerId && t.id !== currentUser.trainerId) {
+        return false;
+      }
+
       // Shift filter
       if (selectedShift !== "All" && t.shift !== selectedShift) return false;
 
@@ -506,7 +687,7 @@ export default function TrainersAttendancePage() {
         </div>
 
         {/* View Mode Toggle & Primary Actions */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <div className="inline-flex items-center rounded-2xl border border-border bg-card p-1 shadow-xs">
             <button
               type="button"
@@ -545,6 +726,31 @@ export default function TrainersAttendancePage() {
               <span>Leave Tracker</span>
             </button>
           </div>
+
+          {isAdmin() && (
+            <button
+              type="button"
+              onClick={() => {
+                const firstTrainer = filteredTrainers[0] || trainers[0];
+                handleOpenEditModal(firstTrainer || null, null);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-accent/40 bg-accent text-accent-foreground hover:bg-accent/90 px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-xs"
+            >
+              <CalendarCheck size={15} />
+              <span>Mark Attendance</span>
+            </button>
+          )}
+
+          {isAdmin() && (
+            <button
+              type="button"
+              onClick={() => setIsAuditModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-2xl border border-border/80 bg-card hover:bg-muted/60 px-3.5 py-2 text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
+            >
+              <History size={15} className="text-accent" />
+              <span>Audit Trail</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -584,9 +790,15 @@ export default function TrainersAttendancePage() {
           filteredTrainers={filteredTrainers}
           paginatedTrainers={paginatedTrainers}
           dailyRecordsMap={dailyRecordsMap}
+          trainerIntervalsMap={trainerIntervalsMap}
+          trainerSchedulesMap={trainerSchedulesMap}
           handleQuickCheckIn={handleQuickCheckIn}
           handleQuickCheckOut={handleQuickCheckOut}
+          handleQuickCheckInSession={handleQuickCheckInSession}
+          handleQuickCheckOutSession={handleQuickCheckOutSession}
+          handleTrainerAddAnotherSession={handleTrainerAddAnotherSession}
           onOpenViewModal={onOpenViewModal}
+          onOpenEditModal={handleOpenEditModal}
           onOpenLeaveDrawer={handleOpenLeaveDrawer}
           batches={batches}
           selectedDate={selectedDate}
@@ -648,9 +860,12 @@ export default function TrainersAttendancePage() {
         modalFormData={modalFormData}
         setModalFormData={setModalFormData}
         handleSaveModal={handleSaveModal}
+        handleQuickCheckInSession={handleQuickCheckInSession}
+        handleQuickCheckOutSession={handleQuickCheckOutSession}
         isSubmitting={isSubmitting}
         trainers={trainers}
         batches={batches}
+        selectedDate={selectedDate}
       />
 
       {/* ─── MODAL: View Historical Faculty Attendance Record ────────────────── */}
@@ -671,6 +886,13 @@ export default function TrainersAttendancePage() {
         trainers={trainers}
         batches={batches}
         onLeaveSubmitted={handleLeaveSubmitted}
+      />
+
+      {/* ─── MODAL: Attendance Audit Trail ─────────────────────────────────── */}
+      <AttendanceAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        defaultType="TRAINER"
       />
     </div>
   );

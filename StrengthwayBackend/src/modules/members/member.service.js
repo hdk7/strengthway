@@ -180,11 +180,6 @@ class MemberService {
       emergencyPhone: emergencyContact.phone,
       emergencyRelation: emergencyContact.relation,
       emergencyContact,
-      medicalDoc: body.medicalDoc || {
-        submitted: false,
-        clearanceDate: null,
-        notes: "",
-      },
       membershipPlan,
       paymentDetails,
       convertedAt: null,
@@ -506,7 +501,142 @@ class MemberService {
     const member = await this.getById(id);
     return getMemberMonthTracking(member, yearMonth);
   }
+
+  // ─── Membership Plan Renewal with Payment Adjustment Deduction ──────────────
+  async renewMembership(id, renewalData = {}) {
+    const member = await memberRepository.findById(id);
+    if (!member) throw new NotFoundError(`Member with ID "${id}" not found.`);
+
+    const planId = renewalData.planId || renewalData.paymentPlanId || member.membershipPlan?.id;
+    if (!planId) {
+      throw new BadRequestError("A valid membership planId must be specified for renewal.");
+    }
+
+    const plan = await planService.getById(planId);
+    if (!plan) throw new NotFoundError(`Membership plan "${planId}" not found.`);
+
+    const originalAmount = Number(
+      renewalData.amountPaid !== undefined
+        ? renewalData.amountPaid
+        : renewalData.paymentAmount !== undefined
+          ? renewalData.paymentAmount
+          : plan.price
+    );
+    let adjustmentAmount = 0;
+    const creditsApplied = [];
+
+    // Check for available cancellation adjustment credits
+    if (
+      renewalData.applyCredits !== false &&
+      Array.isArray(member.membershipAdjustmentCredits) &&
+      member.membershipAdjustmentCredits.length > 0
+    ) {
+      const availableCredits = member.membershipAdjustmentCredits.filter(
+        (c) => c.status === "AVAILABLE"
+      );
+      const totalAvailable = availableCredits.reduce(
+        (sum, c) => sum + (c.creditAmount || 0),
+        0
+      );
+
+      if (totalAvailable > 0) {
+        adjustmentAmount = Math.min(originalAmount, totalAvailable);
+        let remainingToDeduct = adjustmentAmount;
+
+        for (const cred of member.membershipAdjustmentCredits) {
+          if (cred.status === "AVAILABLE" && remainingToDeduct > 0) {
+            const deductThis = Math.min(cred.creditAmount, remainingToDeduct);
+            cred.status = "APPLIED_TO_RENEWAL";
+            cred.appliedToPayment = {
+              invoiceNumber: renewalData.invoiceNumber || "",
+              transactionId: renewalData.transactionId || "",
+              originalAmount,
+              adjustmentAmount: deductThis,
+              finalPayableAmount: Math.max(0, originalAmount - adjustmentAmount),
+              appliedAt: new Date(),
+            };
+            remainingToDeduct -= deductThis;
+            creditsApplied.push({
+              creditId: cred.creditId,
+              amountApplied: deductThis,
+            });
+          }
+        }
+        member.totalAdjustmentCredit = Math.max(
+          0,
+          (member.totalAdjustmentCredit || 0) - adjustmentAmount
+        );
+      }
+    }
+
+    const finalPayableAmount = Math.max(0, originalAmount - adjustmentAmount);
+    const formattedPrice = `₹${finalPayableAmount.toLocaleString("en-IN")}`;
+
+    // Determine start date: if current plan has not expired, chain renewal after current endDate
+    const now = new Date();
+    let startDate = now;
+    if (member.membershipPlan?.endDate) {
+      const currentEnd = new Date(member.membershipPlan.endDate);
+      if (currentEnd > now) {
+        startDate = currentEnd;
+      }
+    }
+    if (renewalData.startDate) {
+      const specifiedStart = new Date(renewalData.startDate);
+      if (!isNaN(specifiedStart.getTime())) startDate = specifiedStart;
+    }
+
+    const dates = calculateMembershipDates(plan.durationMonths || 1, startDate);
+    const receiptNo = generateReceiptNumber();
+    const transactionId =
+      renewalData.transactionId?.trim() ||
+      generateTransactionId(renewalData.paymentMethod || "UPI");
+
+    member.membershipPlan = {
+      id: plan.id,
+      name: plan.name,
+      durationMonths: plan.durationMonths,
+      price: finalPayableAmount,
+      formattedPrice,
+      startDate: new Date(dates.startDate),
+      endDate: new Date(dates.endDate),
+      formattedStart: dates.formattedStart,
+      formattedEnd: dates.formattedEnd,
+    };
+
+    member.paymentDetails = {
+      method: renewalData.paymentMethod || "UPI",
+      amount: finalPayableAmount,
+      formattedAmount: formattedPrice,
+      transactionId,
+      receiptNo,
+      upiReference: renewalData.upiReference || "",
+      invoiceNumber: renewalData.invoiceNumber || "",
+      status: "Completed",
+      paidAt: now,
+      notes: `Renewed ${plan.name} (${plan.durationMonths} Mo). Original: ₹${originalAmount}, Adjustment deduction: ₹${adjustmentAmount}, Final: ₹${finalPayableAmount}.`,
+    };
+
+    member.status = MEMBER_STATUS.ACTIVE;
+    await member.save();
+
+    return {
+      member,
+      paymentBreakdown: {
+        originalAmount,
+        adjustmentAmount,
+        finalPayableAmount,
+        formattedFinalPayable: formattedPrice,
+        receiptNo,
+        transactionId,
+        creditsApplied,
+        remainingCredits: member.totalAdjustmentCredit || 0,
+        pendingSessionsCount: member.pendingSessionsCount || 0,
+        planStartDate: dates.formattedStart,
+        planEndDate: dates.formattedEnd,
+      },
+    };
+  }
 }
 
-module.exports = new MemberService();
 module.exports = new MemberService();

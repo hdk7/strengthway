@@ -1,9 +1,11 @@
-import { CalendarCheck, Grid3X3 } from "lucide-react";
+import { CalendarCheck, Grid3X3, History } from "lucide-react";
+import { isAdmin } from "@/auth/currentUser";
 
 export function MemberAttendanceHeader({
   viewMode,
   setViewMode,
   handleExportMatrixCSV,
+  onOpenAuditModal,
 }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 shrink-0">
@@ -44,7 +46,20 @@ export function MemberAttendanceHeader({
             <span>Monthly Matrix</span>
           </button>
         </div>
+
+        {isAdmin() && onOpenAuditModal && (
+          <button
+            type="button"
+            onClick={onOpenAuditModal}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border/80 bg-card hover:bg-muted/60 px-3 py-2 text-xs font-bold text-foreground transition-all cursor-pointer shadow-xs"
+          >
+            <History size={14} className="text-accent" />
+            <span>Audit Trail</span>
+          </button>
+        )}
       </div>
     </div>
   );
 }
+
+export default MemberAttendanceHeader;

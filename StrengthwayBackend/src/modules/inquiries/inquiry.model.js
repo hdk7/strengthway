@@ -85,6 +85,12 @@ const inquirySchema = new mongoose.Schema(
       type: contactDetailsSchema,
       default: null,
     },
+    enrollmentId: {
+      type: String,
+      trim: true,
+      default: null,
+      index: true,
+    },
     convertedMemberId: {
       type: String,
       trim: true,

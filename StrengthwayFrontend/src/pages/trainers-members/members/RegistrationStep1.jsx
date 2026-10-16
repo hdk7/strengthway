@@ -44,9 +44,8 @@ export function RegistrationStep1({
             <p className="text-muted-foreground mt-0.5 leading-relaxed">
               Personal and Contact Information have been automatically loaded from this
               athlete&apos;s prospective inquiry submission. Please complete the remaining
-              required sections: <strong>Emergency Contact</strong>,{" "}
-              <strong>Fitness Information</strong>, and{" "}
-              <strong>Medical Fitness Document</strong> below before proceeding to plan
+              required sections: <strong>Emergency Contact</strong> and{" "}
+              <strong>Fitness Information</strong> below before proceeding to plan
               &amp; payment.
             </p>
           </div>

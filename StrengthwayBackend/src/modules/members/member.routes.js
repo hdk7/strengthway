@@ -63,6 +63,19 @@ router.delete(
   ctrl.permanentDelete
 );
 
+const classCancellationCtrl = require("../classes/classCancellation.controller");
+
+// ── Member Payment Adjustment & Entitlement Routes ─────────────────────────
+router.get(
+  "/:id/adjustment-credits",
+  authenticate,
+  requirePermission("members", "view", "view_assigned", "view_own"),
+  scopeMemberDoc,
+  classCancellationCtrl.getMemberAdjustments
+);
+router.post("/:id/apply-adjustment-credit", authenticate, requireAdmin, classCancellationCtrl.applyMemberRenewalAdjustment);
+router.post("/:id/renew", authenticate, requireAdmin, ctrl.renewMembership);
+
 // ── Action routes (Admin only) ───────────────────────────────────────────────
 router.patch("/:id/soft-delete", authenticate, requireAdmin, ctrl.softDelete);
 router.patch("/:id/restore", authenticate, requireAdmin, ctrl.restore);

@@ -11,10 +11,17 @@ const {
   markAttendanceSchema,
   bulkMarkAttendanceSchema,
   createTrainerLogSchema,
+  trainerCheckInSchema,
+  trainerCheckOutSchema,
+  trainerAddAnotherSessionSchema,
+  processAutoCheckoutSchema,
+  adminCorrectContinuousSessionSchema,
+  adminOverrideMemberSchema,
+  adminOverrideTrainerSchema,
 } = require("./attendance.schema");
 
 // ─── Attendance Core Endpoints ───────────────────────────────────────────────
-// Attendance Marking: Restricted strictly to Admin (Trainers cannot mark or edit attendance)
+// Attendance Marking: Restricted strictly to Admin (Trainers cannot mark or edit member attendance)
 router.post(
   "/mark",
   authenticate,
@@ -28,6 +35,44 @@ router.post(
   requireAdmin,
   validate(bulkMarkAttendanceSchema),
   ctrl.bulkMarkAttendance
+);
+
+// Process automatic member checkouts for expired windows
+router.post(
+  "/process-auto-checkouts",
+  authenticate,
+  requireAdmin,
+  validate(processAutoCheckoutSchema),
+  ctrl.processAutoCheckouts
+);
+
+// ─── Admin Attendance Overrides & Audit Trail ────────────────────────────────
+router.post(
+  "/admin/override-member",
+  authenticate,
+  requireAdmin,
+  validate(adminOverrideMemberSchema),
+  ctrl.adminOverrideMember
+);
+router.post(
+  "/admin/override-trainer",
+  authenticate,
+  requireAdmin,
+  validate(adminOverrideTrainerSchema),
+  ctrl.adminOverrideTrainer
+);
+router.post(
+  "/admin/correct-continuous-session",
+  authenticate,
+  requireAdmin,
+  validate(adminCorrectContinuousSessionSchema),
+  ctrl.adminCorrectContinuousSession
+);
+router.get(
+  "/audit-logs",
+  authenticate,
+  requireAdmin,
+  ctrl.getAttendanceAuditLogs
 );
 
 // ─── Attendance Query Endpoints ───────────────────────────────────────────────
@@ -60,7 +105,38 @@ router.get(
 // Attendance query: Scoped in controller (Admin all; Trainer assigned; Member self)
 router.get("/", authenticate, ctrl.getAttendanceRecords);
 
-// ─── Trainer Logs Endpoints ───────────────────────────────────────────────────
+// ─── Trainer Check-In / Check-Out & Continuous Intervals ───────────────────────
+// Trainer check-in (supports individual sessions and consecutive sessions continuous interval)
+router.post(
+  "/trainer-checkin",
+  authenticate,
+  validate(trainerCheckInSchema),
+  ctrl.trainerCheckIn
+);
+router.post(
+  "/trainer-checkout",
+  authenticate,
+  validate(trainerCheckOutSchema),
+  ctrl.trainerCheckOut
+);
+router.post(
+  "/trainer/add-another-session",
+  authenticate,
+  validate(trainerAddAnotherSessionSchema),
+  ctrl.trainerAddAnotherSession
+);
+router.get(
+  "/trainer-schedule/:trainerId",
+  authenticate,
+  ctrl.getTrainerDailySchedule
+);
+router.get(
+  "/trainer-intervals",
+  authenticate,
+  ctrl.getTrainerIntervals
+);
+
+// ─── Trainer Logs Endpoints (Conducted Session Ledger) ─────────────────────────
 // Trainer log recording: Admin only (biometric log / admin approval)
 router.post("/trainer-logs", authenticate, requireAdmin, validate(createTrainerLogSchema), ctrl.recordTrainerLog);
 // Trainer logs query: Admin all; Trainer self; Member forbidden
@@ -74,4 +150,5 @@ router.post("/leave-policy", authenticate, requireAdmin, ctrl.saveTrainerLeavePo
 router.post("/leave-policy/validate", authenticate, ctrl.validateTrainerLeaveNotice);
 
 module.exports = router;
+
 

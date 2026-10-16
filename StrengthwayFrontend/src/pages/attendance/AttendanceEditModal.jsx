@@ -8,6 +8,8 @@ import {
   ShieldCheck,
   FileText,
   XCircle,
+  Timer,
+  ShieldAlert,
 } from "lucide-react";
 import {
   FormModal,
@@ -20,6 +22,7 @@ import { InputField } from "@/components/form";
 import {
   getCurrentTimeString,
   isCheckOutValid,
+  parseTimeToMinutes,
 } from "./memberAttendanceUtils";
 
 export function AttendanceEditModal({
@@ -35,6 +38,7 @@ export function AttendanceEditModal({
   const [actionType, setActionType] = useState("CHECK_IN"); // "CHECK_IN" | "CHECK_OUT" | "ABSENT"
   const [checkInTime, setCheckInTime] = useState("");
   const [checkOutTime, setCheckOutTime] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
@@ -45,6 +49,7 @@ export function AttendanceEditModal({
 
       setCheckInTime(existingIn || nowStr);
       setCheckOutTime(existingOut);
+      setOverrideReason("");
       setNotes(record?.notes || "");
 
       if (record?.status === "ABSENT") {
@@ -78,6 +83,16 @@ export function AttendanceEditModal({
     }
   };
 
+  const calculatedDuration = () => {
+    if (!checkInTime || !checkOutTime) return null;
+    const inM = parseTimeToMinutes(checkInTime);
+    const outM = parseTimeToMinutes(checkOutTime);
+    if (inM === null || outM === null || outM < inM) return null;
+    return outM - inM;
+  };
+
+  const duration = calculatedDuration();
+
   const handleSubmit = (e) => {
     if (e && e.preventDefault) e.preventDefault();
 
@@ -105,15 +120,18 @@ export function AttendanceEditModal({
       status: finalStatus,
       checkInTime: actionType === "ABSENT" ? "" : checkInTime.trim(),
       checkOutTime: actionType === "ABSENT" ? "" : checkOutTime.trim(),
+      durationMinutes: duration || 0,
       notes: notes.trim(),
+      isAdminOverride: Boolean(overrideReason.trim()),
+      overrideReason: overrideReason.trim(),
     });
   };
 
   return (
     <FormModal isOpen={isOpen} onClose={onClose} size="md">
       <FormModalHeader
-        title="Manage Check-In & Check-Out"
-        description="Current day attendance management. Check-in marks status as Present."
+        title="Manage Attendance & Time Corrections"
+        description="Verify check-in, check-out, visit duration, and audit corrections."
         icon={ShieldCheck}
         onClose={onClose}
       />
@@ -136,11 +154,11 @@ export function AttendanceEditModal({
               </div>
             </div>
             <span className="rounded bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-              Today's Session
+              {record?.date || selectedDate}
             </span>
           </FormCalloutBox>
 
-          {/* Action Selector: Retaining Check In and Check Out */}
+          {/* Action Selector: Check In, Check Out */}
           <div>
             <label className="font-semibold text-slate-800 dark:text-foreground block mb-1.5 text-xs">
               Attendance Action
@@ -176,49 +194,74 @@ export function AttendanceEditModal({
 
           {/* Timestamps */}
           {actionType !== "ABSENT" && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <InputField
-                label="Check-In Time"
-                placeholder="e.g. 09:30 AM"
-                value={checkInTime}
-                onChange={(e) => setCheckInTime(e.target.value)}
-                inputClassName="font-mono"
-                endAdornment={
-                  <button
-                    type="button"
-                    onClick={() => setCheckInTime(getCurrentTimeString())}
-                    className="text-[10px] font-bold text-blue-700 dark:text-accent hover:underline cursor-pointer pr-2.5"
-                  >
-                    Now
-                  </button>
-                }
-              />
-
-              <InputField
-                label="Check-Out Time"
-                placeholder="e.g. 10:45 AM"
-                value={checkOutTime}
-                onChange={(e) => setCheckOutTime(e.target.value)}
-                disabled={actionType === "CHECK_IN" && !checkOutTime}
-                inputClassName="font-mono"
-                endAdornment={
-                  actionType === "CHECK_OUT" && (
+            <div className="space-y-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <InputField
+                  label="Check-In Time"
+                  placeholder="e.g. 06:00 AM"
+                  value={checkInTime}
+                  onChange={(e) => setCheckInTime(e.target.value)}
+                  inputClassName="font-mono"
+                  endAdornment={
                     <button
                       type="button"
-                      onClick={() => setCheckOutTime(getCurrentTimeString())}
-                      className="text-[10px] font-bold text-blue-700 dark:text-blue-400 hover:underline cursor-pointer pr-2.5"
+                      onClick={() => setCheckInTime(getCurrentTimeString())}
+                      className="text-[10px] font-bold text-blue-700 dark:text-accent hover:underline cursor-pointer pr-2.5"
                     >
                       Now
                     </button>
-                  )
-                }
-              />
+                  }
+                />
+
+                <InputField
+                  label="Check-Out Time"
+                  placeholder="e.g. 07:15 AM"
+                  value={checkOutTime}
+                  onChange={(e) => setCheckOutTime(e.target.value)}
+                  disabled={actionType === "CHECK_IN" && !checkOutTime}
+                  inputClassName="font-mono"
+                  endAdornment={
+                    actionType === "CHECK_OUT" && (
+                      <button
+                        type="button"
+                        onClick={() => setCheckOutTime(getCurrentTimeString())}
+                        className="text-[10px] font-bold text-blue-700 dark:text-blue-400 hover:underline cursor-pointer pr-2.5"
+                      >
+                        Now
+                      </button>
+                    )
+                  }
+                />
+              </div>
+
+              {/* Duration Preview Card */}
+              {duration !== null && (
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 dark:border-border bg-slate-50/70 dark:bg-background/60 text-xs">
+                  <span className="flex items-center gap-1.5 font-semibold text-muted-foreground">
+                    <Timer size={14} className="text-indigo-500" />
+                    <span>Calculated Visit Duration:</span>
+                  </span>
+                  <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                    {duration} minutes ({Math.round((duration / 60) * 10) / 10} hrs)
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
+          {/* Admin Override Reason */}
+          <InputField
+            label="Admin Correction / Override Reason"
+            placeholder="e.g. Biometric sensor glitch; verified via facility gate log"
+            value={overrideReason}
+            onChange={(e) => setOverrideReason(e.target.value)}
+            startIcon={<ShieldAlert size={14} className="text-amber-500" />}
+            helperText="Reason is recorded into the audit trail for regulatory compliance."
+          />
+
           <InputField
             label="Session Notes (Optional)"
-            placeholder="e.g. Completed scheduled workout..."
+            placeholder="e.g. Completed full training program..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             startIcon={<FileText size={14} />}

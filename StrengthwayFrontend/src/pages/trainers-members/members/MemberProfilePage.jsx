@@ -27,7 +27,7 @@ import {
   formatWeight,
 } from "./profile/memberProfileUtils";
 import { MemberProfileHeader } from "./profile/MemberProfileHeader";
-import { MemberVitalsCard, MemberMedicalClearanceCard } from "./profile/MemberVitalsCard";
+import { MemberVitalsCard } from "./profile/MemberVitalsCard";
 import { MemberContactCard } from "./profile/MemberContactCard";
 import { MemberPlanDossierCard } from "./profile/MemberPlanDossierCard";
 import { MemberBatchManagementCard } from "./profile/MemberBatchManagementCard";
@@ -114,31 +114,6 @@ export default function MemberProfilePage() {
   const imperialHeight = useMemo(() => formatHeight(member?.height), [member?.height]);
   const imperialWeight = useMemo(() => formatWeight(member?.weight), [member?.weight]);
   const isDeleted = Boolean(member?.isDeleted);
-
-  const hasMedicalDoc = Boolean(
-    member?.medicalDocName ||
-    (typeof member?.medicalDoc === "string" && member.medicalDoc) ||
-    (typeof member?.medicalDoc === "object" && member?.medicalDoc !== null)
-  );
-
-  const medicalDocName = useMemo(() => {
-    if (!member) return null;
-    if (member.medicalDocName) return member.medicalDocName;
-    if (typeof member.medicalDoc === "string" && member.medicalDoc) return member.medicalDoc;
-    if (member.medicalDoc && typeof member.medicalDoc === "object") {
-      return member.medicalDoc.notes || "Medical_Fitness_Certificate.pdf";
-    }
-    return null;
-  }, [member]);
-
-  const medicalDocSubtext = useMemo(() => {
-    if (!member) return "";
-    if (member.medicalDocSize) return `${member.medicalDocSize} • Signed Physician Clearance`;
-    if (member.medicalDoc && typeof member.medicalDoc === "object" && member.medicalDoc.clearanceDate) {
-      return `Cleared: ${member.medicalDoc.clearanceDate} • Signed Physician Clearance`;
-    }
-    return "1.4 MB • Signed Physician Clearance";
-  }, [member]);
 
   const emergencyName = member?.emergencyName || member?.emergencyContact?.name || "";
   const emergencyRel =
@@ -369,19 +344,12 @@ export default function MemberProfilePage() {
 
       {/* Main 2-Column Responsive Dashboard Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Membership Plan & Dossier + Medical Clearance (6 Cols) */}
+        {/* Left Column: Membership Plan & Dossier (6 Cols) */}
         <div className="lg:col-span-6 space-y-6">
           <MemberPlanDossierCard
             member={member}
             planDetails={planDetails}
             isDeleted={isDeleted}
-          />
-
-          <MemberMedicalClearanceCard
-            hasMedicalDoc={hasMedicalDoc}
-            medicalDocName={medicalDocName}
-            medicalDocSubtext={medicalDocSubtext}
-            setIsEditModalOpen={setIsEditModalOpen}
           />
         </div>
 

@@ -1,4 +1,4 @@
-import { Phone, Mail, FileCheck, UserCheck, Loader2, RotateCcw } from "lucide-react";
+import { Phone, Mail, UserCheck, Loader2, RotateCcw } from "lucide-react";
 import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 
 export default function MemberTableRow({
@@ -119,17 +119,6 @@ export default function MemberTableRow({
         )}
       </td>
 
-      {/* Medical Doc */}
-      <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
-        {member.medicalDoc || member.medicalDocName ? (
-          <div className="inline-flex items-center gap-1.5 text-xs text-emerald-500 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-            <FileCheck size={13} />
-            <span>Attached</span>
-          </div>
-        ) : (
-          <span className="text-xs text-muted-foreground">None</span>
-        )}
-      </td>
 
       {/* Status */}
       <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 last:rounded-r-2xl last:border-r last:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">

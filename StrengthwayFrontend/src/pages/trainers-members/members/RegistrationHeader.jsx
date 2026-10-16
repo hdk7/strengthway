@@ -11,7 +11,7 @@ export function RegistrationHeader({
     <div className="relative border-b border-slate-100 dark:border-border/60 px-6 py-5 sm:px-8 shrink-0 text-center bg-white dark:bg-card">
       <DialogPrimitive.Title className="font-display text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-foreground">
         {isConfirmingLead
-          ? `Member Registration & Activation — ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
+          ? `Member Registration & Activation  ${activeLead?.firstName || ""} ${activeLead?.lastName || ""}`.trim()
           : isEditingActiveMember
             ? "Edit Member Profile"
             : "Member Registration & Plan Enrollment"}

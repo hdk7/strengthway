@@ -159,6 +159,39 @@ export default function BatchMembersTab({
         },
       },
       {
+        header: "Plan & Entitlements",
+        className: "whitespace-nowrap",
+        cell: (mem) => (
+          <div className="space-y-1">
+            <div className="text-xs font-semibold text-foreground">
+              {mem.membershipPlan?.name || "Standard Plan"}
+            </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(mem.pendingSessionsCount > 0 || (mem.carryForwardSessions && mem.carryForwardSessions.length > 0)) && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400"
+                  title="Carried-forward pending sessions from emergency class cancellations"
+                >
+                  <RotateCcw size={10} />
+                  <span>+{mem.pendingSessionsCount || mem.carryForwardSessions.length} Pending</span>
+                </span>
+              )}
+              {mem.totalAdjustmentCredit > 0 && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 font-mono"
+                  title="Available cancellation adjustment credit towards next renewal"
+                >
+                  <span>₹{mem.totalAdjustmentCredit} Credit</span>
+                </span>
+              )}
+              {!(mem.pendingSessionsCount > 0) && !mem.totalAdjustmentCredit && (
+                <span className="text-[10px] text-muted-foreground">Standard</span>
+              )}
+            </div>
+          </div>
+        ),
+      },
+      {
         header: "Status",
         className: "whitespace-nowrap",
         cell: (mem) => (

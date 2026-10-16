@@ -105,6 +105,28 @@ function generateAttendanceId() {
   return `${ID_PREFIXES.ATTENDANCE}-${ts}-${rand}`;
 }
 
+// ─── Attendance Audit ID ──────────────────────────────────────────────────────
+/**
+ * Produces format: ATAUD-172767-1234
+ * @returns {string}
+ */
+function generateAttendanceAuditId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.ATTENDANCE_AUDIT || "ATAUD"}-${ts}-${rand}`;
+}
+
+// ─── Trainer Interval ID ──────────────────────────────────────────────────────
+/**
+ * Produces format: TINT-172767-1234
+ * @returns {string}
+ */
+function generateTrainerIntervalId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.TRAINER_INTERVAL || "TINT"}-${ts}-${rand}`;
+}
+
 // ─── Trainer Log ID ───────────────────────────────────────────────────────────
 /**
  * Produces format: TLOG-172767-1234
@@ -229,16 +251,44 @@ function generateNotificationId() {
   return `NOTIF-${ts}-${rand}`;
 }
 
+// ─── Enrollment ID ────────────────────────────────────────────────────────────
+/**
+ * Produces format: ENR-2026-0001
+ * @param {number} currentMax - The highest numeric suffix in DB
+ * @param {number} [year] - Year prefix, defaults to current year
+ * @returns {string}
+ */
+function generateEnrollmentId(currentMax = 0, year = new Date().getFullYear()) {
+  const num = String(currentMax + 1).padStart(4, "0");
+  return `${ID_PREFIXES.ENROLLMENT || "ENR"}-${year}-${num}`;
+}
+
+// ─── Invoice Number ───────────────────────────────────────────────────────────
+/**
+ * Produces format: INV-2026-0001
+ * @param {number} currentMax - The highest numeric suffix in DB
+ * @param {number} [year] - Year prefix, defaults to current year
+ * @returns {string}
+ */
+function generateInvoiceNumber(currentMax = 0, year = new Date().getFullYear()) {
+  const num = String(currentMax + 1).padStart(4, "0");
+  return `${ID_PREFIXES.INVOICE || "INV"}-${year}-${num}`;
+}
+
 module.exports = {
   generateMemberId,
   generateTrainerId,
   generateBatchId,
   generatePlanId,
   generateInquiryId,
+  generateEnrollmentId,
+  generateInvoiceNumber,
   generateTransactionId,
   generateReceiptNumber,
   generateAssignmentId,
   generateAttendanceId,
+  generateAttendanceAuditId,
+  generateTrainerIntervalId,
   generateTrainerLogId,
   generateTrainerLeaveId,
   generateClassId,

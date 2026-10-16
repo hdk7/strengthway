@@ -510,4 +510,6 @@ class BatchScheduleService {
   }
 }
 
-module.exports = new BatchScheduleService();
+const instance = new BatchScheduleService();
+instance.generateBatchDates = generateBatchDates;
+module.exports = instance;

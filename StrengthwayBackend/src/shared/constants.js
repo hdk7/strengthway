@@ -89,6 +89,25 @@ const PAYMENT_STATUS = Object.freeze({
   REFUNDED:  "Refunded",
 });
 
+// ─── Enrollment & Conversion Statuses ─────────────────────────────────────────
+const ENROLLMENT_STATUS = Object.freeze({
+  CONTACTED:          "Contacted",
+  ENROLLMENT_CREATED: "Enrollment Created",
+  PENDING_PAYMENT:    "Pending Payment",
+  PAYMENT_FAILED:     "Payment Failed",
+  PAYMENT_EXPIRED:    "Payment Expired",
+  PARTIALLY_PAID:     "Partially Paid",
+  PAYMENT_VERIFIED:   "Payment Verified",
+  CONVERTED:          "Converted",
+  CANCELLED:          "Cancelled",
+});
+
+const DISCOUNT_TYPES = Object.freeze({
+  NONE:       "none",
+  FIXED:      "fixed",
+  PERCENTAGE: "percentage",
+});
+
 // ─── ID Prefixes (matches frontend MEM-xxxx / TRN-xxx format) ─────────────────
 const ID_PREFIXES = Object.freeze({
   MEMBER:      "MEM",
@@ -96,10 +115,14 @@ const ID_PREFIXES = Object.freeze({
   BATCH:       "BATCH",
   PLAN:        "PLAN",
   INQUIRY:     "INQ",
+  ENROLLMENT:  "ENR",
+  INVOICE:     "INV",
   TXN:         "TXN",
   RECEIPT:          "TSW-REC",
   ASSIGNMENT:       "ASG",
   ATTENDANCE:       "ATT",
+  ATTENDANCE_AUDIT: "ATAUD",
+  TRAINER_INTERVAL: "TINT",
   TRAINER_LOG:      "TLOG",
   TRAINER_LEAVE:    "TLREQ",
   CLASS:            "CLS",
@@ -152,13 +175,15 @@ const CLASS_STATUS = Object.freeze({
 
 // ─── Schedule History Actions ────────────────────────────────────────────────
 const SCHEDULE_CHANGE_ACTION = Object.freeze({
-  ASSIGN_CLASSES: "ASSIGN_CLASSES",
-  SWAP_DATES:     "SWAP_DATES",
-  REORDER:        "REORDER",
-  EDIT_WORKOUT:   "EDIT_WORKOUT",
-  REMOVE_CLASS:   "REMOVE_CLASS",
-  UPDATE_CLASS:   "UPDATE_CLASS",
-  RESTORE_CLASS:  "RESTORE_CLASS",
+  ASSIGN_CLASSES:    "ASSIGN_CLASSES",
+  SWAP_DATES:        "SWAP_DATES",
+  REORDER:           "REORDER",
+  EDIT_WORKOUT:      "EDIT_WORKOUT",
+  REMOVE_CLASS:      "REMOVE_CLASS",
+  UPDATE_CLASS:      "UPDATE_CLASS",
+  RESTORE_CLASS:     "RESTORE_CLASS",
+  CANCEL_RESCHEDULE: "CANCEL_RESCHEDULE",
+  CANCEL_SESSION:    "CANCEL_SESSION",
 });
 
 // ─── Session Statuses ─────────────────────────────────────────────────────────
@@ -217,10 +242,24 @@ const BATCH_AUDIT_ROLE = Object.freeze({
 const ATTENDANCE_STATUS = Object.freeze({
   PRESENT:     "PRESENT",
   ABSENT:      "ABSENT",
+  LEAVE:       "LEAVE",
+  ON_LEAVE:    "ON_LEAVE",
   LATE:        "LATE",
   EXCUSED:     "EXCUSED",
   CHECKED_IN:  "CHECKED_IN",
   CHECKED_OUT: "CHECKED_OUT",
+});
+
+// ─── Attendance Exception Types ───────────────────────────────────────────────
+const ATTENDANCE_EXCEPTION_TYPE = Object.freeze({
+  NONE:              "NONE",
+  CHECKOUT_PENDING:  "CHECKOUT_PENDING",
+  LATE:              "LATE",
+  EARLY_DEPARTURE:   "EARLY_DEPARTURE",
+  OUTSIDE_WINDOW:    "OUTSIDE_WINDOW",
+  OVERRIDE:          "OVERRIDE",
+  AUTO_CHECKOUT:     "AUTO_CHECKOUT",
+  MISSED_TRANSITION: "MISSED_TRANSITION",
 });
 
 // ─── Trainer Log Statuses ─────────────────────────────────────────────────────
@@ -300,6 +339,7 @@ module.exports = {
   BATCH_AUDIT_ACTION,
   BATCH_AUDIT_ROLE,
   ATTENDANCE_STATUS,
+  ATTENDANCE_EXCEPTION_TYPE,
   TRAINER_LOG_STATUS,
   TRAINER_LEAVE_STATUS,
   TRAINER_LEAVE_TYPE,
@@ -314,6 +354,8 @@ module.exports = {
   DAYS_PATTERN,
   PAYMENT_METHODS,
   PAYMENT_STATUS,
+  ENROLLMENT_STATUS,
+  DISCOUNT_TYPES,
   ID_PREFIXES,
   PAGINATION,
   USER_ROLES,

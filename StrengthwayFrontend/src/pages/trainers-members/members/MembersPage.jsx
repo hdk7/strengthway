@@ -24,7 +24,6 @@ const MEMBER_COLUMNS = [
   { header: "Contact" },
   { header: "Physical Stats" },
   { header: "Emergency Contact" },
-  { header: "Medical Doc" },
   { header: "Status", align: "center" },
 ];
 
@@ -172,13 +171,11 @@ export default function MembersPage() {
     const inquiries = activeList.filter(
       (m) => m.status === "Lead" || m.status === "Inquiry"
     ).length;
-    const withMedical = activeList.filter((m) => m.medicalDoc || m.medicalDocName).length;
     const archived = members.filter((m) => m.isDeleted).length;
     return {
       total,
       active,
       inquiries,
-      withMedical,
       archived,
     };
   }, [members]);

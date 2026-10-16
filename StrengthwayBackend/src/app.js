@@ -52,7 +52,14 @@ app.use(
 );
 
 // ── Body parsers ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: "10mb" }));
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // ── HTTP request logger ───────────────────────────────────────────────────────
@@ -85,6 +92,7 @@ app.get("/api/v1", (req, res) => {
       plans:    "/api/v1/plans",
       batches:  "/api/v1/batches",
       inquiries: "/api/v1/inquiries",
+      enrollments: "/api/v1/enrollments",
       schedules:  "/api/v1/schedules",
       classes:    "/api/v1/classes",
       sessions:   "/api/v1/sessions",
@@ -94,6 +102,7 @@ app.get("/api/v1", (req, res) => {
       trainerLeaves: "/api/v1/trainer-leaves",
       uploads:    "/api/v1/uploads",
       portfolio:  "/api/v1/portfolio",
+      whatsapp:   "/api/v1/whatsapp",
     },
     docs: "See README.md for full API reference.",
   });
@@ -118,6 +127,8 @@ const sessionNoteRoutes  = require("./modules/schedules/sessionNote.routes");
 const permissionRoutes   = require("./modules/permissions/permission.routes");
 const portfolioRoutes    = require("./modules/portfolio/portfolio.routes");
 const notificationRoutes = require("./modules/notifications/notification.routes");
+const enrollmentRoutes   = require("./modules/enrollments/enrollment.routes");
+const whatsappRoutes     = require("./modules/whatsapp/whatsapp.routes");
 
 app.use("/api/v1/auth",           authRoutes);
 app.use("/api/v1/members",        memberRoutes);
@@ -125,6 +136,8 @@ app.use("/api/v1/trainers",       trainerRoutes);
 app.use("/api/v1/plans",          planRoutes);
 app.use("/api/v1/batches",        batchRoutes);
 app.use("/api/v1/inquiries",      inquiryRoutes);
+app.use("/api/v1/enrollments",    enrollmentRoutes);
+app.use("/api/v1/whatsapp",       whatsappRoutes);
 app.use("/api/v1/schedules",      scheduleRoutes);
 app.use("/api/v1/classes",        classRoutes);
 app.use("/api/v1/sessions",       sessionRoutes);

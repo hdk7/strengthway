@@ -7,6 +7,7 @@ import {
   AlertCircle,
   PhoneCall,
   UserCheck,
+  UserPlus,
   Archive,
   CheckCircle2,
   Clock,
@@ -20,7 +21,7 @@ import {
   archiveInquiry,
   updateInquiryStatus,
 } from "@/lib/inquiriesService";
-import { AdminMemberRegistrationModal } from "@/pages/trainers-members/members/MembersRegistration";
+import EnrollmentModal from "./EnrollmentModal";
 import { Button } from "@/components/ui/Button";
 import ContactLeadModal from "./ContactLeadModal";
 import InquiryContactRecordCard from "./InquiryContactRecordCard";
@@ -144,24 +145,27 @@ export default function InquiryProfilePage() {
     }
   };
 
-  const handleRegistrationSuccess = async (registeredMember) => {
-    try {
-      await updateInquiryStatus(inquiry.id, "Converted", {
-        convertedMemberId: registeredMember?.id,
-      });
+  const handleEnrollmentSuccess = async (result) => {
+    setIsRegisterModalOpen(false);
+    if (result?.member) {
+      try {
+        await updateInquiryStatus(inquiry.id, "Converted", {
+          convertedMemberId: result.member.id,
+        });
+        setInquiry((prev) => ({
+          ...prev,
+          status: "Converted",
+          convertedMemberId: result.member.id,
+          convertedAt: new Date().toISOString(),
+        }));
+      } catch (err) {
+        console.error("Failed to update status on conversion:", err);
+      }
+    } else {
       setInquiry((prev) => ({
         ...prev,
-        status: "Converted",
-        convertedMemberId: registeredMember?.id,
-        convertedAt: new Date().toISOString(),
+        enrollmentId: result?.id || "ENR-PENDING",
       }));
-      setIsRegisterModalOpen(false);
-      toast.success(
-        `${registeredMember?.firstName || inquiry?.name || "Prospect"} successfully converted to Member!`,
-        { icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" /> },
-      );
-    } catch (err) {
-      console.error("Failed to update status on conversion:", err);
     }
   };
 
@@ -274,8 +278,8 @@ export default function InquiryProfilePage() {
                   variant="success"
                   onClick={() => setIsRegisterModalOpen(true)}
                 >
-                  <UserCheck size={16} />
-                  <span>Convert to Member</span>
+                  <UserPlus size={16} />
+                  <span>Proceed to Enrollment</span>
                 </Button>
               )}
               <Button
@@ -373,24 +377,13 @@ export default function InquiryProfilePage() {
         leadEmail={inquiry?.email}
       />
 
-      {/* --- MEMBER REGISTRATION MODAL --- */}
+      {/* --- PAYMENT-FIRST ENROLLMENT MODAL --- */}
       {isRegisterModalOpen && (
-        <AdminMemberRegistrationModal
+        <EnrollmentModal
           isOpen={isRegisterModalOpen}
           onClose={() => setIsRegisterModalOpen(false)}
-          onSuccess={handleRegistrationSuccess}
-          leadToConfirm={{
-            id: inquiry.id,
-            name: inquiry.name,
-            gender: inquiry.gender,
-            mobile: inquiry.mobile,
-            email: inquiry.email,
-            address: inquiry.address,
-            bio: inquiry.message
-              ? `Inquiry (${inquiry.subject || "General"}): ${inquiry.message}`
-              : "Prospective athlete via website inquiry.",
-            status: inquiry.status || "Contacted",
-          }}
+          inquiry={inquiry}
+          onSuccess={handleEnrollmentSuccess}
         />
       )}
     </div>

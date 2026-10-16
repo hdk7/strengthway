@@ -76,6 +76,139 @@ export function parseTimeToMinutes(timeStr) {
 }
 
 /**
+ * Formats minutes from midnight to standard 12-hour AM/PM string.
+ * e.g., 360 -> "06:00 AM", 840 -> "02:00 PM"
+ *
+ * @param {number} minutes
+ * @returns {string}
+ */
+export function formatMinutesToTime(minutes) {
+  if (minutes === null || minutes === undefined || isNaN(minutes)) return "";
+  let m = Math.floor(minutes) % (24 * 60);
+  if (m < 0) m += 24 * 60;
+  const hours24 = Math.floor(m / 60);
+  const mins = m % 60;
+  const meridiem = hours24 >= 12 ? "PM" : "AM";
+  let hours12 = hours24 % 12;
+  if (hours12 === 0) hours12 = 12;
+  return `${String(hours12).padStart(2, "0")}:${String(mins).padStart(2, "0")} ${meridiem}`;
+}
+
+/**
+ * Calculates actual overlap between an attendance interval and a scheduled session.
+ * Excludes time outside the scheduled period from teaching duration.
+ *
+ * @param {number} inMin
+ * @param {number} outMin
+ * @param {number} schedStartMin
+ * @param {number} schedEndMin
+ * @returns {number}
+ */
+export function calculateSessionOverlap(inMin, outMin, schedStartMin, schedEndMin) {
+  if (inMin === null || outMin === null || schedStartMin === null || schedEndMin === null) {
+    return 0;
+  }
+  const overlapStart = Math.max(inMin, schedStartMin);
+  const overlapEnd = Math.min(outMin, schedEndMin);
+  if (overlapEnd > overlapStart) {
+    return overlapEnd - overlapStart;
+  }
+  return 0;
+}
+
+/**
+ * Groups sessions into consecutive session blocks (intervals) where break <= 15 minutes.
+ *
+ * @param {Array<object>} sessions
+ * @param {number} [meaningfulBreakMinutes=15]
+ * @returns {Array<object>}
+ */
+export function groupConsecutiveSessions(sessions = [], meaningfulBreakMinutes = 15) {
+  if (!Array.isArray(sessions) || sessions.length === 0) return [];
+
+  const sorted = [...sessions].sort((a, b) => {
+    const startA = parseTimeToMinutes(a.startTime) || 0;
+    const startB = parseTimeToMinutes(b.startTime) || 0;
+    return startA - startB;
+  });
+
+  const blocks = [];
+  let currentBlock = null;
+
+  for (const s of sorted) {
+    const sStartMin = parseTimeToMinutes(s.startTime);
+    const sEndMin = parseTimeToMinutes(s.endTime);
+    if (sStartMin === null || sEndMin === null) continue;
+
+    if (!currentBlock) {
+      currentBlock = {
+        blockIndex: blocks.length + 1,
+        blockStartTime: s.startTime,
+        blockEndTime: s.endTime,
+        blockStartMin: sStartMin,
+        blockEndMin: sEndMin,
+        totalScheduledDuration: sEndMin - sStartMin,
+        sessions: [s],
+      };
+    } else {
+      const breakMinutes = sStartMin - currentBlock.blockEndMin;
+      if (breakMinutes <= meaningfulBreakMinutes && breakMinutes >= -15) {
+        currentBlock.sessions.push(s);
+        currentBlock.blockEndTime = s.endTime;
+        currentBlock.blockEndMin = Math.max(currentBlock.blockEndMin, sEndMin);
+        currentBlock.totalScheduledDuration += (sEndMin - sStartMin);
+      } else {
+        currentBlock.isConsecutive = currentBlock.sessions.length > 1;
+        blocks.push(currentBlock);
+        currentBlock = {
+          blockIndex: blocks.length + 1,
+          blockStartTime: s.startTime,
+          blockEndTime: s.endTime,
+          blockStartMin: sStartMin,
+          blockEndMin: sEndMin,
+          totalScheduledDuration: sEndMin - sStartMin,
+          sessions: [s],
+        };
+      }
+    }
+  }
+
+  if (currentBlock) {
+    currentBlock.isConsecutive = currentBlock.sessions.length > 1;
+    blocks.push(currentBlock);
+  }
+
+  return blocks;
+}
+
+/**
+ * Generates remarks for exceptions (late arrival, missing checkout, early departure).
+ */
+export function generateRemarks(inMin, outMin, schedStartMin, schedEndMin, isMissingCheckout = false) {
+  if (isMissingCheckout || outMin === null || outMin === undefined) {
+    return "Check-out time not recorded. Admin verification required.";
+  }
+
+  const isLate = inMin > schedStartMin;
+  const isEarly = outMin < schedEndMin;
+
+  if (isLate && isEarly) {
+    const lateM = inMin - schedStartMin;
+    const earlyM = schedEndMin - outMin;
+    return `Checked in ${lateM} minutes after scheduled start time and left ${earlyM} minutes before session ended.`;
+  }
+  if (isLate) {
+    const lateM = inMin - schedStartMin;
+    return `Checked in ${lateM} minute${lateM === 1 ? "" : "s"} after the scheduled start time.`;
+  }
+  if (isEarly) {
+    const earlyM = schedEndMin - outMin;
+    return `Left ${earlyM} minute${earlyM === 1 ? "" : "s"} before the scheduled session ended.`;
+  }
+  return "Attended on schedule.";
+}
+
+/**
  * Derives a trainer's applicable schedule, working days, and time slot for a selected date.
  */
 export function getTrainerScheduleDetails(trainer, batches = [], selectedDate = getTodayDateString()) {
@@ -212,7 +345,10 @@ export function checkTrainerScheduleAccess(selectedDate, trainer, batches = [], 
   const endMinutes = parseTimeToMinutes(schedule.endTime);
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  if (startMinutes !== null && currentMinutes < startMinutes) {
+  const checkInWindowOpen = startMinutes !== null ? startMinutes - 60 : null;
+  const checkOutWindowClose = endMinutes !== null ? endMinutes + 60 : null;
+
+  if (checkInWindowOpen !== null && currentMinutes < checkInWindowOpen) {
     return {
       isAllowed: false,
       isScheduledDay: true,
@@ -224,11 +360,11 @@ export function checkTrainerScheduleAccess(selectedDate, trainer, batches = [], 
       timingLabel: schedule.timingLabel,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
-      reason: `Restricted: Scheduled ${schedule.timingLabel} (Opens at ${schedule.startTime}).`,
+      reason: `Restricted: Scheduled ${schedule.timingLabel} (Check-in opens at ${formatMinutesToTime(checkInWindowOpen)}).`,
     };
   }
 
-  if (endMinutes !== null && currentMinutes > endMinutes) {
+  if (checkOutWindowClose !== null && currentMinutes > checkOutWindowClose) {
     return {
       isAllowed: false,
       isScheduledDay: true,
@@ -240,7 +376,7 @@ export function checkTrainerScheduleAccess(selectedDate, trainer, batches = [], 
       timingLabel: schedule.timingLabel,
       startTime: schedule.startTime,
       endTime: schedule.endTime,
-      reason: `Restricted: Attendance closed (Shift/Class ended at ${schedule.endTime}).`,
+      reason: `Restricted: Attendance closed (Session window ended at ${formatMinutesToTime(checkOutWindowClose)}).`,
     };
   }
 

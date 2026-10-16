@@ -41,6 +41,22 @@ const config = Object.freeze({
   // Rate limiting
   RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 900_000, // 15 min
   RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX, 10) || 200,
+
+  // Meta WhatsApp Cloud API
+  WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_API_TOKEN || "",
+  WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+  WHATSAPP_BUSINESS_ACCOUNT_ID: process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || "",
+  WHATSAPP_APP_SECRET: process.env.WHATSAPP_APP_SECRET || "",
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || "",
+  WHATSAPP_GRAPH_API_VERSION: process.env.WHATSAPP_GRAPH_API_VERSION || "v20.0",
+  WHATSAPP_PAYMENT_TEMPLATE_NAME: process.env.WHATSAPP_PAYMENT_TEMPLATE_NAME || "membership_payment_link",
+  WHATSAPP_PAYMENT_TEMPLATE_LANG: process.env.WHATSAPP_PAYMENT_TEMPLATE_LANG || "en_US",
+  GYM_NAME: process.env.GYM_NAME || "Strengthway Gym",
+
+  // Razorpay Payment Gateway
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || "",
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || "",
+  RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET || "",
 });
 
 module.exports = config;

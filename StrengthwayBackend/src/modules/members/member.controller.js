@@ -165,6 +165,15 @@ async function archiveInquiry(req, res, next) {
   }
 }
 
+async function renewMembership(req, res, next) {
+  try {
+    const result = await memberService.renewMembership(req.params.id, req.body);
+    return success(res, result, "Membership renewed successfully with adjustment deduction.");
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   getAll,
   getById,
@@ -178,5 +187,6 @@ module.exports = {
   recordContact,
   archiveInquiry,
   getMonthTracking,
+  renewMembership,
 };
 

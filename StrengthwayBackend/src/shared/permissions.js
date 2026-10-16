@@ -14,6 +14,7 @@ const MODULES = {
   CLASSES: "classes",
   ATTENDANCE: "attendance",
   PAYMENTS: "payments",
+  ENROLLMENTS: "enrollments",
   REPORTS: "reports",
   INQUIRIES: "inquiries",
   MASTERS: "masters",

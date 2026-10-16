@@ -27,6 +27,7 @@ import {
   Clock,
   UserCheck,
   ChevronDown,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -35,6 +36,7 @@ import {
   resetRolePermissions,
   getPermissionAuditLogs,
 } from "@/lib/permissionsService";
+import WhatsAppIntegrationSection from "./WhatsAppIntegrationSection";
 
 /**
  * Standard StrengthWay Gym Modules Catalog
@@ -480,54 +482,85 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Top Right Controls: Role Selector, Audit Toggle & Save Button */}
+        {/* Navigation Tabs & Controls */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {/* Role Dropdown */}
-          <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 shadow-2xs">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              Role:
-            </span>
-            <div className="relative">
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="appearance-none bg-transparent pr-6 pl-1 py-0.5 text-xs font-black font-mono text-primary focus:outline-none cursor-pointer"
-              >
-                <option value="super_admin" className="bg-popover text-popover-foreground">SUPER_ADMIN</option>
-                <option value="trainer" className="bg-popover text-popover-foreground">FACULTY_TRAINER</option>
-                <option value="member" className="bg-popover text-popover-foreground">GYM_ATHLETE</option>
-              </select>
-              <ChevronDown size={13} className="absolute right-0 top-1 text-muted-foreground pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Audit Toggle */}
-          <button
-            onClick={() => setActiveView(activeView === "matrix" ? "audit" : "matrix")}
-            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition-all cursor-pointer ${
-              activeView === "audit"
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border bg-card text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <History size={13} />
-            <span>Security Audit Trail</span>
-          </button>
-
-          {/* Save Matrix Button */}
-          {selectedRole !== "super_admin" && (
+          <div className="flex items-center p-1 rounded-xl border border-border bg-card shadow-2xs">
             <button
-              onClick={handleSaveMatrix}
-              disabled={!hasChanges || saving}
-              className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
-                hasChanges
-                  ? "bg-primary hover:bg-primary/90 text-primary-foreground ring-2 ring-primary/25"
-                  : "bg-muted text-muted-foreground cursor-not-allowed"
+              type="button"
+              onClick={() => setActiveView("matrix")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeView === "matrix"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
-              <span>Save Matrix</span>
+              <ShieldCheck size={13} />
+              <span>RBAC Matrix</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView("whatsapp")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeView === "whatsapp"
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MessageSquare size={13} />
+              <span>WhatsApp Cloud API</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView("audit")}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                activeView === "audit"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <History size={13} />
+              <span>Audit Trail</span>
+            </button>
+          </div>
+
+          {/* Matrix Controls: Role Selector & Save Button */}
+          {activeView === "matrix" && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-1.5 shadow-2xs">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  Role:
+                </span>
+                <div className="relative">
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="appearance-none bg-transparent pr-6 pl-1 py-0.5 text-xs font-black font-mono text-primary focus:outline-none cursor-pointer"
+                  >
+                    <option value="super_admin" className="bg-popover text-popover-foreground">SUPER_ADMIN</option>
+                    <option value="trainer" className="bg-popover text-popover-foreground">FACULTY_TRAINER</option>
+                    <option value="member" className="bg-popover text-popover-foreground">GYM_ATHLETE</option>
+                  </select>
+                  <ChevronDown size={13} className="absolute right-0 top-1 text-muted-foreground pointer-events-none" />
+                </div>
+              </div>
+
+              {selectedRole !== "super_admin" && (
+                <button
+                  onClick={handleSaveMatrix}
+                  disabled={!hasChanges || saving}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold transition-all shadow-2xs cursor-pointer ${
+                    hasChanges
+                      ? "bg-primary hover:bg-primary/90 text-primary-foreground ring-2 ring-primary/25"
+                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                  }`}
+                >
+                  {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                  <span>Save Matrix</span>
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -746,6 +779,8 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      ) : activeView === "whatsapp" ? (
+        <WhatsAppIntegrationSection />
       ) : (
         /* ── Security Audit Trail View ────────────────────────────────────────── */
         <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-2xs space-y-4">

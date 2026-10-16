@@ -152,11 +152,6 @@ const createMemberSchema = yup.object().shape({
     .nullable()
     .default(MEMBER_STATUS.ACTIVE),
 
-  // Optional medical doc
-  medicalDoc: yup.mixed().nullable(),
-  medicalDocName: yup.string().trim().nullable(),
-  medicalDocSize: yup.string().trim().nullable(),
-
   // Optional plan & payment details at registration
   paymentPlanId: yup.string().trim().nullable(),
   planId: yup.string().trim().nullable(),
@@ -216,9 +211,6 @@ const updateMemberSchema = yup.object().shape({
   photo: yup.string().trim().nullable(),
   photoUrl: yup.string().trim().nullable(),
   photoName: yup.string().trim().nullable(),
-  medicalDoc: yup.mixed().nullable(),
-  medicalDocName: yup.string().trim().nullable(),
-  medicalDocSize: yup.string().trim().nullable(),
   membershipPlan: yup.mixed().nullable(),
   paymentDetails: yup.mixed().nullable(),
 });

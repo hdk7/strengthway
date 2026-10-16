@@ -10,6 +10,8 @@ import {
   ShieldCheck,
   FileText,
   Sparkles,
+  AlertTriangle,
+  Timer,
 } from "lucide-react";
 
 export function AttendanceDetailModal({
@@ -27,7 +29,10 @@ export function AttendanceDetailModal({
   const checkOutTime = record?.checkOutTime || "—";
   const markedBy = record?.markedBy || "Coach";
   const notes = record?.notes || "No notes logged for this session.";
+  const remarks = record?.remarks || "";
+  const durationMinutes = record?.durationMinutes || 0;
   const isFlex = Boolean(record?.isFlexAttendance || attendee?.isFlexIn);
+  const isException = Boolean(record?.isException || record?.exceptionType === "CHECKOUT_PENDING");
 
   const getStatusBadge = () => {
     if (status === "PRESENT" || record?.checkInTime || status === "CHECKED_IN" || status === "CHECKED_OUT") {
@@ -55,7 +60,7 @@ export function AttendanceDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
-      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-5 sm:p-6 shadow-2xl space-y-5">
+      <div className="relative w-full max-w-lg rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-5 sm:p-6 shadow-2xl space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-border pb-3.5">
           <div className="flex items-center gap-2.5">
@@ -67,7 +72,7 @@ export function AttendanceDetailModal({
                 Attendance Record Details
               </h3>
               <p className="text-[11px] text-slate-500 dark:text-muted-foreground">
-                Verified historical attendance log (Read-Only).
+                Verified historical attendance log & visit duration (Read-Only).
               </p>
             </div>
           </div>
@@ -98,9 +103,9 @@ export function AttendanceDetailModal({
         </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-3 text-xs">
+        <div className="grid grid-cols-2 gap-2.5 text-xs">
           {/* Date */}
-          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-3">
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-2.5">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground mb-1">
               <Calendar size={13} className="text-blue-700 dark:text-accent" />
               <span className="font-semibold text-[11px] uppercase tracking-wider">Attendance Date</span>
@@ -109,16 +114,16 @@ export function AttendanceDetailModal({
           </div>
 
           {/* Batch */}
-          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-3">
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-2.5">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground mb-1">
               <Layers size={13} className="text-blue-700 dark:text-accent" />
               <span className="font-semibold text-[11px] uppercase tracking-wider">Scheduled Batch</span>
             </div>
-            <p className="font-bold text-slate-900 dark:text-foreground truncate">{batchName || "Batch Class"}</p>
+            <p className="font-bold text-slate-900 dark:text-foreground truncate">{batchName || record?.batchName || "Batch Class"}</p>
           </div>
 
           {/* Check-In Time */}
-          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-3">
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-2.5">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground mb-1">
               <LogIn size={13} className="text-emerald-500" />
               <span className="font-semibold text-[11px] uppercase tracking-wider">Check-In Time</span>
@@ -127,14 +132,43 @@ export function AttendanceDetailModal({
           </div>
 
           {/* Check-Out Time */}
-          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-3">
+          <div className="rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-2.5">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-muted-foreground mb-1">
               <LogOut size={13} className="text-blue-500 dark:text-blue-400" />
               <span className="font-semibold text-[11px] uppercase tracking-wider">Check-Out Time</span>
             </div>
             <p className="font-bold font-mono text-blue-600 dark:text-blue-400">{checkOutTime}</p>
           </div>
+
+          {/* Visit Duration */}
+          <div className="col-span-2 rounded-lg border border-slate-200 dark:border-border bg-slate-50/40 dark:bg-background/60 p-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Timer size={14} className="text-indigo-500" />
+              <span className="font-semibold text-[11px] uppercase tracking-wider text-slate-500 dark:text-muted-foreground">
+                Actual Visit Duration:
+              </span>
+            </div>
+            <span className="font-bold font-mono text-xs text-foreground">
+              {durationMinutes > 0 ? `${durationMinutes} minutes` : checkInTime !== "—" && checkOutTime === "—" ? "Pending Check-Out" : "—"}
+            </span>
+          </div>
         </div>
+
+        {/* Incomplete attendance / Exception warning */}
+        {isException && (
+          <div className="flex items-center gap-2 p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-500 dark:text-amber-400 text-xs font-semibold">
+            <AlertTriangle size={14} className="shrink-0" />
+            <span>Check-Out Pending: Check-out time was not recorded. Admin verification required.</span>
+          </div>
+        )}
+
+        {/* Remarks / Explanation */}
+        {remarks && (
+          <div className="p-2.5 rounded-lg border border-slate-200 dark:border-border bg-muted/30 text-xs">
+            <span className="font-bold text-[11px] uppercase text-muted-foreground block mb-0.5">Remarks / Notes:</span>
+            <p className="text-foreground font-medium">{remarks}</p>
+          </div>
+        )}
 
         {/* Flex info if applicable */}
         {isFlex && (
@@ -145,29 +179,31 @@ export function AttendanceDetailModal({
         )}
 
         {/* Marked By & Notes */}
-        <div className="space-y-2 rounded-lg border border-slate-200 dark:border-border bg-slate-50/30 dark:bg-background/40 p-3 text-xs">
-          <div className="flex items-center justify-between text-slate-500 dark:text-muted-foreground border-b border-slate-200 dark:border-border/50 pb-1.5">
+        <div className="space-y-1.5 rounded-lg border border-slate-200 dark:border-border bg-slate-50/30 dark:bg-background/40 p-2.5 text-xs">
+          <div className="flex items-center justify-between text-slate-500 dark:text-muted-foreground border-b border-slate-200 dark:border-border/50 pb-1">
             <span className="flex items-center gap-1 font-semibold">
               <User size={12} className="text-blue-700 dark:text-accent" />
               <span>Marked By:</span>
             </span>
             <span className="font-mono text-slate-900 dark:text-foreground font-semibold">{markedBy}</span>
           </div>
-          <div className="pt-1">
-            <span className="flex items-center gap-1 text-slate-500 dark:text-muted-foreground font-semibold mb-1">
-              <FileText size={12} className="text-blue-700 dark:text-accent" />
-              <span>Session Notes:</span>
-            </span>
-            <p className="text-slate-800 dark:text-foreground italic bg-white dark:bg-background/60 p-2 rounded-lg border border-slate-200 dark:border-border/40 text-[11px]">
-              "{notes}"
-            </p>
-          </div>
+          {notes && notes !== "No notes logged for this session." && (
+            <div className="pt-1">
+              <span className="flex items-center gap-1 text-slate-500 dark:text-muted-foreground font-semibold mb-0.5">
+                <FileText size={12} className="text-blue-700 dark:text-accent" />
+                <span>Session Notes:</span>
+              </span>
+              <p className="text-slate-800 dark:text-foreground italic bg-white dark:bg-background/60 p-1.5 rounded border border-slate-200 dark:border-border/40 text-[11px]">
+                "{notes}"
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-border">
           <span className="text-[11px] text-slate-500 dark:text-muted-foreground italic">
-            Historical attendance records are archived and locked.
+            Historical records are secured and audited.
           </span>
           <button
             type="button"

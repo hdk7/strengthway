@@ -19,9 +19,6 @@ export function RegistrationStep2({
   chosenPlan,
   paymentForm,
   isConfirmingLead,
-  handleRemoveDoc,
-  handleDocUpload,
-  docInputRef,
 }) {
   return (
     <div className="no-scrollbar flex-1 min-h-0 overflow-y-auto px-6 py-6 sm:px-8 space-y-6">
@@ -262,12 +259,12 @@ export function RegistrationStep2({
             ]}
           />
         </div>
-      </section>      {/* 4. ATHLETE BIO & COACHING NOTES */}
+      </section>      {/* 4. Member Bio */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 border-b border-border/60 pb-2">
           <FileText className="h-4 w-4 text-accent" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            4. Athlete Bio &amp; Coaching Notes
+            4. Member Bio
           </h3>
         </div>
 

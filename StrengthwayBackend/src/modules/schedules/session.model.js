@@ -210,6 +210,56 @@ const sessionSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    isCancelled: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    cancellationId: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+    cancellationReason: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+    cancelledBy: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    rescheduledToDate: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    isRescheduled: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    rescheduledFromDate: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    rescheduledFromSessionId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    originalSessionDate: {
+      type: String,
+      trim: true,
+      default: "",
+    },
   },
   {
     timestamps: true,

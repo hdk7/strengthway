@@ -13,6 +13,9 @@ import {
   Sparkles,
   ArrowRightLeft,
   Clock,
+  Pencil,
+  AlertTriangle,
+  Timer,
 } from "lucide-react";
 import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
 import {
@@ -37,6 +40,7 @@ export function MemberDailyCheckInTable({
   handleQuickCheckIn,
   handleQuickCheckOut,
   onOpenViewModal,
+  onOpenEditModal,
   currentBatch,
   batches,
   selectedDate,
@@ -259,14 +263,43 @@ export function MemberDailyCheckInTable({
                     <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
                       {hasCheckedIn ? (
                         <div className="font-mono text-xs flex flex-col gap-0.5">
-                          <span className="text-emerald-500 font-semibold flex items-center gap-1 text-[11px]">
-                            <LogIn size={11} className="shrink-0" />
-                            <span>In: {record.checkInTime}</span>
-                          </span>
-                          {hasCheckedOut && (
-                            <span className="text-blue-400 font-semibold flex items-center gap-1 text-[11px]">
-                              <LogOut size={11} className="shrink-0" />
-                              <span>Out: {record.checkOutTime}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-emerald-500 font-semibold flex items-center gap-1 text-[11px]">
+                              <LogIn size={11} className="shrink-0" />
+                              <span>In: {record.checkInTime}</span>
+                            </span>
+                            {hasCheckedOut && (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-blue-400 font-semibold flex items-center gap-1 text-[11px]">
+                                  <LogOut size={11} className="shrink-0" />
+                                  <span>Out: {record.checkOutTime}</span>
+                                </span>
+                                {record.isSystemGenerated || record.checkoutBy === "SYSTEM" ? (
+                                  <span className="inline-flex items-center rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 font-mono text-[9px] px-1 py-0.2" title="System Auto-Checkout at scheduled class end + 1 hour">
+                                    System Auto
+                                  </span>
+                                ) : record.checkoutBy === "ADMIN" ? (
+                                  <span className="inline-flex items-center rounded bg-purple-500/15 border border-purple-500/30 text-purple-400 font-mono text-[9px] px-1 py-0.2" title="Manual checkout recorded by Admin">
+                                    Admin
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded bg-blue-500/15 border border-blue-500/30 text-blue-400 font-mono text-[9px] px-1 py-0.2" title="Member checkout action">
+                                    Member
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {hasCheckedIn && hasCheckedOut && record?.durationMinutes > 0 && (
+                            <span className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                              <Timer size={10} className="text-indigo-400 shrink-0" />
+                              <span>Visit: {record.durationMinutes} mins</span>
+                            </span>
+                          )}
+                          {hasCheckedIn && !hasCheckedOut && (isPast || periodExpired) && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 w-fit">
+                              <AlertTriangle size={10} />
+                              <span>Check-out Pending</span>
                             </span>
                           )}
                         </div>
@@ -279,9 +312,16 @@ export function MemberDailyCheckInTable({
                       )}
                     </td>
 
-                    {/* Status Badge */}
+                    {/* Status Badge & Remarks */}
                     <td className="bg-card py-3.5 px-4 sm:px-6 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-                      {renderStatusBadge(effectiveStatus, hasCheckedOut)}
+                      <div className="flex flex-col gap-1 items-start">
+                        {renderStatusBadge(effectiveStatus, hasCheckedOut)}
+                        {record?.remarks && (
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[160px] font-sans" title={record.remarks}>
+                            {record.remarks}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Action Column: Retain ONLY Check In and Check Out, governed by schedule */}
@@ -291,8 +331,8 @@ export function MemberDailyCheckInTable({
                           Handled at target batch
                         </span>
                       ) : isPast ? (
-                        /* Past Records: Retain only View action */
-                        <div className="inline-flex items-center justify-center">
+                        /* Past Records: View and Admin Correction */
+                        <div className="inline-flex items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() =>
@@ -309,6 +349,17 @@ export function MemberDailyCheckInTable({
                             <Eye size={12} className="text-accent" />
                             <span>View</span>
                           </button>
+                          {isAdmin() && onOpenEditModal && (
+                            <button
+                              type="button"
+                              onClick={() => onOpenEditModal(attendee, record, selectedDate)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-2 py-1 text-xs font-semibold text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs"
+                              title="Admin correction / override"
+                            >
+                              <Pencil size={11} className="text-amber-500" />
+                              <span>Correct</span>
+                            </button>
+                          )}
                         </div>
                       ) : isFuture ? (
                         /* Future Records: Disabled until scheduled date, not accessible through View */

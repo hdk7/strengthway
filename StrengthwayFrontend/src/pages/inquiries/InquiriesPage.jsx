@@ -16,7 +16,7 @@ import {
   archiveInquiry,
   deleteInquiry,
 } from "@/lib/inquiriesService";
-import { AdminMemberRegistrationModal } from "@/pages/trainers-members/members/MembersRegistration";
+import EnrollmentModal from "@/pages/inquiries/EnrollmentModal";
 import { InquiryProfileModal } from "@/pages/inquiries/InquiryProfileModal";
 import { LogInquiryModal } from "@/pages/inquiries/LogInquiryModal";
 import ContactLeadModal from "@/pages/inquiries/ContactLeadModal";
@@ -166,35 +166,30 @@ export default function InquiriesPage() {
     }
   };
 
-  const handleRegistrationSuccess = async (registeredMember) => {
+  const handleEnrollmentSuccess = async (result) => {
     if (inquiryToConvert) {
-      try {
-        await updateInquiryStatus(inquiryToConvert.id, "Converted", {
-          convertedMemberId: registeredMember?.id,
-        });
+      if (result?.member) {
+        // Converted immediately via offline payment
+        try {
+          await updateInquiryStatus(inquiryToConvert.id, "Converted", {
+            convertedMemberId: result.member.id,
+          });
+        } catch (err) {
+          console.error("Failed to update status on conversion:", err);
+        }
+      } else {
+        // Enrollment created & pending payment link dispatched
         setInquiries((prev) =>
           prev.map((inq) =>
             inq.id === inquiryToConvert.id
-              ? {
-                  ...inq,
-                  status: "Converted",
-                  convertedMemberId: registeredMember?.id,
-                  convertedAt: new Date().toISOString(),
-                }
+              ? { ...inq, enrollmentId: result?.id || "ENR-PENDING" }
               : inq,
           ),
         );
-      } catch (err) {
-        console.error("Failed to update status on conversion:", err);
       }
     }
     setInquiryToConvert(null);
-    toast.success(
-      `${registeredMember?.firstName || inquiryToConvert?.name || "Inquiry"} successfully converted to Member!`,
-      {
-        icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
-      },
-    );
+    loadInquiries();
   };
 
   const stats = useMemo(() => {
@@ -398,24 +393,13 @@ export default function InquiriesPage() {
         }}
       />
 
-      {/* --- MEMBER REGISTRATION MODAL WITH AUTO-FILLED DATA --- */}
+      {/* --- PAYMENT-FIRST MEMBER ENROLLMENT MODAL --- */}
       {inquiryToConvert && (
-        <AdminMemberRegistrationModal
+        <EnrollmentModal
           isOpen={Boolean(inquiryToConvert)}
           onClose={() => setInquiryToConvert(null)}
-          onSuccess={handleRegistrationSuccess}
-          leadToConfirm={{
-            id: inquiryToConvert.id,
-            name: inquiryToConvert.name,
-            gender: inquiryToConvert.gender,
-            mobile: inquiryToConvert.mobile,
-            email: inquiryToConvert.email,
-            address: inquiryToConvert.address,
-            bio: inquiryToConvert.message
-              ? `Inquiry (${inquiryToConvert.subject || "General"}): ${inquiryToConvert.message}`
-              : "Prospective athlete via website inquiry.",
-            status: inquiryToConvert.status || "Contacted",
-          }}
+          inquiry={inquiryToConvert}
+          onSuccess={handleEnrollmentSuccess}
         />
       )}
     </div>

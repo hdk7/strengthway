@@ -7,6 +7,7 @@ const Session = require("../schedules/session.model");
 const MasterSchedule = require("../schedules/schedule.model");
 const Attendance = require("../attendance/attendance.model");
 const TrainerLog = require("../attendance/trainerLog.model");
+const TrainerInterval = require("../attendance/trainerInterval.model");
 const BatchAssignment = require("../batches/batchAssignment.model");
 const batchService = require("../batches/batch.service");
 
@@ -131,6 +132,8 @@ class ReportsService {
       const attendanceRate = totalLogged > 0 ? Math.round((presentCount / totalLogged) * 100) : 0;
       const hasActiveFlex = flexAssignments.some((f) => f.memberId === m.id);
       const isAtRisk = totalLogged >= 3 ? attendanceRate < 60 : (totalLogged > 0 && attendanceRate < 60);
+      const totalVisitMinutes = records.reduce((sum, a) => sum + (a.durationMinutes || 0), 0);
+      const avgVisitMinutes = presentCount > 0 ? Math.round(totalVisitMinutes / presentCount) : 0;
 
       return {
         memberId: m.id,
@@ -147,6 +150,8 @@ class ReportsService {
         primaryPresentCount,
         flexCount,
         attendanceRate,
+        totalVisitMinutes,
+        avgVisitMinutes,
         hasActiveFlex,
         isAtRisk,
       };
@@ -175,7 +180,9 @@ class ReportsService {
   }
 
   /**
-   * 3. Trainer-wise Monthly Performance & Conduction Report
+   * 3. Trainer-wise Monthly Performance & Conduction Report:
+   * Accurately calculates teaching duration and presence duration without double-counting
+   * consecutive sessions handled under continuous attendance.
    */
   async getMonthlyTrainerReport(yearMonth) {
     const ym = yearMonth && /^\d{4}-\d{2}$/.test(yearMonth)
@@ -184,15 +191,32 @@ class ReportsService {
 
     const trainers = await Trainer.find({ isDeleted: false }).sort({ name: 1 }).lean();
     const trainerLogs = await TrainerLog.find({ monthYear: ym }).lean();
+    const trainerIntervals = await TrainerInterval.find({ monthYear: ym }).lean();
     const sessions = await Session.find({ sessionDate: { $regex: `^${ym}` } }).lean();
 
     const trainerRows = trainers.map((t) => {
       const logs = trainerLogs.filter((l) => l.trainerId === t.id);
-      const conductedLogs = logs.filter((l) => l.status === "CONDUCTED");
-      const substituteLogs = trainerLogs.filter((l) => l.substituteTrainerId === t.id && l.status === "CONDUCTED");
+      const conductedLogs = logs.filter((l) => l.status === "CONDUCTED" || l.status === "PRESENT");
+      const substituteLogs = trainerLogs.filter(
+        (l) => l.substituteTrainerId === t.id && (l.status === "CONDUCTED" || l.status === "SUBSTITUTE" || l.status === "PRESENT")
+      );
       const scheduledSessions = sessions.filter((s) => s.coachId === t.id);
-      const totalMinutes = conductedLogs.reduce((sum, l) => sum + (l.durationMinutes || 60), 0) + substituteLogs.reduce((sum, l) => sum + (l.durationMinutes || 60), 0);
-      const totalAttendees = conductedLogs.reduce((sum, l) => sum + (l.attendeesCount || 0), 0) + substituteLogs.reduce((sum, l) => sum + (l.attendeesCount || 0), 0);
+
+      // Overlap-based scheduled teaching duration (excludes time outside scheduled periods)
+      const teachingMinutes =
+        conductedLogs.reduce((sum, l) => sum + (l.durationMinutes || 60), 0) +
+        substituteLogs.reduce((sum, l) => sum + (l.durationMinutes || 60), 0);
+
+      // Unique intervals for actual physical presence (ensures continuous sessions are not double-counted)
+      const intervals = trainerIntervals.filter((inv) => inv.trainerId === t.id);
+      const actualPresenceMinutes = intervals.reduce(
+        (sum, inv) => sum + (inv.actualDurationMinutes || 0),
+        0
+      );
+
+      const totalAttendees =
+        conductedLogs.reduce((sum, l) => sum + (l.attendeesCount || 0), 0) +
+        substituteLogs.reduce((sum, l) => sum + (l.attendeesCount || 0), 0);
       const totalConducted = conductedLogs.length + substituteLogs.length;
       const avgClassAttendance = totalConducted > 0 ? Math.round(totalAttendees / totalConducted) : 0;
 
@@ -206,7 +230,8 @@ class ReportsService {
         classesScheduled: scheduledSessions.length,
         classesConducted: totalConducted,
         substituteCoverages: substituteLogs.length,
-        coachingHours: Math.round((totalMinutes / 60) * 10) / 10,
+        coachingHours: Math.round((teachingMinutes / 60) * 10) / 10,
+        actualPresenceHours: Math.round((Math.max(teachingMinutes, actualPresenceMinutes) / 60) * 10) / 10,
         totalAttendeesCoached: totalAttendees,
         avgClassAttendance,
       };

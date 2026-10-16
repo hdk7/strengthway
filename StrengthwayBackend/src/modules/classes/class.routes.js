@@ -11,6 +11,11 @@ const { createClassSchema, updateClassSchema } = require("./class.schema");
 // Class catalogue is protected: Admin & Trainer only (Members cannot access class catalogue)
 router.get("/calendar", authenticate, requireTrainer, ctrl.getCalendar);
 
+const classCancellationCtrl = require("./classCancellation.controller");
+router.post("/cancellations/simulate", authenticate, requireAdmin, classCancellationCtrl.simulate);
+router.post("/cancellations", authenticate, requireAdmin, classCancellationCtrl.apply);
+router.get("/cancellations/:cancellationId", authenticate, requireTrainer, classCancellationCtrl.getCancellationById);
+
 // ─── Core CRUD Routes ─────────────────────────────────────────────────────────
 // Read restricted to Admin & Trainer; Mutations restricted to Admin
 router.get("/", authenticate, requireTrainer, ctrl.getAll);

@@ -32,9 +32,6 @@ export function MemberRegistrationUnifiedForm({
   paymentForm,
   setPaymentForm,
   handleSubmit,
-  handleRemoveDoc,
-  handleDocUpload,
-  docInputRef,
   photoInputRef,
   handlePhotoFileChange,
   handleRemovePhoto,
@@ -70,7 +67,7 @@ export function MemberRegistrationUnifiedForm({
         <div className="flex items-center gap-2 border-b border-border/60 pb-2">
           <User className="h-4 w-4 text-accent" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            1. Personal Details &amp; Portrait
+            1. Personal Details
           </h3>
         </div>
 
@@ -369,12 +366,12 @@ export function MemberRegistrationUnifiedForm({
         </div>
       </section>
 
-      {/* 5. ATHLETE BIO & COACHING NOTES */}
+      {/* 5. Member Bio */}
       <section className="space-y-4">
         <div className="flex items-center gap-2 border-b border-border/60 pb-2">
           <FileText className="h-4 w-4 text-accent" />
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            5. Athlete Bio &amp; Coaching Notes
+            5. Member Bio
           </h3>
         </div>
 
@@ -382,7 +379,7 @@ export function MemberRegistrationUnifiedForm({
           id="admin-member-bio"
           name="bio"
           rows={3}
-          label="Athlete Bio &amp; Coaching Notes"
+          label="Member Bio"
           placeholder="Tell us about the athlete's background, training history or fitness goals..."
           value={form.bio}
           onChange={handleChange}

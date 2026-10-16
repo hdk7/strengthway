@@ -61,7 +61,6 @@ export function AdminMemberRegistrationModal({
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const docInputRef = useRef(null);
   const photoInputRef = useRef(null);
 
   // Sync form with leadToConfirm / memberToEdit or reset on open
@@ -139,9 +138,6 @@ export function AdminMemberRegistrationModal({
             height: sourceData.height ? String(sourceData.height) : "",
             weight: sourceData.weight ? String(sourceData.weight) : "",
             bloodGroup: sourceData.bloodGroup || sourceData.physicalStats?.bloodGroup || "",
-            medicalDoc: sourceData.medicalDoc || null,
-            medicalDocName: sourceData.medicalDocName || "",
-            medicalDocSize: sourceData.medicalDocSize || "",
             bio: sourceData.bio || "",
             batchId: sourceData.batchId || "",
           });
@@ -171,7 +167,6 @@ export function AdminMemberRegistrationModal({
     if (!memberToEdit && !leadToConfirm) {
       setForm(INITIAL_FORM);
     }
-    if (docInputRef.current) docInputRef.current.value = "";
     if (photoInputRef.current) photoInputRef.current.value = "";
     if (typeof onClose === "function") {
       onClose();
@@ -199,46 +194,7 @@ export function AdminMemberRegistrationModal({
     setErrors((prev) => ({ ...prev, [name]: fieldError }));
   };
 
-  const handleDocUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
 
-    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"];
-    if (!validTypes.includes(file.type)) {
-      toast.error("Supported formats are PDF, JPG, PNG.");
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Document file size must not exceed 10MB.");
-      return;
-    }
-
-    const sizeFormatted =
-      file.size > 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-        : `${Math.round(file.size / 1024)} KB`;
-
-    setForm((prev) => ({
-      ...prev,
-      medicalDoc: file.name,
-      medicalDocName: file.name,
-      medicalDocSize: sizeFormatted,
-    }));
-    toast.success("Medical fitness document attached!");
-  };
-
-  const handleRemoveDoc = () => {
-    setForm((prev) => ({
-      ...prev,
-      medicalDoc: null,
-      medicalDocName: "",
-      medicalDocSize: "",
-    }));
-    if (docInputRef.current) {
-      docInputRef.current.value = "";
-    }
-  };
 
   const handlePhotoFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -364,7 +320,6 @@ export function AdminMemberRegistrationModal({
       }
 
       setForm(INITIAL_FORM);
-      if (docInputRef.current) docInputRef.current.value = "";
       if (photoInputRef.current) photoInputRef.current.value = "";
       if (onSuccess) {
         onSuccess(resultMember, isConfirmingLead);
@@ -388,18 +343,7 @@ export function AdminMemberRegistrationModal({
       }
       setIsSubmitting(true);
       try {
-        const updatePayload = {
-          ...form,
-          medicalDoc: form.medicalDoc
-            ? typeof form.medicalDoc === "object"
-              ? form.medicalDoc
-              : {
-                  submitted: true,
-                  clearanceDate: new Date().toISOString().split("T")[0],
-                  notes: form.medicalDocName || form.medicalDoc || "Medical Fitness Certificate",
-                }
-            : undefined,
-        };
+        const updatePayload = { ...form };
         const updated = await updateMember(memberToEdit.id, updatePayload);
         toast.success(
           `Member ${form.firstName} ${form.lastName}`.trim() + " updated successfully!",
@@ -452,9 +396,6 @@ export function AdminMemberRegistrationModal({
         paymentForm={paymentForm}
         setPaymentForm={setPaymentForm}
         handleSubmit={handleSubmit}
-        handleRemoveDoc={handleRemoveDoc}
-        handleDocUpload={handleDocUpload}
-        docInputRef={docInputRef}
         photoInputRef={photoInputRef}
         handlePhotoFileChange={handlePhotoFileChange}
         handleRemovePhoto={handleRemovePhoto}

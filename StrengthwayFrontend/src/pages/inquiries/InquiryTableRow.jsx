@@ -1,4 +1,4 @@
-import { Phone, Mail, Clock, UserCheck, RotateCcw } from "lucide-react";
+import { Phone, Mail, Clock, UserCheck, UserPlus, RotateCcw } from "lucide-react";
 
 export default function InquiryTableRow({
   inq,
@@ -135,6 +135,27 @@ export default function InquiryTableRow({
             />
             {displayStatus === "Converted" ? "Converted to Member" : displayStatus}
           </span>
+
+          {inq.enrollmentId && displayStatus !== "Converted" && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              Pending Payment
+            </span>
+          )}
+
+          {displayStatus === "Contacted" && onOpenRegistration && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenRegistration(inq);
+              }}
+              title="Proceed to Member Enrollment"
+              className="inline-flex items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-2 py-1 text-[10px] font-semibold transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
+            >
+              <UserPlus size={11} />
+              <span>Enroll</span>
+            </button>
+          )}
 
           {displayStatus === "Archived" && onMoveToInquiry && (
             <button

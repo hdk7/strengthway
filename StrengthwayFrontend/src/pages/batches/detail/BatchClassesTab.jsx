@@ -19,11 +19,13 @@ import {
   History,
   Flag,
   User,
+  AlertTriangle,
 } from "lucide-react";
 import Pagination from "@/components/table/Pagination";
 import { hasClassStarted } from "@/lib/batchUtils";
 import { ShuffleClassModal } from "../../schedule/components/ShuffleClassModal";
 import { ScheduleHistoryDrawer } from "../../schedule/components/ScheduleHistoryDrawer";
+import { ClassCancellationRescheduleModal } from "../../schedule/components/ClassCancellationRescheduleModal";
 import { isSessionEligibleForInterchange } from "@/lib/classInterchangeUtils";
 import { isAdmin, isMember, isTrainer, getCurrentUser } from "@/auth/currentUser";
 
@@ -191,6 +193,8 @@ export default function BatchClassesTab({
   const [isShuffleOpen, setIsShuffleOpen] = useState(false);
   const [shuffleSourceSessionId, setShuffleSourceSessionId] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isCancellationModalOpen, setIsCancellationModalOpen] = useState(false);
+  const [cancellationInitialSessionId, setCancellationInitialSessionId] = useState("");
 
   const handleOpenShuffle = (sourceId = "") => {
     setShuffleSourceSessionId(sourceId);
@@ -290,6 +294,23 @@ export default function BatchClassesTab({
                 </button>
               );
             })}
+
+            {/* Emergency Class Cancellation & Reschedule Action */}
+            {isAdmin() && (
+              <button
+                id="btn-emergency-reschedule-batch"
+                type="button"
+                onClick={() => {
+                  setCancellationInitialSessionId("");
+                  setIsCancellationModalOpen(true);
+                }}
+                className="sm:ml-auto inline-flex items-center gap-1.5 rounded-xl border border-destructive/40 bg-destructive/10 hover:bg-destructive/20 text-destructive px-3.5 py-2 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                title="Reschedule emergency cancellations and calculate membership payment adjustments"
+              >
+                <AlertTriangle size={14} className="text-destructive" />
+                <span>Emergency Reschedule / Cancel</span>
+              </button>
+            )}
           </div>
 
           {/* Today's Conduction & Coach Session Notes Overview Banner */}
@@ -415,7 +436,19 @@ export default function BatchClassesTab({
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {session.isCancelled && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-destructive/15 border border-destructive/30 px-2 py-0.5 text-[10px] font-bold text-destructive">
+                              <XCircle size={11} className="shrink-0" />
+                              <span>Cancelled{session.rescheduledToDate ? ` → ${session.rescheduledToDate}` : ""}</span>
+                            </span>
+                          )}
+                          {session.isRescheduled && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/15 border border-blue-500/30 px-2 py-0.5 text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                              <RotateCcw size={11} className="shrink-0" />
+                              <span>Rescheduled{session.rescheduledFromDate ? ` from ${session.rescheduledFromDate}` : ""}</span>
+                            </span>
+                          )}
                           {session.isSubstituted && (
                             <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
                               <UserCheck size={11} className="text-amber-500 shrink-0" />
@@ -443,6 +476,22 @@ export default function BatchClassesTab({
                             </span>
                           )}
                         </div>
+
+                        {session.isCancelled && session.cancellationReason && (
+                          <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-2.5 py-1.5 flex items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <AlertTriangle size={13} className="text-destructive shrink-0" />
+                              <span className="font-bold text-destructive truncate text-[11px]">
+                                Cancelled: {session.cancellationReason}
+                              </span>
+                            </div>
+                            {session.rescheduledToDate && (
+                              <span className="text-[10px] text-muted-foreground font-mono shrink-0">
+                                Shifted to: {session.rescheduledToDate}
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         {session.beginnerWorkouts || session.intermediateWorkouts ? (
                           <div className="space-y-1 text-xs pt-0.5">
@@ -785,12 +834,15 @@ export default function BatchClassesTab({
                             {isAdmin() && (
                               <button
                                 type="button"
-                                onClick={() => onCancelSession(session.id, session.subject)}
+                                onClick={() => {
+                                  setCancellationInitialSessionId(session.id);
+                                  setIsCancellationModalOpen(true);
+                                }}
                                 className="inline-flex items-center gap-1 rounded-lg border border-destructive/25 bg-destructive/10 hover:bg-destructive/20 text-destructive px-2 py-1 text-[11px] font-bold transition-colors cursor-pointer"
-                                title="Cancel class session"
+                                title="Emergency cancel and reschedule this class"
                               >
                                 <X size={12} />
-                                <span>Cancel</span>
+                                <span>Cancel / Reschedule</span>
                               </button>
                             )}
                           </>
@@ -887,6 +939,19 @@ export default function BatchClassesTab({
         isOpen={isHistoryOpen}
         onClose={() => setIsHistoryOpen(false)}
         batch={batch}
+      />
+
+      {/* Class Cancellation & Rescheduling Modal */}
+      <ClassCancellationRescheduleModal
+        isOpen={isCancellationModalOpen}
+        onClose={() => {
+          setIsCancellationModalOpen(false);
+          setCancellationInitialSessionId("");
+        }}
+        batch={batch}
+        sessions={currentBatchSessions}
+        initialSessionId={cancellationInitialSessionId}
+        onSuccess={onRefresh}
       />
     </div>
   );

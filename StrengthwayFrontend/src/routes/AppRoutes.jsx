@@ -35,13 +35,15 @@ import PortfolioMasterPage from "@/pages/masters/PortfolioMasterPage";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import UsersAccessPage from "@/pages/users/UsersAccessPage";
 import MasterClassSchedulePage from "@/pages/schedule/MasterClassSchedulePage";
+import PaymentCheckoutSimulatorPage from "@/pages/payments/PaymentCheckoutSimulatorPage";
 
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Marketing site */}
+      {/* Marketing site & checkout portal */}
       <Route path="/" element={<HomePage />} />
       <Route path="/portfolio" element={<PortfolioPage />} />
+      <Route path="/payment/checkout" element={<PaymentCheckoutSimulatorPage />} />
       <Route path="/trainers" element={<Navigate to="/#trainers" replace />} />
       <Route path="/trainers/:id" element={<PublicTrainerProfilePage />} />
 

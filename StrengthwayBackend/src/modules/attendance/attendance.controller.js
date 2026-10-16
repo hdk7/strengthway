@@ -156,6 +156,118 @@ async function validateTrainerLeaveNotice(req, res, next) {
   }
 }
 
+async function trainerCheckIn(req, res, next) {
+  try {
+    if (req.user?.role === "trainer") {
+      req.body.trainerId = req.user.trainerId; // enforce self
+      req.body.isAdminOverride = false;
+    }
+    const result = await attendanceService.trainerCheckIn(req.body, req.user);
+    return success(res, result, "Faculty coach checked in successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function trainerCheckOut(req, res, next) {
+  try {
+    if (req.user?.role === "trainer") {
+      req.body.trainerId = req.user.trainerId; // enforce self
+      req.body.isAdminOverride = false;
+    }
+    const result = await attendanceService.trainerCheckOut(req.body, req.user);
+    return success(res, result, "Faculty coach checked out successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getTrainerDailySchedule(req, res, next) {
+  try {
+    const trainerId = req.params.trainerId;
+    if (req.user?.role === "trainer" && req.user.trainerId !== trainerId) {
+      throw new ForbiddenError("Access denied. You can only view your own schedule.");
+    }
+    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const schedule = await attendanceService.getTrainerDailySchedule(trainerId, date);
+    return success(res, schedule, "Trainer daily schedule retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getTrainerIntervals(req, res, next) {
+  try {
+    let trainerId = req.query.trainerId;
+    if (req.user?.role === "trainer") {
+      trainerId = req.user.trainerId;
+    }
+    const { month, date } = req.query;
+    const intervals = await attendanceService.getTrainerIntervals(trainerId, month, date);
+    return success(res, intervals, "Trainer attendance intervals retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function adminOverrideMember(req, res, next) {
+  try {
+    const record = await attendanceService.adminOverrideMemberAttendance(req.body, req.user);
+    return success(res, record, "Member attendance corrected and audit log recorded.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function adminOverrideTrainer(req, res, next) {
+  try {
+    const result = await attendanceService.adminOverrideTrainerAttendance(req.body, req.user);
+    return success(res, result, "Trainer attendance corrected and audit log recorded.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getAttendanceAuditLogs(req, res, next) {
+  try {
+    const logs = await attendanceService.getAttendanceAuditLogs(req.query);
+    return success(res, logs, "Attendance audit logs retrieved successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function trainerAddAnotherSession(req, res, next) {
+  try {
+    if (req.user?.role === "trainer") {
+      req.body.trainerId = req.user.trainerId; // enforce self
+    }
+    const result = await attendanceService.trainerAddAnotherSession(req.body, req.user);
+    return success(res, result, "Consecutive session transition recorded successfully.");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function processAutoCheckouts(req, res, next) {
+  try {
+    const { date, batchId } = req.body || {};
+    const result = await attendanceService.processMemberAutoCheckouts(date, batchId);
+    return success(res, result, `Automatic checkout processed for ${result.count} member records.`);
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function adminCorrectContinuousSession(req, res, next) {
+  try {
+    const result = await attendanceService.adminCorrectContinuousSession(req.body, req.user);
+    return success(res, result, "Continuous session attendance corrected and audited.");
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   markAttendance,
   bulkMarkAttendance,
@@ -168,5 +280,16 @@ module.exports = {
   getTrainerLeavePolicy,
   saveTrainerLeavePolicy,
   validateTrainerLeaveNotice,
+  trainerCheckIn,
+  trainerCheckOut,
+  trainerAddAnotherSession,
+  processAutoCheckouts,
+  adminCorrectContinuousSession,
+  getTrainerDailySchedule,
+  getTrainerIntervals,
+  adminOverrideMember,
+  adminOverrideTrainer,
+  getAttendanceAuditLogs,
 };
+
 

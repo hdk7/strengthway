@@ -16,6 +16,7 @@ import { MemberDailyCheckInTable } from "./MemberDailyCheckInTable";
 import { MemberMonthlyMatrixTable } from "./MemberMonthlyMatrixTable";
 import { AttendanceDetailModal } from "./AttendanceDetailModal";
 import { AttendanceEditModal } from "./AttendanceEditModal";
+import { AttendanceAuditModal } from "./AttendanceAuditModal";
 import {
   DAY_NAMES,
   exportMatrixCSV,
@@ -61,6 +62,7 @@ function AdminMembersAttendanceContent() {
   const [viewModalData, setViewModalData] = useState(null);
   const [editModalData, setEditModalData] = useState(null);
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   // Filters & Search: All, Present, Absent
   const [searchQuery, setSearchQuery] = useState("");
@@ -285,10 +287,9 @@ function AdminMembersAttendanceContent() {
       return;
     }
     const effectiveDate = date || selectedDate;
-    if (!isDateToday(effectiveDate)) return toast.error("Editing attendance is permitted only for the current day.");
-    const attendeeBatch = (attendee?.batchId && batches.find((b) => b.id === attendee.batchId)) || currentBatch;
-    const access = checkBatchScheduleAccess(effectiveDate, attendeeBatch);
-    if (!access.isAllowed && !record?.checkInTime) return toast.error(access.reason);
+    if (isDateFuture(effectiveDate)) {
+      return toast.error("Future attendance records are disabled until the scheduled date.");
+    }
     setEditModalData({ attendee, record: record || dailyRecordsMap[attendee?.memberId], date: effectiveDate });
   };
 
@@ -299,7 +300,13 @@ function AdminMembersAttendanceContent() {
     }
     setIsSubmittingEdit(true);
     try {
-      const result = await markAttendance({ ...payload, batchId: selectedBatchId, markedBy: "Admin Faculty" });
+      const result = await markAttendance({
+        ...payload,
+        batchId: selectedBatchId,
+        markedBy: "Admin Faculty",
+        isAdminOverride: true,
+        overrideReason: payload.overrideReason || "Administrative manual attendance adjustment",
+      });
       setDailyRecordsMap((prev) => ({ ...prev, [payload.memberId]: result }));
       if (viewMode === "matrix") loadMatrixData();
       toast.success(`${payload.memberName || "Athlete"} attendance saved.`);
@@ -382,6 +389,7 @@ function AdminMembersAttendanceContent() {
         viewMode={viewMode}
         setViewMode={setViewMode}
         handleExportMatrixCSV={() => exportMatrixCSV(matrixData, selectedMonth)}
+        onOpenAuditModal={() => setIsAuditModalOpen(true)}
       />
 
       <MemberAttendanceToolbar
@@ -433,6 +441,7 @@ function AdminMembersAttendanceContent() {
           handleQuickCheckIn={handleQuickCheckIn}
           handleQuickCheckOut={handleQuickCheckOut}
           onOpenViewModal={handleOpenViewModal}
+          onOpenEditModal={handleOpenEditModal}
           currentBatch={currentBatch}
           batches={batches}
           selectedDate={selectedDate}
@@ -483,6 +492,12 @@ function AdminMembersAttendanceContent() {
         batchName={currentBatch?.name}
         onSave={handleSaveEditModal}
         isSubmitting={isSubmittingEdit}
+      />
+
+      <AttendanceAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        defaultType="MEMBER"
       />
     </div>
   );

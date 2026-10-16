@@ -28,14 +28,6 @@ const emergencyContactSchema = new mongoose.Schema(
   { _id: false },
 );
 
-const medicalDocSchema = new mongoose.Schema(
-  {
-    submitted: { type: Boolean, default: false },
-    clearanceDate: { type: String, default: null },
-    notes: { type: String, trim: true, default: "" },
-  },
-  { _id: false },
-);
 
 const contactDetailsSchema = new mongoose.Schema(
   {
@@ -81,11 +73,62 @@ const paymentDetailsSchema = new mongoose.Schema(
     formattedAmount: { type: String },
     transactionId: { type: String, trim: true },
     receiptNo: { type: String, trim: true },
+    upiReference: { type: String, trim: true, default: "" },
+    invoiceNumber: { type: String, trim: true, default: "" },
     status: { type: String, default: "Completed" },
     paidAt: { type: Date, default: Date.now },
     notes: { type: String, trim: true, default: "" },
   },
   { _id: false },
+);
+
+const carryForwardSessionSchema = new mongoose.Schema(
+  {
+    cancellationId: { type: String, trim: true, default: "" },
+    batchId: { type: String, trim: true, default: "" },
+    batchName: { type: String, trim: true, default: "" },
+    classCount: { type: Number, default: 0 },
+    cancelledDates: { type: [String], default: [] },
+    rescheduledDates: { type: [String], default: [] },
+    reason: { type: String, trim: true, default: "" },
+    addedAt: { type: Date, default: Date.now },
+    expiryDate: { type: Date, default: null },
+    status: {
+      type: String,
+      enum: ["AVAILABLE", "ATTENDED", "EXPIRED"],
+      default: "AVAILABLE",
+    },
+  },
+  { _id: false }
+);
+
+const membershipAdjustmentCreditSchema = new mongoose.Schema(
+  {
+    creditId: { type: String, trim: true, default: "" },
+    cancellationId: { type: String, trim: true, default: "" },
+    batchId: { type: String, trim: true, default: "" },
+    batchName: { type: String, trim: true, default: "" },
+    cancelledClassesCount: { type: Number, default: 0 },
+    perClassRate: { type: Number, default: 0 },
+    creditAmount: { type: Number, default: 0 },
+    originalPlanPrice: { type: Number, default: 0 },
+    reason: { type: String, trim: true, default: "" },
+    status: {
+      type: String,
+      enum: ["AVAILABLE", "APPLIED_TO_RENEWAL", "RETAINED_CARRIED_FORWARD"],
+      default: "AVAILABLE",
+    },
+    appliedToPayment: {
+      invoiceNumber: { type: String, trim: true, default: "" },
+      transactionId: { type: String, trim: true, default: "" },
+      originalAmount: { type: Number, default: 0 },
+      adjustmentAmount: { type: Number, default: 0 },
+      finalPayableAmount: { type: Number, default: 0 },
+      appliedAt: { type: Date, default: null },
+    },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
 );
 
 const scheduleSchema = new mongoose.Schema(
@@ -342,10 +385,6 @@ const memberSchema = new mongoose.Schema(
       type: emergencyContactSchema,
       default: null,
     },
-    medicalDoc: {
-      type: medicalDocSchema,
-      default: () => ({ submitted: false, clearanceDate: null, notes: "" }),
-    },
 
     membershipPlan: {
       type: membershipPlanSnapshotSchema,
@@ -354,6 +393,25 @@ const memberSchema = new mongoose.Schema(
     paymentDetails: {
       type: paymentDetailsSchema,
       default: null,
+    },
+
+    pendingSessionsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    carryForwardSessions: {
+      type: [carryForwardSessionSchema],
+      default: [],
+    },
+    membershipAdjustmentCredits: {
+      type: [membershipAdjustmentCreditSchema],
+      default: [],
+    },
+    totalAdjustmentCredit: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     convertedAt: {
