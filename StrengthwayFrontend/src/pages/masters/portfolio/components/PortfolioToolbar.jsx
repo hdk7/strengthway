@@ -1,4 +1,5 @@
-import { Search, LayoutGrid, List, Plus } from "lucide-react";
+import { LayoutGrid, List, Plus } from "lucide-react";
+import { SearchInput } from "@/components/ui";
 
 export function PortfolioToolbar({
   searchQuery,
@@ -13,19 +14,12 @@ export function PortfolioToolbar({
   return (
     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
       {/* Search Bar */}
-      <div className="relative w-full sm:w-56 md:w-64">
-        <Search
-          size={14}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-        />
-        <input
-          type="text"
-          placeholder={placeholder}
-          value={searchQuery || ""}
-          onChange={(e) => setSearchQuery?.(e.target.value)}
-          className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none transition-colors"
-        />
-      </div>
+      <SearchInput
+        placeholder={placeholder}
+        value={searchQuery || ""}
+        onChange={(e) => setSearchQuery?.(e.target.value)}
+        className="w-full sm:w-56 md:w-64"
+      />
 
       {/* View Mode Toggle */}
       <div className="flex items-center border border-border rounded-xl p-0.5 bg-background shrink-0">

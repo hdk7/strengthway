@@ -18,6 +18,8 @@ import { getAllTrainerLogs } from "@/lib/attendanceService";
 import { getTrainerLeaveMonthlySummary } from "@/lib/trainerLeaveService";
 import { DataTable } from "@/components/table";
 import { isTrainer } from "@/auth/currentUser";
+import { KpiCard, SearchInput } from "@/components/ui";
+import { formatINR } from "@/lib/formatters";
 
 const SHIFT_OPTIONS = [
   "ALL",
@@ -267,7 +269,7 @@ export default function TrainersPaymentsPage() {
       align: "center",
       cell: (p) => (
         <span className="font-mono text-muted-foreground font-semibold">
-          ₹{p.baseStipend.toLocaleString("en-IN")}
+          {formatINR(p.baseStipend)}
         </span>
       ),
     },
@@ -299,7 +301,7 @@ export default function TrainersPaymentsPage() {
               {p.leaveDaysCount}d ({p.unpaidLeaveDays}d LOP)
             </span>
             <span className="text-[9px] font-bold text-rose-500 mt-0.5">
-              -₹{p.leaveDeduction.toLocaleString("en-IN")}
+              -{formatINR(p.leaveDeduction)}
             </span>
             <span className="text-[9px] text-rose-400">
               {p.annualRemainingDays > 0 ? `${p.annualRemainingDays}d allowance left` : "Allowance exhausted"}
@@ -313,10 +315,10 @@ export default function TrainersPaymentsPage() {
       align: "center",
       cell: (p) => (
         <div className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-          <div>₹{p.totalPayout.toLocaleString("en-IN")}</div>
+          <div>{formatINR(p.totalPayout)}</div>
           {p.leaveDeduction > 0 && (
             <div className="text-[9px] text-rose-500 font-normal">
-              (Net of -₹{p.leaveDeduction.toLocaleString("en-IN")} leave)
+              (Net of -{formatINR(p.leaveDeduction)} leave)
             </div>
           )}
         </div>
@@ -367,129 +369,69 @@ export default function TrainersPaymentsPage() {
       <div className="shrink-0 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {userIsTrainer ? (
           <>
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Net Remuneration
-                </span>
-                <IndianRupee size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                ₹{kpis.totalLiability.toLocaleString("en-IN")}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Monthly stipend after deductions
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Conducted Sessions
-                </span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
-                {filteredPayouts[0]?.totalConducted || 0}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Classes conducted this cycle
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Floor Hours
-                </span>
-                <Clock size={16} className="text-accent" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                {filteredPayouts[0]?.totalHours || 0} hrs
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Verified training floor time
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Disbursement Status
-                </span>
-                <Award size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                {filteredPayouts[0]?.status || "Disbursed"}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                {filteredPayouts[0]?.leaveDeduction > 0
-                  ? `-₹${filteredPayouts[0].leaveDeduction.toLocaleString("en-IN")} leave deduction`
-                  : "Zero unexcused leaves"}
-              </p>
-            </div>
+            <KpiCard
+              title="Net Remuneration"
+              value={formatINR(kpis.totalLiability)}
+              subtext="Monthly stipend after deductions"
+              icon={IndianRupee}
+              colorScheme="emerald"
+            />
+            <KpiCard
+              title="Conducted Sessions"
+              value={filteredPayouts[0]?.totalConducted || 0}
+              subtext="Classes conducted this cycle"
+              icon={CheckCircle2}
+              colorScheme="emerald"
+            />
+            <KpiCard
+              title="Floor Hours"
+              value={`${filteredPayouts[0]?.totalHours || 0} hrs`}
+              subtext="Verified training floor time"
+              icon={Clock}
+              colorScheme="terracotta"
+            />
+            <KpiCard
+              title="Disbursement Status"
+              value={filteredPayouts[0]?.status || "Disbursed"}
+              subtext={
+                filteredPayouts[0]?.leaveDeduction > 0
+                  ? `-${formatINR(filteredPayouts[0].leaveDeduction)} leave deduction`
+                  : "Zero unexcused leaves"
+              }
+              icon={Award}
+              colorScheme="emerald"
+            />
           </>
         ) : (
           <>
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Payroll Outflow
-                </span>
-                <IndianRupee size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                ₹{kpis.totalLiability.toLocaleString("en-IN")}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Cumulative monthly stipends
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Disbursed Coaches
-                </span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
-                {kpis.disbursedCount}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Accounts settled
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Pending Approval
-                </span>
-                <AlertCircle size={16} className="text-amber-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-amber-500">
-                {kpis.pendingCount}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Awaiting sign-off
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Avg Coach Payout
-                </span>
-                <Award size={16} className="text-accent" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                ₹{kpis.avgPayout.toLocaleString("en-IN")}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Average monthly stipend
-              </p>
-            </div>
+            <KpiCard
+              title="Payroll Outflow"
+              value={formatINR(kpis.totalLiability)}
+              subtext="Cumulative monthly stipends"
+              icon={IndianRupee}
+              colorScheme="emerald"
+            />
+            <KpiCard
+              title="Disbursed Coaches"
+              value={kpis.disbursedCount}
+              subtext="Accounts settled"
+              icon={CheckCircle2}
+              colorScheme="emerald"
+            />
+            <KpiCard
+              title="Pending Approval"
+              value={kpis.pendingCount}
+              subtext="Awaiting sign-off"
+              icon={AlertCircle}
+              colorScheme="amber"
+            />
+            <KpiCard
+              title="Avg Coach Payout"
+              value={formatINR(kpis.avgPayout)}
+              subtext="Average monthly stipend"
+              icon={Award}
+              colorScheme="terracotta"
+            />
           </>
         )}
       </div>
@@ -497,19 +439,11 @@ export default function TrainersPaymentsPage() {
       {/* ─── Filter & Search Bar ────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-2xl border border-border/80 bg-card p-2 sm:p-2.5 shadow-xs">
         <div className="flex items-center gap-2 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search faculty name, ID, specialization..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search faculty name, ID, specialization..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">

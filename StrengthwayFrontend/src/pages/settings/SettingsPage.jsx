@@ -859,7 +859,7 @@ export default function SettingsPage() {
 
       {/* ── Confirmation Modal for Reset ─────────────────────────────────────── */}
       {isResetConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] p-4 animate-in fade-in duration-150">
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-4">
             <div className="flex items-center gap-3 text-destructive">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">

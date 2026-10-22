@@ -74,6 +74,7 @@ class InquiryService {
       message: body.message?.trim() || "",
       status,
       contactDetails: null,
+      contactHistory: [],
       convertedMemberId: null,
       convertedAt: null,
       statusHistory: [
@@ -135,9 +136,21 @@ class InquiryService {
 
     const currentHistory = Array.isArray(existing.statusHistory) ? existing.statusHistory : [];
 
+    // Maintain conversation history: preserve existing conversations and place latest at top
+    let currentContactHistory = Array.isArray(existing.contactHistory) ? [...existing.contactHistory] : [];
+    if (
+      currentContactHistory.length === 0 &&
+      existing.contactDetails &&
+      existing.contactDetails.contactNotes
+    ) {
+      currentContactHistory.push(existing.contactDetails);
+    }
+    const updatedContactHistory = [contactDetails, ...currentContactHistory];
+
     return inquiryRepository.updateById(id, {
       status: INQUIRY_STATUS.CONTACTED,
       contactDetails,
+      contactHistory: updatedContactHistory,
       statusHistory: [...currentHistory, historyEntry],
     });
   }

@@ -260,14 +260,14 @@ export function ShuffleClassModal({
       <FormModalBody className="space-y-6">
         {/* Mode Selector Tabs (only shown when allowRandomizeRange is true) */}
         {allowRandomizeRange && (
-          <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-100 dark:bg-muted border border-slate-200/70 dark:border-border/70">
+          <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/60 border border-border/70">
             <button
               type="button"
               onClick={() => setMode("SWAP")}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === "SWAP"
-                  ? "bg-white dark:bg-card text-indigo-700 dark:text-primary shadow-xs"
-                  : "text-slate-600 dark:text-muted-foreground hover:text-slate-900"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <ArrowLeftRight size={14} />
@@ -278,8 +278,8 @@ export function ShuffleClassModal({
               onClick={() => setMode("SHUFFLE_RANGE")}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === "SHUFFLE_RANGE"
-                  ? "bg-white dark:bg-card text-indigo-700 dark:text-primary shadow-xs"
-                  : "text-slate-600 dark:text-muted-foreground hover:text-slate-900"
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Shuffle size={14} />
@@ -289,9 +289,9 @@ export function ShuffleClassModal({
         )}
 
         {eligibleSessions.length < 2 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 dark:border-border p-8 text-center text-xs text-slate-500 dark:text-muted-foreground space-y-2">
+          <div className="rounded-xl border border-dashed border-border p-8 text-center text-xs text-muted-foreground space-y-2">
             <AlertCircle size={24} className="mx-auto text-amber-500" />
-            <p className="font-bold text-slate-800 dark:text-foreground">
+            <p className="font-bold text-foreground">
               Insufficient Scheduled Classes
             </p>
             <p>
@@ -470,8 +470,8 @@ export function ShuffleClassModal({
         ) : (
           /* ─── MODE: RANDOMIZE CYCLE RANGE ─── */
           <div className="space-y-4">
-            <div className="rounded-xl border border-slate-200 dark:border-border bg-slate-50/50 dark:bg-muted/20 p-4 space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-primary flex items-center gap-1.5">
+            <div className="rounded-xl border border-border bg-muted/20 p-4 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
                 <Calendar size={14} />
                 <span>Select Date Range to Shuffle</span>
               </h4>
@@ -492,10 +492,10 @@ export function ShuffleClassModal({
                 />
               </div>
 
-              <div className="pt-2 text-xs text-slate-600 dark:text-muted-foreground flex items-center justify-between">
+              <div className="pt-2 text-xs text-muted-foreground flex items-center justify-between">
                 <span>
                   Classes in range to be randomized:{" "}
-                  <strong className="text-indigo-700 dark:text-primary font-bold">
+                  <strong className="text-primary font-bold">
                     {rangeSessions.length} sessions
                   </strong>
                 </span>

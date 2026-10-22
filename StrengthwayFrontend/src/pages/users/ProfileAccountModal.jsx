@@ -26,6 +26,7 @@ import {
   FormModalFooter,
 } from "@/components/ui/FormModal";
 import { InputField } from "@/components/form";
+import { isValidEmail, isValidName } from "@/lib/validation";
 
 /**
  * ProfileAccountModal
@@ -61,6 +62,7 @@ export default function ProfileAccountModal({
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   // Existing Account Management State
   const [account, setAccount] = useState(existingAccount);
@@ -74,6 +76,7 @@ export default function ProfileAccountModal({
     setEmail(defaultEmail);
     setPassword("");
     setError("");
+    setFieldErrors({});
     setResetPassword("");
     setResetError("");
   }, [existingAccount, defaultName, defaultEmail]);
@@ -85,26 +88,37 @@ export default function ProfileAccountModal({
       gen += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     targetSetter(gen);
+    if (fieldErrors.password) {
+      setFieldErrors((prev) => ({ ...prev, password: "" }));
+    }
   };
 
   // ── Create Account Handler ─────────────────────────────────────────────────
   const handleCreate = async (e) => {
     e.preventDefault();
+    const errs = {};
     if (!name.trim()) {
-      setError("Full name is required.");
-      return;
+      errs.name = "Full name is required.";
+    } else if (!isValidName(name)) {
+      errs.name = "Name can only contain letters, spaces, hyphens, apostrophes, and periods.";
     }
     if (!email.trim()) {
-      setError("Email address is required.");
-      return;
+      errs.email = "Email address is required.";
+    } else if (!isValidEmail(email)) {
+      errs.email = "Enter a valid email address.";
     }
     if (!password || password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      errs.password = "Password must be at least 8 characters.";
+    }
+
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
       return;
     }
 
     setIsSubmitting(true);
     setError("");
+    setFieldErrors({});
 
     try {
       const payload = {
@@ -286,7 +300,19 @@ export default function ProfileAccountModal({
               label="Full Name"
               required
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+              }}
+              onBlur={() => {
+                if (name && !isValidName(name)) {
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    name: "Name can only contain letters, spaces, hyphens, apostrophes, and periods.",
+                  }));
+                }
+              }}
+              error={fieldErrors.name}
               placeholder="Full Name"
             />
 
@@ -295,7 +321,16 @@ export default function ProfileAccountModal({
               required
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: "" }));
+              }}
+              onBlur={() => {
+                if (email && !isValidEmail(email)) {
+                  setFieldErrors((prev) => ({ ...prev, email: "Enter a valid email address." }));
+                }
+              }}
+              error={fieldErrors.email}
               placeholder="email@example.com"
             />
 
@@ -303,7 +338,16 @@ export default function ProfileAccountModal({
               label="Initial Password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: "" }));
+              }}
+              onBlur={() => {
+                if (password && password.length < 8) {
+                  setFieldErrors((prev) => ({ ...prev, password: "Password must be at least 8 characters." }));
+                }
+              }}
+              error={fieldErrors.password}
               placeholder="Minimum 8 characters"
               endAdornment={
                 <button

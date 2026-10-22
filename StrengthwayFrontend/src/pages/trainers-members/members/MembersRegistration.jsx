@@ -182,8 +182,10 @@ export function AdminMemberRegistrationModal({
       nextForm.lastName = parts.length > 1 ? parts.slice(1).join(" ") : parts[0] || "";
     }
     setForm(nextForm);
-    const fieldError = validateFieldWithYup(adminMemberRegistrationSchema, name, nextForm);
-    setErrors((prev) => ({ ...prev, [name]: fieldError }));
+    if (errors[name]) {
+      const fieldError = validateFieldWithYup(adminMemberRegistrationSchema, name, nextForm);
+      setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
+    }
   };
 
   const handleBlur = (e) => {
@@ -191,7 +193,7 @@ export function AdminMemberRegistrationModal({
     if (!name) return;
     const currentForm = { ...form, [name]: value !== undefined ? value : form[name] };
     const fieldError = validateFieldWithYup(adminMemberRegistrationSchema, name, currentForm);
-    setErrors((prev) => ({ ...prev, [name]: fieldError }));
+    setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
   };
 
 

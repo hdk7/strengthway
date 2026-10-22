@@ -482,25 +482,25 @@ export function BatchClassAssignmentModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-110 flex items-center justify-center p-3 sm:p-6 bg-slate-900/35 dark:bg-black/65 backdrop-blur-[2px] animate-in fade-in duration-150 overflow-y-auto"
+      className="fixed inset-0 z-110 flex items-center justify-center p-3 sm:p-6 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150 overflow-y-auto"
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-white dark:bg-card border border-slate-200/90 dark:border-border rounded-2xl shadow-2xl relative my-auto animate-in zoom-in-95 duration-150 overflow-hidden"
+        className="w-full max-w-3xl max-h-[92vh] flex flex-col bg-card border border-border rounded-2xl shadow-2xl relative my-auto animate-in zoom-in-95 duration-150 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-border px-6 py-4 bg-white dark:bg-card shrink-0">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4 bg-card shrink-0">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-primary/10 text-blue-700 dark:text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Layers size={20} />
             </span>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-foreground">
+              <h2 className="text-base sm:text-lg font-bold text-foreground">
                 Reusable Classes to Batch
               </h2>
-              <p className="text-xs text-slate-500 dark:text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Map selected workout classes sequentially to batch operational dates & days.
               </p>
             </div>
@@ -509,7 +509,7 @@ export function BatchClassAssignmentModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground cursor-pointer transition-colors"
+            className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
           >
             <X size={18} />
           </button>
@@ -518,8 +518,8 @@ export function BatchClassAssignmentModal({
         {/* Modal Body (Scrollable) */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Section 1: Batch & Cycle Configuration */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-border/80 bg-slate-50/50 dark:bg-muted/20 p-4 sm:p-5 space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-primary flex items-center gap-2">
+          <div className="rounded-2xl border border-border/80 bg-muted/20 p-4 sm:p-5 space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-2">
               <CalendarDays size={15} />
               <span>1. Batch & Schedule Configuration</span>
             </h3>
@@ -527,7 +527,7 @@ export function BatchClassAssignmentModal({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Batch Selector */}
               <div>
-                <label className="block text-xs font-semibold text-slate-800 dark:text-foreground mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1">
                   Target Batch *
                 </label>
                 <select
@@ -745,8 +745,8 @@ export function BatchClassAssignmentModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="border-t border-slate-100 dark:border-border p-4 px-6 bg-white dark:bg-card shrink-0 flex items-center justify-between">
-          <span className="text-xs font-medium text-slate-500 dark:text-muted-foreground">
+        <div className="border-t border-border p-4 px-6 bg-card shrink-0 flex items-center justify-between">
+          <span className="text-xs font-medium text-muted-foreground">
             {orderedClasses.length} class(es) queued for{" "}
             <strong>{activeBatch?.name || "selected batch"}</strong>
           </span>
@@ -756,7 +756,7 @@ export function BatchClassAssignmentModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted cursor-pointer transition-colors"
+              className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
             >
               Cancel
             </button>

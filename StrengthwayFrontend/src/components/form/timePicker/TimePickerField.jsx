@@ -1,6 +1,6 @@
-import { useId } from "react";
 import { Clock } from "lucide-react";
 import { FormLabel, FormError } from "../FormField";
+import { useFieldId } from "../formStyles";
 import ClockPickerPopover from "./ClockPickerPopover";
 import { useTimePicker } from "./useTimePicker";
 
@@ -21,9 +21,7 @@ export default function TimePickerField({
   labelClassName = "",
   helperText,
 }) {
-  const generatedId = useId();
-  const id = providedId || (name ? `time-${name}` : generatedId);
-  const errorId = error ? `${id}-error` : undefined;
+  const { id, errorId } = useFieldId(providedId, name, "time", error);
 
   const {
     hourRef,

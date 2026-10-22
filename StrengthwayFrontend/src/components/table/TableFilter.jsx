@@ -1,5 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Filter, Check, ChevronDown, X } from "lucide-react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 /**
  * Universal Reusable Table Filter Component
@@ -19,19 +20,7 @@ const TableFilter = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    if (isDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isDropdownOpen]);
+  useClickOutside(dropdownRef, () => setIsDropdownOpen(false), isDropdownOpen);
 
   if (!options || options.length === 0) return null;
 

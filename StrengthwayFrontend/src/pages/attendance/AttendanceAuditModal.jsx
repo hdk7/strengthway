@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FileText,
-  Search,
   History,
   User,
   ShieldCheck,
@@ -17,6 +16,7 @@ import {
   FormModalBody,
   FormModalFooter,
 } from "@/components/ui/FormModal";
+import { SearchInput } from "@/components/ui";
 import { getAttendanceAuditLogs } from "@/lib/attendanceService";
 import { toast } from "sonner";
 
@@ -141,19 +141,12 @@ export function AttendanceAuditModal({ isOpen, onClose, defaultType = "ALL" }) {
         {/* Controls Bar */}
         <div className="p-3 border-b border-border/60 bg-muted/20 flex flex-col sm:flex-row items-center justify-between gap-2.5">
           <div className="flex items-center gap-2 w-full sm:w-auto flex-1 max-w-sm">
-            <div className="relative w-full">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-              />
-              <input
-                type="text"
-                placeholder="Search reason, admin, ID..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search reason, admin, ID..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full"
+            />
           </div>
 
           <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-end">

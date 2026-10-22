@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { getTailwindWidth } from "@/lib/tailwindUtils";
 import { getRoleBasePath } from "@/auth/currentUser";
+import { KpiCard, SearchInput } from "@/components/ui";
 
 export function MembersReportTab({
   membersReport,
@@ -30,67 +31,45 @@ export function MembersReportTab({
     <div className="flex-1 min-h-0 flex flex-col gap-2.5">
       {/* Executive KPI Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Total Tracked Athletes
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground">
-              {membersReport?.summary?.totalMembers ?? filteredMembers.length}
-            </span>
-            <span className="text-xs text-muted-foreground">rostered</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Average Compliance
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground">
-              {membersReport?.summary?.averageAttendanceRate ?? 0}%
-            </span>
-            <span className="text-xs text-muted-foreground">monthly turnout</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-destructive/5 p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-destructive block">
-            At-Risk Athletes (&lt; 60%)
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-destructive">
-              {membersReport?.summary?.atRiskMembersCount ?? 0}
-            </span>
-            <span className="text-xs font-semibold text-destructive/80">requires outreach</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Flex Pass Athletes
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-accent">
-              {membersReport?.summary?.flexPassUsersCount ?? 0}
-            </span>
-            <span className="text-xs text-muted-foreground">roster swaps</span>
-          </div>
-        </div>
+        <KpiCard
+          title="Total Tracked Athletes"
+          value={membersReport?.summary?.totalMembers ?? filteredMembers.length}
+          subtext="rostered"
+          icon={Users}
+          colorScheme="default"
+        />
+        <KpiCard
+          title="Average Compliance"
+          value={`${membersReport?.summary?.averageAttendanceRate ?? 0}%`}
+          subtext="monthly turnout"
+          icon={Check}
+          colorScheme="emerald"
+        />
+        <KpiCard
+          title="At-Risk Athletes (< 60%)"
+          value={membersReport?.summary?.atRiskMembersCount ?? 0}
+          subtext="requires outreach"
+          icon={AlertTriangle}
+          colorScheme="rose"
+        />
+        <KpiCard
+          title="Flex Pass Athletes"
+          value={membersReport?.summary?.flexPassUsersCount ?? 0}
+          subtext="roster swaps"
+          icon={Users}
+          colorScheme="terracotta"
+        />
       </div>
 
       {/* Filters & Search Control Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card p-3 shadow-xs shrink-0">
         <div className="flex items-center gap-3 flex-1 flex-wrap">
           {/* Search input */}
-          <div className="relative flex-1 min-w-50">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
+          <div className="flex-1 min-w-50">
+            <SearchInput
               placeholder="Search athlete by name, email, or member ID..."
               value={memberSearch}
               onChange={(e) => setMemberSearch(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background py-1.5 pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 

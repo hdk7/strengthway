@@ -6,6 +6,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { getRoleBasePath } from "@/auth/currentUser";
+import { KpiCard, SearchInput } from "@/components/ui";
 
 export function TrainersReportTab({
   trainersReport,
@@ -23,78 +24,51 @@ export function TrainersReportTab({
     <div className="flex-1 min-h-0 flex flex-col gap-2.5">
       {/* Executive KPI Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 shrink-0">
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Active Coaches
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground">
-              {trainersReport?.summary?.totalTrainers ?? filteredTrainers.length}
-            </span>
-            <span className="text-xs text-muted-foreground">faculty</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Classes Delivered
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground">
-              {trainersReport?.summary?.totalClassesConducted ?? 0}
-            </span>
-            <span className="text-xs text-muted-foreground">sessions</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Floor Coaching Hours
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-accent">
-              {trainersReport?.summary?.totalCoachingHours ?? 0}
-            </span>
-            <span className="text-xs text-muted-foreground">hours</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Total Athletes Coached
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground">
-              {trainersReport?.summary?.totalAttendeesCoached ?? 0}
-            </span>
-            <span className="text-xs text-muted-foreground">athlete visits</span>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border/80 bg-card p-3 shadow-xs">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
-            Avg Class Size
-          </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-foreground">
-              {trainersReport?.summary?.avgAttendanceAcrossTrainers ?? 0}
-            </span>
-            <span className="text-xs text-muted-foreground">athletes/session</span>
-          </div>
-        </div>
+        <KpiCard
+          title="Active Coaches"
+          value={trainersReport?.summary?.totalTrainers ?? filteredTrainers.length}
+          subtext="faculty"
+          icon={Award}
+          colorScheme="default"
+        />
+        <KpiCard
+          title="Classes Delivered"
+          value={trainersReport?.summary?.totalClassesConducted ?? 0}
+          subtext="sessions"
+          icon={Award}
+          colorScheme="emerald"
+        />
+        <KpiCard
+          title="Floor Coaching Hours"
+          value={trainersReport?.summary?.totalCoachingHours ?? 0}
+          subtext="hours"
+          icon={Award}
+          colorScheme="terracotta"
+        />
+        <KpiCard
+          title="Total Athletes Coached"
+          value={trainersReport?.summary?.totalAttendeesCoached ?? 0}
+          subtext="athlete visits"
+          icon={Award}
+          colorScheme="sky"
+        />
+        <KpiCard
+          title="Avg Class Size"
+          value={trainersReport?.summary?.avgAttendanceAcrossTrainers ?? 0}
+          subtext="athletes/session"
+          icon={Award}
+          colorScheme="default"
+        />
       </div>
 
       {/* Filters & Search Control Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border/80 bg-card p-3 shadow-xs shrink-0">
         <div className="flex items-center gap-3 flex-1 flex-wrap">
-          <div className="relative flex-1 min-w-50">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
+          <div className="flex-1 min-w-50">
+            <SearchInput
               placeholder="Search coach by name, phone, or email..."
               value={trainerSearch}
               onChange={(e) => setTrainerSearch(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background py-1.5 pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 

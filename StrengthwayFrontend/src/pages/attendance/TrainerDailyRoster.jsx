@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
+import { SearchInput } from "@/components/ui";
 import {
-  Search,
   ExternalLink,
   Layers,
   Clock,
@@ -27,19 +27,12 @@ export function TrainerDailyRoster({
     <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-border bg-card shadow-xs flex flex-col">
       <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 px-4 py-2.5">
         <div className="flex items-center gap-3 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search
-              size={15}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search faculty by name, ID, phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background pl-9 pr-3 py-1.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search faculty by name, ID, phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
         </div>
       </div>
 

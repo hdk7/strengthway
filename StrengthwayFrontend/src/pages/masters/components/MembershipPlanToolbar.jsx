@@ -1,4 +1,5 @@
-import { Search, LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List } from "lucide-react";
+import { SearchInput } from "@/components/ui";
 
 export function MembershipPlanToolbar({
   statusFilter,
@@ -34,17 +35,11 @@ export function MembershipPlanToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="relative w-full sm:w-64">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="text"
+        <div className="w-full sm:w-64">
+          <SearchInput
             placeholder="Search plans, features..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background py-1.5 pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
           />
         </div>
 

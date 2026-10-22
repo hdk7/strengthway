@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
-import { X, UserCheck, Search, Plus, Check } from "lucide-react";
+import { X, UserCheck, Plus, Check } from "lucide-react";
+import { SearchInput } from "@/components/ui";
 import { getTrainerPhoto } from "@/lib/trainersService";
 
 export default function AddTrainerModal({
@@ -56,19 +57,12 @@ export default function AddTrainerModal({
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Search */}
-          <div className="relative">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search coaches by name..."
-              value={trainerSearchQuery}
-              onChange={(e) => setTrainerSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-border bg-slate-50/90 dark:bg-muted/40 py-2.5 pl-9 pr-3 text-xs text-slate-900 dark:text-foreground placeholder:text-slate-400 focus:border-blue-600 focus:bg-white dark:focus:bg-card focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/30"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search coaches by name..."
+            value={trainerSearchQuery}
+            onChange={(e) => setTrainerSearchQuery(e.target.value)}
+            className="w-full"
+          />
 
           {/* Coaches list */}
           <div className="space-y-2">

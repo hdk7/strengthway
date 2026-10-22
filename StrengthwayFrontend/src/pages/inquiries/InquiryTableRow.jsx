@@ -1,4 +1,6 @@
 import { Phone, Mail, Clock, UserCheck, UserPlus, RotateCcw } from "lucide-react";
+import { IdBadge } from "@/components/ui/Badge";
+import { formatDate, getInitials } from "@/lib/formatters";
 
 export default function InquiryTableRow({
   inq,
@@ -6,14 +8,7 @@ export default function InquiryTableRow({
   onOpenRegistration,
   onMoveToInquiry,
 }) {
-  const dateLabel = inq.createdAt
-    ? new Date(inq.createdAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "—";
+  const dateLabel = formatDate(inq.createdAt, "dateTime");
 
   const displayStatus =
     inq.status === "Lead" || inq.status === "New" || !inq.status
@@ -23,9 +18,6 @@ export default function InquiryTableRow({
   const followUpDate = inq.contactDetails?.followUpDate;
   const isNeedsFollowUp = inq.contactDetails?.outcome === "Needs Follow-Up" && !!followUpDate;
 
-  const rawId = inq.id ? String(inq.id) : "";
-  const displayId = rawId.length > 7 ? rawId.slice(-6).toUpperCase() : rawId;
-
   return (
     <tr
       onClick={() => onNavigate(`/admin/inquiries/${inq.id}`)}
@@ -33,16 +25,14 @@ export default function InquiryTableRow({
     >
       {/* Inquiry ID badge */}
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-        <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-muted/60 text-muted-foreground px-2.5 py-1 rounded-full border border-border/40">
-          #{displayId}
-        </span>
+        <IdBadge id={inq.id} />
       </td>
 
       {/* Client / Sender */}
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors">
         <div className="flex items-center gap-2.5 group/item">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent/20 text-accent group-hover/item:scale-105 text-xs font-extrabold transition-transform">
-            {inq.name ? inq.name.charAt(0).toUpperCase() : "U"}
+            {getInitials(inq.name, "U")}
           </div>
           <div>
             <div className="font-bold text-foreground text-xs sm:text-sm flex items-center gap-1.5 group-hover:text-accent group-hover:underline transition-colors">

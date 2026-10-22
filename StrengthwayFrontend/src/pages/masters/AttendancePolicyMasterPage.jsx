@@ -22,6 +22,7 @@ import { getBatches } from "@/lib/batchesService";
 import { DataTable, Pagination } from "@/components/table";
 import { HolidayModal } from "./HolidayModal";
 import { TrainerLeavePolicyTab } from "./TrainerLeavePolicyTab";
+import { KpiCard, SearchInput } from "@/components/ui";
 
 
 const STANDARD_CATEGORIES = [
@@ -339,55 +340,36 @@ export default function AttendancePolicyMasterPage() {
 
           {/* KPI Cards */}
           <div className="shrink-0 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">Total Holidays</span>
-                <CalendarDays size={16} className="text-primary" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
-                {stats.total}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Configured in system</p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">Upcoming Dates</span>
-                <AlertCircle size={16} className="text-amber-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-extrabold text-amber-500">
-                {stats.upcoming}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Future closures in 2026</p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">Passed Closures</span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
-                {stats.past}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">Archived this calendar year</p>
-            </div>
+            <KpiCard
+              title="Total Holidays"
+              value={stats.total}
+              subtext="Configured in system"
+              icon={CalendarDays}
+              colorScheme="default"
+            />
+            <KpiCard
+              title="Upcoming Dates"
+              value={stats.upcoming}
+              subtext="Future closures in 2026"
+              icon={AlertCircle}
+              colorScheme="amber"
+            />
+            <KpiCard
+              title="Passed Closures"
+              value={stats.past}
+              subtext="Archived this calendar year"
+              icon={CheckCircle2}
+              colorScheme="emerald"
+            />
           </div>
 
           {/* Search Bar */}
           <div className="shrink-0 rounded-2xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
-            <div className="relative">
-              <Search
-                size={15}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <input
-                type="text"
-                placeholder="Search holiday by name, type, or reason..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search holiday by name, type, or reason..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
           {/* Standardized Holidays List Data Table */}

@@ -31,6 +31,7 @@ import {
 import { Pagination } from "@/components/table";
 import { MonthPicker, getCurrentYearMonth } from "@/components/ui/MonthPicker";
 import { AffectedSessionsModal } from "./AffectedSessionsModal";
+import { KpiCard, SearchInput } from "@/components/ui";
 
 export function TrainerLeaveTrackerView({
   trainers = [],
@@ -285,60 +286,40 @@ export function TrainerLeaveTrackerView({
     <div className="flex-1 min-h-0 h-full flex flex-col gap-3">
       {/* ─── 1. KPI Cards Row ──────────────────────────────────────────────── */}
       <div className="shrink-0 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        {/* Total Requests */}
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Leave Applications</span>
-            <FileText size={15} className="text-primary" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-foreground">{stats.total}</span>
-            <span className="text-[10px] text-muted-foreground">requests</span>
-          </div>
-        </div>
-
-        {/* Pending Review */}
-        <div
+        <KpiCard
+          title="Leave Applications"
+          value={stats.total}
+          subtext="requests"
+          icon={FileText}
+          colorScheme="default"
+        />
+        <KpiCard
+          title="Pending Action"
+          value={stats.pending}
+          subtext="awaiting review"
+          icon={Clock}
+          colorScheme="amber"
           onClick={() => handleStatusFilterChange("PENDING")}
-          className={`rounded-xl border p-3 shadow-xs transition-all cursor-pointer ${
+          className={
             statusFilter === "PENDING"
               ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30"
-              : "border-border bg-card hover:border-amber-500/40"
-          }`}
-        >
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500">Pending Action</span>
-            <Clock size={15} className="text-amber-500" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-amber-500">{stats.pending}</span>
-            <span className="text-[10px] text-muted-foreground">awaiting review</span>
-          </div>
-        </div>
-
-        {/* Approved Requests */}
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Approved Requests</span>
-            <CheckCircle2 size={15} className="text-emerald-500" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-emerald-500">{stats.approved}</span>
-            <span className="text-[10px] text-muted-foreground">confirmed</span>
-          </div>
-        </div>
-
-        {/* Approved Leave Days */}
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Leave Days Consumed</span>
-            <CalendarOff size={15} className="text-blue-400" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-xl sm:text-2xl font-black text-blue-400">{stats.approvedDays}</span>
-            <span className="text-[10px] text-muted-foreground">days total</span>
-          </div>
-        </div>
+              : "cursor-pointer hover:border-amber-500/40"
+          }
+        />
+        <KpiCard
+          title="Approved Requests"
+          value={stats.approved}
+          subtext="confirmed"
+          icon={CheckCircle2}
+          colorScheme="emerald"
+        />
+        <KpiCard
+          title="Leave Days Consumed"
+          value={stats.approvedDays}
+          subtext="days total"
+          icon={CalendarOff}
+          colorScheme="sky"
+        />
       </div>
 
       {/* ─── PENDING LEAVE REQUESTS BANNER (When Pending Filter Active or Pending > 0) ─── */}
@@ -363,20 +344,12 @@ export function TrainerLeaveTrackerView({
       {/* ─── 2. Filter Toolbar ─────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 p-3 rounded-xl border border-border bg-card shadow-xs">
         {/* Search Input */}
-        <div className="flex items-center gap-2 flex-1 max-w-sm">
-          <div className="relative w-full">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-            />
-            <input
-              type="text"
-              placeholder="Search by faculty, ID, request #, reason..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background pl-8.5 pr-3 py-1.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
+        <div className="flex-1 max-w-sm">
+          <SearchInput
+            placeholder="Search by faculty, ID, request #, reason..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         {/* Controls: Status, Type, Trainer, Month, New Button */}
@@ -698,7 +671,7 @@ export function TrainerLeaveTrackerView({
 
       {/* ─── MODAL: Approve / Deny / Cancel Confirmation ───────────────────── */}
       {actionModal.isOpen && actionModal.leave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
           <div
             onClick={() => setActionModal((prev) => ({ ...prev, isOpen: false }))}
             className="fixed inset-0 bg-transparent"
@@ -894,7 +867,7 @@ export function TrainerLeaveTrackerView({
 
       {/* ─── MODAL: Full Leave Request Audit Details ───────────────────────── */}
       {detailModalLeave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
           <div
             onClick={() => setDetailModalLeave(null)}
             className="fixed inset-0 bg-transparent"

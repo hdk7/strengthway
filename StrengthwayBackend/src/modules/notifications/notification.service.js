@@ -29,9 +29,12 @@ class NotificationService {
   async getNotifications(user, query = {}) {
     const filter = { $or: [] };
 
-    // Targeted directly at this user / trainer ID
+    // Targeted directly at this user / trainer ID / member ID
     if (user?.trainerId) {
       filter.$or.push({ recipientId: user.trainerId });
+    }
+    if (user?.memberId) {
+      filter.$or.push({ recipientId: user.memberId });
     }
     if (user?.id) {
       filter.$or.push({ recipientId: user.id });
@@ -88,6 +91,7 @@ class NotificationService {
   async markAllAsRead(user) {
     const filter = { $or: [] };
     if (user?.trainerId) filter.$or.push({ recipientId: user.trainerId });
+    if (user?.memberId) filter.$or.push({ recipientId: user.memberId });
     if (user?.id) filter.$or.push({ recipientId: user.id });
     if (user?.role) filter.$or.push({ recipientRole: user.role });
     filter.$or.push({ recipientRole: "all" });

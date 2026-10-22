@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { useState, useEffect } from "react";
 import {
   CreditCard,
@@ -11,6 +10,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { recordOfflinePayment } from "@/lib/enrollmentsService";
+import { InputField } from "@/components/form";
+import { formatINR } from "@/lib/formatters";
 
 export default function RecordOfflinePaymentModal({
   isOpen,
@@ -23,7 +24,8 @@ export default function RecordOfflinePaymentModal({
   const [transactionId, setTransactionId] = useState("");
   const [receiptNotes, setReceiptNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [generalError, setGeneralError] = useState("");
 
   const pricing = enrollment?.pricing || {};
   const currentBalance = pricing.balanceAmount !== undefined ? pricing.balanceAmount : pricing.finalAmount || 0;
@@ -34,26 +36,48 @@ export default function RecordOfflinePaymentModal({
     setPaymentMethod("Cash");
     setTransactionId("");
     setReceiptNotes("");
-    setError("");
+    setFieldErrors({});
+    setGeneralError("");
   }, [isOpen, enrollment, currentBalance]);
 
   if (!isOpen || !enrollment) return null;
 
+  const validateAmount = (val) => {
+    const num = Number(val);
+    if (val === "" || isNaN(num) || num <= 0) {
+      return "Please specify a valid payment amount greater than zero.";
+    }
+    if (num > currentBalance) {
+      return `Payment cannot exceed current outstanding balance of ${formatINR(currentBalance)}.`;
+    }
+    return "";
+  };
+
+  const handleAmountChange = (e) => {
+    const val = e.target.value;
+    setAmount(val);
+    if (fieldErrors.amount) {
+      const err = validateAmount(val);
+      setFieldErrors((prev) => ({ ...prev, amount: err || undefined }));
+    }
+  };
+
+  const handleAmountBlur = () => {
+    const err = validateAmount(amount);
+    setFieldErrors((prev) => ({ ...prev, amount: err || undefined }));
+  };
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+    const amountErr = validateAmount(amount);
+    if (amountErr) {
+      setFieldErrors((prev) => ({ ...prev, amount: amountErr }));
+      return;
+    }
+
     const numAmount = Number(amount);
-
-    if (isNaN(numAmount) || numAmount <= 0) {
-      setError("Please specify a valid payment amount greater than zero.");
-      return;
-    }
-    if (numAmount > currentBalance) {
-      setError(`Payment cannot exceed current outstanding balance of ₹${currentBalance.toLocaleString("en-IN")}.`);
-      return;
-    }
-
     setIsSubmitting(true);
-    setError("");
+    setGeneralError("");
 
     try {
       const result = await recordOfflinePayment(enrollment.id, {
@@ -67,10 +91,8 @@ export default function RecordOfflinePaymentModal({
 
       toast.success(
         isFullyPaid
-          ? `Full payment of ₹${numAmount.toLocaleString("en-IN")} recorded! Member activated.`
-          : `Partial payment of ₹${numAmount.toLocaleString("en-IN")} recorded. Remaining dues: ₹${(
-              currentBalance - numAmount
-            ).toLocaleString("en-IN")}`,
+          ? `Full payment of ${formatINR(numAmount)} recorded! Member activated.`
+          : `Partial payment of ${formatINR(numAmount)} recorded. Remaining dues: ${formatINR(currentBalance - numAmount)}`,
         {
           icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
         }
@@ -80,14 +102,14 @@ export default function RecordOfflinePaymentModal({
       onClose();
     } catch (err) {
       console.error("Recording offline payment failed:", err);
-      setError(err.message || "Failed to record payment.");
+      setGeneralError(err.message || "Failed to record payment.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/75 backdrop-blur-[2px] animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
       <div className="relative w-full max-w-md rounded-3xl border border-border bg-card shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between bg-card">
@@ -112,12 +134,12 @@ export default function RecordOfflinePaymentModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} noValidate className="p-6 space-y-4 text-xs">
           {/* Balance Callout */}
           <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
             <span className="text-amber-300 font-medium">Outstanding Balance Due:</span>
             <span className="text-base font-extrabold text-amber-400">
-              ₹{currentBalance.toLocaleString("en-IN")}
+              {formatINR(currentBalance)}
             </span>
           </div>
 
@@ -145,35 +167,34 @@ export default function RecordOfflinePaymentModal({
           </div>
 
           {/* Amount Input */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              Amount Collected (₹) <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="number"
-              min="1"
-              max={currentBalance}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs text-foreground font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40"
-              placeholder={`Max ₹${currentBalance}`}
-              required
-            />
-          </div>
+          <InputField
+            id="offline-payment-amount"
+            name="amount"
+            label="Amount Collected (₹)"
+            required
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={handleAmountChange}
+            onBlur={handleAmountBlur}
+            error={fieldErrors.amount}
+            restriction="decimal"
+            placeholder={`Max ₹${currentBalance}`}
+            size="sm"
+          />
 
           {/* Reference / Transaction ID */}
-          <div>
-            <label className="block text-xs font-semibold text-foreground mb-1">
-              {paymentMethod === "UPI" ? "UPI Reference / Txn ID" : "Receipt / Note Ref"}
-            </label>
-            <input
-              type="text"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-              placeholder={paymentMethod === "UPI" ? "e.g. UPI-9842104" : "e.g. CASH-101"}
-            />
-          </div>
+          <InputField
+            id="offline-payment-txn"
+            name="transactionId"
+            label={paymentMethod === "UPI" ? "UPI Reference / Txn ID" : "Receipt / Note Ref"}
+            type="text"
+            value={transactionId}
+            onChange={(e) => setTransactionId(e.target.value)}
+            restriction="alphanumeric"
+            placeholder={paymentMethod === "UPI" ? "e.g. UPI-9842104" : "e.g. CASH-101"}
+            size="sm"
+          />
 
           {/* Remarks */}
           <div>
@@ -184,15 +205,15 @@ export default function RecordOfflinePaymentModal({
               rows={2}
               value={receiptNotes}
               onChange={(e) => setReceiptNotes(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
+              className="w-full rounded-xl border border-border bg-card px-3.5 py-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none"
               placeholder="e.g. Paid in full at reception desk"
             />
           </div>
 
-          {error && (
+          {generalError && (
             <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2">
               <AlertCircle size={14} className="shrink-0" />
-              <span>{error}</span>
+              <span>{generalError}</span>
             </div>
           )}
 

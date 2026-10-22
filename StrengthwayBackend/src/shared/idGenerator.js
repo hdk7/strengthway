@@ -275,7 +275,43 @@ function generateInvoiceNumber(currentMax = 0, year = new Date().getFullYear()) 
   return `${ID_PREFIXES.INVOICE || "INV"}-${year}-${num}`;
 }
 
+// ─── Member Discount ID ───────────────────────────────────────────────────────
+/**
+ * Produces format: DSC-2026-0001
+ * @param {number} currentMax - The highest numeric suffix in DB
+ * @param {number} [year] - Year prefix, defaults to current year
+ * @returns {string}
+ */
+function generateMemberDiscountId(currentMax = 0, year = new Date().getFullYear()) {
+  const num = String(currentMax + 1).padStart(4, "0");
+  return `${ID_PREFIXES.MEMBER_DISCOUNT || "DSC"}-${year}-${num}`;
+}
+
+// ─── Discount Campaign / Batch Operation ID ──────────────────────────────────
+/**
+ * Produces format: CMP-20261020-1234
+ * @returns {string}
+ */
+function generateDiscountCampaignId() {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.CAMPAIGN || "CMP"}-${dateStr}-${rand}`;
+}
+
+// ─── Member Import ID ────────────────────────────────────────────────────────
+/**
+ * Produces format: IMP-172767-1234
+ * @returns {string}
+ */
+function generateImportId() {
+  const ts = Date.now().toString().slice(-6);
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  return `${ID_PREFIXES.IMPORT || "IMP"}-${ts}-${rand}`;
+}
+
 module.exports = {
+  generateImportId,
   generateMemberId,
   generateTrainerId,
   generateBatchId,
@@ -283,6 +319,8 @@ module.exports = {
   generateInquiryId,
   generateEnrollmentId,
   generateInvoiceNumber,
+  generateMemberDiscountId,
+  generateDiscountCampaignId,
   generateTransactionId,
   generateReceiptNumber,
   generateAssignmentId,

@@ -8,6 +8,7 @@ import { DataTable } from "@/components/table";
 import { TrainerModal } from "./TrainerModal";
 import { getTrainerColumns } from "./trainerColumns";
 import { isAdmin } from "@/auth/currentUser";
+import { KpiCard } from "@/components/ui";
 
 export default function TrainersPage() {
   const navigate = useNavigate();
@@ -112,68 +113,31 @@ export default function TrainersPage() {
 
       {/* KPI Cards (3 Cards: Total Staff, Active Now, Inactive) */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 shrink-0">
-        <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Total Coaches
-            </span>
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-accent/10 text-accent">
-              <Users size={14} />
-            </div>
-          </div>
-          <div className="mt-0.5 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">
-              {loading ? (
-                <Loader2 size={20} className="animate-spin text-muted-foreground" />
-              ) : (
-                stats.total
-              )}
-            </span>
-            <p className="text-[11px] text-muted-foreground">Registered coaches</p>
-          </div>
-        </div>
+        <KpiCard
+          title="Total Coaches"
+          value={loading ? <Loader2 size={20} className="animate-spin text-muted-foreground" /> : stats.total}
+          subtext="Registered coaches"
+          icon={Users}
+          variant="terracotta"
+        />
 
-        <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Active Coaches
-            </span>
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-500/10 text-emerald-500">
-              <UserCheck size={14} />
-            </div>
-          </div>
-          <div className="mt-0.5 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-extrabold text-emerald-500 tracking-tight">
-              {loading ? (
-                <Loader2 size={20} className="animate-spin text-emerald-500" />
-              ) : (
-                stats.active
-              )}
-            </span>
-            <p className="text-[11px] text-muted-foreground">Available for coaching</p>
-          </div>
-        </div>
+        <KpiCard
+          title="Active Coaches"
+          value={loading ? <Loader2 size={20} className="animate-spin text-emerald-500" /> : stats.active}
+          subtext="Available for coaching"
+          icon={UserCheck}
+          variant="emerald"
+          valueColor="text-emerald-500"
+        />
 
-        <div className="rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Inactive Coaches
-            </span>
-            <div className="grid h-7 w-7 place-items-center rounded-lg bg-muted text-muted-foreground">
-              <Users size={14} />
-            </div>
-          </div>
-          <div className="mt-0.5 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-extrabold text-muted-foreground tracking-tight">
-              {loading ? (
-                <Loader2 size={20} className="animate-spin text-muted-foreground" />
-              ) : (
-                stats.inactive
-              )}
-            </span>
-            <p className="text-[11px] text-muted-foreground">On break / paused</p>
-          </div>
-        </div>
+        <KpiCard
+          title="Inactive Coaches"
+          value={loading ? <Loader2 size={20} className="animate-spin text-muted-foreground" /> : stats.inactive}
+          subtext="On break / paused"
+          icon={Users}
+          variant="neutral"
+          valueColor="text-muted-foreground"
+        />
       </div>
 
       {/* Integrated Data Table */}

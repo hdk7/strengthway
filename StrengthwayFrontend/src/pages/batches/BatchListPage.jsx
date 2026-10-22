@@ -17,11 +17,17 @@ import { getBatches, createBatch, updateBatch, deleteBatch } from "@/lib/batches
 import { getMembers } from "@/lib/membersService";
 import { getTrainers } from "@/lib/trainersService";
 import { DataTable, Pagination } from "@/components/table";
+import {
+  batchSchema,
+  validateWithYup,
+  validateFieldWithYup,
+} from "@/lib/validation";
 import { BatchFormModal } from "./components/BatchFormModal";
 import { BatchDeleteModal } from "./components/BatchDeleteModal";
 import { BatchGridCard } from "./components/BatchGridCard";
 import { BatchTableRow } from "./components/BatchTableRow";
 import { isAdmin, isMember, isTrainer } from "@/auth/currentUser";
+import { KpiCard, SearchInput } from "@/components/ui";
 
 const BATCH_COLUMNS = [
   { header: "Batch ID", width: "w-28" },
@@ -163,6 +169,25 @@ export function BatchListPage() {
     return { total, active, totalCapacity, totalEnrolled, avgUtilization };
   }, [batches]);
 
+  const [errors, setErrors] = useState({});
+
+  const handleFieldChange = (name, value) => {
+    const updated = { ...form, [name]: value };
+    setForm(updated);
+    if (errors[name]) {
+      const fieldError = validateFieldWithYup(batchSchema, name, updated);
+      setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
+    }
+    if (name === "daysPattern" && value !== "CUSTOM" && errors.customDays) {
+      setErrors((prev) => ({ ...prev, customDays: undefined }));
+    }
+  };
+
+  const handleFieldBlur = (name) => {
+    const fieldError = validateFieldWithYup(batchSchema, name, form);
+    setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
+  };
+
   const handleOpenCreate = () => {
     setEditingBatch(null);
     setForm({
@@ -173,10 +198,11 @@ export function BatchListPage() {
       daysLabel: "Monday • Wednesday • Friday",
       daysList: ["Monday", "Wednesday", "Friday"],
       customDays: [],
-      maxPax: "",
+      capacity: 28,
       status: "Active",
       description: "",
     });
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -194,10 +220,11 @@ export function BatchListPage() {
       daysLabel: batch.daysLabel || "Monday • Wednesday • Friday",
       daysList: batch.daysList || ["Monday", "Wednesday", "Friday"],
       customDays,
-      maxPax: batch.maxPax ?? "",
+      capacity: batch.capacity ?? batch.maxPax ?? 28,
       status: batch.status || "Active",
       description: batch.description || "",
     });
+    setErrors({});
     setIsModalOpen(true);
   };
 
@@ -207,24 +234,26 @@ export function BatchListPage() {
 
   const handleSaveBatch = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error("Please enter a batch name.");
-      return;
-    }
-    if (!form.startTime || !form.endTime) {
-      toast.error("Please provide both start time and end time.");
-      return;
-    }
+    const capacityVal = form.capacity !== "" && form.capacity !== undefined ? Number(form.capacity) : (form.maxPax !== "" && form.maxPax !== undefined ? Number(form.maxPax) : 28);
+    const validationErrors = validateWithYup(batchSchema, {
+      ...form,
+      capacity: capacityVal,
+    });
     if (form.daysPattern === "CUSTOM" && (!form.customDays || form.customDays.length === 0)) {
-      toast.error("Please select at least one day for the custom schedule.");
+      validationErrors.customDays = "Please select at least one active training day.";
+    }
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+
     setIsSubmitting(true);
     try {
       const payload = {
         ...form,
         name: form.name.trim(),
-        maxPax: form.maxPax === "" ? 28 : Number(form.maxPax) || 28,
+        maxPax: capacityVal || 28,
+        capacity: capacityVal || 28,
       };
       if (editingBatch) {
         const updated = await updateBatch(editingBatch.id, payload);
@@ -299,45 +328,32 @@ export function BatchListPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 shrink-0">
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Total Batches</span>
-            <Boxes size={16} />
-          </div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-foreground">{stats.total}</span>
-            <span className="text-xs text-emerald-400 font-semibold">{stats.active} Active</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground">Operating time slots</p>
-        </div>
-
-        <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Total Capacity</span>
-            <UserCheck size={16} />
-          </div>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-2xl font-extrabold text-foreground">{stats.totalCapacity}</span>
-            <span className="text-xs text-muted-foreground">Max Pax</span>
-          </div>
-          <p className="text-[11px] text-muted-foreground">Across all daily slots</p>
-        </div>
+        <KpiCard
+          title="Total Batches"
+          value={stats.total}
+          trend={`${stats.active} Active`}
+          subtext="Operating time slots"
+          icon={Boxes}
+          colorScheme="terracotta"
+        />
+        <KpiCard
+          title="Total Capacity"
+          value={stats.totalCapacity}
+          trend="Max Pax"
+          subtext="Across all daily slots"
+          icon={UserCheck}
+          colorScheme="sky"
+        />
       </div>
 
       {/* Filter and Control Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-border bg-card p-2.5 shadow-xs shrink-0">
         {/* Search input */}
-        <div className="relative flex-1 sm:max-w-xs md:max-w-sm">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-          />
-          <input
-            type="text"
+        <div className="flex-1 sm:max-w-xs md:max-w-sm">
+          <SearchInput
             placeholder="Search batch by name, timing, or days..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
           />
         </div>
 
@@ -513,6 +529,9 @@ export function BatchListPage() {
         editingBatch={editingBatch}
         form={form}
         setForm={setForm}
+        errors={errors}
+        handleFieldChange={handleFieldChange}
+        handleFieldBlur={handleFieldBlur}
         handleSaveBatch={handleSaveBatch}
         isSubmitting={isSubmitting}
       />

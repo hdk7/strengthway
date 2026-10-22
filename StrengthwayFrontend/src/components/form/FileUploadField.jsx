@@ -1,6 +1,7 @@
-import { useRef, useId } from "react";
+import { useRef } from "react";
 import { Upload, X, FileText, Image as ImageIcon } from "lucide-react";
-import { FormLabel, FormError } from "./FormField";
+import FormField from "./FormField";
+import { useFieldId } from "./formStyles";
 
 export default function FileUploadField({
   label,
@@ -20,8 +21,7 @@ export default function FileUploadField({
   disabled = false,
   className = "",
 }) {
-  const generatedId = useId();
-  const id = providedId || generatedId;
+  const { id } = useFieldId(providedId, null, "file", error);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -49,13 +49,14 @@ export default function FileUploadField({
   const hasFile = Boolean(previewUrl || fileName);
 
   return (
-    <div className={`flex flex-col text-left ${className}`}>
-      {label && (
-        <FormLabel htmlFor={id} required={required} hint={hint}>
-          {label}
-        </FormLabel>
-      )}
-
+    <FormField
+      label={label}
+      required={required}
+      hint={hint}
+      id={id}
+      error={error}
+      className={className}
+    >
       <input
         ref={fileInputRef}
         id={id}
@@ -135,8 +136,6 @@ export default function FileUploadField({
           )}
         </div>
       </div>
-
-      <FormError error={error} />
-    </div>
+    </FormField>
   );
 }

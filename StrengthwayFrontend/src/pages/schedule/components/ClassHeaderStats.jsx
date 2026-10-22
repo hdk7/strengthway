@@ -9,6 +9,7 @@ import {
   List,
 } from "lucide-react";
 import { isAdmin } from "@/auth/currentUser";
+import { KpiCard, SearchInput } from "@/components/ui";
 
 export function ClassHeaderStats({
   activeView = "library",
@@ -94,51 +95,30 @@ export function ClassHeaderStats({
         <>
           {/* KPI Stats Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 shrink-0">
-            {/* KPI 1: Total Reusable Classes */}
-            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Total Classes
-                </span>
-                <Dumbbell size={16} className="text-accent" />
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-foreground">{stats.total}</span>
-                <span className="text-[11px] text-muted-foreground">TSW curriculum workouts</span>
-              </div>
-            </div>
-
-            {/* KPI 2: Active Classes */}
-            <div className="rounded-xl border border-border bg-card p-3 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Active Library
-                </span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-emerald-500">{stats.active}</span>
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                  Ready for batch assignment
-                </span>
-              </div>
-            </div>
+            <KpiCard
+              title="Total Classes"
+              value={stats.total}
+              subtext="TSW curriculum workouts"
+              icon={Dumbbell}
+              colorScheme="terracotta"
+            />
+            <KpiCard
+              title="Active Library"
+              value={stats.active}
+              subtext="Ready for batch assignment"
+              icon={CheckCircle2}
+              colorScheme="emerald"
+            />
           </div>
 
           {/* Search, Filter Action Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-border bg-card p-2 sm:p-2.5 shadow-xs shrink-0">
             {/* Search Input */}
-            <div className="relative flex-1 sm:max-w-md">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-              />
-              <input
-                type="text"
+            <div className="flex-1 sm:max-w-md">
+              <SearchInput
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search classes by name, workout..."
-                className="w-full rounded-lg border border-border bg-background py-1.5 pl-8 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
               />
             </div>
 

@@ -6,6 +6,7 @@ import {
   ChevronDown,
   RotateCcw,
 } from "lucide-react";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 const MONTH_NAMES_SHORT = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -99,15 +100,11 @@ export function MonthPicker({
     }
   }, [isOpen, selectedYear]);
 
-  // Close on click outside or Escape key
+  useClickOutside(containerRef, () => setIsOpen(false), isOpen);
+
+  // Close on Escape key
   useEffect(() => {
     if (!isOpen) return;
-
-    function handleClickOutside(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
-    }
 
     function handleKeyDown(e) {
       if (e.key === "Escape") {
@@ -115,10 +112,8 @@ export function MonthPicker({
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
     document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);

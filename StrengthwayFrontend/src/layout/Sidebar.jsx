@@ -65,6 +65,7 @@ const navConfig = [
     icon: Wallet,
     children: [
       { id: "members", label: "Members Payments", path: "/admin/payments/members" },
+      { id: "discounts", label: "Member Discounts", path: "/admin/payments/discounts" },
       { id: "trainers", label: "Coaches Payments", path: "/admin/payments/trainers" },
     ],
   },
@@ -83,7 +84,6 @@ const navConfig = [
         label: "Attendance Policy",
         path: "/admin/masters/attendance-policy",
       },
-      { id: "payment-fee", label: "Payment Fee Master", path: "/admin/masters/payment-fee" },
       { id: "portfolio-master", label: "Portfolio Master", path: "/admin/masters/portfolio" },
     ],
   },
@@ -114,6 +114,7 @@ function filterNavByPermissions(items) {
           if (child.id === "members-attendance") return can("attendance", "view") || can("attendance", "view_own");
           if (child.id === "trainers-attendance") return can("attendance", "view") || can("attendance", "view_own");
           if (child.id === "members") return can("payments", "view") || can("payments", "view_own");
+          if (child.id === "discounts") return can("payments", "view");
           if (child.id === "trainers") return can("payments", "view") || can("payments", "view_own");
           if (child.id === "membership-plan" || child.id === "attendance-policy" || child.id === "payment-fee") {
             return can("masters", "view");

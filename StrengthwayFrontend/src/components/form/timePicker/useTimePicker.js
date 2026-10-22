@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { parseTimeString } from "./timeUtils";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 // --- useTimePicker -------------------------------------------------------------
 // Custom hook that owns all state and handler logic for TimePickerField.
@@ -31,16 +32,7 @@ export function useTimePicker({ value, name, onChange, disabled }) {
     setPeriod(parsed.period);
   }, [value]);
 
-  // Close on outside click
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsPickerOpen(false);
-      }
-    }
-    if (isPickerOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isPickerOpen]);
+  useClickOutside(containerRef, () => setIsPickerOpen(false), isPickerOpen);
 
   const triggerChange = (newHour, newMinute, newPeriod) => {
     const formatted = `${newHour}:${newMinute} ${newPeriod}`;

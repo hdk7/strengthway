@@ -3,11 +3,11 @@ import {
   UserCheck,
   Users,
   Calendar,
-  Search,
   ArrowRightLeft,
   Plus,
   History,
 } from "lucide-react";
+import { SearchInput } from "@/components/ui";
 import { isMember, isAdmin } from "@/auth/currentUser";
 
 export default function BatchDetailTabsNav({
@@ -112,19 +112,12 @@ export default function BatchDetailTabsNav({
       {/* Action Controls on Active Subtab */}
       {activeTab === "trainers" && (
         <div className="flex items-center gap-2.5 sm:pr-1 sm:pb-1">
-          <div className="relative w-full sm:w-56">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search coach..."
-              value={trainerSearch}
-              onChange={(e) => setTrainerSearch(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search coach..."
+            value={trainerSearch}
+            onChange={(e) => setTrainerSearch(e.target.value)}
+            className="w-full sm:w-56"
+          />
 
           {isAdmin() && (
             <button
@@ -140,19 +133,12 @@ export default function BatchDetailTabsNav({
 
       {activeTab === "members" && !isMember() && (
         <div className="flex items-center gap-2 sm:pr-1 sm:pb-1 flex-wrap sm:flex-nowrap">
-          <div className="relative w-full sm:w-48">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder="Search members..."
-              value={memberSearch}
-              onChange={(e) => setMemberSearch(e.target.value)}
-              className="w-full rounded-xl border border-border bg-card py-2 pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search members..."
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            className="w-full sm:w-48"
+          />
 
           {isAdmin() && (
             <>

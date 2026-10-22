@@ -108,6 +108,17 @@ const DISCOUNT_TYPES = Object.freeze({
   PERCENTAGE: "percentage",
 });
 
+// ─── Member Discount Statuses ────────────────────────────────────────────────
+const MEMBER_DISCOUNT_STATUS = Object.freeze({
+  DRAFT:           "Draft",
+  ASSIGNED:        "Assigned",
+  NOTIFIED:        "Notified",
+  PAYMENT_PENDING: "Payment Pending",
+  REDEEMED:        "Redeemed",
+  EXPIRED:         "Expired",
+  CANCELLED:       "Cancelled",
+});
+
 // ─── ID Prefixes (matches frontend MEM-xxxx / TRN-xxx format) ─────────────────
 const ID_PREFIXES = Object.freeze({
   MEMBER:      "MEM",
@@ -131,6 +142,9 @@ const ID_PREFIXES = Object.freeze({
   PORTFOLIO:        "PTF",
   BATCH_AUDIT:      "BAUD",
   BATCH_SUBSTITUTE_AUDIT: "BSUB",
+  MEMBER_DISCOUNT:  "DSC",
+  CAMPAIGN:         "CMP",
+  IMPORT:           "IMP",
 });
 
 // ─── Pagination Defaults ──────────────────────────────────────────────────────
@@ -356,6 +370,7 @@ module.exports = {
   PAYMENT_STATUS,
   ENROLLMENT_STATUS,
   DISCOUNT_TYPES,
+  MEMBER_DISCOUNT_STATUS,
   ID_PREFIXES,
   PAGINATION,
   USER_ROLES,

@@ -17,6 +17,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { getCurrentUser } from "@/auth/currentUser";
+import { formatINR } from "@/lib/formatters";
 
 export default function EnrollmentDetailModal({
   isOpen,
@@ -200,7 +201,7 @@ export default function EnrollmentDetailModal({
               <div className="space-y-1.5">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Original Price:</span>
-                  <span>₹{pricing.originalPrice?.toLocaleString("en-IN")}</span>
+                  <span>{formatINR(pricing.originalPrice)}</span>
                 </div>
                 {pricing.discountAmount > 0 && (
                   <div className="flex justify-between text-emerald-500">
@@ -210,21 +211,21 @@ export default function EnrollmentDetailModal({
                         <span className="text-[10px] text-muted-foreground ml-1">({pricing.discountReason})</span>
                       )}
                     </span>
-                    <span>-₹{pricing.discountAmount?.toLocaleString("en-IN")}</span>
+                    <span>-{formatINR(pricing.discountAmount)}</span>
                   </div>
                 )}
                 <div className="pt-1.5 border-t border-border/60 flex justify-between font-bold text-foreground">
                   <span>Net Payable Amount:</span>
-                  <span className="text-sm text-emerald-400">₹{pricing.finalAmount?.toLocaleString("en-IN")}</span>
+                  <span className="text-sm text-emerald-400">{formatINR(pricing.finalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Amount Collected:</span>
-                  <span className="font-semibold text-foreground">₹{pricing.paidAmount?.toLocaleString("en-IN") || 0}</span>
+                  <span className="font-semibold text-foreground">{formatINR(pricing.paidAmount || 0)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Outstanding Balance:</span>
                   <span className={`font-semibold ${pricing.balanceAmount > 0 ? "text-amber-400" : "text-emerald-400"}`}>
-                    ₹{pricing.balanceAmount?.toLocaleString("en-IN") || 0}
+                    {formatINR(pricing.balanceAmount || 0)}
                   </span>
                 </div>
               </div>

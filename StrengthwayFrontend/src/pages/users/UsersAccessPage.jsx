@@ -35,13 +35,10 @@ import { getTrainers } from "@/lib/trainersService";
 import { getMembers } from "@/lib/membersService";
 import { getCurrentUser } from "@/auth/currentUser";
 import { DataTable } from "@/components/table";
-import {
-  FormModal,
-  FormModalHeader,
-  FormModalBody,
-  FormModalFooter,
-} from "@/components/ui/FormModal";
+import { KpiCard, SearchInput, ConfirmDialog } from "@/components/ui";
+import { getInitials } from "@/lib/formatters";
 import { InputField, SelectField } from "@/components/form";
+import { isValidName, isValidEmail } from "@/lib/validation";
 
 // ── Role Styling Definitions ──────────────────────────────────────────────────
 const ROLE_CONFIG = {
@@ -190,12 +187,7 @@ export default function UsersAccessPage() {
       accessorKey: "name",
       cell: (user) => {
         const isCurrent = user._id === currentUser?.id || user.email === currentUser?.email;
-        const initials = (user.name || "U")
-          .split(" ")
-          .map((n) => n[0])
-          .slice(0, 2)
-          .join("")
-          .toUpperCase();
+        const initials = getInitials(user.name);
 
         return (
           <div className="flex items-center gap-3">
@@ -397,78 +389,52 @@ export default function UsersAccessPage() {
 
       {/* ── Summary Counters ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
-        {/* Total */}
-        <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Total Accounts</span>
-            <Users size={18} className="text-foreground/70" />
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black text-foreground font-display">
-            {stats.total}
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground">Registered logins</div>
-        </div>
-
-        {/* Admins */}
-        <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-purple-600 dark:text-purple-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Admins</span>
-            <Shield size={18} />
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black text-foreground font-display">
-            {stats.admins}
-          </div>
-          <div className="mt-1 text-xs text-purple-600/80 dark:text-purple-400/80">Full Authority</div>
-        </div>
-
-        {/* Trainers */}
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Coaches</span>
-            <Dumbbell size={18} />
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black text-foreground font-display">
-            {stats.trainers}
-          </div>
-          <div className="mt-1 text-xs text-emerald-600/80 dark:text-emerald-400/80">Faculty Coaches</div>
-        </div>
-
-        {/* Members */}
-        <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-sky-600 dark:text-sky-400">
-            <span className="text-xs font-semibold uppercase tracking-wider">Athletes</span>
-            <User size={18} />
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black text-foreground font-display">
-            {stats.members}
-          </div>
-          <div className="mt-1 text-xs text-sky-600/80 dark:text-sky-400/80">Gym Members</div>
-        </div>
-
-        {/* Active Rate */}
-        <div className="col-span-2 lg:col-span-1 rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Active Rate</span>
-            <CheckCircle2 size={18} className="text-emerald-500" />
-          </div>
-          <div className="mt-2 text-2xl sm:text-3xl font-black text-foreground font-display">
-            {stats.activeRate}%
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground">{stats.active} of {stats.total} Active</div>
-        </div>
+        <KpiCard
+          title="Total Accounts"
+          value={stats.total}
+          subtext="Registered logins"
+          icon={Users}
+          colorScheme="terracotta"
+        />
+        <KpiCard
+          title="Admins"
+          value={stats.admins}
+          subtext="Full Authority"
+          icon={Shield}
+          colorScheme="indigo"
+        />
+        <KpiCard
+          title="Coaches"
+          value={stats.trainers}
+          subtext="Faculty Coaches"
+          icon={Dumbbell}
+          colorScheme="emerald"
+        />
+        <KpiCard
+          title="Athletes"
+          value={stats.members}
+          subtext="Gym Members"
+          icon={User}
+          colorScheme="sky"
+        />
+        <KpiCard
+          title="Active Rate"
+          value={`${stats.activeRate}%`}
+          subtext={`${stats.active} of ${stats.total} Active`}
+          icon={CheckCircle2}
+          colorScheme="emerald"
+          className="col-span-2 lg:col-span-1"
+        />
       </div>
 
       {/* ── Toolbar: Search & Filters ─────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5 bg-card border border-border rounded-2xl p-3 sm:p-4 shadow-xs">
         {/* Search */}
-        <div className="relative flex-1 min-w-[240px]">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
+        <div className="flex-1 min-w-[240px]">
+          <SearchInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, email, role, TRN-ID, or MEM-ID..."
-            className="w-full rounded-xl border border-border bg-background/50 pl-10 pr-4 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
           />
         </div>
 
@@ -581,49 +547,20 @@ export default function UsersAccessPage() {
       )}
 
       {/* ── Delete Confirmation Dialog ────────────────────────────────────────── */}
-      {deleteTarget && (
-        <FormModal
-          isOpen={Boolean(deleteTarget)}
-          onClose={() => setDeleteTarget(null)}
-          size="sm"
-        >
-          <FormModalHeader
-            title="Delete User Account"
-            subtitle="Permanent account revocation"
-            onClose={() => setDeleteTarget(null)}
-          />
-          <FormModalBody>
-            <div className="space-y-4 py-2">
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive">
-                <AlertTriangle size={24} className="shrink-0" />
-                <div className="text-xs leading-relaxed">
-                  Are you sure you want to delete the login account for{" "}
-                  <strong className="font-semibold">{deleteTarget.name}</strong> ({deleteTarget.email})?
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                This removes system login credentials. If this account is linked to a Coach or Member profile, the underlying gym profile record remains intact.
-              </p>
-            </div>
-          </FormModalBody>
-          <FormModalFooter>
-            <button
-              type="button"
-              onClick={() => setDeleteTarget(null)}
-              className="rounded-xl border border-border px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirmDelete}
-              className="rounded-xl bg-destructive px-5 py-2 text-xs font-semibold text-white hover:bg-destructive/90 transition-colors cursor-pointer"
-            >
-              Delete Account
-            </button>
-          </FormModalFooter>
-        </FormModal>
-      )}
+      {/* ── Delete Confirmation Dialog ────────────────────────────────────────── */}
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete User Account"
+        description={
+          deleteTarget
+            ? `Are you sure you want to delete the login account for ${deleteTarget.name} (${deleteTarget.email})? This removes system login credentials. If this account is linked to a Coach or Member profile, the underlying gym profile record remains intact.`
+            : ""
+        }
+        confirmText="Delete Account"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }
@@ -692,8 +629,18 @@ function ProvisionUserModal({
     e.preventDefault();
     const errs = {};
 
-    if (!name.trim()) errs.name = "Full name is required.";
-    if (!email.trim()) errs.email = "Email address is required.";
+    if (!name.trim()) {
+      errs.name = "Full name is required.";
+    } else if (!isValidName(name)) {
+      errs.name = "Name can only contain letters, spaces, hyphens, apostrophes, and periods.";
+    }
+
+    if (!email.trim()) {
+      errs.email = "Email address is required.";
+    } else if (!isValidEmail(email)) {
+      errs.email = "Enter a valid email address.";
+    }
+
     if (!password || password.length < 8) {
       errs.password = "Password must be at least 8 characters.";
     }
@@ -857,7 +804,18 @@ function ProvisionUserModal({
                 label="Full Name"
                 required
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+                }}
+                onBlur={() => {
+                  if (name && !isValidName(name)) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      name: "Name can only contain letters, spaces, hyphens, apostrophes, and periods.",
+                    }));
+                  }
+                }}
                 placeholder="e.g. John Doe"
                 error={errors.name}
               />
@@ -867,7 +825,15 @@ function ProvisionUserModal({
                 required
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+                }}
+                onBlur={() => {
+                  if (email && !isValidEmail(email)) {
+                    setErrors((prev) => ({ ...prev, email: "Enter a valid email address." }));
+                  }
+                }}
                 placeholder="user@example.com"
                 error={errors.email}
               />
@@ -878,13 +844,24 @@ function ProvisionUserModal({
               label="Initial Password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+              }}
+              onBlur={() => {
+                if (password && password.length < 8) {
+                  setErrors((prev) => ({ ...prev, password: "Password must be at least 8 characters." }));
+                }
+              }}
               placeholder="Minimum 8 characters"
               error={errors.password}
               endAdornment={
                 <button
                   type="button"
-                  onClick={handleGeneratePassword}
+                  onClick={() => {
+                    handleGeneratePassword();
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                  }}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline cursor-pointer px-1 py-0.5"
                 >
                   <Sparkles size={12} />

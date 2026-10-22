@@ -315,6 +315,10 @@ const memberSchema = new mongoose.Schema(
       type: contactDetailsSchema,
       default: null,
     },
+    contactHistory: {
+      type: [contactDetailsSchema],
+      default: [],
+    },
     statusHistory: {
       type: [memberStatusHistorySchema],
       default: [],

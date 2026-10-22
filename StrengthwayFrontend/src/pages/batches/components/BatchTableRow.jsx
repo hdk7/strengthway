@@ -1,5 +1,6 @@
 import { Clock, Eye, Edit3, Trash2 } from "lucide-react";
 import { isAdmin } from "@/auth/currentUser";
+import { IdBadge } from "@/components/ui/Badge";
 
 const SHORT_DAYS_MAP = {
   Monday: "Mon",
@@ -21,9 +22,7 @@ export function BatchTableRow({
     <tr className="group transition-all duration-150 hover:-translate-y-px">
       {/* Batch ID */}
       <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l last:rounded-r-2xl last:border-r shadow-xs group-hover:bg-muted/40 transition-colors whitespace-nowrap">
-        <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold bg-muted/60 text-muted-foreground px-2.5 py-1 rounded-full border border-border/40">
-          #{b.id?.length > 7 ? b.id.slice(-6).toUpperCase() : b.id}
-        </span>
+        <IdBadge id={b.id} />
       </td>
 
       {/* Batch Name */}

@@ -3,12 +3,31 @@
 const yup = require("yup");
 const { GENDER, DISCOUNT_TYPES } = require("../../shared/constants");
 
+const NAME_PATTERN = /^[\p{L}\s.'\-]+$/u;
+
 const createEnrollmentSchema = yup.object().shape({
   inquiryId: yup.string().trim().required("Inquiry ID is required to link enrollment."),
-  firstName: yup.string().trim().required("First name is required.").min(2, "First name must be at least 2 characters."),
+  firstName: yup
+    .string()
+    .trim()
+    .required("First name is required.")
+    .min(2, "First name must be at least 2 characters.")
+    .test(
+      "valid-name",
+      "First name can only contain letters, spaces, hyphens, apostrophes, and periods.",
+      (v) => !v || NAME_PATTERN.test(v.trim()),
+    ),
   lastName: yup.string().trim().nullable(),
   email: yup.string().trim().email("Please provide a valid email.").required("Email is required."),
-  mobile: yup.string().trim().required("Mobile number is required."),
+  mobile: yup
+    .string()
+    .trim()
+    .required("Mobile number is required.")
+    .test("valid-phone", "Please enter a valid mobile number (10 to 15 digits).", (v) => {
+      if (!v) return false;
+      const digits = v.replace(/\D/g, "");
+      return digits.length >= 10 && digits.length <= 15;
+    }),
   gender: yup.string().oneOf(GENDER, "Invalid gender.").default("Male"),
   dob: yup.string().trim().nullable(),
   address: yup.string().trim().nullable(),
@@ -28,7 +47,16 @@ const createEnrollmentSchema = yup.object().shape({
     .string()
     .oneOf(Object.values(DISCOUNT_TYPES), "Invalid discount type.")
     .default(DISCOUNT_TYPES.NONE),
-  discountValue: yup.number().min(0, "Discount cannot be negative.").default(0),
+  discountValue: yup
+    .number()
+    .min(0, "Discount cannot be negative.")
+    .test("percentage-max", "Discount percentage cannot exceed 100%.", function (val) {
+      if (this.parent.discountType === DISCOUNT_TYPES.PERCENTAGE) {
+        return val <= 100;
+      }
+      return true;
+    })
+    .default(0),
   discountReason: yup.string().trim().nullable(),
   paymentMode: yup
     .string()

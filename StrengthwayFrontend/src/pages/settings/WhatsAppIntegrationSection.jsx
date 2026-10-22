@@ -722,7 +722,7 @@ export default function WhatsAppIntegrationSection() {
 
       {/* ── Setup Instructions Modal (Phase 2 & 10 Documentation) ────────────── */}
       {showSetupModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
           <div className="relative w-full max-w-2xl rounded-3xl border border-border bg-card shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             <div className="px-6 py-4 border-b border-border/80 flex items-center justify-between shrink-0 bg-card">
               <div className="flex items-center gap-2">

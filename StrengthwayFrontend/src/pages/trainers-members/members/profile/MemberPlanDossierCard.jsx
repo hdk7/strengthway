@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Award, FileCheck } from "lucide-react";
 import { isTrainer, getRoleBasePath } from "@/auth/currentUser";
+import { formatINR } from "@/lib/formatters";
 
 export function MemberPlanDossierCard({
   member,
@@ -55,7 +56,7 @@ export function MemberPlanDossierCard({
                     Fee
                   </span>
                   <span className="text-xs font-bold text-accent font-mono">
-                    {planDetails.formattedPrice || (planDetails.price ? `₹${Number(planDetails.price).toLocaleString("en-IN")}` : "—")}
+                    {planDetails.formattedPrice || (planDetails.price ? formatINR(planDetails.price) : "—")}
                   </span>
                 </div>
               )}

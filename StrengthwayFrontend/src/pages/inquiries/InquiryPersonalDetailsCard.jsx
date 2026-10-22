@@ -15,15 +15,11 @@ export default function InquiryPersonalDetailsCard({
   if (!inquiry) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-linear-to-r from-accent/15 via-card/75 to-background/60 shadow-lg backdrop-blur-xl">
-      {/* Ambient Glowing Orbs */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-accent/15 blur-3xl" />
-      <div className="pointer-events-none absolute -left-20 -bottom-20 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-
+    <div className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden">
       {/* 1. Unified Card Top Header */}
-      <div className="relative z-10 px-6 py-5 sm:px-8 sm:py-6 border-b border-border/60 bg-card/40 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-border/60 bg-muted/20 dark:bg-muted/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-500 shrink-0">
             <ShieldCheck size={20} />
           </div>
           <div>
@@ -35,10 +31,10 @@ export default function InquiryPersonalDetailsCard({
       </div>
 
       {/* 2. Unified Card Body: 2-Column Split with subtle divider */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-border/60">
+      <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-border/60">
         {/* Left Column: Personal & Contact Information */}
-        <div className="lg:col-span-6 p-6 sm:p-8 space-y-4 bg-card/30 backdrop-blur-sm">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/50">
+        <div className="lg:col-span-6 p-6 sm:p-8 space-y-4 bg-card">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/60">
             <User size={14} className="text-muted-foreground" />
             <span>Contact Information</span>
           </div>
@@ -55,7 +51,7 @@ export default function InquiryPersonalDetailsCard({
             {/* Inquiry ID */}
             <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 items-center">
               <dt className="font-medium text-muted-foreground">Inquiry ID</dt>
-              <dd className="mt-1 font-mono font-semibold text-emerald-500 sm:col-span-2 sm:mt-0">
+              <dd className="mt-1 font-mono font-semibold text-emerald-600 dark:text-emerald-400 sm:col-span-2 sm:mt-0">
                 {inquiry.id || "—"}
               </dd>
             </div>
@@ -123,14 +119,14 @@ export default function InquiryPersonalDetailsCard({
         </div>
 
         {/* Right Column: Inquiry Statement & Message */}
-        <div className="lg:col-span-6 p-6 sm:p-8 space-y-5 bg-muted/15 backdrop-blur-sm flex flex-col justify-start">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/50">
+        <div className="lg:col-span-6 p-6 sm:p-8 space-y-5 bg-muted/25 dark:bg-muted/10 flex flex-col justify-start">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border/60">
             <Quote size={14} className="text-primary" />
             <span>Inquiry Statement</span>
           </div>
 
           {/* Subject Box */}
-          <div className="rounded-2xl border border-border/70 bg-card/50 backdrop-blur-md p-4 sm:p-5 shadow-2xs">
+          <div className="rounded-2xl border border-border/80 bg-background dark:bg-card p-4 sm:p-5 shadow-2xs">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               <Tag size={13} className="text-primary" />
               <span>Subject</span>
@@ -145,7 +141,7 @@ export default function InquiryPersonalDetailsCard({
             <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
               Message
             </span>
-            <div className="flex-1 rounded-2xl border border-border/70 bg-card/50 backdrop-blur-md p-5 sm:p-6 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans min-h-[140px] shadow-2xs">
+            <div className="flex-1 rounded-2xl border border-border/80 bg-background dark:bg-card p-5 sm:p-6 text-sm sm:text-base leading-relaxed text-foreground whitespace-pre-wrap font-sans min-h-[140px] shadow-2xs">
               {inquiry.message || "No message provided."}
             </div>
           </div>

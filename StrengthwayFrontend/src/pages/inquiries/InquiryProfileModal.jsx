@@ -156,9 +156,10 @@ export function InquiryProfileModal({
             />
 
             {/* Contact Interaction History & Details (Shown if contacted or archived) */}
-            {contactDetailsToDisplay && (
+            {(inquiry?.contactHistory?.length > 0 || contactDetailsToDisplay) && (
               <InquiryContactRecordCard
                 contactDetails={contactDetailsToDisplay}
+                contactHistory={inquiry?.contactHistory}
               />
             )}
           </div>

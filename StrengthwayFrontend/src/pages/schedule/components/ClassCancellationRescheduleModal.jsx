@@ -23,6 +23,7 @@ import {
   simulateCancellation,
   applyCancellation,
 } from "@/lib/classCancellationService";
+import { formatINR } from "@/lib/formatters";
 
 const REASON_PRESETS = [
   "Emergency Facility Maintenance",
@@ -108,9 +109,15 @@ export function ClassCancellationRescheduleModal({
       return;
     }
 
+    const targetBatchId = batch?.id || batch?._id || batch?.batchId;
+    if (!targetBatchId) {
+      toast.error("Batch ID is missing.");
+      return;
+    }
+
     setIsSimulating(true);
     try {
-      const data = await simulateCancellation(batch.id, {
+      const res = await simulateCancellation(targetBatchId, {
         cancellationType,
         startDate,
         endDate,
@@ -122,6 +129,7 @@ export function ClassCancellationRescheduleModal({
           baseMonthlySessions: Number(baseMonthlySessions) || 12,
         },
       });
+      const data = res?.data || res;
       setSimulationResult(data);
       toast.success("Schedule forward-shift and member adjustments simulated successfully.");
     } catch (err) {
@@ -141,9 +149,15 @@ export function ClassCancellationRescheduleModal({
       return;
     }
 
+    const targetBatchId = batch?.id || batch?._id || batch?.batchId;
+    if (!targetBatchId) {
+      toast.error("Batch ID is missing.");
+      return;
+    }
+
     setIsApplying(true);
     try {
-      const data = await applyCancellation(batch.id, {
+      const res = await applyCancellation(targetBatchId, {
         cancellationType,
         startDate,
         endDate,
@@ -155,6 +169,7 @@ export function ClassCancellationRescheduleModal({
           baseMonthlySessions: Number(baseMonthlySessions) || 12,
         },
       });
+      const data = res?.data || res;
 
       toast.success(
         `Successfully cancelled ${data.summary?.totalCancelled || "classes"} and rescheduled schedule forward!`
@@ -177,7 +192,7 @@ export function ClassCancellationRescheduleModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] p-4 animate-in fade-in duration-200">
       <div className="flex flex-col h-[92vh] max-h-[850px] w-full max-w-4xl rounded-3xl border border-border bg-card shadow-2xl overflow-hidden text-foreground">
         {/* ─── Modal Header ────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-b border-border/80 px-6 py-4 bg-muted/20 shrink-0">
@@ -517,7 +532,7 @@ export function ClassCancellationRescheduleModal({
                     Total Member Credits
                   </span>
                   <span className="text-lg font-black text-emerald-500 block mt-0.5 font-mono">
-                    ₹{(simulationResult.summary?.totalCredit || 0).toLocaleString("en-IN")}
+                    {formatINR(simulationResult.summary?.totalCredit || 0)}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
                     Adjustment pool

@@ -17,11 +17,17 @@ import {
 } from "@/lib/membershipPlans";
 import { getMembers } from "@/lib/membersService";
 import { DataTable, Pagination } from "@/components/table";
+import {
+  membershipPlanSchema,
+  validateWithYup,
+  validateFieldWithYup,
+} from "@/lib/validation";
 import { MembershipPlanModal } from "./components/MembershipPlanModal";
 import { MembershipPlanCard } from "./components/MembershipPlanCard";
 import { MembershipPlanTableRow } from "./components/MembershipPlanTableRow";
 import { MembershipPlanStats } from "./components/MembershipPlanStats";
 import { MembershipPlanToolbar } from "./components/MembershipPlanToolbar";
+import { formatINR } from "@/lib/formatters";
 
 const MEMBERSHIP_PLAN_COLUMNS = [
   { header: "Plan ID", width: "w-28" },
@@ -151,9 +157,26 @@ export default function MembershipPlanMasterPage() {
   }, [filteredPlans, safePage, pageSize]);
 
   // Modal Handlers
+  const [errors, setErrors] = useState({});
+
+  const handleFieldChange = (name, value) => {
+    const updated = { ...form, [name]: value };
+    setForm(updated);
+    if (errors[name]) {
+      const fieldError = validateFieldWithYup(membershipPlanSchema, name, updated);
+      setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
+    }
+  };
+
+  const handleFieldBlur = (name) => {
+    const fieldError = validateFieldWithYup(membershipPlanSchema, name, form);
+    setErrors((prev) => ({ ...prev, [name]: fieldError || undefined }));
+  };
+
   const handleOpenAdd = () => {
     setEditingPlan(null);
     setForm(EMPTY_PLAN_FORM);
+    setErrors({});
     setFeatureInput("");
     setIsModalOpen(true);
   };
@@ -172,6 +195,7 @@ export default function MembershipPlanMasterPage() {
       description: plan.description || "",
       features: Array.isArray(plan.features) ? [...plan.features] : [],
     });
+    setErrors({});
     setFeatureInput("");
     setIsModalOpen(true);
   };
@@ -266,25 +290,22 @@ export default function MembershipPlanMasterPage() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error("Plan name is required.");
-      return;
-    }
-    if (form.price === "" || Number(form.price) < 0) {
-      toast.error("Please specify a valid price amount.");
+    const validationErrors = validateWithYup(membershipPlanSchema, form);
+    if (validationErrors && Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
     const priceNum = Number(form.price) || 0;
     const durationNum = form.durationMonths === "" ? 1 : Math.max(1, Number(form.durationMonths));
-    const defaultBilling = `Billed ₹${priceNum.toLocaleString("en-IN")}${form.period ? ` ${form.period}` : ""}`;
+    const defaultBilling = `Billed ${formatINR(priceNum)}${form.period ? ` ${form.period}` : ""}`;
 
     const payload = {
       ...form,
       name: form.name.trim(),
       price: priceNum,
       durationMonths: durationNum,
-      billing: form.billing.trim() || defaultBilling,
+      billing: form.billing?.trim() || defaultBilling,
     };
 
     setIsSubmitting(true);
@@ -477,6 +498,9 @@ export default function MembershipPlanMasterPage() {
         editingPlan={editingPlan}
         form={form}
         setForm={setForm}
+        errors={errors}
+        handleFieldChange={handleFieldChange}
+        handleFieldBlur={handleFieldBlur}
         featureInput={featureInput}
         setFeatureInput={setFeatureInput}
         handleAddFeature={handleAddFeature}

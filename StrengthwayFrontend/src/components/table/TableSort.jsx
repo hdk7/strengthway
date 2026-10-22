@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { ArrowUpDown, SlidersHorizontal } from "lucide-react";
 import ThemeSelect from "../form/ThemeSelect";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 /**
  * Universal Reusable Table Sort Dropdown Component
@@ -25,19 +26,7 @@ const TableSort = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  useClickOutside(containerRef, () => setIsOpen(false), isOpen);
 
   if (!options || options.length === 0) return null;
 

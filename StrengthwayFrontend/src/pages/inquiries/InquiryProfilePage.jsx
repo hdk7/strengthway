@@ -87,11 +87,19 @@ export default function InquiryProfilePage() {
   const handleContactSubmit = async (contactData) => {
     try {
       const updated = await recordInquiryContact(inquiry.id, contactData);
-      setInquiry((prev) => ({
-        ...prev,
-        status: "Contacted",
-        contactDetails: updated?.contactDetails || contactData,
-      }));
+      setInquiry((prev) => {
+        const nextDetails = updated?.contactDetails || contactData;
+        const nextHistory = updated?.contactHistory || [
+          nextDetails,
+          ...(prev?.contactHistory || (prev?.contactDetails ? [prev.contactDetails] : [])),
+        ];
+        return {
+          ...prev,
+          status: "Contacted",
+          contactDetails: nextDetails,
+          contactHistory: nextHistory,
+        };
+      });
 
       // Dispatch event so Header notification center updates immediately
       window.dispatchEvent(new CustomEvent("inquiry-updated", { detail: updated }));
@@ -362,8 +370,11 @@ export default function InquiryProfilePage() {
         />
 
         {/* Contact Interaction History & Details (Shown if contacted or archived) */}
-        {contactDetailsToDisplay && (
-          <InquiryContactRecordCard contactDetails={contactDetailsToDisplay} />
+        {(inquiry?.contactHistory?.length > 0 || contactDetailsToDisplay) && (
+          <InquiryContactRecordCard
+            contactDetails={contactDetailsToDisplay}
+            contactHistory={inquiry?.contactHistory}
+          />
         )}
       </div>
 

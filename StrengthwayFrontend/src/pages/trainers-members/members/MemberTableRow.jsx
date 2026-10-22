@@ -1,5 +1,7 @@
 import { Phone, Mail, UserCheck, Loader2, RotateCcw } from "lucide-react";
 import { isAdmin, getRoleBasePath } from "@/auth/currentUser";
+import Avatar from "@/components/ui/avatar";
+import { IdBadge } from "@/components/ui/Badge";
 
 export default function MemberTableRow({
   member,
@@ -10,7 +12,6 @@ export default function MemberTableRow({
   onMoveToInquiry,
 }) {
   const fullName = `${member.firstName || ""} ${member.lastName || ""}`.trim();
-  const initials = `${member.firstName?.[0] || ""}${member.lastName?.[0] || ""}`.toUpperCase();
   const isDeleted = Boolean(member.isDeleted);
 
   return (
@@ -21,37 +22,24 @@ export default function MemberTableRow({
     >
       {/* Member ID Badge */}
       <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/70 text-foreground/85 font-mono text-xs font-semibold tracking-tight shadow-2xs">
-          #{member.id}
-        </span>
+        <IdBadge id={member.id} />
       </td>
 
       {/* Member Info */}
       <td className="bg-card py-3 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
         <div className="flex items-center gap-2.5">
-          {member.photo ? (
-            <button
-              type="button"
-              onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
-              title="View full member profile"
-              className="shrink-0 cursor-pointer focus:outline-none"
-            >
-              <img
-                src={member.photo}
-                alt={fullName}
-                className="h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-full object-cover border border-border hover:scale-105 transition-all"
-              />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
-              title="View full member profile"
-              className="grid h-8 w-8 sm:h-8.5 sm:w-8.5 shrink-0 place-items-center rounded-full bg-accent/15 text-accent font-bold text-xs border border-accent/20 hover:scale-105 transition-all cursor-pointer focus:outline-none"
-            >
-              {initials || "M"}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => onNavigate(`${getRoleBasePath()}/trainers-members/members/${member.id}`)}
+            title="View full member profile"
+            className="shrink-0 cursor-pointer focus:outline-none hover:scale-105 transition-transform"
+          >
+            <Avatar
+              src={member.photo}
+              name={fullName}
+              className="h-8 w-8 sm:h-8.5 sm:w-8.5 rounded-full border border-border"
+            />
+          </button>
           <div>
             <button
               type="button"

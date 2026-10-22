@@ -37,6 +37,7 @@ import {
 import { PolicyRuleSimulator } from "@/pages/attendance/PolicyRuleSimulator";
 import { AffectedSessionsModal } from "@/pages/attendance/AffectedSessionsModal";
 import { Pagination } from "@/components/table";
+import { formatINR } from "@/lib/formatters";
 
 /**
  * Reusable Trainer Leave Management & Policy Rule Simulator Section
@@ -544,7 +545,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
             </div>
             <p className="mt-0.5 text-[10px] text-muted-foreground">
               {(annualBalance.lopDays || 0) > 0
-                ? `-₹${(annualBalance.lopDeductionAmount || 0).toLocaleString("en-IN")} payroll deduction`
+                ? `-${formatINR(annualBalance.lopDeductionAmount || 0)} payroll deduction`
                 : "No LOP deductions incurred"}
             </p>
           </div>
@@ -682,7 +683,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
                   </div>
                   <p className="text-[11px] mt-1 opacity-90 leading-relaxed">
                     {requestLopDetails.lopDays > 0
-                      ? `You currently have ${annualBalance.remainingDays ?? 0} day(s) remaining in your 36-day annual allowance. ${requestLopDetails.lopDays} excess day(s) will incur Loss of Pay (-₹${requestLopDetails.lopDeduction.toLocaleString("en-IN")}) in monthly payroll.`
+                      ? `You currently have ${annualBalance.remainingDays ?? 0} day(s) remaining in your 36-day annual allowance. ${requestLopDetails.lopDays} excess day(s) will incur Loss of Pay (-${formatINR(requestLopDetails.lopDeduction)}) in monthly payroll.`
                       : `You currently have ${annualBalance.remainingDays ?? 36} day(s) remaining in your 36-day annual allowance. This request consumes ${requestLopDetails.reqDays} day(s) and leaves ${requestLopDetails.projectedRemaining} day(s) remaining.`}
                   </p>
                 </div>
@@ -943,7 +944,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
                               <span>{leave.annualLeaveCalculation.requestImpact.lopDays}d LOP</span>
                             </span>
                             <span className="text-[9px] font-semibold text-rose-500 mt-0.5">
-                              -₹{(leave.annualLeaveCalculation.requestImpact.lopDeduction || 0).toLocaleString("en-IN")}
+                              -{formatINR(leave.annualLeaveCalculation.requestImpact.lopDeduction || 0)}
                             </span>
                           </div>
                         ) : isApproved ? (
@@ -1061,7 +1062,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
 
       {/* ─── MODAL: Admin Approval (Full Duration vs Shorter Period) ──────── */}
       {approvalModal.isOpen && approvalModal.leave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
           <div
             onClick={() => setApprovalModal((prev) => ({ ...prev, isOpen: false }))}
             className="fixed inset-0 bg-transparent"
@@ -1215,7 +1216,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
                       <span>{appDays} Day(s) Approved: {paid}d Paid, {lop}d LOP</span>
                     </span>
                     <span className="font-mono font-bold text-[11px]">
-                      {lop > 0 ? `-₹${(lop * rate).toLocaleString("en-IN")}` : "0 LOP"}
+                      {lop > 0 ? `-${formatINR(lop * rate)}` : "0 LOP"}
                     </span>
                   </div>
                 );
@@ -1262,7 +1263,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
 
       {/* ─── MODAL: Admin Denial ────────────────────────────────────────────── */}
       {denialModal.isOpen && denialModal.leave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
           <div
             onClick={() => setDenialModal((prev) => ({ ...prev, isOpen: false }))}
             className="fixed inset-0 bg-transparent"
@@ -1323,7 +1324,7 @@ export function TrainerLeaveSection({ trainer, isAdmin = false, onLeavesUpdated 
 
       {/* ─── MODAL: View Leave Details & Audit Log ─────────────────────────── */}
       {detailModalLeave && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150">
           <div
             onClick={() => setDetailModalLeave(null)}
             className="fixed inset-0 bg-transparent"

@@ -135,6 +135,7 @@ export function MemberRegistrationUnifiedForm({
             onChange={handleChange}
             onBlur={handleBlur}
             error={errors.mobile}
+            restriction="phone"
           />
 
           <InputField
@@ -236,6 +237,7 @@ export function MemberRegistrationUnifiedForm({
             onChange={handleChange}
             onBlur={handleBlur}
             error={errors.pincode}
+            restriction="pincode"
           />
         </div>
       </section>
@@ -295,6 +297,7 @@ export function MemberRegistrationUnifiedForm({
           onChange={handleChange}
           onBlur={handleBlur}
           error={errors.emergencyNumber}
+          restriction="phone"
         />
       </section>
 
@@ -311,8 +314,8 @@ export function MemberRegistrationUnifiedForm({
           <InputField
             id="admin-member-height"
             name="height"
-            type="number"
-            step="0.1"
+            type="text"
+            inputMode="decimal"
             label="Height"
             required
             placeholder="e.g. 175"
@@ -320,6 +323,7 @@ export function MemberRegistrationUnifiedForm({
             onChange={handleChange}
             onBlur={handleBlur}
             error={errors.height}
+            restriction="decimal"
             endAdornment={
               <span className="text-xs font-semibold text-muted-foreground pr-3.5">cm</span>
             }
@@ -328,8 +332,8 @@ export function MemberRegistrationUnifiedForm({
           <InputField
             id="admin-member-weight"
             name="weight"
-            type="number"
-            step="0.1"
+            type="text"
+            inputMode="decimal"
             label="Weight"
             required
             placeholder="e.g. 72"
@@ -337,6 +341,7 @@ export function MemberRegistrationUnifiedForm({
             onChange={handleChange}
             onBlur={handleBlur}
             error={errors.weight}
+            restriction="decimal"
             endAdornment={
               <span className="text-xs font-semibold text-muted-foreground pr-3.5">kg</span>
             }
@@ -409,7 +414,7 @@ export function MemberRegistrationUnifiedForm({
             placeholder="Select Training Batch Slot"
             options={batches.map((b) => ({
               value: b.id,
-              label: `${b.name} • ${b.timingLabel || b.startTime} (${b.currentPax || 0}/${b.maxPax || 28} Pax)`,
+              label: `${b.name} • ${b.daysLabel || b.daysPattern || "Daily"} • ${b.timingLabel || b.startTime} (${b.currentPax || 0}/${b.maxPax || 28} Pax)`,
             }))}
           />
 
@@ -475,11 +480,13 @@ export function MemberRegistrationUnifiedForm({
             <InputField
               label="Amount Received (₹)"
               required
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={paymentForm.amountPaid}
               onChange={(e) =>
                 setPaymentForm((prev) => ({ ...prev, amountPaid: e.target.value }))
               }
+              restriction="decimal"
               inputClassName="font-semibold"
               error={errors.amountPaid}
             />

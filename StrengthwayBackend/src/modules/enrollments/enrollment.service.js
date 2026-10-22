@@ -6,7 +6,7 @@ const planRepository = require("../membership-plans/plan.repository");
 const memberRepository = require("../members/member.repository");
 const batchRepository = require("../batches/batch.repository");
 const paymentGatewayService = require("./services/paymentGateway.service");
-const whatsappService = require("./services/whatsapp.service");
+const whatsappService = require("../whatsapp/whatsapp.service");
 
 const {
   NotFoundError,
@@ -906,9 +906,81 @@ class EnrollmentService {
     }
 
     if (!enrollment) {
+      // Check if this webhook corresponds to a Member Discount payment
+      try {
+        const memberDiscountRepository = require("../discounts/memberDiscount.repository");
+        const memberService = require("../members/member.service");
+
+        const discountId =
+          (referenceId && referenceId.startsWith("DSC-") && referenceId) ||
+          paymentEntity?.notes?.discountId ||
+          plinkEntity?.notes?.discountId;
+
+        let discount = null;
+        if (discountId) {
+          discount = await memberDiscountRepository.findById(discountId);
+        } else if (orderId) {
+          discount = await memberDiscountRepository.findAll({
+            filter: { "appliedToInvoice.gatewayOrderId": orderId },
+            limit: 1,
+          }).then((res) => res[0]);
+        }
+
+        if (discount) {
+          if (discount.status === "Redeemed") {
+            return {
+              processed: true,
+              message: "Member discount already redeemed",
+              discountId: discount.id,
+            };
+          }
+          if (
+            event === "payment_link.paid" ||
+            event === "payment.captured" ||
+            event === "order.paid"
+          ) {
+            const paymentId = paymentEntity?.id || plinkEntity?.id;
+            const upiReference =
+              paymentEntity?.acquirer_data?.upi_transaction_id ||
+              paymentEntity?.acquirer_data?.rrn ||
+              "";
+            const amountPaise =
+              paymentEntity?.amount || plinkEntity?.amount_paid || 0;
+            const amountPaid = Math.round(Number(amountPaise) / 100);
+
+            const renewalResult = await memberService.renewMembership(
+              discount.memberId,
+              {
+                planId: discount.planId,
+                discountId: discount.id,
+                paymentMethod: "Razorpay / Online",
+                transactionId: paymentId,
+                paymentId,
+                upiReference,
+                adminUser: { name: "Razorpay Webhook" },
+              }
+            );
+
+            return {
+              processed: true,
+              message:
+                "Member discount redeemed and membership renewed successfully via webhook.",
+              discountId: discount.id,
+              memberId: discount.memberId,
+              receiptNo: renewalResult.paymentBreakdown?.receiptNo,
+            };
+          }
+        }
+      } catch (discErr) {
+        console.warn(
+          "[RazorpayWebhook] Discount webhook handling check error:",
+          discErr.message
+        );
+      }
+
       return {
         processed: false,
-        reason: "No matching enrollment found for webhook identifiers",
+        reason: "No matching enrollment or discount found for webhook identifiers",
         identifiers: { linkId, referenceId, orderId },
       };
     }

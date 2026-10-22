@@ -19,6 +19,7 @@ import { ShuffleClassModal } from "./components/ShuffleClassModal";
 import { DataTable } from "@/components/table";
 import Pagination from "@/components/table/Pagination";
 import { isAdmin } from "@/auth/currentUser";
+import { ConfirmDialog } from "@/components/ui";
 
 export default function MasterClassSchedulePage() {
   const location = useLocation();
@@ -517,64 +518,32 @@ export default function MasterClassSchedulePage() {
       />
 
       {/* Delete Confirmation Modal */}
-      {deletingClass && (
-        <div
-          className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-slate-900/30 dark:bg-black/60 backdrop-blur-[2px] animate-in fade-in duration-150"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-border bg-white dark:bg-card p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
-                <Trash2 size={20} />
-              </span>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-foreground">
-                  Delete Reusable Class
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-muted-foreground">
-                  Are you sure you want to delete this class from the library?
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-100 dark:border-border/60 bg-slate-50/70 dark:bg-muted/40 p-3 text-xs space-y-1">
-              <span className="font-bold text-slate-900 dark:text-foreground block">
+      <ConfirmDialog
+        isOpen={Boolean(deletingClass)}
+        onClose={() => setDeletingClass(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Reusable Class"
+        message="Are you sure you want to delete this class from the library?"
+        confirmText={submittingDelete ? "Deleting…" : "Confirm Delete"}
+        variant="danger"
+        isLoading={submittingDelete}
+      >
+        {deletingClass && (
+          <div className="space-y-2 mt-2">
+            <div className="rounded-xl border border-border/60 bg-muted/40 p-3 text-xs space-y-1">
+              <span className="font-bold text-foreground block">
                 {deletingClass.name}
               </span>
-              <span className="font-mono text-[11px] text-slate-500 dark:text-muted-foreground block">
+              <span className="font-mono text-[11px] text-muted-foreground block">
                 ID: {deletingClass.id}
               </span>
             </div>
-
             <p className="text-xs text-rose-600 dark:text-rose-400">
               Note: If this class is currently mapped to active upcoming batch sessions, deletion will be blocked to safeguard schedules.
             </p>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-border">
-              <button
-                type="button"
-                onClick={() => setDeletingClass(null)}
-                disabled={submittingDelete}
-                className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                disabled={submittingDelete}
-                className="rounded-xl bg-rose-600 hover:bg-rose-700 px-4 py-2 text-xs font-bold text-white shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                {submittingDelete ? "Deleting…" : "Confirm Delete"}
-              </button>
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </ConfirmDialog>
 
       {/* Multi-Class Batch Calendar Assignment Modal (Phase 4) */}
       <BatchClassAssignmentModal

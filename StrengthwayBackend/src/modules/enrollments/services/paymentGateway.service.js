@@ -178,8 +178,11 @@ class PaymentGatewayService {
     const mockOrderId = `order_sim_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
     const mockLinkId = `plink_sim_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const isDiscount = String(referenceId).startsWith("DSC-");
+    const paramKey = isDiscount ? "discountId" : "enrollmentId";
+
     const baseUrl = config.CLIENT_ORIGIN || process.env.CLIENT_ORIGIN || "http://localhost:5173";
-    const paymentUrl = `${baseUrl}/payment/checkout?enrollmentId=${encodeURIComponent(
+    const paymentUrl = `${baseUrl}/payment/checkout?${paramKey}=${encodeURIComponent(
       referenceId
     )}&orderId=${mockOrderId}&linkId=${mockLinkId}&amount=${amount}`;
 

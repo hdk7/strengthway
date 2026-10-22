@@ -6,8 +6,10 @@ import {
   UserPlus,
   Search,
   Filter,
-  Loader2,
   AlertCircle,
+  FileSpreadsheet,
+  UploadCloud,
+  History,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminMemberRegistrationModal } from "./MembersRegistration";
@@ -17,6 +19,12 @@ import { DataTable } from "@/components/table";
 import { isAdmin } from "@/auth/currentUser";
 import MemberMetricsRow from "./MemberMetricsRow";
 import MemberTableRow from "./MemberTableRow";
+import { SearchInput } from "@/components/ui";
+import {
+  GoogleFormTemplateModal,
+  MemberImportModal,
+  MemberImportHistoryModal,
+} from "./components";
 
 const MEMBER_COLUMNS = [
   { header: "Member ID", width: "w-28" },
@@ -40,6 +48,11 @@ export default function MembersPage() {
   const [selectedInquiryForConfirm, setSelectedInquiryForConfirm] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
 
+  // Import-related modals state
+  const [isGoogleFormModalOpen, setIsGoogleFormModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+
   const fetchMembers = () => {
     setLoading(true);
     setError(null);
@@ -54,10 +67,18 @@ export default function MembersPage() {
     setLoading(true);
     setError(null);
     getMembers(true)
-      .then((data) => { if (!cancelled) setMembers(data || []); })
-      .catch((e) => { if (!cancelled) setError(e?.message || "Failed to load members."); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .then((data) => {
+        if (!cancelled) setMembers(data || []);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e?.message || "Failed to load members.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleOpenAddModal = () => {
@@ -69,7 +90,7 @@ export default function MembersPage() {
     try {
       const updated = await toggleMemberStatus(memberId);
       setMembers((prev) =>
-        prev.map((m) => (m.id === memberId ? { ...m, status: updated.status } : m))
+        prev.map((m) => (m.id === memberId ? { ...m, status: updated.status } : m)),
       );
       toast.success(`Member status updated to ${updated.status}.`);
     } catch (e) {
@@ -86,7 +107,7 @@ export default function MembersPage() {
   const handleConfirmSuccess = (convertedMember) => {
     setSelectedInquiryForConfirm(null);
     setMembers((prev) =>
-      prev.map((m) => (m.id === convertedMember.id ? convertedMember : m))
+      prev.map((m) => (m.id === convertedMember.id ? convertedMember : m)),
     );
     toast.success(`Inquiry for ${convertedMember.firstName} converted to active Member.`);
   };
@@ -169,7 +190,7 @@ export default function MembersPage() {
     const total = activeList.length;
     const active = activeList.filter((m) => m.status === "Active").length;
     const inquiries = activeList.filter(
-      (m) => m.status === "Lead" || m.status === "Inquiry"
+      (m) => m.status === "Lead" || m.status === "Inquiry",
     ).length;
     const archived = members.filter((m) => m.isDeleted).length;
     return {
@@ -183,23 +204,56 @@ export default function MembersPage() {
   return (
     <div className="flex-1 min-h-0 h-full flex flex-col gap-2">
       {/* Page Header */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between shrink-0">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between shrink-0">
         <div>
           <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground">
             Members
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Manage members, profiles, status, edits, and registrations.
+            Manage members, profiles, status, bulk imports, and registrations.
           </p>
         </div>
 
-        {/* Add Member CTA Button (Admin Only) */}
+        {/* Member Action Controls (Admin Only) */}
         {isAdmin() && (
-          <div className="shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Get Google Form Template */}
+            <button
+              type="button"
+              onClick={() => setIsGoogleFormModalOpen(true)}
+              title="Get standardized Google Form link for member self-registration"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-3 sm:px-4 py-2 min-h-[38px] text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+            >
+              <FileSpreadsheet size={15} className="text-blue-500" />
+              <span>Get Form Template</span>
+            </button>
+
+            {/* Smart Bulk Import */}
+            <button
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              title="Upload Google Sheets response file or Excel/CSV to import members in bulk"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 dark:text-emerald-300 px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+            >
+              <UploadCloud size={15} className="text-emerald-600 dark:text-emerald-400" />
+              <span>Import Members</span>
+            </button>
+
+            {/* Import Audit History */}
+            <button
+              type="button"
+              onClick={() => setIsHistoryModalOpen(true)}
+              title="View past import audit history and download recovery reports"
+              className="inline-flex items-center justify-center rounded-lg border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground p-2 min-h-[38px] min-w-[38px] shadow-2xs transition-all cursor-pointer"
+            >
+              <History size={16} />
+            </button>
+
+            {/* Add Member CTA Button */}
             <button
               type="button"
               onClick={handleOpenAddModal}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 min-h-[40px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-900 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 min-h-[38px] text-xs sm:text-sm font-semibold shadow-sm transition-all cursor-pointer active:scale-[0.99]"
             >
               <UserPlus size={16} />
               <span>Add Member</span>
@@ -218,17 +272,11 @@ export default function MembersPage() {
       {/* Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 shrink-0">
         {/* Search input */}
-        <div className="relative flex-1 max-w-md">
-          <Search
-            size={15}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="text"
+        <div className="flex-1 max-w-md">
+          <SearchInput
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, mobile, email, or ID…"
-            className="w-full h-8.5 sm:h-9 rounded-xl border border-border bg-card pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-accent focus:ring-1 focus:ring-accent"
           />
         </div>
 
@@ -289,7 +337,10 @@ export default function MembersPage() {
         <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive shrink-0">
           <AlertCircle size={15} className="shrink-0" />
           <span>{error}</span>
-          <button onClick={fetchMembers} className="ml-auto text-xs font-semibold underline cursor-pointer hover:no-underline">
+          <button
+            onClick={fetchMembers}
+            className="ml-auto text-xs font-semibold underline cursor-pointer hover:no-underline"
+          >
             Retry
           </button>
         </div>
@@ -367,6 +418,27 @@ export default function MembersPage() {
           leadToConfirm={selectedInquiryForConfirm}
         />
       )}
+
+      {/* --- GOOGLE FORM TEMPLATE MODAL --- */}
+      <GoogleFormTemplateModal
+        isOpen={isGoogleFormModalOpen}
+        onClose={() => setIsGoogleFormModalOpen(false)}
+      />
+
+      {/* --- MEMBER BULK IMPORT MODAL --- */}
+      <MemberImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          fetchMembers();
+        }}
+      />
+
+      {/* --- IMPORT AUDIT HISTORY MODAL --- */}
+      <MemberImportHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+      />
     </div>
   );
 }

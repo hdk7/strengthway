@@ -30,40 +30,40 @@ export function ClassSessionDetailModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-120 flex items-center justify-center p-4 bg-slate-900/35 dark:bg-black/65 backdrop-blur-[2px] animate-in fade-in duration-150"
+      className="fixed inset-0 z-120 flex items-center justify-center p-4 bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="w-full max-w-lg rounded-2xl border border-slate-200/90 dark:border-border bg-white dark:bg-card p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between border-b border-slate-100 dark:border-border pb-3.5">
+        <div className="flex items-start justify-between border-b border-border pb-3.5">
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-[10px] font-bold text-blue-700 dark:text-primary bg-blue-50 dark:bg-primary/10 px-2 py-0.5 rounded">
+              <span className="font-mono text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
                 {session.classId || "CLASS"}
               </span>
-              <span className="rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 font-bold px-2 py-0.5 text-[10px]">
+              <span className="rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold px-2 py-0.5 text-[10px]">
                 {session.dayOfWeek}
               </span>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
                   session.status === "COMPLETED"
-                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
                     : session.status === "TODAY"
-                      ? "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                      : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "bg-blue-500/10 text-blue-600 dark:text-blue-400"
                 }`}
               >
                 {session.status || "SCHEDULED"}
               </span>
             </div>
-            <h3 className="text-lg font-extrabold text-slate-900 dark:text-foreground">
+            <h3 className="text-lg font-extrabold text-foreground">
               {session.subject || session.className}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-muted-foreground flex items-center gap-1.5">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Calendar size={13} />
               <span>
                 {session.displayDate || session.sessionDate} • Batch:{" "}
@@ -75,7 +75,7 @@ export function ClassSessionDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
+            className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
           >
             <X size={18} />
           </button>
@@ -83,23 +83,23 @@ export function ClassSessionDetailModal({
 
         {/* Floor Meta Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-          <div className="rounded-xl bg-slate-50 dark:bg-muted/30 p-2.5 border border-slate-200/70 dark:border-border">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+          <div className="rounded-xl bg-muted/30 p-2.5 border border-border/70">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase block">
               Slot Time
             </span>
-            <span className="font-bold text-slate-900 dark:text-foreground truncate block">
+            <span className="font-bold text-foreground truncate block">
               {session.timing || `${session.startTime} - ${session.endTime}`}
             </span>
           </div>
 
-          <div className="rounded-xl bg-slate-50 dark:bg-muted/30 p-2.5 border border-slate-200/70 dark:border-border">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+          <div className="rounded-xl bg-muted/30 p-2.5 border border-border/70">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase block">
               Floor Coach
             </span>
-            <span className="font-bold text-slate-900 dark:text-foreground truncate block">
+            <span className="font-bold text-foreground truncate block">
               {session.coachName || "Assigned Coach"}
               {session.isSubstituted && (
-                <span className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                <span className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[10px] font-bold text-amber-600 dark:text-amber-400">
                   (Substitute)
                 </span>
               )}
@@ -111,20 +111,20 @@ export function ClassSessionDetailModal({
             )}
           </div>
 
-          <div className="rounded-xl bg-slate-50 dark:bg-muted/30 p-2.5 border border-slate-200/70 dark:border-border">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+          <div className="rounded-xl bg-muted/30 p-2.5 border border-border/70">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase block">
               Studio
             </span>
-            <span className="font-bold text-slate-900 dark:text-foreground truncate block">
+            <span className="font-bold text-foreground truncate block">
               {session.roomName || session.room || "Studio 1"}
             </span>
           </div>
 
-          <div className="rounded-xl bg-slate-50 dark:bg-muted/30 p-2.5 border border-slate-200/70 dark:border-border">
-            <span className="text-[10px] text-slate-400 font-semibold uppercase block">
+          <div className="rounded-xl bg-muted/30 p-2.5 border border-border/70">
+            <span className="text-[10px] text-muted-foreground font-semibold uppercase block">
               Attendees
             </span>
-            <span className="font-bold text-blue-700 dark:text-primary truncate block">
+            <span className="font-bold text-primary truncate block">
               {session.attendeesCount ?? 0} Pax
             </span>
           </div>
@@ -138,7 +138,7 @@ export function ClassSessionDetailModal({
               <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
               Beginner Workouts
             </span>
-            <p className="text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal">
+            <p className="text-xs text-foreground/90 leading-relaxed font-normal">
               {hasBeginner
                 ? session.beginnerWorkouts
                 : "No beginner-specific routine prescribed."}
@@ -151,7 +151,7 @@ export function ClassSessionDetailModal({
               <span className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400" />
               Intermediate Workouts
             </span>
-            <p className="text-xs text-foreground/90 dark:text-slate-200 leading-relaxed font-normal">
+            <p className="text-xs text-foreground/90 leading-relaxed font-normal">
               {hasIntermediate
                 ? session.intermediateWorkouts
                 : "No intermediate routine prescribed."}
@@ -160,7 +160,7 @@ export function ClassSessionDetailModal({
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-slate-100 dark:border-border pt-3.5 flex items-center justify-between">
+        <div className="border-t border-border pt-3.5 flex items-center justify-between">
           {isAdmin() && onOpenSwap && session.status !== "COMPLETED" ? (
             <button
               type="button"
@@ -180,7 +180,7 @@ export function ClassSessionDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted cursor-pointer transition-colors"
+            className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
           >
             Close
           </button>

@@ -5,6 +5,7 @@ import {
   Trash2,
   Edit3,
 } from "lucide-react";
+import { IdBadge, Badge } from "@/components/ui";
 
 export function MembershipPlanTableRow({
   plan,
@@ -23,9 +24,7 @@ export function MembershipPlanTableRow({
     >
       {/* Plan ID Badge */}
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 first:rounded-l-2xl first:border-l first:border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors">
-        <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-muted/70 text-foreground/85 font-mono text-xs font-semibold tracking-tight shadow-2xs">
-          #{plan.id}
-        </span>
+        <IdBadge id={plan.id} prefix="#" />
       </td>
 
       {/* Plan Name */}
@@ -72,9 +71,9 @@ export function MembershipPlanTableRow({
       </td>
 
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-500 border border-blue-500/20">
+        <Badge variant="sky" size="sm">
           {enrolled} Athletes
-        </span>
+        </Badge>
       </td>
 
       <td className="bg-card py-3.5 px-4 sm:px-5 align-middle border-y border-border/50 shadow-xs group-hover:bg-muted/40 transition-colors text-center">

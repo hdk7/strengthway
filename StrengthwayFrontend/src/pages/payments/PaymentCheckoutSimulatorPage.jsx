@@ -12,18 +12,24 @@ import {
   Sparkles,
   Lock,
   Building,
+  Tag,
+  Percent,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getEnrollmentById, verifyOnlinePayment } from "@/lib/enrollmentsService";
+import { getDiscountById, verifyDiscountPayment } from "@/lib/memberDiscountsService";
+import { formatINR } from "@/lib/formatters";
 
 export default function PaymentCheckoutSimulatorPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const enrollmentId = searchParams.get("enrollmentId");
+  const discountId = searchParams.get("discountId");
   const orderId = searchParams.get("orderId");
 
   const [enrollment, setEnrollment] = useState(null);
+  const [discount, setDiscount] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -32,50 +38,71 @@ export default function PaymentCheckoutSimulatorPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [verificationResult, setVerificationResult] = useState(null);
 
+  const isDiscountCheckout = Boolean(discountId);
+
   useEffect(() => {
-    if (!enrollmentId) {
-      setError("No enrollment reference specified.");
+    if (!enrollmentId && !discountId) {
+      setError("No enrollment or discount reference specified.");
       setIsLoading(false);
       return;
     }
 
-    getEnrollmentById(enrollmentId)
-      .then((data) => {
-        if (!data) {
-          setError(`Enrollment reference "${enrollmentId}" was not found.`);
-        } else {
-          setEnrollment(data);
-          if (data.status === "Converted" || data.invoice?.status === "Paid") {
-            setPaymentSuccess(true);
+    if (discountId) {
+      // Load discount checkout
+      getDiscountById(discountId)
+        .then((data) => {
+          if (!data) {
+            setError(`Discount offer reference "${discountId}" was not found.`);
+          } else {
+            setDiscount(data);
+            if (data.status === "Redeemed") {
+              setPaymentSuccess(true);
+            }
           }
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load enrollment for payment:", err);
-        setError(err.message || "Failed to load checkout details.");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [enrollmentId]);
+        })
+        .catch((err) => {
+          console.error("Failed to load discount checkout:", err);
+          setError(err.message || "Failed to load discount checkout details.");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      // Load enrollment checkout
+      getEnrollmentById(enrollmentId)
+        .then((data) => {
+          if (!data) {
+            setError(`Enrollment reference "${enrollmentId}" was not found.`);
+          } else {
+            setEnrollment(data);
+            if (data.status === "Converted" || data.invoice?.status === "Paid") {
+              setPaymentSuccess(true);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load enrollment for payment:", err);
+          setError(err.message || "Failed to load checkout details.");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
+  }, [enrollmentId, discountId]);
 
   const handlePay = async (simulateFailure = false) => {
-    if (!enrollment) return;
     setIsProcessing(true);
 
     try {
-      if (simulateFailure) {
-        // Test failure branch
-        await verifyOnlinePayment(enrollment.id, {
-          razorpay_order_id: orderId || enrollment.invoice?.gatewayOrderId,
-          razorpay_payment_id: "pay_failed_test",
-          razorpay_signature: "invalid_sig",
-          mockPayment: false,
-        });
-      } else {
+      if (isDiscountCheckout) {
+        if (!discount) return;
+        if (simulateFailure) {
+          throw new Error("Simulated payment transaction failure branch");
+        }
+
         const mockPaymentId = `pay_sim_${Date.now()}`;
-        const result = await verifyOnlinePayment(enrollment.id, {
-          razorpay_order_id: orderId || enrollment.invoice?.gatewayOrderId,
+        const result = await verifyDiscountPayment(discount.id, {
+          razorpay_order_id: orderId || discount.appliedToInvoice?.gatewayOrderId,
           razorpay_payment_id: mockPaymentId,
           razorpay_signature: "simulated_success",
           mockPayment: true,
@@ -83,13 +110,37 @@ export default function PaymentCheckoutSimulatorPage() {
 
         setVerificationResult(result);
         setPaymentSuccess(true);
-        toast.success("Payment verified! Membership activated successfully.", {
+        toast.success("Payment verified! Member discount redeemed and plan renewed successfully.", {
           icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
         });
+      } else {
+        if (!enrollment) return;
+        if (simulateFailure) {
+          await verifyOnlinePayment(enrollment.id, {
+            razorpay_order_id: orderId || enrollment.invoice?.gatewayOrderId,
+            razorpay_payment_id: "pay_failed_test",
+            razorpay_signature: "invalid_sig",
+            mockPayment: false,
+          });
+        } else {
+          const mockPaymentId = `pay_sim_${Date.now()}`;
+          const result = await verifyOnlinePayment(enrollment.id, {
+            razorpay_order_id: orderId || enrollment.invoice?.gatewayOrderId,
+            razorpay_payment_id: mockPaymentId,
+            razorpay_signature: "simulated_success",
+            mockPayment: true,
+          });
+
+          setVerificationResult(result);
+          setPaymentSuccess(true);
+          toast.success("Payment verified! Membership activated successfully.", {
+            icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
+          });
+        }
       }
     } catch (err) {
       toast.error(err.message || "Payment verification failed.");
-      if (simulateFailure) {
+      if (simulateFailure && enrollment) {
         setEnrollment((prev) => ({
           ...prev,
           status: "Payment Failed",
@@ -112,7 +163,7 @@ export default function PaymentCheckoutSimulatorPage() {
     );
   }
 
-  if (error || !enrollment) {
+  if (error || (!enrollment && !discount)) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
         <div className="max-w-md w-full p-6 rounded-3xl border border-rose-500/30 bg-slate-900 shadow-2xl text-center space-y-4">
@@ -124,7 +175,7 @@ export default function PaymentCheckoutSimulatorPage() {
           <button
             type="button"
             onClick={() => navigate("/admin/payments/members")}
-            className="px-5 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition-colors"
+            className="px-5 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition-colors cursor-pointer"
           >
             Back to Dashboard
           </button>
@@ -133,10 +184,25 @@ export default function PaymentCheckoutSimulatorPage() {
     );
   }
 
-  const plan = enrollment.membershipPlan || {};
-  const pricing = enrollment.pricing || {};
-  const invoice = enrollment.invoice || {};
-  const personal = enrollment.personalDetails || {};
+  // Extract relevant details depending on checkout type
+  const customerName = isDiscountCheckout
+    ? discount?.memberName
+    : enrollment?.personalDetails?.name;
+  const planName = isDiscountCheckout
+    ? discount?.planName
+    : enrollment?.membershipPlan?.name;
+  const standardPrice = isDiscountCheckout
+    ? Number(discount?.standardPrice || 0)
+    : Number(enrollment?.pricing?.standardPrice || 0);
+  const discountAmount = isDiscountCheckout
+    ? Number(discount?.discountAmount || 0)
+    : Number(enrollment?.pricing?.discountAmount || 0);
+  const finalPayable = isDiscountCheckout
+    ? Number(discount?.finalPayableAmount || 0)
+    : Number(enrollment?.pricing?.finalAmount || 0);
+  const refCode = isDiscountCheckout
+    ? discount?.id
+    : enrollment?.invoice?.invoiceNumber || enrollment?.id;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6">
@@ -150,7 +216,11 @@ export default function PaymentCheckoutSimulatorPage() {
           <span>STRENGTHWAY</span>
           <span className="text-emerald-400">GYM</span>
         </h1>
-        <p className="text-xs text-slate-400 mt-1">Official Member Enrollment & Subscription Checkout</p>
+        <p className="text-xs text-slate-400 mt-1">
+          {isDiscountCheckout
+            ? "Exclusive Member Offer Renewal Checkout"
+            : "Official Member Enrollment & Subscription Checkout"}
+        </p>
       </div>
 
       {/* Main Checkout Card */}
@@ -167,35 +237,34 @@ export default function PaymentCheckoutSimulatorPage() {
                 Payment Successfully Verified
               </span>
               <h2 className="text-2xl font-black text-white mt-1">
-                Welcome to Strengthway, {personal.firstName}!
+                Thank you, {customerName}!
               </h2>
               <p className="text-xs text-slate-400 mt-2 max-w-xs mx-auto">
-                Your membership for the <strong className="text-slate-200">{plan.name}</strong> is now officially activated.
+                Your membership renewal for <strong className="text-slate-200">{planName}</strong> is
+                now officially activated with your applied discount.
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs space-y-2 text-left">
               <div className="flex justify-between">
-                <span className="text-slate-400">Receipt Ref:</span>
-                <span className="font-mono font-bold text-white">
-                  {verificationResult?.receiptNo || "TSW-REC-2026-VERIFIED"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Invoice Number:</span>
-                <span className="font-mono text-slate-300">{invoice.invoiceNumber}</span>
+                <span className="text-slate-400">Reference:</span>
+                <span className="font-mono font-bold text-white">{refCode}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Amount Paid:</span>
                 <span className="font-bold text-emerald-400">
-                  ₹{pricing.finalAmount?.toLocaleString("en-IN")}
+                  {formatINR(finalPayable)}
                 </span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-400">
+                  <span>Discount Saved:</span>
+                  <span className="font-semibold">- {formatINR(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
-                <span className="text-slate-400">Membership Valid Until:</span>
-                <span className="font-medium text-slate-300">
-                  {plan.formattedEnd || new Date(plan.endDate).toLocaleDateString()}
-                </span>
+                <span className="text-slate-400">Status:</span>
+                <span className="font-semibold text-emerald-400">Active & Verified</span>
               </div>
             </div>
 
@@ -205,51 +274,72 @@ export default function PaymentCheckoutSimulatorPage() {
                 onClick={() => navigate("/admin/payments/members")}
                 className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg transition-colors cursor-pointer"
               >
-                Go to Admin Payments Ledger
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/admin/trainers-members/members")}
-                className="w-full py-2.5 rounded-xl border border-slate-800 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
-              >
-                View Active Members Directory
+                Go to Payments Ledger
               </button>
             </div>
           </div>
         ) : (
           /* Checkout Payment Form */
           <div className="p-6 sm:p-8 space-y-6">
-            {/* Invoice & Plan Header */}
+            {/* Discount Banner if applicable */}
+            {isDiscountCheckout && (
+              <div className="p-3.5 rounded-2xl border border-primary/30 bg-primary/10 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Tag className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <span className="font-bold text-xs text-white block">
+                      Member Exclusive Offer Applied!
+                    </span>
+                    <span className="text-[11px] text-slate-300">
+                      {discount?.discountType === "percentage"
+                        ? `${discount?.discountValue}% OFF`
+                        : `₹${discount?.discountValue} Flat Concession`}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-xs font-mono font-bold text-primary bg-primary/20 px-2 py-0.5 rounded-md">
+                  {discount?.id}
+                </span>
+              </div>
+            )}
+
+            {/* Plan & Pricing Box */}
             <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Candidate Dossier</span>
-                <span className="font-mono text-emerald-400 font-bold">{invoice.invoiceNumber}</span>
+                <span className="text-slate-400">Account Dossier</span>
+                <span className="font-mono text-emerald-400 font-bold">{refCode}</span>
               </div>
 
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-white">{personal.name}</h3>
-                  <p className="text-xs text-slate-400">{plan.name} • {plan.durationMonths} Months</p>
+                  <h3 className="text-base font-bold text-white">{customerName}</h3>
+                  <p className="text-xs text-slate-400">{planName}</p>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">Payable Amount</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
+                    Payable Amount
+                  </span>
                   <span className="text-xl font-extrabold text-emerald-400">
-                    ₹{pricing.finalAmount?.toLocaleString("en-IN")}
+                    {formatINR(finalPayable)}
                   </span>
                 </div>
               </div>
 
-              {pricing.discountAmount > 0 && (
+              {discountAmount > 0 && (
                 <div className="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-emerald-400">
-                  <span>Concession Applied:</span>
-                  <span>-₹{pricing.discountAmount?.toLocaleString("en-IN")}</span>
+                  <span className="flex items-center gap-1">
+                    <Percent size={11} /> Discount Deduction:
+                  </span>
+                  <span>- {formatINR(discountAmount)}</span>
                 </div>
               )}
             </div>
 
             {/* Payment Method Selector */}
             <div className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-300">Select Payment Method</label>
+              <label className="block text-xs font-semibold text-slate-300">
+                Select Payment Method
+              </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
                   { id: "UPI", label: "UPI / QR", icon: QrCode },
@@ -321,7 +411,7 @@ export default function PaymentCheckoutSimulatorPage() {
                 ) : (
                   <>
                     <Lock size={15} />
-                    <span>Pay ₹{pricing.finalAmount?.toLocaleString("en-IN")} Securely</span>
+                    <span>Pay {formatINR(finalPayable)} Securely</span>
                   </>
                 )}
               </button>

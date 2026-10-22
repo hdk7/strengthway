@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
       awaitWriteFinish: { stabilityThreshold: 1000, pollInterval: 100 },
     },
   },
-  plugins: [tailwindcss(), viteReact()],
+  plugins: [viteReact(), tailwindcss()],
   envPrefix: "VITE_",
   define:
     mode === "development" ? { "process.env.NODE_ENV": JSON.stringify("development") } : undefined,

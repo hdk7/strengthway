@@ -108,25 +108,25 @@ export function ScheduleHistoryDrawer({ isOpen, onClose, batch }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-110 flex items-center justify-end bg-slate-900/35 dark:bg-black/65 backdrop-blur-[2px] animate-in fade-in duration-150"
+      className="fixed inset-0 z-110 flex items-center justify-end bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="h-full w-full max-w-lg bg-white dark:bg-card border-l border-slate-200/90 dark:border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200"
+        className="h-full w-full max-w-lg bg-card border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-border px-6 py-4.5 bg-white dark:bg-card shrink-0">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4.5 bg-card shrink-0">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-primary/10 text-indigo-700 dark:text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <History size={20} />
             </span>
             <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-foreground">
+              <h2 className="text-base font-bold text-foreground">
                 Schedule Change History
               </h2>
-              <p className="text-xs text-slate-500 dark:text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Audit trail of all curriculum changes for <strong>{batch.name}</strong>
               </p>
             </div>
@@ -137,7 +137,7 @@ export function ScheduleHistoryDrawer({ isOpen, onClose, batch }) {
               type="button"
               onClick={loadHistory}
               disabled={loading}
-              className="rounded-lg p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
+              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
               title="Refresh Audit Log"
             >
               <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
@@ -145,7 +145,7 @@ export function ScheduleHistoryDrawer({ isOpen, onClose, batch }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
+              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
             >
               <X size={18} />
             </button>
@@ -153,10 +153,10 @@ export function ScheduleHistoryDrawer({ isOpen, onClose, batch }) {
         </div>
 
         {/* Filter Bar */}
-        <div className="px-6 py-2.5 border-b border-slate-100 dark:border-border bg-slate-50/60 dark:bg-muted/30 flex items-center justify-between gap-2 shrink-0">
+        <div className="px-6 py-2.5 border-b border-border bg-muted/30 flex items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-1.5 text-xs">
-            <Filter size={13} className="text-slate-400" />
-            <span className="text-slate-500 font-semibold">Filter:</span>
+            <Filter size={13} className="text-muted-foreground" />
+            <span className="text-muted-foreground font-semibold">Filter:</span>
             {["ALL", "SWAP_DATES", "ASSIGN_CLASSES", "REORDER"].map((f) => (
               <button
                 key={f}
@@ -282,11 +282,11 @@ export function ScheduleHistoryDrawer({ isOpen, onClose, batch }) {
         </div>
 
         {/* Drawer Footer */}
-        <div className="border-t border-slate-100 dark:border-border p-4 px-6 bg-white dark:bg-card shrink-0 flex items-center justify-end">
+        <div className="border-t border-border p-4 px-6 bg-card shrink-0 flex items-center justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 dark:border-border bg-white dark:bg-card px-4 py-2 text-xs font-semibold text-slate-700 dark:text-foreground hover:bg-slate-50 dark:hover:bg-muted cursor-pointer transition-colors"
+            className="rounded-xl border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-muted cursor-pointer transition-colors"
           >
             Close History
           </button>

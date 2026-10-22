@@ -25,9 +25,34 @@ export function BatchFormModal({
   editingBatch,
   form,
   setForm,
+  errors = {},
+  handleFieldChange,
+  handleFieldBlur,
   handleSaveBatch,
   isSubmitting,
 }) {
+  const onNameChange = (e) => {
+    const val = e.target.value;
+    if (handleFieldChange) handleFieldChange("name", val);
+    else setForm((prev) => ({ ...prev, name: val }));
+  };
+
+  const onStartTimeChange = (val) => {
+    if (handleFieldChange) handleFieldChange("startTime", val);
+    else setForm((prev) => ({ ...prev, startTime: val }));
+  };
+
+  const onEndTimeChange = (val) => {
+    if (handleFieldChange) handleFieldChange("endTime", val);
+    else setForm((prev) => ({ ...prev, endTime: val }));
+  };
+
+  const onCapacityChange = (e) => {
+    const val = e.target.value;
+    if (handleFieldChange) handleFieldChange("capacity", val);
+    else setForm((prev) => ({ ...prev, capacity: val }));
+  };
+
   return (
     <FormModal isOpen={isOpen} onClose={onClose} size="md">
       <FormModalHeader
@@ -49,10 +74,14 @@ export function BatchFormModal({
           />
 
           <InputField
+            id="batch-name"
+            name="name"
             label="Batch Name"
             placeholder="e.g. BATCH 7"
             value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            onChange={onNameChange}
+            onBlur={() => handleFieldBlur && handleFieldBlur("name")}
+            error={errors.name}
             size="sm"
             required
           />
@@ -61,14 +90,18 @@ export function BatchFormModal({
             <TimePickerField
               label="Start Time"
               value={form.startTime}
-              onChange={(e) => setForm({ ...form, startTime: e.target.value })}
+              onChange={onStartTimeChange}
+              onBlur={() => handleFieldBlur && handleFieldBlur("startTime")}
+              error={errors.startTime}
               size="sm"
               required
             />
             <TimePickerField
               label="End Time"
               value={form.endTime}
-              onChange={(e) => setForm({ ...form, endTime: e.target.value })}
+              onChange={onEndTimeChange}
+              onBlur={() => handleFieldBlur && handleFieldBlur("endTime")}
+              error={errors.endTime}
               size="sm"
               required
             />
@@ -105,6 +138,9 @@ export function BatchFormModal({
                     customDays: [],
                   });
                 }
+                if (errors.daysPattern || errors.customDays) {
+                  if (handleFieldChange) handleFieldChange("daysPattern", val);
+                }
               }}
               size="sm"
               options={[
@@ -115,12 +151,17 @@ export function BatchFormModal({
             />
 
             <InputField
-              type="number"
+              id="batch-capacity"
+              name="capacity"
+              type="text"
+              inputMode="numeric"
               label="Capacity Limit (Pax)"
-              value={form.capacity}
-              onChange={(e) => setForm({ ...form, capacity: e.target.value })}
+              value={form.capacity ?? form.maxPax ?? ""}
+              onChange={onCapacityChange}
+              onBlur={() => handleFieldBlur && handleFieldBlur("capacity")}
+              error={errors.capacity || errors.maxPax}
+              restriction="integer"
               size="sm"
-              min={1}
               required
             />
           </div>
@@ -130,6 +171,9 @@ export function BatchFormModal({
               <label className="text-xs font-semibold text-slate-800 dark:text-foreground block">
                 Select Active Training Days <span className="text-rose-500">*</span>
               </label>
+              {errors.customDays && (
+                <p className="text-xs font-medium text-destructive">{errors.customDays}</p>
+              )}
               <div className="flex flex-wrap gap-1.5 pt-1">
                 {ALL_DAYS.map((d) => {
                   const isChecked = form.customDays?.includes(d);

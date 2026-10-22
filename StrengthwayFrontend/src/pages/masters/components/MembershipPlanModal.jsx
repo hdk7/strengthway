@@ -27,6 +27,9 @@ export function MembershipPlanModal({
   editingPlan,
   form,
   setForm,
+  errors = {},
+  handleFieldChange,
+  handleFieldBlur,
   featureInput,
   setFeatureInput,
   handleAddFeature,
@@ -34,6 +37,24 @@ export function MembershipPlanModal({
   handleSave,
   isSubmitting,
 }) {
+  const onNameChange = (e) => {
+    const val = e.target.value;
+    if (handleFieldChange) handleFieldChange("name", val);
+    else setForm((prev) => ({ ...prev, name: val }));
+  };
+
+  const onPriceChange = (e) => {
+    const val = e.target.value;
+    if (handleFieldChange) handleFieldChange("price", val);
+    else setForm((prev) => ({ ...prev, price: val }));
+  };
+
+  const onDurationChange = (e) => {
+    const val = e.target.value;
+    if (handleFieldChange) handleFieldChange("durationMonths", val);
+    else setForm((prev) => ({ ...prev, durationMonths: val }));
+  };
+
   return (
     <FormModal isOpen={isOpen} onClose={onClose} size="xl">
       <FormModalHeader
@@ -65,7 +86,9 @@ export function MembershipPlanModal({
                 required
                 placeholder="e.g. Quarterly Pro, Annual Athlete"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={onNameChange}
+                onBlur={() => handleFieldBlur && handleFieldBlur("name")}
+                error={errors.name}
                 size="sm"
                 className="sm:col-span-2"
               />
@@ -105,38 +128,32 @@ export function MembershipPlanModal({
               <InputField
                 id="plan-price"
                 name="price"
-                type="number"
-                min="0"
+                type="text"
+                inputMode="decimal"
                 label="Price (₹ INR)"
                 required
                 placeholder="e.g. 7000"
                 value={form.price}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setForm({
-                    ...form,
-                    price: val === "" ? "" : Number(val),
-                  });
-                }}
+                onChange={onPriceChange}
+                onBlur={() => handleFieldBlur && handleFieldBlur("price")}
+                error={errors.price}
+                restriction="decimal"
                 size="sm"
               />
 
               <InputField
                 id="plan-duration"
                 name="durationMonths"
-                type="number"
-                min="1"
+                type="text"
+                inputMode="numeric"
                 label="Duration (Months)"
                 required
                 placeholder="e.g. 1, 3, 6, 12"
                 value={form.durationMonths}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setForm({
-                    ...form,
-                    durationMonths: val === "" ? "" : Number(val),
-                  });
-                }}
+                onChange={onDurationChange}
+                onBlur={() => handleFieldBlur && handleFieldBlur("durationMonths")}
+                error={errors.durationMonths}
+                restriction="integer"
                 size="sm"
               />
 

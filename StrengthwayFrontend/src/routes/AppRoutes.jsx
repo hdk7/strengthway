@@ -26,6 +26,7 @@ import BatchDetailPage from "@/pages/batches/BatchDetailPage";
 import MembersAttendancePage from "@/pages/attendance/MembersAttendancePage";
 import TrainersAttendancePage from "@/pages/attendance/TrainersAttendancePage";
 import MembersPaymentsPage from "@/pages/payments/MembersPaymentsPage";
+import MemberDiscountsPage from "@/pages/payments/discounts/MemberDiscountsPage";
 import TrainersPaymentsPage from "@/pages/payments/TrainersPaymentsPage";
 import ReportsPage from "@/pages/reports/ReportsPage";
 import MembershipPlanMasterPage from "@/pages/masters/MembershipPlanMasterPage";
@@ -92,6 +93,7 @@ export function AppRoutes() {
         <Route path="batches/:id" element={<BatchDetailPage />} />
 
         <Route path="schedule/master-class" element={<MasterClassSchedulePage />} />
+        <Route path="schedule/master-schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
         <Route path="schedule/classes" element={<Navigate to="/admin/schedule/master-class" replace />} />
         <Route path="schedule/class" element={<Navigate to="/admin/schedule/master-class" replace />} />
         <Route path="schedule/class-schedule" element={<Navigate to="/admin/schedule/master-class" replace />} />
@@ -103,6 +105,7 @@ export function AppRoutes() {
 
         {/* Payments */}
         <Route path="payments/members" element={<MembersPaymentsPage />} />
+        <Route path="payments/discounts" element={<MemberDiscountsPage />} />
         <Route path="payments/trainers" element={<TrainersPaymentsPage />} />
 
         {/* Reports */}

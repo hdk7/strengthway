@@ -111,6 +111,7 @@ app.get("/api/v1", (req, res) => {
 // ── Feature module routes ─────────────────────────────────────────────────────
 const authRoutes         = require("./modules/auth/auth.routes");
 const memberRoutes       = require("./modules/members/member.routes");
+const memberImportRoutes = require("./modules/member-import/memberImport.routes");
 const trainerRoutes      = require("./modules/trainers/trainer.routes");
 const planRoutes         = require("./modules/membership-plans/plan.routes");
 const batchRoutes        = require("./modules/batches/batch.routes");
@@ -129,14 +130,19 @@ const portfolioRoutes    = require("./modules/portfolio/portfolio.routes");
 const notificationRoutes = require("./modules/notifications/notification.routes");
 const enrollmentRoutes   = require("./modules/enrollments/enrollment.routes");
 const whatsappRoutes     = require("./modules/whatsapp/whatsapp.routes");
+const memberDiscountRoutes = require("./modules/discounts/memberDiscount.routes");
+const dashboardRoutes    = require("./modules/dashboard/dashboard.routes");
 
 app.use("/api/v1/auth",           authRoutes);
+app.use("/api/v1/members/import", memberImportRoutes);
+app.use("/api/v1/member-import",  memberImportRoutes);
 app.use("/api/v1/members",        memberRoutes);
 app.use("/api/v1/trainers",       trainerRoutes);
 app.use("/api/v1/plans",          planRoutes);
 app.use("/api/v1/batches",        batchRoutes);
 app.use("/api/v1/inquiries",      inquiryRoutes);
 app.use("/api/v1/enrollments",    enrollmentRoutes);
+app.use("/api/v1/member-discounts", memberDiscountRoutes);
 app.use("/api/v1/whatsapp",       whatsappRoutes);
 app.use("/api/v1/schedules",      scheduleRoutes);
 app.use("/api/v1/classes",        classRoutes);
@@ -150,6 +156,7 @@ app.use("/api/v1/uploads",        uploadRoutes);
 app.use("/api/v1/permissions",    permissionRoutes);
 app.use("/api/v1/portfolio",      portfolioRoutes);
 app.use("/api/v1/notifications",  notificationRoutes);
+app.use("/api/v1/dashboard",      dashboardRoutes);
 
 
 

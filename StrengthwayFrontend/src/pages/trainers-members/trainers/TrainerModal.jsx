@@ -360,6 +360,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 onBlur={handleBlur}
                 placeholder="e.g. +91 98200 11223"
                 error={errors.phone}
+                restriction="phone"
                 size="sm"
               />
 
@@ -459,6 +460,7 @@ export function TrainerModal({ isOpen, onClose, onSuccess, trainerToEdit = null 
                 onBlur={handleBlur}
                 placeholder="e.g. 400001"
                 error={errors.pincode}
+                restriction="pincode"
                 size="sm"
               />
             </div>

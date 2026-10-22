@@ -21,6 +21,7 @@ import { InquiryProfileModal } from "@/pages/inquiries/InquiryProfileModal";
 import { LogInquiryModal } from "@/pages/inquiries/LogInquiryModal";
 import ContactLeadModal from "@/pages/inquiries/ContactLeadModal";
 import { DataTable } from "@/components/table";
+import SearchInput from "@/components/ui/SearchInput";
 import InquiryStatsCards from "./InquiryStatsCards";
 import InquiryTableRow from "./InquiryTableRow";
 
@@ -307,17 +308,12 @@ export default function InquiriesPage() {
           ))}
         </div>
 
-        <div className="relative w-full sm:w-72">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          />
-          <input
-            type="text"
+        <div className="w-full sm:w-72">
+          <SearchInput
             placeholder="Search inquiries..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full min-h-10 rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground focus:outline-none"
+            onClear={() => setSearchQuery("")}
           />
         </div>
       </div>

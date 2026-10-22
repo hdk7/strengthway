@@ -44,7 +44,7 @@ async function bootstrap() {
   }, 15 * 60 * 1000);
 
   // 4. Start listening
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, "0.0.0.0", () => {
     console.log("─────────────────────────────────────────────");
     console.log(`  Strengthway API`);
     console.log(`  ENV  : ${NODE_ENV}`);

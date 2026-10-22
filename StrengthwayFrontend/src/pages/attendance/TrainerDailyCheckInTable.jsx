@@ -1,7 +1,7 @@
 /* eslint-disable max-lines */
 import { Link } from "react-router-dom";
+import { SearchInput } from "@/components/ui";
 import {
-  Search,
   CheckCircle2,
   Users,
   LogIn,
@@ -11,6 +11,7 @@ import {
   XCircle,
   Layers,
   CalendarOff,
+  CalendarCheck,
   Clock,
   Timer,
   AlertTriangle,
@@ -112,19 +113,12 @@ export function TrainerDailyCheckInTable({
       {/* Action Toolbar & Search */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-2.5 sm:p-3 rounded-2xl border border-border/80 bg-card shadow-xs shrink-0">
         <div className="flex items-center gap-2 flex-1 max-w-sm">
-          <div className="relative w-full">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
-            />
-            <input
-              type="text"
-              placeholder="Search faculty by name, ID, phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background pl-8 pr-3 py-1.5 text-xs font-medium text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search faculty by name, ID, phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full"
+          />
         </div>
 
         {/* Filters: All, Present, Absent, On Leave */}

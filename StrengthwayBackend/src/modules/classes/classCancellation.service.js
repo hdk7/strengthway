@@ -54,17 +54,18 @@ class ClassCancellationService {
       if (!startDate) {
         throw new BadRequestError("startDate is required for weekly cancellation.");
       }
-      const d = new Date(startDate);
+      const parts = String(startDate).split("-").map(Number);
+      const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
       if (isNaN(d.getTime())) {
         throw new BadRequestError(`Invalid startDate: "${startDate}".`);
       }
-      // Calculate Monday of the week and Sunday of the week
-      const day = d.getDay();
-      const diffToMonday = day === 0 ? -6 : 1 - day; // Monday is day 1
+      // Calculate Monday of the week and Sunday of the week (Monday is day 1)
+      const day = d.getUTCDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
       const monday = new Date(d);
-      monday.setDate(d.getDate() + diffToMonday);
+      monday.setUTCDate(d.getUTCDate() + diffToMonday);
       const sunday = new Date(monday);
-      sunday.setDate(monday.getDate() + 6);
+      sunday.setUTCDate(monday.getUTCDate() + 6);
 
       resolvedStartDate = monday.toISOString().slice(0, 10);
       resolvedEndDate = sunday.toISOString().slice(0, 10);
@@ -111,13 +112,26 @@ class ClassCancellationService {
     }
 
     // Protection: Disallow cancelling already completed sessions or sessions with attendance recorded
-    const completedOrAttended = targetSessions.filter(
-      (s) => s.status === SESSION_STATUS.COMPLETED || (s.attendedCount && s.attendedCount > 0)
-    );
-    if (completedOrAttended.length > 0) {
-      const dates = completedOrAttended.map((s) => s.sessionDate).join(", ");
+    if (cancellationType === "SPECIFIC_CLASSES") {
+      const completedOrAttended = targetSessions.filter(
+        (s) => s.status === SESSION_STATUS.COMPLETED || (s.attendedCount && s.attendedCount > 0)
+      );
+      if (completedOrAttended.length > 0) {
+        const dates = completedOrAttended.map((s) => s.sessionDate).join(", ");
+        throw new BadRequestError(
+          `Cannot cancel past or completed classes with existing attendance records: [${dates}].`
+        );
+      }
+    } else {
+      // For WEEKLY or DATE_RANGE, automatically exclude already completed or attended sessions
+      targetSessions = targetSessions.filter(
+        (s) => s.status !== SESSION_STATUS.COMPLETED && (!s.attendedCount || s.attendedCount === 0)
+      );
+    }
+
+    if (targetSessions.length === 0) {
       throw new BadRequestError(
-        `Cannot cancel past or completed classes with existing attendance records: [${dates}].`
+        `No upcoming/uncompleted sessions found in batch "${batch.name}" for the specified cancellation window (${resolvedStartDate} to ${resolvedEndDate}). All sessions in this period are already completed or cancelled.`
       );
     }
 
@@ -127,20 +141,17 @@ class ClassCancellationService {
 
     // Rescheduling start date determination:
     let nextPeriodStartStr;
-    if (cancellationType === "WEEKLY") {
-      // Immediately following week (Monday after resolvedEndDate)
-      const endD = new Date(resolvedEndDate);
-      endD.setDate(endD.getDate() + 1);
-      nextPeriodStartStr = endD.toISOString().slice(0, 10);
-    } else if (cancellationType === "DATE_RANGE") {
-      // Immediately following day after the period ends (e.g. 21st if cancelled 11th-20th)
-      const endD = new Date(resolvedEndDate);
-      endD.setDate(endD.getDate() + 1);
+    if (cancellationType === "WEEKLY" || cancellationType === "DATE_RANGE") {
+      // Immediately following day after the period ends (e.g. 21st if cancelled 11th-20th, or next Monday if weekly)
+      const parts = resolvedEndDate.split("-").map(Number);
+      const endD = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      endD.setUTCDate(endD.getUTCDate() + 1);
       nextPeriodStartStr = endD.toISOString().slice(0, 10);
     } else {
       // Next day after last cancelled class
-      const endD = new Date(lastCancelledDate);
-      endD.setDate(endD.getDate() + 1);
+      const parts = lastCancelledDate.split("-").map(Number);
+      const endD = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+      endD.setUTCDate(endD.getUTCDate() + 1);
       nextPeriodStartStr = endD.toISOString().slice(0, 10);
     }
 

@@ -2,6 +2,7 @@ import {
   adminMemberRegistrationSchema,
   validateFieldWithYup,
 } from "@/lib/validation";
+import { formatINR } from "@/lib/formatters";
 
 export const INITIAL_FORM = {
   fullName: "",
@@ -94,7 +95,7 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
     name: plan.name,
     durationMonths: plan.durationMonths,
     price: Number(paymentForm.amountPaid),
-    formattedPrice: `₹${Number(paymentForm.amountPaid).toLocaleString("en-IN")}`,
+    formattedPrice: formatINR(paymentForm.amountPaid),
     startDate: dates.startDate,
     endDate: dates.endDate,
     formattedStart: dates.formattedStart,
@@ -104,7 +105,7 @@ export function buildRegistrationPayloads({ form, batches, availablePlans, payme
   const paymentDetails = {
     method: paymentForm.paymentMethod || "",
     amount: Number(paymentForm.amountPaid),
-    formattedAmount: `₹${Number(paymentForm.amountPaid).toLocaleString("en-IN")}`,
+    formattedAmount: formatINR(paymentForm.amountPaid),
     transactionId:
       paymentForm.transactionId?.trim() ||
       (paymentForm.paymentMethod ? generateTransactionId(paymentForm.paymentMethod) : "") ||

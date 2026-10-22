@@ -14,7 +14,7 @@ const {
   ValidationError,
 } = require("../../shared/apiError");
 const { MEMBER_STATUS } = require("../../shared/constants");
-const { calculateBmi } = require("../../shared/dateUtils");
+const { calculateBmi, calculateMembershipDates } = require("../../shared/dateUtils");
 const {
   buildPhysicalStats,
   buildEmergencyContact,
@@ -460,9 +460,20 @@ class MemberService {
       notes: `Contact details recorded: ${contactNotes.slice(0, 100)}`,
     };
 
+    let currentContactHistory = Array.isArray(existing.contactHistory) ? [...existing.contactHistory] : [];
+    if (
+      currentContactHistory.length === 0 &&
+      existing.contactDetails &&
+      existing.contactDetails.contactNotes
+    ) {
+      currentContactHistory.push(existing.contactDetails);
+    }
+    const updatedContactHistory = [contactDetails, ...currentContactHistory];
+
     return memberRepository.updateById(id, {
       status: MEMBER_STATUS.CONTACTED,
       contactDetails,
+      contactHistory: updatedContactHistory,
       statusHistory: [...currentHistory, historyEntry],
     });
   }
@@ -504,6 +515,7 @@ class MemberService {
 
   // ─── Membership Plan Renewal with Payment Adjustment Deduction ──────────────
   async renewMembership(id, renewalData = {}) {
+    const now = new Date();
     const member = await memberRepository.findById(id);
     if (!member) throw new NotFoundError(`Member with ID "${id}" not found.`);
 
@@ -569,11 +581,49 @@ class MemberService {
       }
     }
 
-    const finalPayableAmount = Math.max(0, originalAmount - adjustmentAmount);
+    // Check for applicable member discount
+    let discountAmount = 0;
+    let appliedDiscountInfo = null;
+    let discountToApply = null;
+
+    try {
+      const memberDiscountRepository = require("../discounts/memberDiscount.repository");
+      const memberDiscountService = require("../discounts/memberDiscount.service");
+      const { MEMBER_DISCOUNT_STATUS } = require("../../shared/constants");
+
+      if (renewalData.discountId) {
+        discountToApply = await memberDiscountRepository.findById(renewalData.discountId);
+      } else {
+        discountToApply = await memberDiscountRepository.findActiveByMemberIdAndPlan(member.id, plan.id);
+      }
+
+      if (discountToApply) {
+        const isUnexpired = !discountToApply.expiryDate || new Date(discountToApply.expiryDate) > now;
+        const isValidStatus = [
+          MEMBER_DISCOUNT_STATUS.ASSIGNED,
+          MEMBER_DISCOUNT_STATUS.NOTIFIED,
+          MEMBER_DISCOUNT_STATUS.PAYMENT_PENDING,
+        ].includes(discountToApply.status);
+
+        if (isUnexpired && isValidStatus && discountToApply.planId === plan.id) {
+          discountAmount = Number(discountToApply.discountAmount) || 0;
+          appliedDiscountInfo = {
+            discountId: discountToApply.id,
+            campaignId: discountToApply.campaignId,
+            discountType: discountToApply.discountType,
+            discountValue: discountToApply.discountValue,
+            discountAmount,
+          };
+        }
+      }
+    } catch {
+      // Graceful fallback if discounts module is loading
+    }
+
+    const finalPayableAmount = Math.max(0, originalAmount - adjustmentAmount - discountAmount);
     const formattedPrice = `₹${finalPayableAmount.toLocaleString("en-IN")}`;
 
     // Determine start date: if current plan has not expired, chain renewal after current endDate
-    const now = new Date();
     let startDate = now;
     if (member.membershipPlan?.endDate) {
       const currentEnd = new Date(member.membershipPlan.endDate);
@@ -614,17 +664,44 @@ class MemberService {
       invoiceNumber: renewalData.invoiceNumber || "",
       status: "Completed",
       paidAt: now,
-      notes: `Renewed ${plan.name} (${plan.durationMonths} Mo). Original: ₹${originalAmount}, Adjustment deduction: ₹${adjustmentAmount}, Final: ₹${finalPayableAmount}.`,
+      notes: `Renewed ${plan.name} (${plan.durationMonths} Mo). Original: ₹${originalAmount}, Discount: ₹${discountAmount}, Adjustment: ₹${adjustmentAmount}, Final: ₹${finalPayableAmount}.`,
+      appliedDiscount: appliedDiscountInfo,
     };
 
     member.status = MEMBER_STATUS.ACTIVE;
-    await member.save();
+    const updatedMember = await memberRepository.updateById(member.id, {
+      membershipPlan: member.membershipPlan,
+      paymentDetails: member.paymentDetails,
+      membershipAdjustmentCredits: member.membershipAdjustmentCredits,
+      totalAdjustmentCredit: member.totalAdjustmentCredit,
+      status: MEMBER_STATUS.ACTIVE,
+    });
+
+    // Redeem discount if applied
+    if (discountToApply && appliedDiscountInfo) {
+      try {
+        const memberDiscountService = require("../discounts/memberDiscount.service");
+        await memberDiscountService.redeemDiscount({
+          discountId: discountToApply.id,
+          paymentId: renewalData.paymentId || transactionId,
+          transactionId,
+          amountPaid: finalPayableAmount,
+          invoiceNumber: renewalData.invoiceNumber || receiptNo,
+          upiReference: renewalData.upiReference || "",
+          adminUser: renewalData.adminUser || { name: "Admin / System" },
+        });
+      } catch (err) {
+        console.warn(`[MemberService] Discount redemption tracking warning:`, err.message);
+      }
+    }
 
     return {
-      member,
+      member: updatedMember || member,
       paymentBreakdown: {
         originalAmount,
         adjustmentAmount,
+        discountAmount,
+        appliedDiscount: appliedDiscountInfo,
         finalPayableAmount,
         formattedFinalPayable: formattedPrice,
         receiptNo,

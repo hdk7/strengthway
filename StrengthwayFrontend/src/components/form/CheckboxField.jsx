@@ -1,5 +1,6 @@
-import { useId, forwardRef } from "react";
+import { forwardRef } from "react";
 import { FormError } from "./FormField";
+import { useFieldId } from "./formStyles";
 
 const CheckboxField = forwardRef(function CheckboxField(
   {
@@ -16,9 +17,7 @@ const CheckboxField = forwardRef(function CheckboxField(
   },
   ref,
 ) {
-  const generatedId = useId();
-  const id = providedId || (name ? `checkbox-${name}` : generatedId);
-  const errorId = error ? `${id}-error` : undefined;
+  const { id, errorId } = useFieldId(providedId, name, "checkbox", error);
 
   return (
     <div className={`flex flex-col text-left ${className}`}>

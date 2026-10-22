@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { SlidersHorizontal } from "lucide-react";
 import ThemeSelect from "../form/ThemeSelect";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 /**
  * Universal Reusable Table Filter Options Popover Component
@@ -19,19 +20,7 @@ const TableFilterDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  useClickOutside(containerRef, () => setIsOpen(false), isOpen);
 
   const activeSections =
     sections && sections.length > 0

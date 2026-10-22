@@ -21,6 +21,8 @@ import {
   MessageSquare,
   Users,
   UserPlus,
+  Tag,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getMembers } from "@/lib/membersService";
@@ -29,8 +31,11 @@ import {
   generateAndSendPaymentLink,
   resendPaymentLink,
 } from "@/lib/enrollmentsService";
+import { getMyActiveDiscounts } from "@/lib/memberDiscountsService";
 import { DataTable } from "@/components/table";
 import { isMember, isAdmin } from "@/auth/currentUser";
+import { KpiCard, SearchInput } from "@/components/ui";
+import { formatINR } from "@/lib/formatters";
 import EnrollmentDetailModal from "./EnrollmentDetailModal";
 import RecordOfflinePaymentModal from "./RecordOfflinePaymentModal";
 
@@ -71,6 +76,24 @@ export default function MembersPaymentsPage() {
   const [enrollmentStatusFilter, setEnrollmentStatusFilter] = useState("ALL");
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [offlinePaymentEnrollment, setOfflinePaymentEnrollment] = useState(null);
+
+  // Member Exclusive Active Discount Offer (Member Portal View)
+  const [activeMemberDiscount, setActiveMemberDiscount] = useState(null);
+
+  useEffect(() => {
+    if (userIsMember) {
+      getMyActiveDiscounts()
+        .then((res) => {
+          const list = Array.isArray(res?.data) ? res.data : [];
+          if (list.length > 0) {
+            setActiveMemberDiscount(list[0]);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load active member discounts:", err);
+        });
+    }
+  }, [userIsMember]);
 
   const loadMembers = useCallback(async () => {
     setIsLoadingMembers(true);
@@ -335,7 +358,7 @@ export default function MembersPaymentsPage() {
         cell: (p) => (
           <div className="flex flex-col items-center">
             <span className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400">
-              ₹{p.amount.toLocaleString("en-IN")}
+              {formatINR(p.amount)}
             </span>
             <div className="flex items-center gap-1 mt-0.5 flex-wrap justify-center">
               {p.appliedAdjustment > 0 && (
@@ -488,17 +511,16 @@ export default function MembersPaymentsPage() {
           return (
             <div className="text-right">
               <span className="font-mono font-extrabold text-sm text-foreground block">
-                ₹{pricing.finalAmount?.toLocaleString("en-IN")}
+                {formatINR(pricing.finalAmount)}
               </span>
               {pricing.discountAmount > 0 && (
                 <span className="text-[10px] text-emerald-400 font-medium block">
-                  Concession: -₹{pricing.discountAmount?.toLocaleString("en-IN")}
+                  Concession: -{formatINR(pricing.discountAmount)}
                 </span>
               )}
               {pricing.paidAmount > 0 && (
                 <span className="text-[10px] text-muted-foreground block">
-                  Paid: ₹{pricing.paidAmount?.toLocaleString("en-IN")} (Due: ₹
-                  {pricing.balanceAmount?.toLocaleString("en-IN")})
+                  Paid: {formatINR(pricing.paidAmount)} (Due: {formatINR(pricing.balanceAmount)})
                 </span>
               )}
             </div>
@@ -707,6 +729,53 @@ export default function MembersPaymentsPage() {
               </span>
             )}
           </button>
+
+          <button
+            type="button"
+            onClick={() => navigate("/admin/payments/discounts")}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold border-b-2 border-transparent text-muted-foreground hover:text-foreground transition-all cursor-pointer"
+          >
+            <Tag size={14} />
+            <span>Member Discounts</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-primary/20 text-primary font-extrabold border border-primary/30">
+              New
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* ─── Active Member Exclusive Offer Banner (Member View) ─────────────── */}
+      {userIsMember && activeMemberDiscount && (
+        <div className="shrink-0 p-4 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/25 shrink-0">
+              <Tag size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-primary uppercase tracking-wider">
+                  Exclusive Offer Available
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Valid for your immediate next payment
+                </span>
+              </div>
+              <h3 className="text-base font-bold text-foreground mt-0.5">
+                Special {activeMemberDiscount.discountType === "percentage" ? `${activeMemberDiscount.discountValue}% OFF` : `₹${activeMemberDiscount.discountValue} Concession`} on {activeMemberDiscount.planName}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Standard: <span className="line-through">{formatINR(activeMemberDiscount.standardPrice || 0)}</span> • Discount: <span className="text-rose-400 font-semibold">-{formatINR(activeMemberDiscount.discountAmount || 0)}</span> • You Pay: <span className="text-emerald-400 font-extrabold text-sm">{formatINR(activeMemberDiscount.finalPayableAmount || 0)}</span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(`/payment/checkout?discountId=${encodeURIComponent(activeMemberDiscount.id)}`)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-xs shadow-md shadow-primary/20 hover:bg-primary/90 transition-all cursor-pointer whitespace-nowrap"
+          >
+            <span>Redeem Offer & Renew Now</span>
+            <ArrowRight size={14} />
+          </button>
         </div>
       )}
 
@@ -714,128 +783,66 @@ export default function MembersPaymentsPage() {
       <div className="shrink-0 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
         {activeTab === "members" || userIsMember ? (
           <>
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Total Collected
-                </span>
-                <IndianRupee size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                ₹{kpis.totalCollected.toLocaleString("en-IN")}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Settled subscription revenue
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Active Paid
-                </span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-500">
-                {kpis.paidCount}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Active paid subscriptions
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Due Soon
-                </span>
-                <AlertCircle size={16} className="text-amber-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-amber-500">
-                {kpis.dueCount}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Renewals required
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Avg Transaction
-                </span>
-                <CreditCard size={16} className="text-accent" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                ₹{kpis.avgAmount.toLocaleString("en-IN")}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Average plan value
-              </p>
-            </div>
+            <KpiCard
+              title="Total Collected"
+              value={formatINR(kpis.totalCollected)}
+              subtext="Settled subscription revenue"
+              icon={IndianRupee}
+              colorScheme="emerald"
+            />
+            <KpiCard
+              title="Active Paid"
+              value={kpis.paidCount}
+              subtext="Active paid subscriptions"
+              icon={CheckCircle2}
+              colorScheme="emerald"
+            />
+            <KpiCard
+              title="Due Soon"
+              value={kpis.dueCount}
+              subtext="Renewals required"
+              icon={AlertCircle}
+              colorScheme="amber"
+            />
+            <KpiCard
+              title="Avg Transaction"
+              value={formatINR(kpis.avgAmount)}
+              subtext="Average plan value"
+              icon={CreditCard}
+              colorScheme="terracotta"
+            />
           </>
         ) : (
           /* Enrollment Tab KPIs */
           <>
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Total Enrollments
-                </span>
-                <UserPlus size={16} className="text-primary" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-foreground">
-                {enrollmentKpis.total}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                All initiated dossiers
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Pending Payment
-                </span>
-                <Clock size={16} className="text-amber-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-amber-400">
-                {enrollmentKpis.pendingPayment}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Awaiting gateway/offline payment
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Partially Paid
-                </span>
-                <CreditCard size={16} className="text-blue-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-blue-400">
-                {enrollmentKpis.partiallyPaid}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Token advance received
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-              <div className="flex items-center justify-between text-muted-foreground">
-                <span className="text-[11px] font-semibold uppercase tracking-wider">
-                  Verified & Converted
-                </span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
-              </div>
-              <div className="mt-1 text-xl sm:text-2xl font-black text-emerald-400">
-                {enrollmentKpis.converted}
-              </div>
-              <p className="mt-0.5 text-[10px] text-muted-foreground">
-                Converted to active members
-              </p>
-            </div>
+            <KpiCard
+              title="Total Enrollments"
+              value={enrollmentKpis.total}
+              subtext="All initiated dossiers"
+              icon={UserPlus}
+              colorScheme="sky"
+            />
+            <KpiCard
+              title="Pending Payment"
+              value={enrollmentKpis.pendingPayment}
+              subtext="Awaiting gateway/offline payment"
+              icon={Clock}
+              colorScheme="amber"
+            />
+            <KpiCard
+              title="Partially Paid"
+              value={enrollmentKpis.partiallyPaid}
+              subtext="Token advance received"
+              icon={CreditCard}
+              colorScheme="sky"
+            />
+            <KpiCard
+              title="Verified & Converted"
+              value={enrollmentKpis.converted}
+              subtext="Converted to active members"
+              icon={CheckCircle2}
+              colorScheme="emerald"
+            />
           </>
         )}
       </div>
@@ -843,29 +850,21 @@ export default function MembersPaymentsPage() {
       {/* ─── Filter & Search Bar ────────────────────────────────────────────── */}
       <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-2xl border border-border/80 bg-card p-2 sm:p-2.5 shadow-xs">
         <div className="flex items-center gap-2 flex-1 max-w-md">
-          <div className="relative w-full">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              type="text"
-              placeholder={
-                activeTab === "members"
-                  ? userIsMember
-                    ? "Filter receipts, txn ID, plan..."
-                    : "Search athlete, member ID, phone, txn..."
-                  : "Search candidate name, mobile, email, invoice #..."
-              }
-              value={activeTab === "members" ? searchQuery : enrollmentSearch}
-              onChange={(e) =>
-                activeTab === "members"
-                  ? setSearchQuery(e.target.value)
-                  : setEnrollmentSearch(e.target.value)
-              }
-              className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
+          <SearchInput
+            placeholder={
+              activeTab === "members"
+                ? userIsMember
+                  ? "Filter receipts, txn ID, plan..."
+                  : "Search athlete, member ID, phone, txn..."
+                : "Search candidate name, mobile, email, invoice #..."
+            }
+            value={activeTab === "members" ? searchQuery : enrollmentSearch}
+            onChange={(e) =>
+              activeTab === "members"
+                ? setSearchQuery(e.target.value)
+                : setEnrollmentSearch(e.target.value)
+            }
+          />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -1013,7 +1012,7 @@ export default function MembersPaymentsPage() {
 
       {/* ─── Official Receipt Modal ─────────────────────────────────────────── */}
       {receiptRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 dark:bg-black/55 backdrop-blur-[1.5px] p-4 animate-in fade-in duration-150">
           <div className="w-full max-w-lg rounded-3xl border border-border bg-card p-6 shadow-2xl space-y-5 text-foreground">
             {/* Modal Header */}
             <div className="flex items-start justify-between border-b border-border/60 pb-3">
@@ -1085,7 +1084,7 @@ export default function MembersPaymentsPage() {
                     {receiptRecord.durationMonths} Mo)
                   </span>
                   <span className="font-mono">
-                    ₹{receiptRecord.amount.toLocaleString("en-IN")}
+                    {formatINR(receiptRecord.amount)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-muted-foreground text-[11px]">
@@ -1095,7 +1094,7 @@ export default function MembersPaymentsPage() {
                 {receiptRecord.appliedAdjustment > 0 && (
                   <div className="flex items-center justify-between text-destructive text-[11px] font-semibold bg-destructive/10 border border-destructive/20 px-2 py-1 rounded-lg">
                     <span>Emergency Cancellation Adjustment Deduction</span>
-                    <span className="font-mono">-₹{receiptRecord.appliedAdjustment.toLocaleString("en-IN")}</span>
+                    <span className="font-mono">-{formatINR(receiptRecord.appliedAdjustment)}</span>
                   </div>
                 )}
                 {receiptRecord.pendingSessionsCount > 0 && (
@@ -1111,7 +1110,7 @@ export default function MembersPaymentsPage() {
                 <div className="flex items-center justify-between pt-2 border-t border-border/40 text-sm font-black text-emerald-500">
                   <span>Total Settled Amount</span>
                   <span className="font-mono text-base">
-                    ₹{receiptRecord.amount.toLocaleString("en-IN")}
+                    {formatINR(receiptRecord.amount)}
                   </span>
                 </div>
               </div>

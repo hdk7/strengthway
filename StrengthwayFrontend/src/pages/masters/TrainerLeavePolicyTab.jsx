@@ -23,6 +23,8 @@ import {
   validateTrainerLeaveNotice,
 } from "@/lib/masterScheduleService";
 import { PolicyRuleSimulator } from "@/pages/attendance/PolicyRuleSimulator";
+import { KpiCard } from "@/components/ui";
+import { formatINR } from "@/lib/formatters";
 
 const FACTORY_DEFAULT_TIERS = [
   {
@@ -166,55 +168,37 @@ export function TrainerLeavePolicyTab() {
     <div className="flex-1 min-h-0 flex flex-col gap-4 overflow-y-auto no-scrollbar pr-1 pb-4">
       {/* KPI Stats */}
       <div className="shrink-0 grid grid-cols-1 gap-2.5 sm:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Annual Allowance</span>
-            <ShieldCheck size={16} className="text-emerald-500" />
-          </div>
-          <div className="mt-1 flex items-baseline gap-1.5">
-            <span className="text-lg sm:text-xl font-extrabold text-foreground">
-              {policy.annualPaidLeaveAllowance ?? 36} Days
-            </span>
-            <span className="text-[10px] text-muted-foreground">/ year</span>
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Paid leave without Loss of Pay (LOP)
-          </p>
-        </div>
+        <KpiCard
+          label="Annual Allowance"
+          value={`${policy.annualPaidLeaveAllowance ?? 36} Days`}
+          subtext="Paid leave without Loss of Pay (LOP)"
+          icon={ShieldCheck}
+          color="emerald"
+        />
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Configured Tiers</span>
-            <Clock size={16} className="text-primary" />
-          </div>
-          <div className="mt-1 text-xl sm:text-2xl font-extrabold text-foreground">
-            {policy.tiers.length} Tiers
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Advance notice thresholds</p>
-        </div>
+        <KpiCard
+          label="Configured Tiers"
+          value={`${policy.tiers.length} Tiers`}
+          subtext="Advance notice thresholds"
+          icon={Clock}
+          color="sky"
+        />
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Notice Spectrum</span>
-            <Sparkles size={16} className="text-amber-500" />
-          </div>
-          <div className="mt-1 text-lg sm:text-xl font-extrabold text-foreground">
-            7 to 60 Days
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">1 week up to 2 months advance notice</p>
-        </div>
+        <KpiCard
+          label="Notice Spectrum"
+          value="7 to 60 Days"
+          subtext="1 week up to 2 months advance notice"
+          icon={Sparkles}
+          color="amber"
+        />
 
-        <div className="rounded-2xl border border-border bg-card p-3 sm:p-3.5 shadow-xs">
-          <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-[11px] font-semibold uppercase tracking-wider">Loss of Pay (LOP) Rate</span>
-            <AlertCircle size={16} className="text-rose-500" />
-          </div>
-          <div className="mt-1 text-lg sm:text-xl font-extrabold text-foreground">
-            ₹{(policy.unpaidDeductionPerDay ?? 1000).toLocaleString("en-IN")}
-            <span className="text-xs font-normal text-muted-foreground ml-1">/ day</span>
-          </div>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">Applied to every day beyond 36 days</p>
-        </div>
+        <KpiCard
+          label="Loss of Pay (LOP) Rate"
+          value={`${formatINR(policy.unpaidDeductionPerDay ?? 1000)} / day`}
+          subtext="Applied to every day beyond 36 days"
+          icon={AlertCircle}
+          color="rose"
+        />
       </div>
 
       {/* Main Content Layout: Tier Configurator + Simulator */}

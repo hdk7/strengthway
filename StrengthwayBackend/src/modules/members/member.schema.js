@@ -10,17 +10,36 @@ const {
 
 const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const PINCODE_PATTERN = /^[1-9][0-9]{5}$/;
+const NAME_PATTERN = /^[\p{L}\s.'\-]+$/u;
 
 const createMemberSchema = yup.object().shape({
-  fullName: yup.string().trim().nullable(),
+  fullName: yup
+    .string()
+    .trim()
+    .nullable()
+    .test("valid-full-name", "Full name can only contain letters, spaces, hyphens, apostrophes, and periods.", (v) => {
+      if (!v || v.trim() === "") return true;
+      return NAME_PATTERN.test(v.trim());
+    }),
   firstName: yup
     .string()
     .trim()
     .nullable()
     .test("first-name-required", "Name is required.", function (v) {
       return Boolean((v && v.length >= 2) || (this.parent.fullName && this.parent.fullName.trim().length >= 2));
+    })
+    .test("valid-first-name", "Name can only contain letters, spaces, hyphens, apostrophes, and periods.", (v) => {
+      if (!v || v.trim() === "") return true;
+      return NAME_PATTERN.test(v.trim());
     }),
-  lastName: yup.string().trim().nullable(),
+  lastName: yup
+    .string()
+    .trim()
+    .nullable()
+    .test("valid-last-name", "Last name can only contain letters, spaces, hyphens, apostrophes, and periods.", (v) => {
+      if (!v || v.trim() === "") return true;
+      return NAME_PATTERN.test(v.trim());
+    }),
   email: yup
     .string()
     .trim()
@@ -33,7 +52,7 @@ const createMemberSchema = yup.object().shape({
     .required("Mobile number is required.")
     .test(
       "valid-phone",
-      "Enter a valid mobile number (at least 10 digits).",
+      "Enter a valid mobile number (10 to 15 digits).",
       (v) => {
         if (!v) return false;
         const digits = v.replace(/\D/g, "");
@@ -44,7 +63,7 @@ const createMemberSchema = yup.object().shape({
     .string()
     .trim()
     .required("Please select a gender.")
-    .oneOf(GENDER, "Gender must be Male or Female."),
+    .oneOf(GENDER, "Gender must be Male, Female, or Other."),
   dob: yup
     .string()
     .trim()

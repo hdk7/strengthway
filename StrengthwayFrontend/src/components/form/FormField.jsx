@@ -1,3 +1,5 @@
+import { AlertCircle } from "lucide-react";
+
 export function FormLabel({
   htmlFor,
   required = false,
@@ -30,9 +32,10 @@ export function FormError({ error, id, className = "" }) {
     <p
       id={id}
       role="alert"
-      className={`mt-1 text-[11px] sm:text-xs font-medium text-destructive animate-in fade-in-0 duration-150 ${className}`}
+      className={`mt-1 text-[11px] sm:text-xs font-medium text-destructive flex items-center gap-1 animate-in fade-in-0 duration-150 ${className}`}
     >
-      {error}
+      <AlertCircle size={12} className="shrink-0 text-destructive" />
+      <span>{error}</span>
     </p>
   );
 }
@@ -46,18 +49,35 @@ export function FormField({
   children,
   className = "",
   size = "md",
+  labelClassName = "",
+  helperText,
+  footerExtra,
 }) {
   const errorId = id && error ? `${id}-error` : undefined;
 
   return (
     <div className={`flex flex-col text-left ${className}`}>
       {label && (
-        <FormLabel htmlFor={id} required={required} hint={hint} size={size}>
+        <FormLabel
+          htmlFor={id}
+          required={required}
+          hint={hint}
+          size={size}
+          className={labelClassName}
+        >
           {label}
         </FormLabel>
       )}
+
       {children}
-      <FormError error={error} id={errorId} />
+
+      <div className={footerExtra ? "flex items-center justify-between" : ""}>
+        <FormError error={error} id={errorId} />
+        {helperText && !error && (
+          <p className="mt-1 text-[11px] text-muted-foreground">{helperText}</p>
+        )}
+        {footerExtra}
+      </div>
     </div>
   );
 }

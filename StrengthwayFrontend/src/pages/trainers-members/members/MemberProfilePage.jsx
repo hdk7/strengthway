@@ -329,8 +329,11 @@ export default function MemberProfilePage() {
       />
 
       {/* Inbound Inquiry Contact Interaction Record */}
-      {contactDetailsToDisplay && (
-        <InquiryContactRecordCard contactDetails={contactDetailsToDisplay} />
+      {(member?.contactHistory?.length > 0 || contactDetailsToDisplay) && (
+        <InquiryContactRecordCard
+          contactDetails={contactDetailsToDisplay}
+          contactHistory={member?.contactHistory}
+        />
       )}
 
       {/* Physical Stats & Biometrics KPI Metric Strip (Full Width) */}

@@ -5,7 +5,7 @@ const { BATCH_STATUS, DAYS_PATTERN } = require("../../shared/constants");
 
 const createBatchSchema = yup.object().shape({
   id: yup.string().trim().required("Batch ID is required (e.g. BATCH-01)."),
-  name: yup.string().trim().required("Batch name is required.").min(2),
+  name: yup.string().trim().required("Batch name is required.").min(2, "Batch name must be at least 2 characters."),
   shortName: yup.string().trim().nullable(),
   startTime: yup.string().trim().required("Start time is required (e.g. 06:00 AM)."),
   endTime: yup.string().trim().required("End time is required (e.g. 07:00 AM)."),
@@ -13,15 +13,20 @@ const createBatchSchema = yup.object().shape({
   daysPattern: yup.string().trim().default("MWF"),
   daysLabel: yup.string().trim().nullable(),
   daysList: yup.array().of(yup.string()).nullable(),
-  maxPax: yup.number().min(1).default(25),
+  maxPax: yup
+    .number()
+    .typeError("Capacity limit must be a valid number.")
+    .min(1, "Capacity limit must be at least 1 pax.")
+    .max(500, "Capacity cannot exceed 500 pax.")
+    .default(28),
   status: yup.string().oneOf(Object.values(BATCH_STATUS)).default(BATCH_STATUS.ACTIVE),
   trainerIds: yup.array().of(yup.string()).nullable(),
   memberIds: yup.array().of(yup.string()).nullable(),
-  description: yup.string().trim().nullable(),
+  description: yup.string().trim().max(500, "Description cannot exceed 500 characters.").nullable(),
 });
 
 const updateBatchSchema = yup.object().shape({
-  name: yup.string().trim().min(2),
+  name: yup.string().trim().min(2, "Batch name must be at least 2 characters."),
   shortName: yup.string().trim().nullable(),
   startTime: yup.string().trim(),
   endTime: yup.string().trim(),
@@ -29,12 +34,16 @@ const updateBatchSchema = yup.object().shape({
   daysPattern: yup.string().trim(),
   daysLabel: yup.string().trim().nullable(),
   daysList: yup.array().of(yup.string()).nullable(),
-  maxPax: yup.number().min(1),
+  maxPax: yup
+    .number()
+    .typeError("Capacity limit must be a valid number.")
+    .min(1, "Capacity limit must be at least 1 pax.")
+    .max(500, "Capacity cannot exceed 500 pax."),
   currentPax: yup.number().min(0),
   status: yup.string().oneOf(Object.values(BATCH_STATUS)),
   trainerIds: yup.array().of(yup.string()).nullable(),
   memberIds: yup.array().of(yup.string()).nullable(),
-  description: yup.string().trim().nullable(),
+  description: yup.string().trim().max(500, "Description cannot exceed 500 characters.").nullable(),
 });
 
 const enrollMemberSchema = yup.object().shape({

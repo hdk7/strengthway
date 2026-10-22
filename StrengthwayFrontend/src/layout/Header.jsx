@@ -17,9 +17,10 @@ import {
   BellRing,
 } from "lucide-react";
 import { toast } from "sonner";
-import Avatar from "@/components/ui/avatar";
+import Avatar from "@/components/ui/Avatar";
 import { getCurrentUser } from "@/auth/currentUser";
 import { useTheme } from "@/hooks/theme";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { getInquiries } from "@/lib/inquiriesService";
 import {
   getNotifications,
@@ -153,19 +154,7 @@ export default function Header({ onToggle, sidebarVisible }) {
     }
   }, [dueCount]);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setIsNotifOpen(false);
-      }
-    };
-    if (isNotifOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isNotifOpen]);
+  useClickOutside(notifRef, () => setIsNotifOpen(false), isNotifOpen);
 
   return (
     <header className="relative flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-5 h-15 bg-card border border-border rounded-xl shadow-sm shrink-0">
@@ -454,8 +443,8 @@ export default function Header({ onToggle, sidebarVisible }) {
               </div>
 
               {/* Dropdown Footer */}
-              <div className="border-t border-border/80 bg-muted/20 p-2.5 text-center shrink-0">
-                {currentUser?.role === "trainer" ? (
+              {currentUser?.role === "trainer" && (
+                <div className="border-t border-border/80 bg-muted/20 p-2.5 text-center shrink-0">
                   <Link
                     to="/trainer/profile?tab=leave"
                     onClick={() => setIsNotifOpen(false)}
@@ -464,17 +453,8 @@ export default function Header({ onToggle, sidebarVisible }) {
                     <span>Go to My Leave &amp; Policy Simulator</span>
                     <ChevronRight size={13} />
                   </Link>
-                ) : (
-                  <Link
-                    to="/admin/attendance/trainers?viewMode=leaveTracker&status=PENDING"
-                    onClick={() => setIsNotifOpen(false)}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-                  >
-                    <span>View Central Leave Command Center</span>
-                    <ChevronRight size={13} />
-                  </Link>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>

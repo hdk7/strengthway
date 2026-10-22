@@ -40,6 +40,8 @@ const notificationSchema = new mongoose.Schema(
         "LEAVE_DENIED",
         "LEAVE_REQUESTED",
         "SUBSTITUTE_ASSIGNED",
+        "TRAINER_LEAVE_APPLIED",
+        "MEMBER_DISCOUNT_OFFER",
         "GENERAL",
       ],
       default: "GENERAL",

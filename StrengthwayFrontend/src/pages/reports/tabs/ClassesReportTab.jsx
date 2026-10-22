@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { ClassReportStatsCards } from "./ClassReportStatsCards";
 import { getRoleBasePath } from "@/auth/currentUser";
+import { SearchInput } from "@/components/ui";
 
 export function ClassesReportTab({
   classesReport,
@@ -30,14 +31,11 @@ export function ClassesReportTab({
       <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-2xl border border-border/80 bg-card p-2 sm:p-2.5 shadow-xs">
         <div className="flex items-center gap-3 flex-1 flex-wrap">
           {/* Search input */}
-          <div className="relative flex-1 min-w-50">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
+          <div className="flex-1 min-w-50">
+            <SearchInput
               placeholder="Search batch or curriculum..."
               value={classSearch}
               onChange={(e) => setClassSearch(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background py-1.5 pl-8.5 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent"
             />
           </div>
 

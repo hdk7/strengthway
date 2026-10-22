@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { formatBoxDate } from "./dateRangeUtils";
 import DateRangeCalendar from "./DateRangeCalendar";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 /**
  * Universal Reusable Date Range Picker
@@ -43,19 +44,7 @@ export default function DateRangePicker({
     }
   }, [startDate, endDate]);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
+  useClickOutside(containerRef, () => setIsOpen(false), isOpen);
 
   const hasRange = Boolean(startDate || endDate);
 
