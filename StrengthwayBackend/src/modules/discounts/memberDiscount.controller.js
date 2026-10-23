@@ -25,10 +25,18 @@ async function previewCalculationsBatch(req, res, next) {
 async function assignBulk(req, res, next) {
   try {
     const adminUser = req.user || { name: "Admin" };
+    const discounts = req.body.discounts || req.body.items || [];
+    const notifyMembers =
+      req.body.notifyMembers !== undefined
+        ? req.body.notifyMembers !== false
+        : req.body.sendNotification !== undefined
+        ? req.body.sendNotification !== false
+        : true;
+
     const result = await memberDiscountService.assignBulkDiscounts({
       campaignName: req.body.campaignName,
-      discounts: req.body.discounts,
-      notifyMembers: req.body.notifyMembers !== false,
+      discounts,
+      notifyMembers,
       adminUser,
     });
     return success(

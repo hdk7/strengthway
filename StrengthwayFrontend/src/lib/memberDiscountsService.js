@@ -38,9 +38,21 @@ export async function getDiscounts(params = {}) {
 
     const queryStr = query.toString() ? `?${query.toString()}` : "";
     const response = await api.get(`/v1/member-discounts${queryStr}`);
+
+    const rawList =
+      response?.discounts ||
+      response?.data?.discounts ||
+      response?.data ||
+      (Array.isArray(response) ? response : []);
+
+    const list = Array.isArray(rawList) ? rawList : [];
+
     return {
-      data: Array.isArray(response?.data) ? response.data : [],
-      total: response?.total || 0,
+      data: list,
+      discounts: list,
+      total: response?.total ?? list.length,
+      page: response?.page ?? 1,
+      totalPages: response?.totalPages ?? 1,
     };
   } catch (err) {
     console.error("Failed to fetch member discounts:", err);
@@ -117,7 +129,23 @@ export async function previewDiscountBatch(items) {
  */
 export async function assignBulkDiscounts(payload) {
   try {
-    const response = await api.post("/v1/member-discounts/bulk-assign", payload);
+    const discounts = payload.discounts || payload.items || [];
+    const notifyMembers =
+      payload.notifyMembers !== undefined
+        ? payload.notifyMembers !== false
+        : payload.sendNotification !== undefined
+        ? payload.sendNotification !== false
+        : true;
+
+    const formattedPayload = {
+      campaignName: payload.campaignName,
+      notes: payload.notes,
+      notifyMembers,
+      sendNotification: notifyMembers,
+      discounts,
+      items: discounts,
+    };
+    const response = await api.post("/v1/member-discounts/bulk-assign", formattedPayload);
     return response;
   } catch (err) {
     console.error("Failed to bulk assign discounts:", err);

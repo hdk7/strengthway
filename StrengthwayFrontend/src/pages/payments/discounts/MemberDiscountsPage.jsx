@@ -111,7 +111,8 @@ export default function MemberDiscountsPage() {
         search: discountSearch,
         discountType: typeFilter !== "ALL" ? typeFilter : undefined,
       });
-      setDiscounts(Array.isArray(res?.data) ? res.data : []);
+      const list = res?.discounts || res?.data || (Array.isArray(res) ? res : []);
+      setDiscounts(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error("Failed to load discounts:", err);
       toast.error("Failed to load discounts list.");
@@ -358,6 +359,32 @@ export default function MemberDiscountsPage() {
       return;
     }
 
+    // Validate each member configuration before submitting
+    for (const id of selectedIds) {
+      const c = configsMap[id];
+      const memberName = selectedMembersMap[id]?.fullName || c?.memberName || id;
+      if (!c?.planId) {
+        toast.error(`Please select a membership plan for ${memberName}.`);
+        return;
+      }
+      const val = Number(c?.discountValue);
+      if (isNaN(val) || val <= 0) {
+        toast.error(`Please enter a valid discount value greater than 0 for ${memberName}.`);
+        return;
+      }
+      if (c.discountType === "percentage" && val > 100) {
+        toast.error(`Discount percentage cannot exceed 100% for ${memberName}.`);
+        return;
+      }
+      if (c.expiryDate) {
+        const expDate = new Date(c.expiryDate);
+        if (isNaN(expDate.getTime()) || expDate <= new Date()) {
+          toast.error(`Expiry date for ${memberName} must be a future date.`);
+          return;
+        }
+      }
+    }
+
     // Build payload items
     const items = selectedIds.map((id) => {
       const c = configsMap[id];
@@ -366,7 +393,7 @@ export default function MemberDiscountsPage() {
         planId: c.planId,
         discountType: c.discountType,
         discountValue: Number(c.discountValue),
-        expiryDate: c.expiryDate || undefined,
+        expiryDate: c.expiryDate ? new Date(c.expiryDate).toISOString() : null,
         applicationRule: "NEXT_PAYMENT_ONLY",
       };
     });
@@ -376,13 +403,15 @@ export default function MemberDiscountsPage() {
       const payload = {
         campaignName: campaignName.trim() || undefined,
         notes: campaignNotes.trim() || undefined,
+        notifyMembers: sendNotificationNow,
         sendNotification: sendNotificationNow,
+        discounts: items,
         items,
       };
 
       const result = await assignBulkDiscounts(payload);
       toast.success(
-        `Successfully assigned individual discounts to ${result.createdCount || items.length} members!`,
+        `Successfully assigned individual discounts to ${result.totalAssigned || result.createdCount || items.length} members!`,
         {
           icon: <CheckCircle2 className="h-5 w-5 text-emerald-500" />,
         }
@@ -394,11 +423,15 @@ export default function MemberDiscountsPage() {
       setCampaignName("");
       setCampaignNotes("");
       setWizardStep(1);
+      setStatusFilter("ALL");
+      setDiscountSearch("");
+      setTypeFilter("ALL");
       setActiveView("tracking");
-      loadDiscountsList();
+      await loadDiscountsList();
     } catch (err) {
       console.error("Bulk assign failed:", err);
-      toast.error(err.message || "Failed to assign discounts. Please verify member configurations.");
+      const detail = err.data?.errors?.map((e) => e.message).join(", ");
+      toast.error(detail || err.message || "Failed to assign discounts. Please verify member configurations.");
     } finally {
       setIsSubmittingBulk(false);
     }
@@ -427,29 +460,29 @@ export default function MemberDiscountsPage() {
   const selectedCount = Object.keys(selectedMembersMap).length;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 animate-in fade-in duration-200">
+    <div className="w-full flex-1 min-h-0 flex flex-col gap-3.5 animate-in fade-in duration-200">
       {/* ─── Top Page Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-6">
+      <div className="shrink-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/60 pb-3">
         <div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-0.5">
             <Link to="/admin/payments/members" className="hover:text-primary transition-colors">
               Payments
             </Link>
             <ChevronRight size={12} />
             <span className="text-foreground font-medium">Individual Member Discounts</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center gap-3">
-            <Tag className="h-7 w-7 text-primary" />
-            Member Discounts Management
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
+            <Tag className="h-6 w-6 text-primary" />
+            <span>Member Discounts Management</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+          <p className="text-xs text-muted-foreground mt-0.5 max-w-3xl">
             Configure custom, independently-edited discounts for selected members, notify them
             privately through their login, and automatically apply savings on their next payment.
           </p>
         </div>
 
         {/* View Switcher Button */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 shrink-0">
           {activeView === "tracking" ? (
             <button
               type="button"
@@ -457,18 +490,18 @@ export default function MemberDiscountsPage() {
                 setActiveView("configurator");
                 setWizardStep(1);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs shadow-lg shadow-primary/20 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-semibold text-xs shadow-xs transition-all cursor-pointer"
             >
-              <Plus size={16} />
+              <Plus size={15} />
               <span>Configure Member Discounts</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={() => setActiveView("tracking")}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold text-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground font-semibold text-xs transition-colors cursor-pointer"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={15} />
               <span>Back to Discounts Tracking</span>
             </button>
           )}
@@ -516,9 +549,9 @@ export default function MemberDiscountsPage() {
           VIEW 1: DISCOUNTS TRACKING TABLE
          ════════════════════════════════════════════════════════════════════════════════ */}
       {activeView === "tracking" && (
-        <div className="space-y-4">
+        <div className="space-y-3 flex-1 min-h-0 flex flex-col">
           {/* Filter Toolbar */}
-          <div className="p-4 rounded-2xl border border-border bg-card shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="p-2.5 sm:p-3 rounded-xl border border-border/80 bg-card shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 shrink-0">
             {/* Search Input */}
             <div className="flex-1">
               <SearchInput
@@ -536,7 +569,7 @@ export default function MemberDiscountsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl text-xs bg-muted/40 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg text-xs bg-muted/40 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
               >
                 {DISCOUNT_STATUS_OPTIONS.map((st) => (
                   <option key={st} value={st}>
@@ -548,26 +581,17 @@ export default function MemberDiscountsPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl text-xs bg-muted/40 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg text-xs bg-muted/40 border border-border text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
               >
                 <option value="ALL">All Types</option>
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed Amount (₹)</option>
               </select>
-
-              <button
-                type="button"
-                onClick={loadDiscountsList}
-                className="p-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer"
-                title="Refresh List"
-              >
-                <RefreshCw size={14} className={isLoadingDiscounts ? "animate-spin" : ""} />
-              </button>
             </div>
           </div>
 
           {/* Table Container */}
-          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="rounded-xl border border-border/80 bg-card shadow-xs flex-1 min-h-0 overflow-hidden flex flex-col">
             {isLoadingDiscounts ? (
               <div className="p-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -743,9 +767,9 @@ export default function MemberDiscountsPage() {
           VIEW 2: INDIVIDUAL MEMBER DISCOUNT CONFIGURATOR (3-STEP WIZARD)
          ════════════════════════════════════════════════════════════════════════════════ */}
       {activeView === "configurator" && (
-        <div className="space-y-6">
+        <div className="space-y-4 flex-1 min-h-0 flex flex-col">
           {/* Wizard Step Indicator Bar */}
-          <div className="p-4 rounded-2xl border border-border bg-card shadow-sm flex items-center justify-between gap-4">
+          <div className="p-3 rounded-xl border border-border/80 bg-card shadow-xs flex items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-3 sm:gap-8 flex-wrap">
               {/* Step 1 */}
               <div

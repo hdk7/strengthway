@@ -179,15 +179,6 @@ export function AttendanceAuditModal({ isOpen, onClose, defaultType = "ALL" }) {
               onChange={(e) => setSelectedDate(e.target.value)}
               className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
             />
-
-            <button
-              type="button"
-              onClick={fetchLogs}
-              title="Refresh Logs"
-              className="p-1.5 rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-            >
-              <RefreshCw size={14} className={isLoading ? "animate-spin text-accent" : ""} />
-            </button>
           </div>
         </div>
 

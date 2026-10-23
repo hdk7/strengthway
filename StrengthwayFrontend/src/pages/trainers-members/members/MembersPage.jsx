@@ -20,11 +20,7 @@ import { isAdmin } from "@/auth/currentUser";
 import MemberMetricsRow from "./MemberMetricsRow";
 import MemberTableRow from "./MemberTableRow";
 import { SearchInput } from "@/components/ui";
-import {
-  GoogleFormTemplateModal,
-  MemberImportModal,
-  MemberImportHistoryModal,
-} from "./components";
+import { MemberImportModal } from "./components";
 
 const MEMBER_COLUMNS = [
   { header: "Member ID", width: "w-28" },
@@ -48,10 +44,8 @@ export default function MembersPage() {
   const [selectedInquiryForConfirm, setSelectedInquiryForConfirm] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
 
-  // Import-related modals state
-  const [isGoogleFormModalOpen, setIsGoogleFormModalOpen] = useState(false);
+  // Bulk import modal state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const fetchMembers = () => {
     setLoading(true);
@@ -217,36 +211,16 @@ export default function MembersPage() {
         {/* Member Action Controls (Admin Only) */}
         {isAdmin() && (
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {/* Get Google Form Template */}
+            {/* Bulk Import Members */}
             <button
               type="button"
-              onClick={() => setIsGoogleFormModalOpen(true)}
-              title="Get standardized Google Form link for member self-registration"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-3 sm:px-4 py-2 min-h-[38px] text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-            >
-              <FileSpreadsheet size={15} className="text-blue-500" />
-              <span>Get Form Template</span>
-            </button>
-
-            {/* Smart Bulk Import */}
-            <button
-              type="button"
+              id="import-members-btn"
               onClick={() => setIsImportModalOpen(true)}
-              title="Upload Google Sheets response file or Excel/CSV to import members in bulk"
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-50/50 hover:bg-emerald-100/70 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 dark:text-emerald-300 px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+              title="Upload Excel or CSV file to import members in bulk"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card hover:bg-muted text-foreground px-3.5 sm:px-4 py-2 min-h-[38px] text-xs font-semibold shadow-2xs transition-all cursor-pointer"
             >
-              <UploadCloud size={15} className="text-emerald-600 dark:text-emerald-400" />
+              <UploadCloud size={15} className="text-emerald-500" />
               <span>Import Members</span>
-            </button>
-
-            {/* Import Audit History */}
-            <button
-              type="button"
-              onClick={() => setIsHistoryModalOpen(true)}
-              title="View past import audit history and download recovery reports"
-              className="inline-flex items-center justify-center rounded-lg border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground p-2 min-h-[38px] min-w-[38px] shadow-2xs transition-all cursor-pointer"
-            >
-              <History size={16} />
             </button>
 
             {/* Add Member CTA Button */}
@@ -419,12 +393,6 @@ export default function MembersPage() {
         />
       )}
 
-      {/* --- GOOGLE FORM TEMPLATE MODAL --- */}
-      <GoogleFormTemplateModal
-        isOpen={isGoogleFormModalOpen}
-        onClose={() => setIsGoogleFormModalOpen(false)}
-      />
-
       {/* --- MEMBER BULK IMPORT MODAL --- */}
       <MemberImportModal
         isOpen={isImportModalOpen}
@@ -432,12 +400,6 @@ export default function MembersPage() {
         onSuccess={() => {
           fetchMembers();
         }}
-      />
-
-      {/* --- IMPORT AUDIT HISTORY MODAL --- */}
-      <MemberImportHistoryModal
-        isOpen={isHistoryModalOpen}
-        onClose={() => setIsHistoryModalOpen(false)}
       />
     </div>
   );

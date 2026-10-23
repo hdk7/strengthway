@@ -1,3 +1,1 @@
-export { GoogleFormTemplateModal } from "./GoogleFormTemplateModal";
-export { MemberImportModal } from "./MemberImportModal";
-export { MemberImportHistoryModal } from "./MemberImportHistoryModal";
+export { MemberImportModal, MemberImportModal as BulkMemberImportModal } from "./MemberImportModal";

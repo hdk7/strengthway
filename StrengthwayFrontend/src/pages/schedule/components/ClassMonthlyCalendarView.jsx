@@ -206,15 +206,6 @@ export function ClassMonthlyCalendarView({
               ))}
             </select>
           </div>
-
-          <button
-            type="button"
-            onClick={loadCalendarSessions}
-            className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
-            title="Refresh Calendar"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          </button>
         </div>
       </div>
 

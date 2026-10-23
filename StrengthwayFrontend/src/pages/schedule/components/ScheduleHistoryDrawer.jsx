@@ -135,15 +135,6 @@ export function ScheduleHistoryDrawer({ isOpen, onClose, batch }) {
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={loadHistory}
-              disabled={loading}
-              className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
-              title="Refresh Audit Log"
-            >
-              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-            </button>
-            <button
-              type="button"
               onClick={onClose}
               className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer transition-colors"
             >

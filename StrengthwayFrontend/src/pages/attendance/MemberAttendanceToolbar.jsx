@@ -112,16 +112,6 @@ export function MemberAttendanceToolbar({
           >
             Today
           </button>
-
-          <button
-            type="button"
-            onClick={loadDailyData}
-            disabled={isLoadingDaily}
-            className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs disabled:opacity-50"
-            title="Refresh Roster"
-          >
-            <RefreshCw size={14} className={isLoadingDaily ? "animate-spin text-accent" : ""} />
-          </button>
         </div>
       ) : (
         <div className="flex items-center gap-2 flex-wrap">
@@ -130,16 +120,6 @@ export function MemberAttendanceToolbar({
             onChange={setSelectedMonth}
             align="right"
           />
-
-          <button
-            type="button"
-            onClick={loadMatrixData}
-            disabled={isLoadingMatrix}
-            className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-all cursor-pointer shadow-xs disabled:opacity-50"
-            title="Refresh Grid"
-          >
-            <RefreshCw size={14} className={isLoadingMatrix ? "animate-spin text-accent" : ""} />
-          </button>
         </div>
       )}
     </div>

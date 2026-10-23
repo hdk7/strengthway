@@ -794,13 +794,6 @@ export default function SettingsPage() {
                 Timestamped records of role access modifications, granting administrators, and diff changes
               </p>
             </div>
-            <button
-              onClick={loadData}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline cursor-pointer"
-            >
-              <RefreshCw size={12} />
-              <span>Refresh Log</span>
-            </button>
           </div>
 
           {auditLogs.length === 0 ? (

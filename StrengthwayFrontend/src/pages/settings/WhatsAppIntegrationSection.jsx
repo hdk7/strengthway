@@ -197,16 +197,6 @@ export default function WhatsAppIntegrationSection() {
               <HelpCircle size={14} className="text-primary" />
               <span>Setup Guide & Docs</span>
             </button>
-
-            <button
-              type="button"
-              onClick={loadData}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border bg-card hover:bg-muted text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-xs"
-              title="Refresh connection vitals"
-            >
-              <RefreshCw size={13} />
-              <span>Refresh</span>
-            </button>
           </div>
         </div>
 
@@ -630,16 +620,6 @@ export default function WhatsAppIntegrationSection() {
               ({totalLogs} logged)
             </span>
           </div>
-
-          <button
-            type="button"
-            onClick={refreshLogs}
-            disabled={isRefreshingLogs}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-bold text-muted-foreground hover:text-foreground transition-all cursor-pointer shadow-2xs"
-          >
-            <RefreshCw size={12} className={isRefreshingLogs ? "animate-spin" : ""} />
-            <span>Refresh Logs</span>
-          </button>
         </div>
 
         {logs.length === 0 ? (

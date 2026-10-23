@@ -275,14 +275,19 @@ class DashboardService {
           batchId: s.batchId,
           batchName: s.batchName || batch?.name || "Strength Batch",
           timing: s.timing || batch?.timingLabel || "06:00 AM - 07:00 AM",
+          time: s.timing || batch?.timingLabel || "06:00 AM - 07:00 AM",
           room: s.room || batch?.room || "Main Studio",
           coachId: s.coachId,
           coachName: s.coachName || "Faculty Coach",
-          status: s.status || "SCHEDULED",
+          status: liveStatus,
           liveStatus,
           eligibleCount: eligibleMembers.length || s.attendeesCount || batch?.maxPax || 24,
           presentCount: attended.length,
           absentCount: Math.max(0, (eligibleMembers.length || s.attendeesCount || 24) - attended.length),
+          attendanceSummary: {
+            present: attended.length,
+            eligible: eligibleMembers.length || s.attendeesCount || batch?.maxPax || 24,
+          },
         };
       });
     } else {
@@ -317,14 +322,19 @@ class DashboardService {
           batchId: b.id,
           batchName: b.name,
           timing: b.timingLabel || `${b.startTime || "06:00 AM"} - ${b.endTime || "07:00 AM"}`,
+          time: b.timingLabel || `${b.startTime || "06:00 AM"} - ${b.endTime || "07:00 AM"}`,
           room: b.room || "Studio 1",
           coachId: b.trainerIds?.[0] || "TRN-001",
           coachName: b.trainerName || "Faculty Coach",
-          status: "SCHEDULED",
+          status: liveStatus,
           liveStatus,
           eligibleCount: eligibleMembers.length || b.currentPax || 20,
           presentCount: attended.length,
           absentCount: Math.max(0, (eligibleMembers.length || b.currentPax || 20) - attended.length),
+          attendanceSummary: {
+            present: attended.length,
+            eligible: eligibleMembers.length || b.currentPax || 20,
+          },
         };
       });
     }
@@ -420,28 +430,43 @@ class DashboardService {
     const expiredList = [];
 
     allMembers.forEach((m) => {
-      const plan = m.membershipPlan;
-      if (plan && plan.endDate) {
-        const eDate = new Date(plan.endDate);
-        if (eDate < now) {
-          expiredList.push({
+      const plan = m.membershipPlan || {};
+      let rawEnd = plan.endDate || m.planEndDate;
+      if (!rawEnd && (m.planStartDate || m.registeredAt) && plan.durationMonths) {
+        const start = new Date(m.planStartDate || m.registeredAt);
+        if (!isNaN(start.getTime())) {
+          rawEnd = new Date(start.getTime() + plan.durationMonths * 30 * 24 * 60 * 60 * 1000);
+        }
+      }
+
+      if (rawEnd) {
+        const eDate = new Date(rawEnd);
+        if (!isNaN(eDate.getTime())) {
+          const daysDiff = Math.ceil((eDate - now) / (1000 * 60 * 60 * 24));
+          const batchObj = allBatches.find((b) => b.id === m.batchId);
+          const memberItem = {
             id: m.id,
-            name: `${m.firstName} ${m.lastName}`.trim(),
-            planName: plan.name,
+            name: `${m.firstName || ""} ${m.lastName || ""}`.trim() || "Member",
+            phone: m.mobile || m.phone || "—",
+            batchName: m.batchName || m.assignedBatch || batchObj?.name || "General Batch",
+            planName: plan.name || m.planName || "Standard Membership",
             endDate: plan.formattedEnd || getTodayDateString(eDate),
-            daysExpired: Math.ceil((now - eDate) / (1000 * 60 * 60 * 24)),
-          });
-        } else if (eDate <= in14Days) {
-          expiringSoonList.push({
-            id: m.id,
-            name: `${m.firstName} ${m.lastName}`.trim(),
-            planName: plan.name,
-            endDate: plan.formattedEnd || getTodayDateString(eDate),
-            daysLeft: Math.ceil((eDate - now) / (1000 * 60 * 60 * 24)),
-          });
+            daysLeft: daysDiff,
+            daysRemaining: daysDiff,
+            daysExpired: Math.abs(daysDiff),
+          };
+
+          if (eDate < now) {
+            expiredList.push(memberItem);
+          } else if (eDate <= in14Days) {
+            expiringSoonList.push(memberItem);
+          }
         }
       }
     });
+
+    expiringSoonList.sort((a, b) => a.daysRemaining - b.daysRemaining);
+    expiredList.sort((a, b) => a.daysExpired - b.daysExpired);
 
     return {
       role: "admin",

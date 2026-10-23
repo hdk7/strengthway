@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { useState, useRef } from "react";
 import {
   UploadCloud,
@@ -7,1073 +6,656 @@ import {
   CheckCircle2,
   AlertTriangle,
   AlertCircle,
-  HelpCircle,
-  ArrowRight,
-  ArrowLeft,
-  Sparkles,
-  RefreshCw,
   X,
   FileText,
   UserCheck,
-  UserPlus,
-  ShieldCheck,
-  Eye,
+  Search,
   Filter,
+  Check,
+  ArrowRight,
+  ShieldAlert,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   FormModal,
   FormModalHeader,
   FormModalBody,
-  FormModalFooter,
 } from "@/components/ui/FormModal";
 import {
   downloadImportTemplate,
   uploadAndParseImportFile,
   validateImportRows,
   executeMemberImport,
-  downloadErrorReport,
 } from "@/lib/memberImportService";
 
-const STEPS = [
-  { id: 1, name: "Upload File" },
-  { id: 2, name: "Column Mapping" },
-  { id: 3, name: "Validation & Exceptions" },
-  { id: 4, name: "Import Summary" },
-];
-
 export function MemberImportModal({ isOpen, onClose, onSuccess }) {
-  const [currentStep, setCurrentStep] = useState(1);
+  // Stepper: 1 = Upload, 2 = Preview & Validation, 3 = Summary Result
+  const [step, setStep] = useState(1);
 
-  // Step 1: Upload state
+  // File & Upload State
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(null);
+  const [isDownloadingTemplate, setIsDownloadingTemplate] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Step 2: Mapping state
-  const [parsedData, setParsedData] = useState(null);
-  const [columnMappings, setColumnMappings] = useState({});
-  const [saveAsPreset, setSaveAsPreset] = useState(true);
-  const [filterUnmappedOnly, setFilterUnmappedOnly] = useState(false);
+  // Preview & Validation State
+  const [validationData, setValidationData] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("ALL"); // ALL | READY | DUPLICATES | INVALID
+  const [searchFilter, setSearchFilter] = useState("");
 
-  // Step 3: Validation state
-  const [isValidating, setIsValidating] = useState(false);
-  const [validationResult, setValidationResult] = useState(null);
-  const [recordsState, setRecordsState] = useState([]);
-  const [activeReviewTab, setActiveReviewTab] = useState("exceptions"); // 'exceptions' | 'existing' | 'ready' | 'all'
-  const [existingBulkAction, setExistingBulkAction] = useState("update"); // 'update' | 'skip'
-
-  // Step 4: Execution state
+  // Execution State
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState(null);
-  const [isDownloadingErrorCsv, setIsDownloadingErrorCsv] = useState(false);
 
-  // Reset state on close
-  const handleClose = () => {
-    setCurrentStep(1);
+  const resetState = () => {
+    setStep(1);
     setFile(null);
-    setParsedData(null);
-    setColumnMappings({});
-    setValidationResult(null);
-    setRecordsState([]);
+    setIsDragging(false);
+    setValidationData(null);
+    setActiveFilter("ALL");
+    setSearchFilter("");
+    setIsExecuting(false);
     setExecutionResult(null);
+  };
+
+  const handleClose = () => {
+    resetState();
     onClose();
   };
 
   /* -------------------------------------------------------------
-   * STEP 1: UPLOAD & TEMPLATE DOWNLOAD
+   * STEP 1: TEMPLATE DOWNLOAD & FILE PARSING
    * ------------------------------------------------------------- */
-  const handleDownloadTemplate = async (format) => {
-    setIsDownloading(format);
+  const handleDownloadTemplate = async () => {
+    setIsDownloadingTemplate(true);
     try {
-      await downloadImportTemplate(format);
-      toast.success(`Blank import template (${format.toUpperCase()}) downloaded!`);
-    } catch (e) {
-      toast.error(e?.message || `Failed to download ${format} template.`);
+      await downloadImportTemplate("xlsx");
+      toast.success("Excel Import Template downloaded successfully!");
+    } catch (err) {
+      toast.error(err?.message || "Failed to download template.");
     } finally {
-      setIsDownloading(null);
+      setIsDownloadingTemplate(false);
     }
   };
 
-  const handleFileSelect = (selectedFile) => {
-    if (!selectedFile) return;
-    const name = selectedFile.name.toLowerCase();
-    if (!name.endsWith(".xlsx") && !name.endsWith(".xls") && !name.endsWith(".csv")) {
-      toast.error("Please upload a valid Excel (.xlsx, .xls) or CSV (.csv) file.");
+  const handleFileDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (droppedFile) processFile(droppedFile);
+  };
+
+  const handleFileSelect = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) processFile(selectedFile);
+  };
+
+  const processFile = async (selectedFile) => {
+    const validExtensions = [".xlsx", ".xls", ".csv"];
+    const isExtValid = validExtensions.some((ext) =>
+      selectedFile.name.toLowerCase().endsWith(ext)
+    );
+
+    if (!isExtValid) {
+      toast.error("Please upload an Excel (.xlsx, .xls) or CSV file.");
       return;
     }
+
+    if (selectedFile.size > 10 * 1024 * 1024) {
+      toast.error("File size exceeds 10MB limit.");
+      return;
+    }
+
     setFile(selectedFile);
-  };
+    setIsParsing(true);
 
-  const handleUploadAndParse = async () => {
-    if (!file) {
-      toast.error("Please select a file to upload.");
-      return;
-    }
-    setIsUploading(true);
     try {
-      const res = await uploadAndParseImportFile(file);
-      if (res?.data) {
-        setParsedData(res.data);
-        // Build initial mapping state from backend recommendation
-        const initialMap = {};
-        Object.entries(res.data.mappings || {}).forEach(([header, info]) => {
-          initialMap[header] = info.crmField || "";
-        });
-        setColumnMappings(initialMap);
-        setCurrentStep(2);
-        toast.success(`Parsed ${res.data.totalRows} data rows from ${res.data.sourceFilename}.`);
+      // 1. Upload & parse file on server
+      const parseRes = await uploadAndParseImportFile(selectedFile);
+      // apiClient automatically unwraps json.data, but guard against both shapes
+      const parsedRows = parseRes?.rows || parseRes?.data?.rows || [];
+
+      if (!parsedRows || parsedRows.length === 0) {
+        throw new Error("No data rows found in the uploaded file.");
       }
-    } catch (e) {
-      toast.error(e?.message || "Failed to parse uploaded file.");
+
+      // 2. Validate parsed rows and run duplicate detection
+      const valRes = await validateImportRows(parsedRows);
+      const validatedData = valRes?.rows ? valRes : (valRes?.data || valRes);
+      setValidationData(validatedData);
+      setStep(2);
+      toast.success(
+        `Parsed ${parsedRows.length} member records. Review preview below.`
+      );
+    } catch (err) {
+      toast.error(err?.message || "Failed to parse spreadsheet file.");
+      setFile(null);
     } finally {
-      setIsUploading(false);
+      setIsParsing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   /* -------------------------------------------------------------
-   * STEP 2: COLUMN MAPPING
+   * STEP 2: EXECUTE BULK IMPORT
    * ------------------------------------------------------------- */
-  const handleMappingChange = (header, targetField) => {
-    setColumnMappings((prev) => ({
-      ...prev,
-      [header]: targetField,
-    }));
-  };
-
-  const handleProceedToValidation = async () => {
-    // Check if at least fullName and phone are mapped
-    const mappedCrmFields = Object.values(columnMappings).filter(Boolean);
-    const hasFullName =
-      mappedCrmFields.includes("fullName") ||
-      (mappedCrmFields.includes("firstName") && mappedCrmFields.includes("lastName"));
-    const hasPhone = mappedCrmFields.includes("phone");
-
-    if (!hasFullName) {
-      toast.error("Please map a column to Full Name (or First Name + Last Name).");
-      return;
-    }
-    if (!hasPhone) {
-      toast.error("Please map a column to Phone / Mobile Number.");
-      return;
-    }
-
-    setIsValidating(true);
-    try {
-      const res = await validateImportRows({
-        rows: parsedData.rows,
-        mappings: columnMappings,
-      });
-
-      if (res?.data) {
-        setValidationResult(res.data);
-        setRecordsState(res.data.records || []);
-
-        // Choose default active review tab
-        if ((res.data.summary.issueCount || 0) > 0) {
-          setActiveReviewTab("exceptions");
-        } else if ((res.data.summary.existingCount || 0) > 0) {
-          setActiveReviewTab("existing");
-        } else {
-          setActiveReviewTab("ready");
-        }
-
-        setCurrentStep(3);
-      }
-    } catch (e) {
-      toast.error(e?.message || "Validation failed.");
-    } finally {
-      setIsValidating(false);
-    }
-  };
-
-  /* -------------------------------------------------------------
-   * STEP 3: EXCEPTION-ONLY REVIEW
-   * ------------------------------------------------------------- */
-  const handleRecordActionToggle = (rowIndex, newAction) => {
-    setRecordsState((prev) =>
-      prev.map((rec) => (rec.rowIndex === rowIndex ? { ...rec, action: newAction } : rec)),
-    );
-  };
-
-  const handleSetAllExistingAction = (action) => {
-    setExistingBulkAction(action);
-    setRecordsState((prev) =>
-      prev.map((rec) => {
-        if (rec.status === "existing_member") {
-          return { ...rec, action };
-        }
-        return rec;
-      }),
-    );
-    toast.success(`Set all existing members to: ${action === "update" ? "Update Profile" : "Skip"}`);
-  };
-
   const handleExecuteImport = async () => {
+    if (!validationData || !validationData.rows) return;
+
+    const readyRecords = validationData.rows.filter((r) => r.status === "READY");
+    if (readyRecords.length === 0) {
+      toast.error("No valid records to import. Please resolve errors in your spreadsheet.");
+      return;
+    }
+
     setIsExecuting(true);
     try {
-      // Collect custom mappings to save if checkbox is checked
-      const customMappingsToSave = saveAsPreset ? columnMappings : null;
-
       const res = await executeMemberImport({
-        records: recordsState,
-        customMappingsToSave,
-        sourceFilename: parsedData.sourceFilename,
-        fileSize: parsedData.fileSize,
+        records: readyRecords,
+        sourceFilename: file?.name || "member_import.xlsx",
       });
 
-      if (res?.data) {
-        setExecutionResult(res.data);
-        setCurrentStep(4);
-        toast.success("Bulk member import completed!");
-        if (onSuccess) {
-          onSuccess();
-        }
+      const execResult = res?.importedCount !== undefined ? res : (res?.data || res);
+      setExecutionResult(execResult);
+      setStep(3);
+      toast.success(
+        `Successfully imported ${execResult?.importedCount || 0} member records!`
+      );
+      if (typeof onSuccess === "function") {
+        onSuccess();
       }
-    } catch (e) {
-      toast.error(e?.message || "Import execution failed.");
+    } catch (err) {
+      toast.error(err?.message || "Bulk import failed. Please try again.");
     } finally {
       setIsExecuting(false);
     }
   };
 
   /* -------------------------------------------------------------
-   * STEP 4: SUMMARY & ERROR REPORT
+   * PREVIEW FILTERING
    * ------------------------------------------------------------- */
-  const handleDownloadExecutionErrorReport = async () => {
-    if (!executionResult?.importId) return;
-    setIsDownloadingErrorCsv(true);
-    try {
-      await downloadErrorReport(executionResult.importId);
-      toast.success("Error report CSV downloaded!");
-    } catch (e) {
-      toast.error(e?.message || "Failed to download error report.");
-    } finally {
-      setIsDownloadingErrorCsv(false);
-    }
-  };
+  const filteredRows = (validationData?.rows || []).filter((row) => {
+    // Tab filter
+    if (activeFilter === "READY" && row.status !== "READY") return false;
+    if (
+      activeFilter === "DUPLICATES" &&
+      row.status !== "DUPLICATE_IN_FILE" &&
+      row.status !== "EXISTING_IN_DB"
+    )
+      return false;
+    if (activeFilter === "INVALID" && row.status !== "INVALID") return false;
 
-  // Helper getters for step 3
-  const summary = validationResult?.summary || {
-    total: 0,
-    readyCount: 0,
-    existingCount: 0,
-    issueCount: 0,
-  };
+    // Search query filter
+    if (searchFilter.trim()) {
+      const q = searchFilter.toLowerCase();
+      const matchName = (row.fullName || "").toLowerCase().includes(q);
+      const matchEmail = (row.email || "").toLowerCase().includes(q);
+      const matchPhone = (row.mobile || "").toLowerCase().includes(q);
+      const matchCity = (row.city || "").toLowerCase().includes(q);
+      if (!matchName && !matchEmail && !matchPhone && !matchCity) return false;
+    }
 
-  const filteredRecords = recordsState.filter((r) => {
-    if (activeReviewTab === "exceptions") {
-      return (
-        r.status === "has_issues" ||
-        (r.issues && r.issues.length > 0) ||
-        r.status === "file_duplicate"
-      );
-    }
-    if (activeReviewTab === "existing") {
-      return r.status === "existing_member";
-    }
-    if (activeReviewTab === "ready") {
-      return r.status === "ready" && (!r.issues || r.issues.length === 0);
-    }
-    return true; // 'all'
+    return true;
   });
 
-  const readyToCreateCount = recordsState.filter((r) => r.action === "create").length;
-  const readyToUpdateCount = recordsState.filter((r) => r.action === "update").length;
-  const readyToSkipCount = recordsState.filter((r) => r.action === "skip").length;
+  const summary = validationData?.summary || {
+    totalRows: 0,
+    readyCount: 0,
+    fileDuplicateCount: 0,
+    dbDuplicateCount: 0,
+    invalidCount: 0,
+  };
 
   return (
     <FormModal isOpen={isOpen} onClose={handleClose} size="4xl">
       <FormModalHeader
-        title="Smart Member Import"
-        subtitle="Import member responses from Google Sheets or Excel with automatic header matching, duplicate detection, and exception-only review."
-        badge={
-          <div className="flex items-center gap-1 text-xs">
-            {STEPS.map((step, idx) => (
-              <div key={step.id} className="flex items-center gap-1">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    currentStep === step.id
-                      ? "bg-blue-600 text-white"
-                      : currentStep > step.id
-                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-400"
-                        : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {step.id}. {step.name}
-                </span>
-                {idx < STEPS.length - 1 && (
-                  <span className="text-muted-foreground/40 text-[10px]">›</span>
-                )}
-              </div>
-            ))}
-          </div>
-        }
-        icon={FileSpreadsheet}
+        title="Bulk Member Import"
+        subtitle="Upload an Excel file (.xlsx) to validate and import real member records in bulk."
         onClose={handleClose}
       />
 
-      <FormModalBody className="space-y-4">
-        {/* =========================================================
-            STEP 1: UPLOAD & TEMPLATE DOWNLOAD
-            ========================================================= */}
-        {currentStep === 1 && (
-          <div className="space-y-5">
-            {/* Download Templates Banner */}
-            <div className="p-4 rounded-xl border border-blue-200/80 bg-blue-50/50 dark:border-blue-900/40 dark:bg-blue-950/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <h4 className="text-xs font-bold text-blue-950 dark:text-blue-200">
-                  Need a pre-formatted template?
-                </h4>
-                <p className="text-[11px] text-blue-900/70 dark:text-blue-300/70">
-                  Download standardized Excel or CSV templates with sample data matching CRM fields.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleDownloadTemplate("xlsx")}
-                  disabled={isDownloading === "xlsx"}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-800 bg-white dark:bg-card hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-900 dark:text-blue-200 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Download size={13} />
-                  <span>{isDownloading === "xlsx" ? "Saving..." : "Excel (.xlsx)"}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDownloadTemplate("csv")}
-                  disabled={isDownloading === "csv"}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-blue-300 dark:border-blue-800 bg-white dark:bg-card hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-900 dark:text-blue-200 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Download size={13} />
-                  <span>{isDownloading === "csv" ? "Saving..." : "CSV (.csv)"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Dropzone */}
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsDragging(false);
-                if (e.dataTransfer.files?.[0]) {
-                  handleFileSelect(e.dataTransfer.files[0]);
-                }
-              }}
-              onClick={() => fileInputRef.current?.click()}
-              className={`p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all flex flex-col items-center justify-center text-center cursor-pointer ${
-                isDragging
-                  ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 scale-[1.005]"
-                  : file
-                    ? "border-emerald-500/80 bg-emerald-50/20 dark:bg-emerald-950/10"
-                    : "border-border hover:border-blue-400 bg-muted/20 hover:bg-muted/40"
-              }`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    handleFileSelect(e.target.files[0]);
-                  }
-                }}
-              />
-
-              {file ? (
-                <div className="space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-xs">
-                    <FileSpreadsheet size={24} />
+      <div className="flex flex-col flex-1 min-h-0">
+        <FormModalBody className="p-4 sm:p-6 space-y-5">
+          {/* ── STEP 1: UPLOAD & TEMPLATE ─────────────────────────────────────── */}
+          {step === 1 && (
+            <div className="space-y-5">
+              {/* Template Download Card */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-border bg-muted/30">
+                <div className="flex items-start gap-3">
+                  <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <FileSpreadsheet size={22} />
                   </div>
-                  <h4 className="font-bold text-foreground text-sm">{file.name}</h4>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    {(file.size / 1024).toFixed(1)} KB · Ready to parse
-                  </p>
-                  <p className="text-[11px] text-blue-600 dark:text-blue-400 underline pt-1">
-                    Click to choose a different file
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2.5">
-                  <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs">
-                    <UploadCloud size={24} />
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">
+                      Standard Excel Import Template
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Download the official formatted template pre-configured with required fields and data constraints.
+                    </p>
                   </div>
-                  <h4 className="font-bold text-foreground text-sm">
-                    Drag & drop your Google Form response sheet or Excel file
-                  </h4>
-                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                    Supports <strong>.xlsx</strong>, <strong>.xls</strong>, and <strong>.csv</strong> exported from Google Sheets or Excel.
-                  </p>
-                  <span className="inline-block mt-2 px-3 py-1 rounded-lg border border-border bg-card text-xs font-semibold text-foreground shadow-2xs">
-                    Browse Computer
-                  </span>
                 </div>
-              )}
-            </div>
 
-            {/* Smart Features Note */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs text-muted-foreground">
-              <div className="p-3 rounded-lg border border-border/80 bg-card/60 flex items-start gap-2">
-                <Sparkles size={14} className="text-blue-500 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Smart Auto-Mapping:</strong> Google Form and CSV headers map automatically with zero manual effort.
-                </span>
-              </div>
-              <div className="p-3 rounded-lg border border-border/80 bg-card/60 flex items-start gap-2">
-                <ShieldCheck size={14} className="text-emerald-500 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Duplicate Safeguards:</strong> Existing members are identified via Phone and ID with option to Update or Skip.
-                </span>
-              </div>
-              <div className="p-3 rounded-lg border border-border/80 bg-card/60 flex items-start gap-2">
-                <UserCheck size={14} className="text-indigo-500 shrink-0 mt-0.5" />
-                <span>
-                  <strong>Database Verified:</strong> Plans & batches are verified against active CRM records.
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================
-            STEP 2: SMART COLUMN MAPPING
-            ========================================================= */}
-        {currentStep === 2 && parsedData && (
-          <div className="space-y-3.5">
-            {/* Header info & Filter Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border border-border bg-card">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-bold text-foreground">
-                    File: <span className="text-blue-600 dark:text-blue-400">{parsedData.sourceFilename}</span>
-                  </h4>
-                  <span className="text-[11px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
-                    {parsedData.totalRows} data rows
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Verify or customize how file columns map to CRM member fields.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setFilterUnmappedOnly(!filterUnmappedOnly)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors cursor-pointer ${
-                    filterUnmappedOnly
-                      ? "border-amber-400 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300"
-                      : "border-border bg-card hover:bg-muted text-muted-foreground"
-                  }`}
+                  onClick={handleDownloadTemplate}
+                  disabled={isDownloadingTemplate}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-card border border-border hover:bg-muted text-xs font-semibold text-foreground shadow-2xs transition-all cursor-pointer shrink-0"
                 >
-                  <Filter size={12} />
-                  <span>
-                    {filterUnmappedOnly ? "Showing Unmapped / Ambiguous" : "Show All Columns"}
-                  </span>
+                  <Download size={14} className={isDownloadingTemplate ? "animate-bounce" : ""} />
+                  <span>{isDownloadingTemplate ? "Downloading…" : "Download Template (.xlsx)"}</span>
                 </button>
               </div>
-            </div>
 
-            {/* Column Mapping Table */}
-            <div className="rounded-xl border border-border overflow-hidden bg-card text-xs max-h-[380px] overflow-y-auto no-scrollbar shadow-xs">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-muted/70 text-muted-foreground font-semibold uppercase tracking-wider text-[10px] sticky top-0 border-b border-border z-10">
-                  <tr>
-                    <th className="py-2.5 px-3">Column in Uploaded File</th>
-                    <th className="py-2.5 px-3">Sample Value</th>
-                    <th className="py-2.5 px-3">Match Confidence</th>
-                    <th className="py-2.5 px-3">Target CRM Field</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60 font-normal">
-                  {parsedData.detectedHeaders
-                    .filter((header) => {
-                      if (!filterUnmappedOnly) return true;
-                      const crm = columnMappings[header];
-                      return !crm;
-                    })
-                    .map((header) => {
-                      const mappingInfo = parsedData.mappings?.[header] || {};
-                      const currentSelected = columnMappings[header] || "";
-                      const sampleVal = parsedData.previewRows?.[0]?.[header] || "—";
-
-                      return (
-                        <tr key={header} className="hover:bg-muted/30 transition-colors">
-                          {/* File Column */}
-                          <td className="py-2 px-3 font-semibold text-foreground whitespace-nowrap">
-                            {header}
-                          </td>
-
-                          {/* Sample Value */}
-                          <td
-                            className="py-2 px-3 text-muted-foreground max-w-[140px] truncate font-mono text-[11px]"
-                            title={String(sampleVal)}
-                          >
-                            {String(sampleVal)}
-                          </td>
-
-                          {/* Match Confidence Badge */}
-                          <td className="py-2 px-3 whitespace-nowrap">
-                            {mappingInfo.matchType === "exact" ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
-                                Exact Match (100%)
-                              </span>
-                            ) : mappingInfo.matchType === "alias" ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-400">
-                                Smart Alias ({Math.round((mappingInfo.confidence || 0.9) * 100)}%)
-                              </span>
-                            ) : mappingInfo.matchType === "normalized" ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-400">
-                                Normalized ({Math.round((mappingInfo.confidence || 0.85) * 100)}%)
-                              </span>
-                            ) : mappingInfo.matchType === "preset" ? (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-400">
-                                Saved Preset
-                              </span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400">
-                                Unmapped
-                              </span>
-                            )}
-                          </td>
-
-                          {/* Target CRM Field Selector */}
-                          <td className="py-2 px-3 whitespace-nowrap">
-                            <select
-                              value={currentSelected}
-                              onChange={(e) => handleMappingChange(header, e.target.value)}
-                              className="h-8 rounded-lg border border-border bg-card px-2.5 text-xs text-foreground outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-medium"
-                            >
-                              <option value="">— Skip / Ignore Column —</option>
-                              {parsedData.crmFields.map((f) => (
-                                <option key={f.key} value={f.key}>
-                                  {f.label} {f.required ? "(Required)" : ""}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Preset Saving Checkbox */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={saveAsPreset}
-                  onChange={(e) => setSaveAsPreset(e.target.checked)}
-                  className="rounded border-border text-blue-600 focus:ring-blue-500 h-4 w-4"
-                />
-                <span className="text-foreground">
-                  Save these confirmed column mappings as presets for future imports
-                </span>
-              </label>
-
-              <span className="text-[11px] text-muted-foreground">
-                Google Form responses will automatically reuse this configuration.
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================
-            STEP 3: VALIDATION & EXCEPTION-ONLY REVIEW
-            ========================================================= */}
-        {currentStep === 3 && validationResult && (
-          <div className="space-y-3.5">
-            {/* Metric Summary Tiles */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              {/* Total Records */}
-              <div className="p-3 rounded-xl border border-border bg-card space-y-0.5">
-                <span className="text-[11px] font-medium text-muted-foreground">Total Uploaded</span>
-                <div className="text-lg font-extrabold text-foreground">{summary.total}</div>
-                <span className="text-[10px] text-muted-foreground">Valid rows parsed</span>
-              </div>
-
-              {/* Ready to Import */}
+              {/* Upload Dropzone */}
               <div
-                onClick={() => setActiveReviewTab("ready")}
-                className={`p-3 rounded-xl border transition-all cursor-pointer space-y-0.5 ${
-                  activeReviewTab === "ready"
-                    ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30"
-                    : "border-border bg-card hover:border-emerald-300"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={handleFileDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`flex flex-col items-center justify-center p-8 sm:p-12 rounded-2xl border-2 border-dashed transition-all cursor-pointer ${
+                  isDragging
+                    ? "border-primary bg-primary/5 scale-[0.99]"
+                    : "border-border hover:border-border/80 bg-card hover:bg-muted/20"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-400">
+                <input
+                  ref={fileInputRef}
+                  id="member-import-file-input"
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
+                <div className="p-4 rounded-2xl bg-muted/60 text-primary mb-3">
+                  {isParsing ? (
+                    <Loader2 size={32} className="animate-spin text-primary" />
+                  ) : (
+                    <UploadCloud size={32} />
+                  )}
+                </div>
+
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-bold text-foreground">
+                    {isParsing
+                      ? "Parsing & Validating Member Records…"
+                      : "Drag and drop your Excel file here, or browse"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Supports Microsoft Excel (.xlsx, .xls) and CSV files up to 10MB
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── STEP 2: PREVIEW & VALIDATION ──────────────────────────────────── */}
+          {step === 2 && validationData && (
+            <div className="space-y-4">
+              {/* Summary KPIs Row */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div
+                  onClick={() => setActiveFilter("ALL")}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    activeFilter === "ALL"
+                      ? "border-primary bg-primary/10 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    Total Records
+                  </span>
+                  <div className="text-xl font-extrabold text-foreground mt-0.5">
+                    {summary.totalRows}
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setActiveFilter("READY")}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    activeFilter === "READY"
+                      ? "border-emerald-500 bg-emerald-500/10 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
                     Ready to Import
                   </span>
-                  <CheckCircle2 size={13} className="text-emerald-600" />
+                  <div className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                    {summary.readyCount}
+                  </div>
                 </div>
-                <div className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400">
-                  {summary.readyCount}
-                </div>
-                <span className="text-[10px] text-emerald-600/80">New clean profiles</span>
-              </div>
 
-              {/* Existing Members */}
-              <div
-                onClick={() => setActiveReviewTab("existing")}
-                className={`p-3 rounded-xl border transition-all cursor-pointer space-y-0.5 ${
-                  activeReviewTab === "existing"
-                    ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/30"
-                    : "border-border bg-card hover:border-blue-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-blue-800 dark:text-blue-400">
-                    Existing Members
+                <div
+                  onClick={() => setActiveFilter("DUPLICATES")}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    activeFilter === "DUPLICATES"
+                      ? "border-amber-500 bg-amber-500/10 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 block">
+                    Duplicates
                   </span>
-                  <UserCheck size={13} className="text-blue-600" />
+                  <div className="text-xl font-extrabold text-amber-500 mt-0.5">
+                    {summary.fileDuplicateCount + summary.dbDuplicateCount}
+                  </div>
                 </div>
-                <div className="text-lg font-extrabold text-blue-700 dark:text-blue-400">
-                  {summary.existingCount}
-                </div>
-                <span className="text-[10px] text-blue-600/80">Matched by Phone/ID</span>
-              </div>
 
-              {/* Exceptions / Issues */}
-              <div
-                onClick={() => setActiveReviewTab("exceptions")}
-                className={`p-3 rounded-xl border transition-all cursor-pointer space-y-0.5 ${
-                  activeReviewTab === "exceptions"
-                    ? "border-amber-500 bg-amber-50/50 dark:bg-amber-950/30"
-                    : "border-border bg-card hover:border-amber-300"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-amber-800 dark:text-amber-400">
-                    Exceptions & Issues
+                <div
+                  onClick={() => setActiveFilter("INVALID")}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    activeFilter === "INVALID"
+                      ? "border-rose-500 bg-rose-500/10 shadow-xs"
+                      : "border-border bg-card hover:bg-muted/40"
+                  }`}
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 block">
+                    Invalid Rows
                   </span>
-                  <AlertTriangle size={13} className="text-amber-600" />
+                  <div className="text-xl font-extrabold text-rose-500 mt-0.5">
+                    {summary.invalidCount}
+                  </div>
                 </div>
-                <div className="text-lg font-extrabold text-amber-700 dark:text-amber-400">
-                  {summary.issueCount}
-                </div>
-                <span className="text-[10px] text-amber-600/80">Requires your review</span>
-              </div>
-            </div>
-
-            {/* Filter Tabs & Bulk Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-2">
-              <div className="flex items-center gap-1 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveReviewTab("exceptions")}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                    activeReviewTab === "exceptions"
-                      ? "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Exceptions & Issues ({summary.issueCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveReviewTab("existing")}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                    activeReviewTab === "existing"
-                      ? "bg-blue-100 text-blue-900 dark:bg-blue-950/60 dark:text-blue-300"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Existing Members ({summary.existingCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveReviewTab("ready")}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                    activeReviewTab === "ready"
-                      ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Ready to Import ({summary.readyCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveReviewTab("all")}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
-                    activeReviewTab === "all"
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  All ({summary.total})
-                </button>
               </div>
 
-              {/* Bulk actions for Existing Members */}
-              {activeReviewTab === "existing" && summary.existingCount > 0 && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="text-muted-foreground text-[11px]">All existing:</span>
+              {/* Filter & Search Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/80 text-xs font-semibold overflow-x-auto">
                   <button
                     type="button"
-                    onClick={() => handleSetAllExistingAction("update")}
-                    className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-colors cursor-pointer ${
-                      existingBulkAction === "update"
-                        ? "bg-blue-600 text-white"
-                        : "border border-border hover:bg-muted text-foreground"
+                    onClick={() => setActiveFilter("ALL")}
+                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                      activeFilter === "ALL"
+                        ? "bg-card text-foreground shadow-2xs"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Update Existing
+                    All ({summary.totalRows})
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleSetAllExistingAction("skip")}
-                    className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-colors cursor-pointer ${
-                      existingBulkAction === "skip"
-                        ? "bg-slate-700 text-white"
-                        : "border border-border hover:bg-muted text-foreground"
+                    onClick={() => setActiveFilter("READY")}
+                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                      activeFilter === "READY"
+                        ? "bg-card text-emerald-500 shadow-2xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Skip All
+                    Ready ({summary.readyCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter("DUPLICATES")}
+                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                      activeFilter === "DUPLICATES"
+                        ? "bg-card text-amber-500 shadow-2xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Duplicates ({summary.fileDuplicateCount + summary.dbDuplicateCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFilter("INVALID")}
+                    className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                      activeFilter === "INVALID"
+                        ? "bg-card text-rose-500 shadow-2xs font-bold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Invalid ({summary.invalidCount})
                   </button>
                 </div>
-              )}
-            </div>
 
-            {/* Records List Table */}
-            <div className="rounded-xl border border-border overflow-hidden bg-card text-xs max-h-[380px] overflow-y-auto no-scrollbar shadow-xs">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-muted/70 text-muted-foreground font-semibold uppercase tracking-wider text-[10px] sticky top-0 border-b border-border z-10">
-                  <tr>
-                    <th className="py-2.5 px-3 w-12 text-center">Row</th>
-                    <th className="py-2.5 px-3">Member Name & Contact</th>
-                    <th className="py-2.5 px-3">Plan & Batch</th>
-                    <th className="py-2.5 px-3">Status & Detected Issues</th>
-                    <th className="py-2.5 px-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60 font-normal">
-                  {filteredRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                        <CheckCircle2 size={24} className="mx-auto mb-1 text-emerald-500 opacity-80" />
-                        <p className="font-semibold text-foreground">No records in this category</p>
-                        <p className="text-[11px]">All records have been resolved or are ready.</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredRecords.map((rec) => {
-                      const data = rec.data || {};
-                      const fullName =
-                        `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
-                        data.fullName ||
-                        "Unnamed";
+                <div className="relative min-w-[200px]">
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search preview…"
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background pl-8.5 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
 
-                      return (
-                        <tr key={rec.rowIndex} className="hover:bg-muted/30 transition-colors">
-                          {/* Row Number */}
-                          <td className="py-2.5 px-3 text-center text-muted-foreground font-mono text-[11px]">
-                            #{rec.rowIndex}
-                          </td>
-
-                          {/* Name & Contact */}
-                          <td className="py-2.5 px-3 whitespace-nowrap">
-                            <div className="font-bold text-foreground">{fullName}</div>
-                            <div className="text-[11px] text-muted-foreground font-mono">
-                              {data.phone || "No phone"} {data.email ? `· ${data.email}` : ""}
-                            </div>
-                          </td>
-
-                          {/* Plan & Batch */}
-                          <td className="py-2.5 px-3 whitespace-nowrap">
-                            <div className="text-foreground font-medium">
-                              {rec.planMatched ? (
-                                <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
-                                  <CheckCircle2 size={11} /> {rec.planMatched.planName}
-                                </span>
-                              ) : data.planName ? (
-                                <span className="text-amber-600 dark:text-amber-400">
-                                  {data.planName} (Unmatched)
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground italic">No plan</span>
-                              )}
-                            </div>
-
-                            <div className="text-[11px] text-muted-foreground">
-                              {rec.batchMatched ? (
-                                <span className="text-indigo-700 dark:text-indigo-300">
-                                  Batch: {rec.batchMatched.batchName}
-                                </span>
-                              ) : data.batchName ? (
-                                <span className="text-amber-600">
-                                  Batch: {data.batchName} (Unmatched)
-                                </span>
-                              ) : (
-                                <span className="italic">No batch</span>
-                              )}
-                            </div>
-                          </td>
-
-                          {/* Status & Issues */}
-                          <td className="py-2.5 px-3">
-                            {rec.status === "existing_member" && (
-                              <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-400">
-                                  <UserCheck size={11} /> Existing: {rec.existingMember?.memberId || "Member"}
-                                </span>
-                                <p className="text-[10px] text-muted-foreground">
-                                  Matched by: {rec.existingMatchReason || "Phone"}
-                                </p>
-                              </div>
-                            )}
-
-                            {rec.status === "ready" && (!rec.issues || rec.issues.length === 0) && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
-                                <CheckCircle2 size={11} /> Ready to import
-                              </span>
-                            )}
-
-                            {rec.issues && rec.issues.length > 0 && (
-                              <div className="space-y-1">
-                                {rec.issues.map((issue, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex items-center gap-1 text-[11px] text-amber-800 dark:text-amber-300"
-                                  >
-                                    <AlertTriangle size={11} className="shrink-0 text-amber-500" />
-                                    <span>{issue.message}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Action Selector */}
-                          <td className="py-2.5 px-3 whitespace-nowrap text-right">
-                            {rec.status === "existing_member" ? (
-                              <select
-                                value={rec.action || "update"}
-                                onChange={(e) => handleRecordActionToggle(rec.rowIndex, e.target.value)}
-                                className="h-7 rounded-md border border-border bg-card px-2 text-[11px] font-semibold text-foreground outline-none focus:border-blue-500"
-                              >
-                                <option value="update">Update Profile</option>
-                                <option value="skip">Skip Record</option>
-                              </select>
-                            ) : (
-                              <select
-                                value={rec.action || "create"}
-                                onChange={(e) => handleRecordActionToggle(rec.rowIndex, e.target.value)}
-                                className="h-7 rounded-md border border-border bg-card px-2 text-[11px] font-semibold text-foreground outline-none focus:border-blue-500"
-                              >
-                                <option value="create">Import as New</option>
-                                <option value="skip">Skip Record</option>
-                              </select>
-                            )}
+              {/* Records Preview Table */}
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="max-h-[360px] overflow-y-auto no-scrollbar">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead className="sticky top-0 bg-muted/90 backdrop-blur-xs border-b border-border text-[11px] font-bold uppercase tracking-wider text-muted-foreground z-10">
+                      <tr>
+                        <th className="py-2.5 px-3 w-12">#</th>
+                        <th className="py-2.5 px-3">Member Name</th>
+                        <th className="py-2.5 px-3">Contact</th>
+                        <th className="py-2.5 px-3">DOB & Gender</th>
+                        <th className="py-2.5 px-3">Address</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3">Diagnostics</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      {filteredRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="text-center py-8 text-muted-foreground">
+                            No member records found matching the active filter.
                           </td>
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Bottom Safeguards Disclaimer */}
-            <div className="p-3 rounded-lg bg-muted/40 border border-border text-[11px] text-muted-foreground flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-emerald-500 shrink-0" />
-                <span>
-                  <strong>Safe Updates:</strong> Updating existing members preserves their existing data and never clears untouched fields.
-                </span>
-              </div>
-              <div className="font-semibold text-foreground">
-                Action Plan: +{readyToCreateCount} new · {readyToUpdateCount} updates · {readyToSkipCount} skipped
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================
-            STEP 4: IMPORT EXECUTION & SUMMARY
-            ========================================================= */}
-        {currentStep === 4 && executionResult && (
-          <div className="space-y-5 text-center py-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950/80 dark:text-emerald-400 flex items-center justify-center mx-auto shadow-sm">
-              <CheckCircle2 size={36} />
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-lg font-extrabold text-foreground font-display">
-                Bulk Import Completed Successfully!
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                Import Batch: <span className="font-mono font-bold text-foreground">{executionResult.importId}</span>
-              </p>
-            </div>
-
-            {/* Results Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-xl mx-auto text-left">
-              <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-950/20">
-                <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-400">
-                  New Members Created
-                </span>
-                <div className="text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-1">
-                  +{executionResult.createdCount || 0}
+                      ) : (
+                        filteredRows.map((row, idx) => (
+                          <tr
+                            key={idx}
+                            className={`transition-colors ${
+                              row.status === "READY"
+                                ? "hover:bg-emerald-500/5"
+                                : row.status === "EXISTING_IN_DB" || row.status === "DUPLICATE_IN_FILE"
+                                ? "bg-amber-500/5 hover:bg-amber-500/10"
+                                : "bg-rose-500/5 hover:bg-rose-500/10"
+                            }`}
+                          >
+                            <td className="py-2 px-3 text-muted-foreground font-mono text-[11px]">
+                              {row.rowNumber}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className="font-semibold text-foreground block">
+                                {row.fullName || "—"}
+                              </span>
+                              {row.emergencyName && (
+                                <span className="text-[10px] text-muted-foreground block">
+                                  Emerg: {row.emergencyName}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className="font-mono text-[11px] text-foreground block">
+                                {row.mobile || "—"}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground truncate block max-w-[150px]">
+                                {row.email || "—"}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className="text-foreground block">{row.gender || "—"}</span>
+                              <span className="text-[10px] text-muted-foreground font-mono block">
+                                {row.dob || "—"}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">
+                              <span className="text-foreground block truncate max-w-[140px]">
+                                {row.city || row.address || "—"}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground block">
+                                {row.state} {row.pincode}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3">
+                              {row.status === "READY" && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                  <Check size={11} /> Ready
+                                </span>
+                              )}
+                              {row.status === "DUPLICATE_IN_FILE" && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-500 border border-amber-500/20">
+                                  <AlertTriangle size={11} /> File Dup
+                                </span>
+                              )}
+                              {row.status === "EXISTING_IN_DB" && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/15 text-blue-500 border border-blue-500/20">
+                                  <UserCheck size={11} /> In Database
+                                </span>
+                              )}
+                              {row.status === "INVALID" && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-500 border border-rose-500/20">
+                                  <AlertCircle size={11} /> Invalid
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-2 px-3 max-w-[180px]">
+                              {row.errors && row.errors.length > 0 ? (
+                                <p className="text-[10px] text-rose-600 dark:text-rose-400 leading-tight">
+                                  {row.errors.join("; ")}
+                                </p>
+                              ) : row.duplicateReason ? (
+                                <p className="text-[10px] text-amber-600 dark:text-amber-400 leading-tight">
+                                  {row.duplicateReason}
+                                </p>
+                              ) : (
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                                  Validated & eligible
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-50/40 dark:bg-blue-950/20">
-                <span className="text-[11px] font-medium text-blue-800 dark:text-blue-400">
-                  Profiles Updated
-                </span>
-                <div className="text-2xl font-extrabold text-blue-700 dark:text-blue-400 mt-1">
-                  {executionResult.updatedCount || 0}
-                </div>
+          {/* ── STEP 3: EXECUTION SUMMARY ─────────────────────────────────────── */}
+          {step === 3 && executionResult && (
+            <div className="py-6 flex flex-col items-center justify-center text-center space-y-4">
+              <div className="h-16 w-16 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center animate-in zoom-in duration-200">
+                <CheckCircle2 size={36} />
               </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card">
-                <span className="text-[11px] font-medium text-muted-foreground">Records Skipped</span>
-                <div className="text-2xl font-extrabold text-muted-foreground mt-1">
-                  {executionResult.skippedCount || 0}
-                </div>
+              <div>
+                <h3 className="text-xl font-black text-foreground">
+                  Bulk Import Completed Successfully
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1 max-w-md">
+                  All valid records have been saved directly into the gym database and assigned consecutive Member IDs.
+                </p>
               </div>
 
-              <div className="p-3.5 rounded-xl border border-border bg-card">
-                <span className="text-[11px] font-medium text-muted-foreground">Failures</span>
-                <div className="text-2xl font-extrabold text-foreground mt-1">
-                  {executionResult.failedCount || 0}
+              {/* Result Summary Metrics */}
+              <div className="grid grid-cols-3 gap-3 w-full max-w-lg pt-2">
+                <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
+                    Imported
+                  </span>
+                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 font-mono">
+                    {executionResult.importedCount}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-border bg-card">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">
+                    Skipped / Dupes
+                  </span>
+                  <div className="text-2xl font-black text-foreground mt-0.5 font-mono">
+                    {executionResult.skippedCount}
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-500 block">
+                    Failed
+                  </span>
+                  <div className="text-2xl font-black text-rose-500 mt-0.5 font-mono">
+                    {executionResult.failedCount}
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+        </FormModalBody>
 
-            {/* If errors occurred, download error report */}
-            {executionResult.failedCount > 0 && (
-              <div className="p-4 rounded-xl border border-rose-300 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/30 max-w-xl mx-auto flex items-center justify-between gap-3 text-left">
-                <div className="space-y-0.5">
-                  <h4 className="text-xs font-bold text-rose-900 dark:text-rose-200">
-                    Some rows could not be imported
-                  </h4>
-                  <p className="text-[11px] text-rose-800/80 dark:text-rose-300/80">
-                    Download the error report CSV to fix failed records and re-import them.
-                  </p>
-                </div>
+        <div className="relative z-10 border-t border-slate-200/90 dark:border-border/60 bg-slate-50/60 dark:bg-muted/15 px-6 py-4 sm:px-7 shrink-0 flex items-center justify-between">
+          {step === 1 && (
+            <>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold text-foreground transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <div className="text-[11px] text-muted-foreground">
+                Select or drop an Excel (.xlsx) file to proceed
+              </div>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                disabled={isExecuting}
+                className="px-4 py-2 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold text-foreground transition-colors cursor-pointer"
+              >
+                Back to Upload
+              </button>
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={handleDownloadExecutionErrorReport}
-                  disabled={isDownloadingErrorCsv}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer shrink-0"
+                  onClick={handleExecuteImport}
+                  disabled={isExecuting || summary.readyCount === 0}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-900 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Download size={13} />
-                  <span>{isDownloadingErrorCsv ? "Downloading..." : "Download Error CSV"}</span>
+                  {isExecuting ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Importing Members…</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Import {summary.readyCount} Valid Records</span>
+                      <ArrowRight size={14} />
+                    </>
+                  )}
                 </button>
               </div>
-            )}
-          </div>
-        )}
-      </FormModalBody>
+            </>
+          )}
 
-      <FormModalFooter
-        onCancel={handleClose}
-        cancelText={currentStep === 4 ? "Done" : "Cancel"}
-        extraLeft={
-          currentStep > 1 && currentStep < 4 ? (
-            <button
-              type="button"
-              onClick={() => setCurrentStep((prev) => prev - 1)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border hover:bg-muted text-xs font-semibold text-foreground transition-colors cursor-pointer"
-            >
-              <ArrowLeft size={13} />
-              <span>Back</span>
-            </button>
-          ) : null
-        }
-      >
-        {/* Step 1 Action */}
-        {currentStep === 1 && (
-          <button
-            type="button"
-            onClick={handleUploadAndParse}
-            disabled={!file || isUploading}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {isUploading ? (
-              <>
-                <RefreshCw size={14} className="animate-spin" />
-                <span>Parsing Sheet...</span>
-              </>
-            ) : (
-              <>
-                <span>Continue to Column Mapping</span>
-                <ArrowRight size={14} />
-              </>
-            )}
-          </button>
-        )}
-
-        {/* Step 2 Action */}
-        {currentStep === 2 && (
-          <button
-            type="button"
-            onClick={handleProceedToValidation}
-            disabled={isValidating}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {isValidating ? (
-              <>
-                <RefreshCw size={14} className="animate-spin" />
-                <span>Validating Data...</span>
-              </>
-            ) : (
-              <>
-                <span>Validate & Review Exceptions</span>
-                <ArrowRight size={14} />
-              </>
-            )}
-          </button>
-        )}
-
-        {/* Step 3 Action */}
-        {currentStep === 3 && (
-          <button
-            type="button"
-            onClick={handleExecuteImport}
-            disabled={isExecuting || readyToCreateCount + readyToUpdateCount === 0}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {isExecuting ? (
-              <>
-                <RefreshCw size={14} className="animate-spin" />
-                <span>Executing Bulk Import...</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={15} />
-                <span>
-                  Confirm Import ({readyToCreateCount} New, {readyToUpdateCount} Updates)
-                </span>
-              </>
-            )}
-          </button>
-        )}
-
-        {/* Step 4 Action */}
-        {currentStep === 4 && (
-          <button
-            type="button"
-            onClick={handleClose}
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-semibold shadow-xs transition-colors cursor-pointer"
-          >
-            <span>Close & View Members</span>
-          </button>
-        )}
-      </FormModalFooter>
+          {step === 3 && (
+            <div className="w-full flex justify-end">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="px-6 py-2 rounded-xl bg-blue-900 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+              >
+                Done & View Members
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </FormModal>
   );
 }

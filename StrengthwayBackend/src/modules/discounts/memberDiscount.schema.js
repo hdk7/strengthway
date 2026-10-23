@@ -46,22 +46,36 @@ const individualDiscountItemSchema = yup.object().shape({
       return true;
     })
     .required("Discount value is required."),
-  expiryDate: yup.date().nullable().optional(),
+  expiryDate: yup
+    .date()
+    .nullable()
+    .optional()
+    .transform((curr, orig) => (!orig || orig === "" ? null : curr)),
   applicationRule: yup
     .string()
     .oneOf(["NEXT_PAYMENT_ONLY", "SINGLE_USE"])
     .default("NEXT_PAYMENT_ONLY"),
+  notes: yup.string().trim().nullable().optional(),
 });
 
-const assignBulkDiscountsSchema = yup.object().shape({
-  campaignName: yup.string().trim().nullable().optional(),
-  notifyMembers: yup.boolean().default(true),
-  discounts: yup
-    .array()
-    .of(individualDiscountItemSchema)
-    .min(1, "At least one member discount configuration is required.")
-    .required("Discounts list is required."),
-});
+const assignBulkDiscountsSchema = yup
+  .object()
+  .shape({
+    campaignName: yup.string().trim().nullable().optional(),
+    notes: yup.string().trim().nullable().optional(),
+    notifyMembers: yup.boolean().default(true),
+    sendNotification: yup.boolean().optional(),
+    discounts: yup.array().of(individualDiscountItemSchema).optional(),
+    items: yup.array().of(individualDiscountItemSchema).optional(),
+  })
+  .test(
+    "has-discounts",
+    "At least one member discount configuration is required.",
+    function (val) {
+      const list = val?.discounts || val?.items;
+      return Array.isArray(list) && list.length > 0;
+    }
+  );
 
 const cancelDiscountSchema = yup.object().shape({
   reason: yup

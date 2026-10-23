@@ -216,14 +216,6 @@ export default function TrainerDashboard({ trainerIdOverride = null }) {
               ))}
             </select>
           </div>
-
-          <button
-            onClick={fetchData}
-            title="Refresh coach data"
-            className="p-2 rounded-xl border border-border/70 bg-muted/30 hover:bg-muted/70 text-muted-foreground hover:text-foreground transition-all"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-primary" : ""}`} />
-          </button>
         </div>
       </div>
 

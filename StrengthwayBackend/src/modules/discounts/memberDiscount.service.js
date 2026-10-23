@@ -407,6 +407,7 @@ class MemberDiscountService {
 
     return {
       discounts,
+      data: discounts,
       total,
       page,
       limit,

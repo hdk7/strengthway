@@ -185,15 +185,6 @@ export function ClassDailyScheduleView({
               ))}
             </select>
           </div>
-
-          <button
-            type="button"
-            onClick={loadDailySessions}
-            className="rounded-xl p-2 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-muted cursor-pointer transition-colors"
-            title="Refresh Day Schedule"
-          >
-            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
-          </button>
         </div>
       </div>
 

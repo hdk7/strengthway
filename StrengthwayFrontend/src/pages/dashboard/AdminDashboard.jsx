@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import {
   DollarSign,
   TrendingUp,
@@ -100,15 +101,31 @@ export default function AdminDashboard({ onSwitchView }) {
 
   const rawTodayClasses = Array.isArray(data?.todayClasses)
     ? data.todayClasses
-    : data?.classes?.todayClasses || [];
+    : Array.isArray(data?.todayClasses?.classes)
+    ? data.todayClasses.classes
+    : Array.isArray(data?.classes?.todayClasses)
+    ? data.classes.todayClasses
+    : [];
 
   const classesData = {
     todayClasses: rawTodayClasses,
-    summary: data?.classes?.summary || {
-      live: rawTodayClasses.filter((c) => (c.status || c.liveStatus) === "LIVE").length,
-      upcoming: rawTodayClasses.filter((c) => (c.status || c.liveStatus) === "UPCOMING").length,
-      completed: rawTodayClasses.filter((c) => (c.status || c.liveStatus) === "COMPLETED").length,
-      cancelled: rawTodayClasses.filter((c) => (c.status || c.liveStatus) === "CANCELLED").length,
+    summary: {
+      live:
+        data?.todayClasses?.liveCount ??
+        data?.classes?.summary?.live ??
+        rawTodayClasses.filter((c) => (c.liveStatus || c.status) === "LIVE").length,
+      upcoming:
+        data?.todayClasses?.upcomingCount ??
+        data?.classes?.summary?.upcoming ??
+        rawTodayClasses.filter((c) => (c.liveStatus || c.status) === "UPCOMING").length,
+      completed:
+        data?.todayClasses?.completedCount ??
+        data?.classes?.summary?.completed ??
+        rawTodayClasses.filter((c) => (c.liveStatus || c.status) === "COMPLETED").length,
+      cancelled:
+        data?.todayClasses?.cancelledCount ??
+        data?.classes?.summary?.cancelled ??
+        rawTodayClasses.filter((c) => (c.liveStatus || c.status) === "CANCELLED").length,
     },
   };
 
@@ -427,9 +444,13 @@ export default function AdminDashboard({ onSwitchView }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {classesData.todayClasses.map((cls) => {
-              const isLive = cls.status === "LIVE";
-              const isCompleted = cls.status === "COMPLETED";
-              const isCancelled = cls.status === "CANCELLED";
+              const currentStatus = cls.liveStatus || cls.status || "UPCOMING";
+              const isLive = currentStatus === "LIVE";
+              const isCompleted = currentStatus === "COMPLETED";
+              const isCancelled = currentStatus === "CANCELLED";
+              const classTiming = cls.time || cls.timing || "06:00 AM - 07:00 AM";
+              const presentCount = cls.presentCount ?? cls.attendanceSummary?.present ?? 0;
+              const eligibleCount = cls.eligibleCount ?? cls.attendanceSummary?.eligible ?? cls.maxPax ?? 20;
 
               return (
                 <div
@@ -467,14 +488,14 @@ export default function AdminDashboard({ onSwitchView }) {
                       }`}
                     >
                       {isLive && <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
-                      {cls.status}
+                      {currentStatus}
                     </span>
                   </div>
 
                   <div className="flex flex-col gap-1 text-xs">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
-                      <span className="font-semibold text-foreground">{cls.time}</span>
+                      <span className="font-semibold text-foreground">{classTiming}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
                       <Award className="w-3.5 h-3.5 text-primary shrink-0" />
@@ -489,9 +510,9 @@ export default function AdminDashboard({ onSwitchView }) {
                   <div className="pt-2 border-t border-border/60 flex items-center justify-between text-xs">
                     <span className="text-muted-foreground text-[11px]">Enrolled:</span>
                     <span className="font-bold tabular-nums text-foreground">
-                      {cls.attendanceSummary?.present !== undefined
-                        ? `${cls.attendanceSummary.present} Present / ${cls.eligibleCount}`
-                        : `${cls.eligibleCount} Athletes`}
+                      {presentCount > 0
+                        ? `${presentCount} Present / ${eligibleCount}`
+                        : `${eligibleCount} Athletes`}
                     </span>
                   </div>
                 </div>
@@ -751,38 +772,41 @@ export default function AdminDashboard({ onSwitchView }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/40">
-                  {membership.recentExpiring.map((m) => (
-                    <tr key={m.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-2.5">
-                        <div className="font-bold text-foreground">{m.name}</div>
-                        <div className="text-[10px] text-muted-foreground">{m.phone}</div>
-                      </td>
-                      <td className="py-2.5 font-medium text-foreground">{m.planName}</td>
-                      <td className="py-2.5 text-muted-foreground">{m.batchName}</td>
-                      <td className="py-2.5 font-medium text-foreground">
-                        {m.endDate ? new Date(m.endDate).toLocaleDateString() : "—"}
-                      </td>
-                      <td className="py-2.5 text-center">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            m.daysRemaining <= 3
-                              ? "bg-rose-500/20 text-rose-400"
-                              : "bg-amber-500/20 text-amber-400"
-                          }`}
-                        >
-                          {m.daysRemaining} days
-                        </span>
-                      </td>
-                      <td className="py-2.5 text-right">
-                        <Link
-                          to={`/admin/trainers-members/members/${m.id}`}
-                          className="px-2.5 py-1 rounded-lg border border-border/80 hover:bg-muted text-[11px] font-semibold text-primary transition-colors"
-                        >
-                          Open Dossier
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                  {membership.recentExpiring.map((m) => {
+                    const daysRemaining = m.daysRemaining ?? m.daysLeft ?? 0;
+                    return (
+                      <tr key={m.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="py-2.5">
+                          <div className="font-bold text-foreground">{m.name}</div>
+                          <div className="text-[10px] text-muted-foreground">{m.phone || m.mobile || "—"}</div>
+                        </td>
+                        <td className="py-2.5 font-medium text-foreground">{m.planName}</td>
+                        <td className="py-2.5 text-muted-foreground">{m.batchName || "—"}</td>
+                        <td className="py-2.5 font-medium text-foreground">
+                          {m.endDate ? new Date(m.endDate).toLocaleDateString() : "—"}
+                        </td>
+                        <td className="py-2.5 text-center">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              daysRemaining <= 3
+                                ? "bg-rose-500/20 text-rose-400"
+                                : "bg-amber-500/20 text-amber-400"
+                            }`}
+                          >
+                            {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
+                          </span>
+                        </td>
+                        <td className="py-2.5 text-right">
+                          <Link
+                            to={`/admin/trainers-members/members/${m.id}`}
+                            className="px-2.5 py-1 rounded-lg border border-border/80 hover:bg-muted text-[11px] font-semibold text-primary transition-colors"
+                          >
+                            Open Dossier
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
